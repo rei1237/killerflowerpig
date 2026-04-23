@@ -115,6 +115,11 @@ function isMobileLandscapePlayMode() {
     return isMobileTouchDevice() && window.innerWidth < window.innerHeight;
 }
 
+function isMobileLandscapeOrientation() {
+    // 진짜 가로 모드 (width > height)
+    return isMobileTouchDevice() && window.innerWidth > window.innerHeight;
+}
+
 // 모바일에서 게임 속도 배율 반환
 function getMobileGameSpeedMultiplier() {
     return isMobileEasyModeActive() ? EASY_MODE_CONFIG.gameSpeedMultiplier : 1.0;
@@ -155,7 +160,11 @@ function enterMobileFullscreen() {
     if (!isMobileTouchDevice()) return;
     const root = document.documentElement;
     if (document.fullscreenElement || !root.requestFullscreen) return;
-    root.requestFullscreen().catch(() => { });
+
+    // 가로 모드일 때만 전체화면 요청 (사용자 경험 개선)
+    if (isMobileLandscapeOrientation()) {
+        root.requestFullscreen().catch(() => { });
+    }
 }
 
 function updateInstallButtonVisibility() { // MOBILE LANDSCAPE
@@ -1191,6 +1200,11 @@ function resizeCanvas() {
 function handleResize() {
     applyMobileOptimizations();
     resizeCanvas();
+
+    // 모바일 가로 모드에서 자동 전체화면
+    if (isMobileLandscapeOrientation() && !document.fullscreenElement) {
+        enterMobileFullscreen();
+    }
 }
 window.addEventListener('resize', handleResize);
 window.addEventListener('orientationchange', handleResize);
