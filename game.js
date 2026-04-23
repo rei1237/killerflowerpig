@@ -1014,15 +1014,20 @@ class Boss {
         const interval = (this.hp < 3000 ? 1000 : 1800) * bossAttackIntervalMultiplier; // EASY MODE
         if (timestamp - this.lastAttackTime > interval) {
             const p = Math.random();
-            if (p < 0.4) {
+            // 모바일에서는 7스테이지 이후부터만 소환 패턴 사용 (초보 보호)
+            const canSummonMinions = !isMobileEasyModeActive() || currentStage >= 7;
+
+            if (p < 0.4 && canSummonMinions) {
+                // 부하 소환 패턴 (7스테이지 이후 모바일에서만)
                 for (let i = 0; i < 3; i++) {
                     const e = new Enemy(this.x, this.y + this.height / 2 + (i - 1) * 80);
                     const summonEnemySpeedMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossSummonEnemySpeedMultiplier : 1; // EASY MODE
                     const summonEnemyHpMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossSummonEnemyHpMultiplier : 1; // EASY MODE
                     e.speed = 5 * summonEnemySpeedMultiplier; e.hp = Math.round(200 * summonEnemyHpMultiplier); enemies.push(e); // EASY MODE
                 }
-            } else if (p < 0.7) {
+            } else if (p < 0.7 || !canSummonMinions) {
                 // 보스 에너지 볼 - 모바일에서는 더 느리고 데미지 감소
+                // 소환 불가능한 스테이지에서는 확률 증가 (0.4~0.7 → 0~0.7)
                 const bossProjSpeed = isMobileEasyModeActive() ? 6 * EASY_MODE_CONFIG.bossProjectileSpeedMultiplier : 6;
                 const bossProjDamage = isMobileEasyModeActive() ? 2 : 3;
                 const b = new Projectile(this.x, this.y + this.height / 2, -bossProjSpeed, 0, 0);
