@@ -121,9 +121,9 @@ html {
    데스크톱 - 꽃돼지 옆에 배치
    ========================================== */
 @media screen and (min-width: 769px) {
-    /* START 버튼 - 화면 하단 중앙 */
+    /* START 버튼 - 화면 하단에서 더 위로 */
     .start-container {
-        bottom: 8%;
+        bottom: 12%;
         left: 50%;
         transform: translateX(-50%);
     }

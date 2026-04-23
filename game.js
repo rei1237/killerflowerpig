@@ -265,15 +265,15 @@ function hideInstallGuide() {
     if (modal) modal.hidden = true;
 }
 
-// 실제 PWA 설치 시도
+// 실제 PWA 설치 시도 - 자동 설치
 async function installPWA() {
-    // 이미 설치된 경우 가이드만 표시
+    // 이미 설치된 경우 알림만 표시
     if (isPWAInstalled()) {
-        showInstallGuide();
+        addFloatingText('✅ Already Installed!', canvas.width / 2, canvas.height / 2 - 50, '#2ecc71');
         return;
     }
 
-    // 설치 프롬프트가 있는 경우 (Chrome/Android)
+    // 설치 프롬프트가 있는 경우 (Chrome/Android) - 바로 설치
     if (deferredInstallPrompt) {
         try {
             deferredInstallPrompt.prompt();
@@ -281,15 +281,24 @@ async function installPWA() {
             if (outcome === 'accepted') {
                 console.log('PWA installed successfully');
                 deferredInstallPrompt = null;
+                addFloatingText('✅ Installing...', canvas.width / 2, canvas.height / 2 - 50, '#2ecc71');
+            } else {
+                addFloatingText('❌ Install Cancelled', canvas.width / 2, canvas.height / 2 - 50, '#e74c3c');
             }
         } catch (error) {
             console.error('Install failed:', error);
-            showInstallGuide();
+            addFloatingText('❌ Install Failed', canvas.width / 2, canvas.height / 2 - 50, '#e74c3c');
         }
     }
-    // iOS Safari나 설치 프롬프트가 없는 경우 가이드 표시
+    // iOS Safari나 설치 프롬프트가 없는 경우 - 간단한 안내 표시
     else {
-        showInstallGuide();
+        // iOS Safari용 간단한 안내
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS) {
+            addFloatingText('📱 Tap Share → Add to Home Screen', canvas.width / 2, canvas.height / 2 - 50, '#f1c40f');
+        } else {
+            addFloatingText('💻 Check address bar for install icon', canvas.width / 2, canvas.height / 2 - 50, '#f1c40f');
+        }
     }
 }
 
