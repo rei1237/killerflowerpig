@@ -171,8 +171,13 @@ function enterMobileFullscreen() {
 
 function updateInstallButtonVisibility() { // MOBILE LANDSCAPE
     if (!installButton) return;
-    // PWA 설치 가능하거나 이미 설치된 경우에도 버튼 표시 (가이드용)
-    const shouldShow = currentState === GAME_STATE.START && (deferredInstallPrompt || !isPWAInstalled());
+    // START 상태에서만 버튼 표시, 게임 중에는 무조건 숨김
+    if (currentState !== GAME_STATE.START) {
+        installButton.hidden = true;
+        return;
+    }
+    // PWA 설치 가능하거나 이미 설치된 경우에 표시 (가이드용)
+    const shouldShow = deferredInstallPrompt || !isPWAInstalled();
     installButton.hidden = !shouldShow;
 }
 
@@ -1339,6 +1344,8 @@ resizeCanvas();
 
 function gameLoop(timestamp) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // 메인 메뉴 가시성 업데이트 (START 상태에서만 표시)
+    updateMainMenuVisibility();
     updateInstallButtonVisibility();
     if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT || currentState === GAME_STATE.STAGE_CLEAR) {
         // STAGE_CLEAR일 때도 보스 업데이트 필요 (사망 애니메이션 완료)
