@@ -68,21 +68,32 @@ let floatingTexts = []; // "BONUS!" 효과 등을 위한 플로팅 텍스트
 const SPAWN_INTERVAL = 2000;
 const GATE_SPAWN_INTERVAL = 6000;
 const EASY_MODE_CONFIG = {
-    enemySpeedMultiplier: 0.45,
-    spawnRateMultiplier: 2.0,
-    goalMultiplier: 2.0,
-    homingSpeedMultiplier: 0.5,
-    enemyHpMultiplierA: 0.66,
-    enemyHpMultiplierB: 0.6,
-    enemyShootIntervalMultiplier: 2.0,
-    maxActiveEnemies: 6,
-    playerHpMultiplier: 2.0,
-    playerDamageMultiplier: 1.5,
-    playerInvincibleMultiplier: 2.0,
-    bossMoveScaleMultiplier: 0.5,
-    bossAttackIntervalMultiplier: 2.0,
-    bossSummonEnemySpeedMultiplier: 0.5,
-    bossSummonEnemyHpMultiplier: 0.6
+    // 적 관련 - 더 느리고 덜 위협적
+    enemySpeedMultiplier: 0.3,        // 45% → 30% (훨씬 느린 적)
+    spawnRateMultiplier: 3.0,       // 2배 → 3배 덜 자주 등장
+    goalMultiplier: 0.6,              // 2배 → 0.6배 (더 적은 적 처치 필요)
+    homingSpeedMultiplier: 0.3,       // 50% → 30% (홈링 더 느림)
+    enemyHpMultiplierA: 0.5,          // 66% → 50% (적 체력 감소)
+    enemyHpMultiplierB: 0.4,        // 60% → 40% (적 체력 더 감소)
+    enemyShootIntervalMultiplier: 3.0, // 2배 → 3배 덜 자주 발사
+    maxActiveEnemies: 4,              // 6 → 4 (동시 적 수 감소)
+
+    // 플레이어 관련 - 더 강하고 안전함
+    playerHpMultiplier: 3.0,          // 2배 → 3배 더 많은 HP
+    playerDamageMultiplier: 2.0,      // 1.5배 → 2배 더 강한 공격
+    playerInvincibleMultiplier: 3.0,  // 2배 → 3배 더 긴 무적시간
+    playerSpeedMultiplier: 1.2,       // 20% 더 빠른 이동
+    fireRateMultiplier: 0.7,          // 30% 더 빠른 발사
+
+    // 보스 관련 - 훨씬 쉬운 보스
+    bossMoveScaleMultiplier: 0.3,     // 50% → 30% (보스 이동 느림)
+    bossAttackIntervalMultiplier: 3.0, // 2배 → 3배 덜 자주 공격
+    bossSummonEnemySpeedMultiplier: 0.3, // 50% → 30% (소환된 적 더 느림)
+    bossSummonEnemyHpMultiplier: 0.4, // 60% → 40% (소환된 적 체력 감소)
+    bossProjectileSpeedMultiplier: 0.6, // 보스 발체 속도 60% 감소
+
+    // 게임 템포
+    gameSpeedMultiplier: 0.75           // 전체 게임 속도 75% (25% 느림)
 };
 
 function isMobileTouchDevice() {
@@ -102,6 +113,11 @@ function applyMobileOptimizations() {
 function isMobileLandscapePlayMode() {
     // 세로 모드일 때는 이지 모드 활성화 (더 쉬운 게임)
     return isMobileTouchDevice() && window.innerWidth < window.innerHeight;
+}
+
+// 모바일에서 게임 속도 배율 반환
+function getMobileGameSpeedMultiplier() {
+    return isMobileEasyModeActive() ? EASY_MODE_CONFIG.gameSpeedMultiplier : 1.0;
 }
 
 function isMobileEasyModeActive() { // EASY MODE
@@ -319,12 +335,16 @@ const Player = {
             return n.timeLeft > 0;
         });
 
+        // 모바일에서 더 빠른 이동 속도 적용
+        const moveSpeed = isMobileEasyModeActive() ? this.speed * EASY_MODE_CONFIG.playerSpeedMultiplier : this.speed;
         let dy = this.targetY - this.y;
-        this.y += dy * this.speed;
+        this.y += dy * moveSpeed;
         if (this.y < 0) this.y = 0;
         if (this.y + this.height > canvas.height) this.y = canvas.height - this.height;
         const totalAniFrames = 8;
-        const fire = Math.max(this.fireRate, 10);
+        // 모바일에서 더 빠른 발사 속도 적용
+        const fireRateMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.fireRateMultiplier : 1.0;
+        const fire = Math.max(this.fireRate * fireRateMultiplier, 10);
         const aniCycleTime = fire * 1.5;
         const frameDuration = aniCycleTime / totalAniFrames;
 
@@ -503,7 +523,8 @@ class Enemy {
         const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : 1; // EASY MODE
         const hpMultiplierB = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierB : 1; // EASY MODE
         this.hp = Math.round((60 * hpMultiplierA) + (currentStage * 50 * hpMultiplierB)); this.maxHp = this.hp; // EASY MODE
-        this.speed = isMobileEasyModeActive() ? 3 * EASY_MODE_CONFIG.enemySpeedMultiplier : 3; this.active = true; // EASY MODE
+        const gameSpeed = getMobileGameSpeedMultiplier();
+        this.speed = isMobileEasyModeActive() ? 3 * EASY_MODE_CONFIG.enemySpeedMultiplier * gameSpeed : 3; this.active = true; // EASY MODE
         this.state = 'WALK';
         this.aniFrame = 0; this.lastFrameTime = 0; this.frameRate = 120; this.totalFrames = 6;
         const enemyShootIntervalMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyShootIntervalMultiplier : 1; // EASY MODE
@@ -537,8 +558,10 @@ class Enemy {
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 const speed = 7; // 탄환 속도
 
-                const vx = (dx / dist) * speed;
-                const vy = (dy / dist) * speed;
+                // 적 발체 속도 - 모바일에서 더 느리게
+                const enemyProjSpeedMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.gameSpeedMultiplier : 1.0;
+                const vx = (dx / dist) * speed * enemyProjSpeedMultiplier;
+                const vy = (dy / dist) * speed * enemyProjSpeedMultiplier;
 
                 const bullet = new Projectile(this.x, this.y + this.height / 2, vx, vy, 0);
                 bullet.isEnemyBullet = true; bullet.width = 16; bullet.height = 16;
@@ -951,7 +974,8 @@ class Boss {
         this.width = 200; this.height = 200; this.level = level;
         this.hp = 2500 * level + (level === 10 ? 15000 : 0); this.maxHp = this.hp;
         const bossMoveMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossMoveScaleMultiplier : 1; // EASY MODE
-        this.speedY = 3 + (level * 0.5 * bossMoveMultiplier); this.active = true; this.state = 'WALK'; // EASY MODE
+        const gameSpeed = getMobileGameSpeedMultiplier();
+        this.speedY = (3 + (level * 0.5)) * bossMoveMultiplier * gameSpeed; this.active = true; this.state = 'WALK'; // EASY MODE
         this.aniFrame = 0; this.lastFrameTime = 0; this.lastAttackTime = 0;
         this.deathHandled = false;
     }
@@ -989,11 +1013,16 @@ class Boss {
                     e.speed = 5 * summonEnemySpeedMultiplier; e.hp = Math.round(200 * summonEnemyHpMultiplier); enemies.push(e); // EASY MODE
                 }
             } else if (p < 0.7) {
-                const b = new Projectile(this.x, this.y + this.height / 2, -6, 0, 0);
-                b.isBossEnergyBall = true; b.lifeDamage = 3; b.width = 45; b.height = 45; projectiles.push(b);
+                // 보스 에너지 볼 - 모바일에서는 더 느리고 데미지 감소
+                const bossProjSpeed = isMobileEasyModeActive() ? 6 * EASY_MODE_CONFIG.bossProjectileSpeedMultiplier : 6;
+                const bossProjDamage = isMobileEasyModeActive() ? 2 : 3;
+                const b = new Projectile(this.x, this.y + this.height / 2, -bossProjSpeed, 0, 0);
+                b.isBossEnergyBall = true; b.lifeDamage = bossProjDamage; b.width = 45; b.height = 45; projectiles.push(b);
             } else {
+                // 보스 산탄 - 모바일에서는 속도 감소
+                const bossScatterSpeed = isMobileEasyModeActive() ? 8 * EASY_MODE_CONFIG.bossProjectileSpeedMultiplier : 8;
                 for (let i = -1; i <= 1; i++) {
-                    const b = new Projectile(this.x, this.y + this.height / 2, -8, i * 1.5, 0);
+                    const b = new Projectile(this.x, this.y + this.height / 2, -bossScatterSpeed, i * 1.5, 0);
                     b.isEnemyBullet = true; projectiles.push(b);
                 }
             }
