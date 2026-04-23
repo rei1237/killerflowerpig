@@ -1214,13 +1214,16 @@ resizeCanvas();
 function gameLoop(timestamp) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     updateInstallButtonVisibility();
-    if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT) {
-        Background.update(); Player.update(timestamp);
-        if (timestamp - gateSpawnTimer > GATE_SPAWN_INTERVAL) { gates.push(new GatePair(canvas.width + 50)); gateSpawnTimer = timestamp; }
+    if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT || currentState === GAME_STATE.STAGE_CLEAR) {
+        // STAGE_CLEAR일 때도 보스 업데이트 필요 (사망 애니메이션 완료)
+        if (currentState !== GAME_STATE.STAGE_CLEAR) {
+            Background.update(); Player.update(timestamp);
+        }
+        if (timestamp - gateSpawnTimer > GATE_SPAWN_INTERVAL && currentState !== GAME_STATE.STAGE_CLEAR) { gates.push(new GatePair(canvas.width + 50)); gateSpawnTimer = timestamp; }
         const stage = getCurrentStageData(); // EASY MODE
         if (timestamp - spawnTimer > stage.spawnRate && currentState === GAME_STATE.PLAYING && !boss) { spawnEnemyWave(); spawnTimer = timestamp; }
         if (boss) boss.update(timestamp);
-        for (let i = gates.length - 1; i >= 0; i--) { gates[i].update(); if (!gates[i].active) gates.splice(i, 1); }
+        for (let i = gates.length - 1; i >= 0; i--) { if (currentState !== GAME_STATE.STAGE_CLEAR) { gates[i].update(); if (!gates[i].active) gates.splice(i, 1); } }
         for (let i = projectiles.length - 1; i >= 0; i--) {
             const p = projectiles[i]; p.update(); if (!p.active) { projectiles.splice(i, 1); continue; }
 
