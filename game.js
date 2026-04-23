@@ -1301,18 +1301,41 @@ function drawStartScreen() {
         particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, 'rgba(46, 204, 113, 0.3)'));
     }
 
-    // 화면 크기에 따른 스케일 계산 (모바일 대응)
+    // 화면 크기에 따른 스케일 계산 (모바일 대응 개선)
     const isMobile = isMobileTouchDevice();
     const minDim = Math.min(canvas.width, canvas.height);
-    const scaleFactor = Math.min(1, minDim / 600); // 작은 화면에서는 비율 축소
+    const maxDim = Math.max(canvas.width, canvas.height);
+    const isPortrait = window.innerHeight > window.innerWidth;
+
+    // 모바일에서는 더 큰 최소 스케일 보장
+    let scaleFactor;
+    if (isMobile) {
+        if (isPortrait) {
+            // 세로 모드: 더 작은 스케일 사용
+            scaleFactor = Math.max(0.65, Math.min(0.85, minDim / 500));
+        } else {
+            // 가로 모드: 중간 스케일 사용
+            scaleFactor = Math.max(0.75, Math.min(1, minDim / 600));
+        }
+    } else {
+        // 데스크톱
+        scaleFactor = Math.min(1, minDim / 600);
+    }
+
+    // 화면 크기별 레이아웃 계산
+    const marginTop = isMobile ? 30 * scaleFactor : 50;
+    const contentSpacing = isMobile ? 20 * scaleFactor : 40;
 
     if (titleImg) {
         ctx.save();
         ctx.shadowBlur = 30;
         ctx.shadowColor = '#00ffff';
-        const w = 500 * pulse * scaleFactor;
+        const maxTitleW = isMobile ? Math.min(400 * scaleFactor, canvas.width * 0.9) : 500 * pulse * scaleFactor;
+        const w = maxTitleW;
         const h = (w / titleImg.width) * titleImg.height;
-        ctx.drawImage(titleImg, canvas.width / 2 - w / 2, canvas.height / 2 - h / 2 - 80 * scaleFactor, w, h);
+        // 모바일에서는 상단에 배치
+        const titleY = isMobile ? marginTop : canvas.height / 2 - h / 2 - 80 * scaleFactor;
+        ctx.drawImage(titleImg, canvas.width / 2 - w / 2, titleY, w, h);
         ctx.restore();
     }
 
@@ -1325,20 +1348,39 @@ function drawStartScreen() {
     ctx.shadowBlur = 30 * scaleFactor;
     ctx.shadowColor = '#e74c3c';
     ctx.fillStyle = '#fff';
-    ctx.font = `bold ${Math.floor(36 * scaleFactor)}px "Press Start 2P"`;
-    ctx.fillText('Yeon', canvas.width / 2, canvas.height / 2 + 30 * scaleFactor);
+    // 모바일에서 더 큰 폰트 크기 보장
+    const titleFontSize = isMobile ? Math.max(24, Math.floor(36 * scaleFactor)) : Math.floor(36 * scaleFactor);
+    ctx.font = `bold ${titleFontSize}px "Press Start 2P"`;
+    // 모바일에서는 타이틀 이미지 아래에 텍스트 배치
+    const textY = isMobile && titleImg ? marginTop + (350 * scaleFactor) + 20 * scaleFactor : canvas.height / 2 + 30 * scaleFactor;
+    ctx.fillText('Yeon', canvas.width / 2, textY);
 
-    ctx.font = `${Math.floor(13 * scaleFactor)}px "Press Start 2P"`;
+    const subtitleFontSize = isMobile ? Math.max(10, Math.floor(13 * scaleFactor)) : Math.floor(13 * scaleFactor);
+    ctx.font = `${subtitleFontSize}px "Press Start 2P"`;
     ctx.fillStyle = '#e74c3c';
     ctx.shadowBlur = 10 * scaleFactor;
-    ctx.fillText('THE KILLER OF BLUE ZOMBIE', canvas.width / 2, canvas.height / 2 + 80 * scaleFactor);
+    ctx.fillText('THE KILLER OF BLUE ZOMBIE', canvas.width / 2, textY + 40 * scaleFactor);
     ctx.restore();
 
     // 2D 도트 스타일 게임 가이드 패널
-    const panelW = Math.min(760 * scaleFactor, canvas.width * 0.9);
-    const panelH = Math.min(180 * scaleFactor, canvas.height * 0.25);
+    // 모바일에서는 패널 크기를 더 작게 조정
+    const panelW = isMobile ? canvas.width * 0.95 : Math.min(760 * scaleFactor, canvas.width * 0.9);
+    const panelH = isMobile ? Math.min(200 * scaleFactor, canvas.height * 0.35) : Math.min(180 * scaleFactor, canvas.height * 0.25);
     const panelX = canvas.width / 2 - panelW / 2;
-    const panelY = canvas.height - panelH - 40 * scaleFactor;
+    // 모바일에서는 타이틀 아래 또는 중앙 근처에 배치
+    let panelY;
+    if (isMobile) {
+        if (isPortrait) {
+            // 세로: 중앙에 배치
+            panelY = canvas.height / 2 - panelH / 2 + 20 * scaleFactor;
+        } else {
+            // 가로: 하단에 배치
+            panelY = canvas.height - panelH - 60 * scaleFactor;
+        }
+    } else {
+        // 데스크톱: 하단
+        panelY = canvas.height - panelH - 40 * scaleFactor;
+    }
     const pulseAlpha = 0.5 + Math.sin(time / 250) * 0.15;
 
     ctx.save();
@@ -1363,9 +1405,10 @@ function drawStartScreen() {
         ctx.fillRect(panelX + i + 8 * scaleFactor, panelY + panelH - 26 * scaleFactor, 4 * scaleFactor, 4 * scaleFactor);
     }
 
-    const fontSizeGuide = Math.max(7, Math.floor(10 * scaleFactor));
-    const fontSizeText = Math.max(6, Math.floor(8 * scaleFactor));
-    const lineHeight = Math.max(14, 22 * scaleFactor);
+    // 모바일에서 가독성 좋은 폰트 크기
+    const fontSizeGuide = isMobile ? Math.max(10, Math.floor(11 * scaleFactor)) : Math.max(7, Math.floor(10 * scaleFactor));
+    const fontSizeText = isMobile ? Math.max(9, Math.floor(10 * scaleFactor)) : Math.max(6, Math.floor(8 * scaleFactor));
+    const lineHeight = Math.max(18, 24 * scaleFactor);
 
     ctx.textAlign = 'left';
     ctx.fillStyle = '#f1c40f';
@@ -1375,26 +1418,45 @@ function drawStartScreen() {
     ctx.fillStyle = '#ffffff';
     ctx.font = `${fontSizeText}px "Press Start 2P"`;
     let lineY = panelY + 56 * scaleFactor;
-    ctx.fillText('- MOVE: MOUSE / TOUCH DRAG', panelX + 20 * scaleFactor, lineY);
-    lineY += lineHeight;
-    ctx.fillText('- ATTACK: AUTO FIRE', panelX + 20 * scaleFactor, lineY);
-    lineY += lineHeight;
-    ctx.fillText('- BOMB: DOUBLE TAP / SPACE', panelX + 20 * scaleFactor, lineY);
-    lineY += lineHeight;
-    ctx.fillText('- SURVIVE WAVES & DESTROY BOSS', panelX + 20 * scaleFactor, lineY);
-    lineY += lineHeight;
-    ctx.fillText('- PICK GATES TO GAIN BUFFS', panelX + 20 * scaleFactor, lineY);
+
+    // 모바일에서는 간단한 안내 텍스트 사용
+    if (isMobile && isPortrait) {
+        // 세로 모드: 간략한 가이드
+        ctx.fillText('- DRAG to Move', panelX + 20 * scaleFactor, lineY);
+        lineY += lineHeight;
+        ctx.fillText('- AUTO FIRE', panelX + 20 * scaleFactor, lineY);
+        lineY += lineHeight;
+        ctx.fillText('- DOUBLE TAP for BOMB', panelX + 20 * scaleFactor, lineY);
+        lineY += lineHeight;
+        ctx.fillText('- DEFEAT BOSS', panelX + 20 * scaleFactor, lineY);
+    } else {
+        // 가로/데스크톱: 전체 가이드
+        ctx.fillText('- MOVE: MOUSE / TOUCH DRAG', panelX + 20 * scaleFactor, lineY);
+        lineY += lineHeight;
+        ctx.fillText('- ATTACK: AUTO FIRE', panelX + 20 * scaleFactor, lineY);
+        lineY += lineHeight;
+        ctx.fillText('- BOMB: DOUBLE TAP / SPACE', panelX + 20 * scaleFactor, lineY);
+        lineY += lineHeight;
+        ctx.fillText('- SURVIVE WAVES & DESTROY BOSS', panelX + 20 * scaleFactor, lineY);
+        lineY += lineHeight;
+        ctx.fillText('- PICK GATES TO GAIN BUFFS', panelX + 20 * scaleFactor, lineY);
+    }
     ctx.restore();
 
     // 스캔라인 효과
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     for (let i = 0; i < canvas.height; i += 4) ctx.fillRect(0, i, canvas.width, 1);
 
+    // 시작 버튼 텍스트 - 모바일에서 더 크게
     const blink = Math.sin(time / 300) > 0;
     if (blink) {
-        const startFontSize = Math.max(12, Math.floor(16 * scaleFactor));
-        ctx.fillStyle = '#fff'; ctx.font = `${startFontSize}px "Press Start 2P"`; ctx.textAlign = 'center';
-        ctx.fillText(isMobile ? 'TAP TO START' : 'CLICK TO START', canvas.width / 2, canvas.height / 2 + 180 * scaleFactor);
+        const startFontSize = isMobile ? Math.max(16, Math.floor(20 * scaleFactor)) : Math.max(12, Math.floor(16 * scaleFactor));
+        ctx.fillStyle = '#fff';
+        ctx.font = `${startFontSize}px "Press Start 2P"`;
+        ctx.textAlign = 'center';
+        // 모바일에서는 하단에 배치
+        const startTextY = isMobile ? canvas.height - 30 * scaleFactor : canvas.height / 2 + 180 * scaleFactor;
+        ctx.fillText(isMobile ? '>>> TAP TO START <<<' : 'CLICK TO START', canvas.width / 2, startTextY);
     }
 }
 
