@@ -172,8 +172,92 @@ function enterMobileFullscreen() {
 
 function updateInstallButtonVisibility() { // MOBILE LANDSCAPE
     if (!installButton) return;
-    const shouldShow = currentState === GAME_STATE.START && !!deferredInstallPrompt;
+    // PWA 설치 가능하거나 이미 설치된 경우에도 버튼 표시 (가이드용)
+    const shouldShow = currentState === GAME_STATE.START && (deferredInstallPrompt || !isPWAInstalled());
     installButton.hidden = !shouldShow;
+}
+
+function updateDownloadButtonVisibility() {
+    if (!downloadButton) return;
+    // 항상 표시 (오프라인 저장 기능)
+    downloadButton.hidden = currentState !== GAME_STATE.START;
+}
+
+// PWA가 이미 설치되었는지 확인
+function isPWAInstalled() {
+    // display-mode가 standalone이나 fullscreen이면 설치된 것
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+        return true;
+    }
+    // iOS의 경우 navigator.standalone으로 확인
+    if (navigator.standalone === true) {
+        return true;
+    }
+    return false;
+}
+
+// 설치 가이드 모달 표시
+function showInstallGuide() {
+    const modal = document.getElementById('install-guide');
+    const mobileGuide = document.getElementById('install-mobile-guide');
+    const desktopGuide = document.getElementById('install-desktop-guide');
+    const installedMsg = document.getElementById('install-installed-msg');
+
+    if (!modal) return;
+
+    // 이미 설치된 경우
+    if (isPWAInstalled()) {
+        mobileGuide.hidden = true;
+        desktopGuide.hidden = true;
+        installedMsg.hidden = false;
+    }
+    // 모바일/태블릿
+    else if (isMobileTouchDevice()) {
+        mobileGuide.hidden = false;
+        desktopGuide.hidden = true;
+        installedMsg.hidden = true;
+    }
+    // 데스크톱
+    else {
+        mobileGuide.hidden = true;
+        desktopGuide.hidden = false;
+        installedMsg.hidden = true;
+    }
+
+    modal.hidden = false;
+}
+
+function hideInstallGuide() {
+    const modal = document.getElementById('install-guide');
+    if (modal) modal.hidden = true;
+}
+
+// 실제 PWA 설치 시도
+async function installPWA() {
+    // 이미 설치된 경우 가이드만 표시
+    if (isPWAInstalled()) {
+        showInstallGuide();
+        return;
+    }
+
+    // 설치 프롬프트가 있는 경우 (Chrome/Android)
+    if (deferredInstallPrompt) {
+        try {
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            if (outcome === 'accepted') {
+                console.log('PWA installed successfully');
+                deferredInstallPrompt = null;
+            }
+        } catch (error) {
+            console.error('Install failed:', error);
+            showInstallGuide();
+        }
+    }
+    // iOS Safari나 설치 프롬프트가 없는 경우 가이드 표시
+    else {
+        showInstallGuide();
+    }
 }
 
 function updateMainMenuVisibility() {
@@ -302,13 +386,16 @@ function loadJSZip() {
 }
 
 if (installButton) {
-    installButton.addEventListener('click', async () => {
-        if (!deferredInstallPrompt) return;
-        deferredInstallPrompt.prompt();
-        await deferredInstallPrompt.userChoice;
-        deferredInstallPrompt = null;
-        updateInstallButtonVisibility();
+    installButton.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await installPWA();
     });
+}
+
+// 설치 가이드 닫기 버튼
+const closeInstallGuideBtn = document.getElementById('close-install-guide');
+if (closeInstallGuideBtn) {
+    closeInstallGuideBtn.addEventListener('click', hideInstallGuide);
 }
 
 // 게임 시작 버튼 이벤트
@@ -319,7 +406,7 @@ if (startButton) {
     });
 }
 
-// 다운로드 버튼 이벤트
+// 다운로드 버튼 이벤트 (오프라인 ZIP 저장)
 if (downloadButton) {
     downloadButton.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -331,14 +418,24 @@ window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredInstallPrompt = event;
     updateInstallButtonVisibility();
+    updateDownloadButtonVisibility();
     // PWA 설치 가능할 때 INSTALL 버튼 표시
     if (installButton) installButton.hidden = false;
+    // 설치 완료 알림
+    addFloatingText('📲 Ready to Install!', canvas.width / 2, canvas.height / 2 - 100, '#2ecc71');
 });
 
 window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
     updateInstallButtonVisibility();
+    // 설치 완료 축하 메시지
+    addFloatingText('✅ Game Installed!', canvas.width / 2, canvas.height / 2 - 100, '#2ecc71');
 });
+
+// 이미 설치된 상태 확인 및 버튼 업데이트
+if (isPWAInstalled()) {
+    console.log('PWA is already installed');
+}
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -1366,6 +1463,7 @@ resizeCanvas();
 function gameLoop(timestamp) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     updateInstallButtonVisibility();
+    updateDownloadButtonVisibility();
     if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT || currentState === GAME_STATE.STAGE_CLEAR) {
         // STAGE_CLEAR일 때도 보스 업데이트 필요 (사망 애니메이션 완료)
         if (currentState !== GAME_STATE.STAGE_CLEAR) {
@@ -1863,5 +1961,12 @@ function addFloatingText(text, x, y, color) {
     floatingTexts.push({ text, x, y, color, life: 1.0 });
 }
 
-async function init() { await ImageLoader.loadAllAssets(); Player.init(); updateMainMenuVisibility(); requestAnimationFrame(gameLoop); }
+async function init() {
+    await ImageLoader.loadAllAssets();
+    Player.init();
+    updateMainMenuVisibility();
+    updateInstallButtonVisibility();
+    updateDownloadButtonVisibility();
+    requestAnimationFrame(gameLoop);
+}
 init();

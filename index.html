@@ -19,8 +19,39 @@
         <!-- 메인 화면 UI 버튼들 -->
         <div id="main-menu-buttons" class="main-menu-overlay" hidden>
             <button id="start-btn" type="button" class="pixel-btn primary">START GAME</button>
-            <button id="install-btn" type="button" class="pixel-btn secondary" hidden>INSTALL APP</button>
-            <button id="download-btn" type="button" class="pixel-btn secondary">DOWNLOAD GAME</button>
+            <button id="install-btn" type="button" class="pixel-btn install" hidden>
+                <span class="btn-icon">📲</span> INSTALL GAME
+            </button>
+            <button id="download-btn" type="button" class="pixel-btn secondary" hidden>
+                <span class="btn-icon">💾</span> SAVE OFFLINE
+            </button>
+        </div>
+        <!-- 설치 가이드 모달 -->
+        <div id="install-guide" class="modal-overlay" hidden>
+            <div class="modal-content">
+                <h2>INSTALL GAME</h2>
+                <div id="install-mobile-guide" hidden>
+                    <p>📱 <strong>Add to Home Screen</strong></p>
+                    <ol>
+                        <li>Tap the <strong>Share</strong> button in your browser</li>
+                        <li>Select <strong>"Add to Home Screen"</strong></li>
+                        <li>Tap <strong>Add</strong></li>
+                    </ol>
+                </div>
+                <div id="install-desktop-guide" hidden>
+                    <p>💻 <strong>Install as App</strong></p>
+                    <ol>
+                        <li>Click the <strong>➕ Install</strong> icon in address bar</li>
+                        <li>Or press <strong>Ctrl+Shift+S</strong> (Chrome)</li>
+                        <li>Click <strong>Install</strong></li>
+                    </ol>
+                </div>
+                <div id="install-installed-msg" hidden>
+                    <p>✅ <strong>Already Installed!</strong></p>
+                    <p>Check your home screen or app launcher.</p>
+                </div>
+                <button id="close-install-guide" class="pixel-btn secondary">CLOSE</button>
+            </div>
         </div>
     </div>
     <script src="game.js"></script>
