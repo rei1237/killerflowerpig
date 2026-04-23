@@ -5,12 +5,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Yeon the killer of blue zombie</title>
+    
+    <!-- 캐시 방지 메타 태그 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- 모바일/앱 설정 -->
     <meta name="theme-color" content="#0a0a0c">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="manifest.webmanifest?v=2">
+    <meta name="apple-mobile-web-app-title" content="Yeon Zombie">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Yeon Zombie">
+    
+    <!-- 링크 -->
+    <link rel="manifest" href="manifest.webmanifest?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
+    
+    <!-- PWA 캐시 초기화 스크립트 -->
+    <script>
+        // Service Worker 업데이트 강제
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                registrations.forEach(registration => {
+                    registration.update();
+                });
+            });
+        }
+    </script>
 </head>
 
 <body>
@@ -51,7 +75,7 @@
             </div>
         </div>
     </div>
-    <script src="game.js?v=2"></script>
+    <script src="game.js?v=3"></script>
 </body>
 
 </html>

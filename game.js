@@ -163,10 +163,20 @@ function enterMobileFullscreen() {
     const root = document.documentElement;
     if (document.fullscreenElement || !root.requestFullscreen) return;
 
-    // 가로 모드일 때만 전체화면 요청 (사용자 경험 개선)
-    if (isMobileLandscapeOrientation()) {
+    // 메인 화면이나 가로 모드일 때 전체화면 요청
+    root.requestFullscreen().catch(() => { });
+}
+
+// 모바일 메인 화면 즉시 전체화면
+function requestMobileMainFullscreen() {
+    if (!isMobileTouchDevice()) return;
+    const root = document.documentElement;
+    if (document.fullscreenElement || !root.requestFullscreen) return;
+    
+    // 약간의 지연 후 전체화면 요청 (브라우저 제한 우회)
+    setTimeout(() => {
         root.requestFullscreen().catch(() => { });
-    }
+    }, 100);
 }
 
 function updateInstallButtonVisibility() { // MOBILE LANDSCAPE
@@ -1849,6 +1859,24 @@ async function init() {
     Player.init();
     updateMainMenuVisibility();
     updateInstallButtonVisibility();
+    
+    // 모바일 메인 화면 즉시 전체화면
+    requestMobileMainFullscreen();
+    
     requestAnimationFrame(gameLoop);
 }
 init();
+
+// 모바일 진입 시 자동 전체화면 이벤트
+if (isMobileTouchDevice()) {
+    window.addEventListener('load', () => {
+        requestMobileMainFullscreen();
+    });
+    
+    // 첫 터치 시에도 전체화면 요청
+    document.addEventListener('touchstart', () => {
+        if (currentState === GAME_STATE.START && !document.fullscreenElement) {
+            requestMobileMainFullscreen();
+        }
+    }, { once: true });
+}
