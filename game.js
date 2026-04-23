@@ -12,7 +12,6 @@ const ctx = canvas.getContext('2d');
 const gameContainer = document.getElementById('game-container');
 const installButton = document.getElementById('install-btn');
 const startButton = document.getElementById('start-btn');
-const downloadButton = document.getElementById('download-btn');
 const mainMenuButtons = document.getElementById('main-menu-buttons');
 const MOBILE_OPTIMIZED_CLASS = 'mobile-optimized';
 let deferredInstallPrompt = null;
@@ -177,12 +176,6 @@ function updateInstallButtonVisibility() { // MOBILE LANDSCAPE
     installButton.hidden = !shouldShow;
 }
 
-function updateDownloadButtonVisibility() {
-    if (!downloadButton) return;
-    // 항상 표시 (오프라인 저장 기능)
-    downloadButton.hidden = currentState !== GAME_STATE.START;
-}
-
 // PWA가 이미 설치되었는지 확인
 function isPWAInstalled() {
     // display-mode가 standalone이나 fullscreen이면 설치된 것
@@ -278,113 +271,6 @@ function startGame() {
     updateMainMenuVisibility();
 }
 
-// 게임 다운로드 함수 (ZIP 파일 다운로드)
-async function downloadGame() {
-    // 다운로드 시작 알림
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0,0,0,0.9);
-        color: #00ffff;
-        padding: 20px 30px;
-        border: 3px solid #00ffff;
-        font-family: 'Press Start 2P', cursive;
-        font-size: 12px;
-        z-index: 1000;
-        text-align: center;
-    `;
-    notification.innerHTML = '📦 PREPARING DOWNLOAD...<br><span style="font-size: 10px; color: #f1c40f;">Please wait</span>';
-    document.body.appendChild(notification);
-
-    try {
-        // 현재 게임 파일들을 ZIP으로 묶어 다운로드
-        const JSZip = await loadJSZip();
-        const zip = new JSZip();
-        
-        // 게임 파일들 추가
-        const files = [
-            'index.html',
-            'game.js',
-            'style.css',
-            'manifest.webmanifest',
-            'service-worker.js'
-        ];
-        
-        for (const file of files) {
-            try {
-                const response = await fetch(file);
-                if (response.ok) {
-                    const content = await response.text();
-                    zip.file(file, content);
-                }
-            } catch (e) {
-                console.log('Could not add file:', file);
-            }
-        }
-        
-        // asset 폴더 파일들 추가
-        const assetFiles = [
-            'asset/꽃돼지 the killer of zombie.png',
-            'asset/꽃돼지 총.png',
-            'asset/꽃돼지 승리.png',
-            'asset/게임오버.png',
-            'asset/청토끼.png',
-            'asset/청토끼 보스.png',
-            'asset/freepik-silent-ops.mp3'
-        ];
-        
-        for (const file of assetFiles) {
-            try {
-                const response = await fetch(file);
-                if (response.ok) {
-                    const blob = await response.blob();
-                    zip.file(file, blob);
-                }
-            } catch (e) {
-                console.log('Could not add asset:', file);
-            }
-        }
-        
-        // ZIP 생성 및 다운로드
-        const content = await zip.generateAsync({type: 'blob'});
-        const url = URL.createObjectURL(content);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'yeon-killer-of-blue-zombie.zip';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        notification.innerHTML = '✅ DOWNLOAD COMPLETE!<br><span style="font-size: 10px; color: #2ecc71;">Check your downloads</span>';
-    } catch (error) {
-        notification.innerHTML = '❌ DOWNLOAD FAILED<br><span style="font-size: 10px; color: #e74c3c;">Please try again</span>';
-        console.error('Download error:', error);
-    }
-    
-    setTimeout(() => {
-        document.body.removeChild(notification);
-    }, 3000);
-}
-
-// JSZip 라이브러리 로드
-function loadJSZip() {
-    return new Promise((resolve, reject) => {
-        if (window.JSZip) {
-            resolve(window.JSZip);
-            return;
-        }
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-        script.onload = () => resolve(window.JSZip);
-        script.onerror = () => reject(new Error('Failed to load JSZip'));
-        document.head.appendChild(script);
-    });
-}
-
 if (installButton) {
     installButton.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -406,19 +292,10 @@ if (startButton) {
     });
 }
 
-// 다운로드 버튼 이벤트 (오프라인 ZIP 저장)
-if (downloadButton) {
-    downloadButton.addEventListener('click', (e) => {
-        e.stopPropagation();
-        downloadGame();
-    });
-}
-
 window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredInstallPrompt = event;
     updateInstallButtonVisibility();
-    updateDownloadButtonVisibility();
     // PWA 설치 가능할 때 INSTALL 버튼 표시
     if (installButton) installButton.hidden = false;
     // 설치 완료 알림
@@ -1463,7 +1340,6 @@ resizeCanvas();
 function gameLoop(timestamp) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     updateInstallButtonVisibility();
-    updateDownloadButtonVisibility();
     if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT || currentState === GAME_STATE.STAGE_CLEAR) {
         // STAGE_CLEAR일 때도 보스 업데이트 필요 (사망 애니메이션 완료)
         if (currentState !== GAME_STATE.STAGE_CLEAR) {
@@ -1966,7 +1842,6 @@ async function init() {
     Player.init();
     updateMainMenuVisibility();
     updateInstallButtonVisibility();
-    updateDownloadButtonVisibility();
     requestAnimationFrame(gameLoop);
 }
 init();
