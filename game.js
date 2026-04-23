@@ -11,6 +11,9 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const gameContainer = document.getElementById('game-container');
 const installButton = document.getElementById('install-btn');
+const startButton = document.getElementById('start-btn');
+const downloadButton = document.getElementById('download-btn');
+const mainMenuButtons = document.getElementById('main-menu-buttons');
 const MOBILE_OPTIMIZED_CLASS = 'mobile-optimized';
 let deferredInstallPrompt = null;
 
@@ -173,8 +176,132 @@ function updateInstallButtonVisibility() { // MOBILE LANDSCAPE
     installButton.hidden = !shouldShow;
 }
 
+function updateMainMenuVisibility() {
+    if (!mainMenuButtons) return;
+    const shouldShow = currentState === GAME_STATE.START;
+    mainMenuButtons.hidden = !shouldShow;
+}
+
+// 게임 시작 함수
+function startGame() {
+    if (currentState !== GAME_STATE.START) return;
+    enterMobileFullscreen();
+    AudioManager.init();
+    AudioManager.startBGM();
+    currentState = GAME_STATE.PLAYING;
+    storyTypingIndex = 0;
+    storyDisplayTime = Date.now();
+    updateMainMenuVisibility();
+}
+
+// 게임 다운로드 함수 (ZIP 파일 다운로드)
+async function downloadGame() {
+    // 다운로드 시작 알림
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.9);
+        color: #00ffff;
+        padding: 20px 30px;
+        border: 3px solid #00ffff;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 12px;
+        z-index: 1000;
+        text-align: center;
+    `;
+    notification.innerHTML = '📦 PREPARING DOWNLOAD...<br><span style="font-size: 10px; color: #f1c40f;">Please wait</span>';
+    document.body.appendChild(notification);
+
+    try {
+        // 현재 게임 파일들을 ZIP으로 묶어 다운로드
+        const JSZip = await loadJSZip();
+        const zip = new JSZip();
+        
+        // 게임 파일들 추가
+        const files = [
+            'index.html',
+            'game.js',
+            'style.css',
+            'manifest.webmanifest',
+            'service-worker.js'
+        ];
+        
+        for (const file of files) {
+            try {
+                const response = await fetch(file);
+                if (response.ok) {
+                    const content = await response.text();
+                    zip.file(file, content);
+                }
+            } catch (e) {
+                console.log('Could not add file:', file);
+            }
+        }
+        
+        // asset 폴더 파일들 추가
+        const assetFiles = [
+            'asset/꽃돼지 the killer of zombie.png',
+            'asset/꽃돼지 총.png',
+            'asset/꽃돼지 승리.png',
+            'asset/게임오버.png',
+            'asset/청토끼.png',
+            'asset/청토끼 보스.png',
+            'asset/freepik-silent-ops.mp3'
+        ];
+        
+        for (const file of assetFiles) {
+            try {
+                const response = await fetch(file);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    zip.file(file, blob);
+                }
+            } catch (e) {
+                console.log('Could not add asset:', file);
+            }
+        }
+        
+        // ZIP 생성 및 다운로드
+        const content = await zip.generateAsync({type: 'blob'});
+        const url = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'yeon-killer-of-blue-zombie.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        notification.innerHTML = '✅ DOWNLOAD COMPLETE!<br><span style="font-size: 10px; color: #2ecc71;">Check your downloads</span>';
+    } catch (error) {
+        notification.innerHTML = '❌ DOWNLOAD FAILED<br><span style="font-size: 10px; color: #e74c3c;">Please try again</span>';
+        console.error('Download error:', error);
+    }
+    
+    setTimeout(() => {
+        document.body.removeChild(notification);
+    }, 3000);
+}
+
+// JSZip 라이브러리 로드
+function loadJSZip() {
+    return new Promise((resolve, reject) => {
+        if (window.JSZip) {
+            resolve(window.JSZip);
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        script.onload = () => resolve(window.JSZip);
+        script.onerror = () => reject(new Error('Failed to load JSZip'));
+        document.head.appendChild(script);
+    });
+}
+
 if (installButton) {
-    installButton.hidden = true;
     installButton.addEventListener('click', async () => {
         if (!deferredInstallPrompt) return;
         deferredInstallPrompt.prompt();
@@ -184,10 +311,28 @@ if (installButton) {
     });
 }
 
+// 게임 시작 버튼 이벤트
+if (startButton) {
+    startButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        startGame();
+    });
+}
+
+// 다운로드 버튼 이벤트
+if (downloadButton) {
+    downloadButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        downloadGame();
+    });
+}
+
 window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredInstallPrompt = event;
     updateInstallButtonVisibility();
+    // PWA 설치 가능할 때 INSTALL 버튼 표시
+    if (installButton) installButton.hidden = false;
 });
 
 window.addEventListener('appinstalled', () => {
@@ -1103,7 +1248,7 @@ function endGame() {
     if (currentState !== GAME_STATE.GAME_OVER) gameOverStartTime = Date.now();
     currentState = GAME_STATE.GAME_OVER;
 }
-function resetGame() { projectiles = []; enemies = []; particles = []; gates = []; currentStage = 1; enemiesKilled = 0; boss = null; currentState = GAME_STATE.PLAYING; gameOverStartTime = 0; Player.init(); }
+function resetGame() { projectiles = []; enemies = []; particles = []; gates = []; currentStage = 1; enemiesKilled = 0; boss = null; currentState = GAME_STATE.PLAYING; gameOverStartTime = 0; Player.init(); updateMainMenuVisibility(); }
 
 function createBombExplosion() {
     const cx = canvas.width / 2; const cy = canvas.height / 2;
@@ -1134,14 +1279,15 @@ function useBomb() {
 }
 
 window.addEventListener('mousemove', (e) => Player.targetY = e.clientY - Player.height / 2);
+// 데스크톱 클릭 처리 (START 상태에서는 버튼만 작동)
 window.addEventListener('mousedown', () => {
+    if (currentState === GAME_STATE.START) {
+        // START 상태에서는 버튼 클릭만 처리 (자동 시작 안함)
+        return;
+    }
     enterMobileFullscreen();
     AudioManager.init(); AudioManager.startBGM();
-    if (currentState === GAME_STATE.START) {
-        currentState = GAME_STATE.PLAYING;
-        storyTypingIndex = 0; storyDisplayTime = Date.now();
-    }
-    else if (currentState === GAME_STATE.GAME_OVER || currentState === GAME_STATE.WIN) resetGame();
+    if (currentState === GAME_STATE.GAME_OVER || currentState === GAME_STATE.WIN) resetGame();
     else if (currentState === GAME_STATE.STAGE_CLEAR) advanceStage();
 });
 
@@ -1157,15 +1303,16 @@ window.addEventListener('dblclick', (e) => {
 let lastTapTime = 0;
 
 window.addEventListener('touchstart', (e) => {
+    if (currentState === GAME_STATE.START) {
+        // START 상태에서는 버튼 클릭만 처리 (자동 시작 안함)
+        return;
+    }
+
     enterMobileFullscreen();
     AudioManager.init(); AudioManager.startBGM();
-    
+
     // 상태 전환 로직
-    if (currentState === GAME_STATE.START) {
-        currentState = GAME_STATE.PLAYING;
-        storyTypingIndex = 0; storyDisplayTime = Date.now();
-    }
-    else if (currentState === GAME_STATE.GAME_OVER || currentState === GAME_STATE.WIN) resetGame();
+    if (currentState === GAME_STATE.GAME_OVER || currentState === GAME_STATE.WIN) resetGame();
     else if (currentState === GAME_STATE.STAGE_CLEAR) advanceStage();
 
     // 더블 탭 감지 (폭탄 사용)
@@ -1469,17 +1616,7 @@ function drawStartScreen() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     for (let i = 0; i < canvas.height; i += 4) ctx.fillRect(0, i, canvas.width, 1);
 
-    // 시작 버튼 텍스트 - 모바일에서 더 크게
-    const blink = Math.sin(time / 300) > 0;
-    if (blink) {
-        const startFontSize = isMobile ? Math.max(16, Math.floor(20 * scaleFactor)) : Math.max(12, Math.floor(16 * scaleFactor));
-        ctx.fillStyle = '#fff';
-        ctx.font = `${startFontSize}px "Press Start 2P"`;
-        ctx.textAlign = 'center';
-        // 모바일에서는 하단에 배치
-        const startTextY = isMobile ? canvas.height - 30 * scaleFactor : canvas.height / 2 + 180 * scaleFactor;
-        ctx.fillText(isMobile ? '>>> TAP TO START <<<' : 'CLICK TO START', canvas.width / 2, startTextY);
-    }
+    // 메인 메뉴 버튼은 HTML 오버레이로 표시됨 (drawStartScreen 외부)
 }
 
 function drawWinScreen() {
@@ -1726,5 +1863,5 @@ function addFloatingText(text, x, y, color) {
     floatingTexts.push({ text, x, y, color, life: 1.0 });
 }
 
-async function init() { await ImageLoader.loadAllAssets(); Player.init(); requestAnimationFrame(gameLoop); }
+async function init() { await ImageLoader.loadAllAssets(); Player.init(); updateMainMenuVisibility(); requestAnimationFrame(gameLoop); }
 init();
