@@ -96,36 +96,38 @@ html {
     padding: 11px 14px;
 }
 
-/* 메인 메뉴 버튼 오버레이 */
+/* 메인 메뉴 버튼 컨테이너 */
 .main-menu-overlay {
     position: absolute;
-    bottom: 8%;
+    bottom: 5%;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    z-index: 100;
     align-items: center;
-    width: 100%;
-    max-width: 400px;
+    gap: 20px;
+    z-index: 200;
 }
 
 .main-menu-overlay[hidden] {
     display: none !important;
 }
 
-/* START 버튼 - 최상단 */
-#start-btn {
-    order: 1;
-    z-index: 101;
+/* 버튼 기본 설정 */
+.main-menu-overlay .pixel-btn {
+    display: inline-block;
+    position: static;
+    margin: 0;
 }
 
-/* INSTALL 버튼 - START 버튼 아래 */
+/* START 버튼 - 메인 버튼 */
+#start-btn {
+    order: 1;
+}
+
+/* INSTALL 버튼 - 보조 버튼 (START 아래) */
 #install-btn {
     order: 2;
-    z-index: 100;
-    margin-top: 8px;
 }
 
 /* 픽셀 아트 스타일 버튼 - 게임 톤앤매너에 맞게 */
@@ -234,8 +236,8 @@ html {
 /* 모바일 대응 */
 @media screen and (max-width: 768px) {
     .main-menu-overlay {
-        bottom: 20%;
-        gap: 12px;
+        bottom: 3%;
+        gap: 16px;
     }
     
     .pixel-btn {
@@ -247,12 +249,18 @@ html {
         padding: 10px 20px;
         font-size: 9px;
     }
+    
+    .pixel-btn.install {
+        padding: 8px 20px;
+        font-size: 9px;
+    }
 }
 
 /* 세로 모드 대응 */
 @media screen and (orientation: portrait) and (max-width: 768px) {
     .main-menu-overlay {
-        bottom: 25%;
+        bottom: 2%;
+        gap: 12px;
     }
 }
 
