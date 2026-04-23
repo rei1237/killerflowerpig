@@ -12,7 +12,8 @@ const ctx = canvas.getContext('2d');
 const gameContainer = document.getElementById('game-container');
 const installButton = document.getElementById('install-btn');
 const startButton = document.getElementById('start-btn');
-const mainMenuButtons = document.getElementById('main-menu-buttons');
+const startBtnContainer = document.getElementById('start-btn-container');
+const installBtnContainer = document.getElementById('install-btn-container');
 const MOBILE_OPTIMIZED_CLASS = 'mobile-optimized';
 let deferredInstallPrompt = null;
 
@@ -173,22 +174,46 @@ function requestMobileMainFullscreen() {
     const root = document.documentElement;
     if (document.fullscreenElement || !root.requestFullscreen) return;
     
-    // 약간의 지연 후 전체화면 요청 (브라우저 제한 우회)
-    setTimeout(() => {
-        root.requestFullscreen().catch(() => { });
-    }, 100);
+    // 즉시 전체화면 요청
+    root.requestFullscreen().catch(() => { });
+}
+
+// 모바일 가로 모드 감지 및 자동 전체화면
+function handleMobileOrientation() {
+    if (!isMobileTouchDevice()) return;
+    
+    const isLandscape = window.orientation === 90 || window.orientation === -90 || 
+                        (window.innerWidth > window.innerHeight);
+    
+    if (isLandscape) {
+        // 가로 모드일 때 전체화면
+        enterMobileFullscreen();
+    }
+}
+
+// 화면 방향 변경 감지
+if (isMobileTouchDevice()) {
+    window.addEventListener('orientationchange', () => {
+        setTimeout(handleMobileOrientation, 100);
+    });
+    
+    // 리사이즈도 감지 (방향 변경 감지 보조)
+    window.addEventListener('resize', () => {
+        handleMobileOrientation();
+    });
 }
 
 function updateInstallButtonVisibility() { // MOBILE LANDSCAPE
-    if (!installButton) return;
     // START 상태에서만 버튼 표시, 게임 중에는 무조건 숨김
     if (currentState !== GAME_STATE.START) {
-        installButton.hidden = true;
+        if (installButton) installButton.hidden = true;
+        if (installBtnContainer) installBtnContainer.hidden = true;
         return;
     }
     // PWA 설치 가능하거나 이미 설치된 경우에 표시 (가이드용)
     const shouldShow = deferredInstallPrompt || !isPWAInstalled();
-    installButton.hidden = !shouldShow;
+    if (installButton) installButton.hidden = !shouldShow;
+    // installBtnContainer는 updateMainMenuVisibility에서 관리
 }
 
 // PWA가 이미 설치되었는지 확인
@@ -269,9 +294,10 @@ async function installPWA() {
 }
 
 function updateMainMenuVisibility() {
-    if (!mainMenuButtons) return;
+    // 개별 버튼 컨테이너 가시성 업데이트
     const shouldShow = currentState === GAME_STATE.START;
-    mainMenuButtons.hidden = !shouldShow;
+    if (startBtnContainer) startBtnContainer.hidden = !shouldShow;
+    if (installBtnContainer) installBtnContainer.hidden = !shouldShow;
 }
 
 // 게임 시작 함수
@@ -1861,19 +1887,17 @@ async function init() {
     updateInstallButtonVisibility();
     
     // 모바일 메인 화면 즉시 전체화면
-    requestMobileMainFullscreen();
+    if (isMobileTouchDevice()) {
+        requestMobileMainFullscreen();
+        handleMobileOrientation();
+    }
     
     requestAnimationFrame(gameLoop);
 }
 init();
 
-// 모바일 진입 시 자동 전체화면 이벤트
+// 모바일 첫 터치 시 전체화면
 if (isMobileTouchDevice()) {
-    window.addEventListener('load', () => {
-        requestMobileMainFullscreen();
-    });
-    
-    // 첫 터치 시에도 전체화면 요청
     document.addEventListener('touchstart', () => {
         if (currentState === GAME_STATE.START && !document.fullscreenElement) {
             requestMobileMainFullscreen();

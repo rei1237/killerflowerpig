@@ -40,9 +40,11 @@
 <body>
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
-        <!-- 메인 화면 UI 버튼들 -->
-        <div id="main-menu-buttons" class="main-menu-overlay" hidden>
+        <!-- 메인 화면 UI 버튼들 - 개별 위치 조정 -->
+        <div id="start-btn-container" class="btn-container start-container" hidden>
             <button id="start-btn" type="button" class="pixel-btn primary">START GAME</button>
+        </div>
+        <div id="install-btn-container" class="btn-container install-container" hidden>
             <button id="install-btn" type="button" class="pixel-btn install" hidden>
                 <span class="btn-icon">📲</span> INSTALL GAME
             </button>

@@ -97,70 +97,96 @@ html {
 }
 
 /* ==========================================
-   메인 메뉴 버튼 컨테이너 
+   개별 버튼 컨테이너 - MISSION GUIDE 아래 배치
    ========================================== */
-.main-menu-overlay {
+
+/* 버튼 컨테이너 기본 - z-index 최상위 */
+.btn-container {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    z-index: 200;
-    width: 100%;
+    z-index: 1000 !important;
     pointer-events: none;
 }
 
-.main-menu-overlay[hidden] {
+.btn-container[hidden] {
     display: none !important;
 }
 
-/* 버튼 기본 설정 */
-.main-menu-overlay .pixel-btn {
-    display: block;
-    position: relative;
+.btn-container .pixel-btn {
     pointer-events: auto;
-    margin: 0;
-}
-
-/* START 버튼 - 위에 배치 */
-#start-btn {
-    order: 1;
-}
-
-/* INSTALL 버튼 - START 버튼 아래 배치 */
-#install-btn {
-    order: 2;
 }
 
 /* ==========================================
-   데스크톱 - MISSION GUIDE 하단용
+   데스크톱 - 꽃돼지 옆에 배치
    ========================================== */
 @media screen and (min-width: 769px) {
-    .main-menu-overlay {
+    /* START 버튼 - 화면 하단 중앙 */
+    .start-container {
         bottom: 8%;
-        gap: 15px;
+        left: 50%;
+        transform: translateX(-50%);
     }
     
     #start-btn {
-        padding: 20px 40px;
-        font-size: 16px;
+        padding: 18px 36px;
+        font-size: 15px;
+    }
+    
+    /* INSTALL 버튼 - 꽃돼지 우측에 배치 */
+    .install-container {
+        bottom: auto;
+        top: 45%;
+        left: auto;
+        right: 15%;
+        transform: translateY(-50%);
     }
     
     #install-btn {
-        padding: 12px 28px;
-        font-size: 11px;
+        padding: 12px 20px;
+        font-size: 10px;
+        white-space: nowrap;
     }
 }
 
 /* ==========================================
-   모바일 가로 모드 - MISSION GUIDE 하단용
+   모바일 가로 모드 - MISSION GUIDE 아래 배치
    ========================================== */
 @media screen and (max-width: 768px) and (orientation: landscape) {
-    .main-menu-overlay {
-        bottom: 5%;
-        gap: 8px;
+    /* START 버튼 - 화면 하단 중앙 */
+    .start-container {
+        bottom: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    #start-btn {
+        padding: 12px 24px;
+        font-size: 11px;
+    }
+    
+    /* INSTALL 버튼 - START 버튼 아래 */
+    .install-container {
+        bottom: 3%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    #install-btn {
+        padding: 8px 16px;
+        font-size: 9px;
+    }
+}
+
+/* ==========================================
+   모바일 세로 모드 - MISSION GUIDE 아래 배치
+   ========================================== */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+    /* START 버튼 - 화면 하단 중앙 */
+    .start-container {
+        bottom: 15%;
+        left: 50%;
+        transform: translateX(-50%);
     }
     
     #start-btn {
@@ -168,29 +194,16 @@ html {
         font-size: 12px;
     }
     
-    #install-btn {
-        padding: 8px 18px;
-        font-size: 9px;
-    }
-}
-
-/* ==========================================
-   모바일 세로 모드 - MISSION GUIDE 중앙용
-   ========================================== */
-@media screen and (max-width: 768px) and (orientation: portrait) {
-    .main-menu-overlay {
-        bottom: 12%;
-        gap: 10px;
-    }
-    
-    #start-btn {
-        padding: 16px 32px;
-        font-size: 13px;
+    /* INSTALL 버튼 - START 버튼 아래 */
+    .install-container {
+        bottom: 6%;
+        left: 50%;
+        transform: translateX(-50%);
     }
     
     #install-btn {
-        padding: 10px 20px;
-        font-size: 10px;
+        padding: 8px 16px;
+        font-size: 8px;
     }
 }
 
