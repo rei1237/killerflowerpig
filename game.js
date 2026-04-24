@@ -2374,7 +2374,7 @@ function playTypewriterSound() {
 }
 
 // 스토리 텍스트를 페이지로 분할하는 함수 (UI/UX 개선)
-function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight) {
+function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight, fontSize = 13) {
     const pages = [];
     const paragraphs = text.split('\n');
     let currentPage = [];
@@ -2387,10 +2387,10 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight) {
     // 문단 간 여백
     const paragraphSpacing = lineHeight * 0.5; // 줄 높이의 50%
     
-    // 임시 캔버스 컨텍스트 생성 (너비 측정용)
+    // 임시 캔버스 컨텍스트 생성 (너비 측정용) - 전달된 fontSize 사용
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.font = '13px "Press Start 2P"';
+    tempCtx.font = `${fontSize}px "Press Start 2P"`;
     
     for (const paragraph of paragraphs) {
         let paragraphHeight = 0;
@@ -2472,13 +2472,15 @@ function drawStoryScreen(ctx, timestamp) {
         const isMobileLandscape = isMobile && !isPortrait;
         
         // 가로 모드: 더 작은 폰트와 줄 높이, 여백
+        const storyFontSize = isMobileLandscape ? 11 : 13; // 폰트 크기
         const storyLineHeight = isMobileLandscape ? 22 : 26;
         const topMargin = isMobileLandscape ? 140 : 170; // 상단 여백
         const bottomMargin = isMobileLandscape ? 70 : 80; // 하단 여백
         
         const maxHeight = canvas.height - topMargin - bottomMargin; // 효과적인 텍스트 영역 높이
         const lineHeight = storyLineHeight;
-        storyPages = splitStoryIntoPages(stage.storyText, maxWidth, maxHeight, lineHeight);
+        // 폰트 크기 전달하여 정확한 페이지 분할
+        storyPages = splitStoryIntoPages(stage.storyText, maxWidth, maxHeight, lineHeight, storyFontSize);
         storyTotalPages = storyPages.length;
         storyCurrentPage = 0;
         // 처음부터 타이핑되도록 시간 초기화
