@@ -373,6 +373,7 @@ function startGame() {
     storyPages = [];
     storyCurrentPage = 0;
     storyTotalPages = 0;
+    lastTypedCharIndex = 0; // 타자기 인덱스 초기화
     
     updateMainMenuVisibility();
 }
@@ -1159,6 +1160,7 @@ function advanceStage() {
         storyPages = [];
         storyCurrentPage = 0;
         storyTotalPages = 0;
+        lastTypedCharIndex = 0; // 타자기 인덱스 초기화
         
         Player.fireRate = 200;
         Player.damage = isMobileEasyModeActive() ? Math.round(10 * EASY_MODE_CONFIG.playerDamageMultiplier) : 10; // EASY MODE
@@ -2033,12 +2035,71 @@ function drawGameOverScreen() {
 }
 
 // --- 스토리 텍스트 연출 시스템 ---
-let storyTypingSpeed = 15; // 더 빠른 타이핑
+let storyTypingSpeed = 45; // 타자기 느린 타이핑 (밀리초)
 let storyTextComplete = false;
 let storyClickPending = false;
 let storyPages = []; // 페이지 분할된 스토리
 let storyCurrentPage = 0; // 현재 페이지
 let storyTotalPages = 0; // 전체 페이지 수
+let lastTypedCharIndex = 0; // 마지막으로 소리낸 문자 인덱스
+
+// 타자기 효과음 (Web Audio API)
+let typewriterAudioContext = null;
+function playTypewriterSound() {
+    try {
+        if (!typewriterAudioContext) {
+            typewriterAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        const ctx = typewriterAudioContext;
+        const now = ctx.currentTime;
+        
+        // 메인 클릭 소리 (낮은 주파수)
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'square';
+        osc1.frequency.setValueAtTime(800, now);
+        osc1.frequency.exponentialRampToValueAtTime(400, now + 0.03);
+        gain1.gain.setValueAtTime(0.08, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.05);
+        
+        // 메커니컬 딸깍 소리 (높은 주파수)
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1200, now);
+        osc2.frequency.exponentialRampToValueAtTime(600, now + 0.02);
+        gain2.gain.setValueAtTime(0.05, now);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now);
+        osc2.stop(now + 0.04);
+        
+        // 노이즈로 기계적 느낌 추가
+        const bufferSize = ctx.sampleRate * 0.01;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.03, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.01);
+        noise.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+        noise.start(now);
+        
+    } catch (e) {
+        // 오디오 컨텍스트 문제 무시
+    }
+}
 
 // 스토리 텍스트를 페이지로 분할하는 함수
 function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight) {
@@ -2103,6 +2164,7 @@ function nextStoryPage() {
         storyCurrentPage++;
         storyDisplayTime = Date.now();
         storyTextComplete = false;
+        lastTypedCharIndex = 0; // 타자기 인덱스 초기화
         return false; // 아직 끝나지 않음
     } else {
         // 모든 페이지 끝, 게임 시작
@@ -2158,6 +2220,19 @@ function drawStoryScreen(ctx, timestamp) {
     const elapsed = Date.now() - storyDisplayTime;
     const charCount = Math.floor(elapsed / storyTypingSpeed);
     const displayText = currentPageText.substring(0, charCount);
+    
+    // 새로운 문자가 타이핑될 때 효과음 재생
+    if (charCount > lastTypedCharIndex && charCount < currentPageText.length) {
+        // 공백이나 줄바꿈이 아닌 문자만 소리냄
+        const currentChar = currentPageText[charCount - 1];
+        if (currentChar && currentChar !== ' ' && currentChar !== '\n') {
+            // 연속으로 너무 많이 재생되지 않도록 약간의 확률 조정
+            if (Math.random() > 0.15) {
+                playTypewriterSound();
+            }
+        }
+        lastTypedCharIndex = charCount;
+    }
     
     // 현재 페이지의 타이핑이 완료되었는지 확인
     storyTextComplete = charCount >= currentPageText.length;
