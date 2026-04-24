@@ -1448,7 +1448,10 @@ function useBomb() {
             if (boss.hp <= 0 && boss.state !== 'DEAD') {
                 boss.state = 'DEAD';
                 boss.aniFrame = 0;
-                boss.lastFrameTime = Date.now();
+                // performance.now() 기반 timestamp 사용 (gameLoop과 동일)
+                boss.lastFrameTime = performance.now();
+                // deathHandled 리셋하여 상태 전환이 정상적으로 이루어지도록
+                boss.deathHandled = false;
             }
         }
         AudioManager.playSFX('explode');
