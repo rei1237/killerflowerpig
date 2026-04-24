@@ -2138,12 +2138,19 @@ function playTypewriterSound() {
     }
 }
 
-// 스토리 텍스트를 페이지로 분할하는 함수
+// 스토리 텍스트를 페이지로 분할하는 함수 (UI/UX 개선)
 function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight) {
     const pages = [];
     const paragraphs = text.split('\n');
     let currentPage = [];
     let currentPageHeight = 0;
+    
+    // 하단 UI 여백 (안내 텍스트 공간 확보)
+    const bottomMargin = 80; // 픽셀
+    const effectiveMaxHeight = maxHeight - bottomMargin;
+    
+    // 문단 간 여백
+    const paragraphSpacing = lineHeight * 0.5; // 줄 높이의 50%
     
     // 임시 캔버스 컨텍스트 생성 (너비 측정용)
     const tempCanvas = document.createElement('canvas');
@@ -2156,7 +2163,8 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight) {
         if (paragraph.trim() === '') {
             paragraphHeight = lineHeight;
         } else if (paragraph.startsWith('■■■■') || paragraph.startsWith('EPISODE') || paragraph.startsWith('\'')) {
-            paragraphHeight = lineHeight;
+            // 제목/특수 문단: 여백 추가
+            paragraphHeight = lineHeight + paragraphSpacing;
         } else {
             // 일반 텍스트의 줄 수 계산
             let line = '';
@@ -2172,11 +2180,12 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight) {
                     line = testLine;
                 }
             }
-            paragraphHeight = lineCount * lineHeight;
+            // 본문 문단도 하단 여백 추가
+            paragraphHeight = (lineCount * lineHeight) + paragraphSpacing;
         }
         
-        // 현재 페이지에 추가할 수 있는지 확인
-        if (currentPageHeight + paragraphHeight > maxHeight && currentPage.length > 0) {
+        // 현재 페이지에 추가할 수 있는지 확인 (효과적인 최대 높이 사용)
+        if (currentPageHeight + paragraphHeight > effectiveMaxHeight && currentPage.length > 0) {
             // 새 페이지 시작
             pages.push(currentPage.join('\n'));
             currentPage = [paragraph];
@@ -2221,7 +2230,9 @@ function drawStoryScreen(ctx, timestamp) {
     // 페이지 분할 (처음 한 번만)
     if (storyPages.length === 0) {
         const maxWidth = Math.min(canvas.width * 0.85, 800);
-        const maxHeight = canvas.height - 180; // 상단/하단 여백 고려
+        // 상단: EPISODE 표시(30px) + 페이지 인디케이터(55px) + 시작 여백(85px) = ~170px
+        // 하단: 안내 텍스트(30px) + 스킵 안내(12px) + 여백 = ~80px
+        const maxHeight = canvas.height - 170 - 80; // 효과적인 텍스트 영역 높이
         const lineHeight = 26;
         storyPages = splitStoryIntoPages(stage.storyText, maxWidth, maxHeight, lineHeight);
         storyTotalPages = storyPages.length;
@@ -2302,21 +2313,33 @@ function drawStoryScreen(ctx, timestamp) {
     const paragraphs = displayText.split('\n');
     let currentY = startY;
     
-    for (const paragraph of paragraphs) {
+    // 문단 간 여백
+    const paragraphSpacing = lineHeight * 0.5;
+    
+    for (let i = 0; i < paragraphs.length; i++) {
+        const paragraph = paragraphs[i];
+        const isLastParagraph = i === paragraphs.length - 1;
+        
         if (paragraph.trim() === '') {
             currentY += lineHeight;
         } else if (paragraph.startsWith('■■■■') || paragraph.startsWith('EPISODE') || paragraph.startsWith('\'')) {
+            // 제목/특수 문단: 상하 여백 추가
             ctx.textAlign = 'center';
             ctx.fillStyle = paragraph.startsWith('■') ? '#f1c40f' : (paragraph.startsWith('\'') ? '#00ffff' : '#ffffff');
             ctx.shadowBlur = 10;
             ctx.shadowColor = ctx.fillStyle;
             ctx.fillText(paragraph, canvas.width / 2, currentY);
             ctx.shadowBlur = 0;
-            currentY += lineHeight;
+            currentY += lineHeight + paragraphSpacing;
             ctx.textAlign = 'left';
             ctx.fillStyle = '#ffffff';
         } else {
+            // 일반 텍스트: 문단 하단 여백 추가
             currentY = wrapTextLeftAlign(ctx, paragraph, startX, currentY, maxWidth, lineHeight);
+            // 마지막 문단이 아니면 여백 추가
+            if (!isLastParagraph) {
+                currentY += paragraphSpacing;
+            }
         }
     }
     ctx.restore();
@@ -2362,6 +2385,7 @@ function drawStoryScreen(ctx, timestamp) {
 function wrapTextLeftAlign(ctx, text, x, y, maxWidth, lineHeight) {
     let line = '';
     let currentY = y;
+    let lineCount = 0;
 
     for (let n = 0; n < text.length; n++) {
         const char = text[n];
@@ -2373,11 +2397,17 @@ function wrapTextLeftAlign(ctx, text, x, y, maxWidth, lineHeight) {
             ctx.fillText(line, x, currentY);
             line = char;
             currentY += lineHeight;
+            lineCount++;
         } else {
             line = testLine;
         }
     }
-    ctx.fillText(line, x, currentY);
+    // 마지막 줄 출력
+    if (line) {
+        ctx.fillText(line, x, currentY);
+        lineCount++;
+    }
+    // 다음 시작 위치 반환 (마지막 줄의 다음 위치)
     return currentY + lineHeight;
 }
 
