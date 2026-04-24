@@ -65,7 +65,7 @@ function updateInGameUIVisibility() {
     if (inGameUi) inGameUi.hidden = !shouldShow;
 }
 
-// --- 캔버스 기반 HUD 렌더링 (최고급 2D 도트 스타일) ---
+// --- 캔버스 기반 HUD 렌더링 (닌텐도 클래식 2D 스타일) ---
 function drawHUD(ctx) {
     const time = Date.now();
     const isMobile = isMobileTouchDevice();
@@ -77,78 +77,74 @@ function drawHUD(ctx) {
     const hudX = 20 * scale;
     const hudY = 20 * scale;
     
-    // HUD 금속 프레임 (입체감 있는 도트 아트)
-    ctx.fillStyle = '#1a1c2c'; // 메탈 배경
-    ctx.fillRect(hudX, hudY, 220 * scale, 70 * scale);
-    
-    // 테두리 빛 (네온 옐로우)
-    ctx.strokeStyle = '#f1c40f';
+    // HUD 닌텐도 그레이 프레임
+    ctx.fillStyle = '#bdc3c7';
+    ctx.strokeStyle = '#000';
     ctx.lineWidth = 4 * scale;
-    ctx.strokeRect(hudX + 2, hudY + 2, 216 * scale, 66 * scale);
+    ctx.fillRect(hudX, hudY, 200 * scale, 65 * scale);
+    ctx.strokeRect(hudX, hudY, 200 * scale, 65 * scale);
+    
+    // 내부 그림자 (2D 스타일)
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.fillRect(hudX + 195 * scale, hudY, 5 * scale, 65 * scale);
+    ctx.fillRect(hudX, hudY + 60 * scale, 200 * scale, 5 * scale);
     
     // 체력 바 배경
-    ctx.fillStyle = '#2c0000';
-    ctx.fillRect(hudX + 15 * scale, hudY + 12 * scale, 190 * scale, 18 * scale);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(hudX + 10 * scale, hudY + 10 * scale, 180 * scale, 18 * scale);
     
-    // 체력 바 채우기 (그라데이션 + 하이라이트)
+    // 체력 바 채우기 (클래식 닌텐도 레드)
     const hpPercent = Math.max(0, Player.hp / Player.maxHp);
     if (hpPercent > 0) {
-        const hpGrad = ctx.createLinearGradient(hudX, 0, hudX + 190 * scale, 0);
-        hpGrad.addColorStop(0, '#ff4757'); // 네온 레드
-        hpGrad.addColorStop(1, '#ff6b81');
-        ctx.fillStyle = hpGrad;
-        ctx.fillRect(hudX + 15 * scale, hudY + 12 * scale, 190 * scale * hpPercent, 18 * scale);
+        ctx.fillStyle = '#e74c3c';
+        ctx.fillRect(hudX + 10 * scale, hudY + 10 * scale, 180 * scale * hpPercent, 18 * scale);
         
-        // 윗부분 하이라이트 (글래스 효과)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.fillRect(hudX + 15 * scale, hudY + 12 * scale, 190 * scale * hpPercent, 6 * scale);
+        // 상단 하이라이트 (플랫 2D)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.fillRect(hudX + 10 * scale, hudY + 10 * scale, 180 * scale * hpPercent, 6 * scale);
     }
     
-    // 점수 표시 (네온 텍스트)
-    ctx.fillStyle = '#fff';
+    // 점수 표시 (클래식 옐로우)
+    ctx.fillStyle = '#f1c40f';
     ctx.font = `${Math.floor(14 * scale)}px "Press Start 2P"`;
     ctx.textAlign = 'left';
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = '#f1c40f';
-    ctx.fillText(String(score).padStart(7, '0'), hudX + 15 * scale, hudY + 55 * scale);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2 * scale;
+    ctx.strokeText(String(score).padStart(7, '0'), hudX + 12 * scale, hudY + 52 * scale);
+    ctx.fillText(String(score).padStart(7, '0'), hudX + 12 * scale, hudY + 52 * scale);
     ctx.restore();
 
-    // 2. 우상단 폭탄 잔량 표시 (폭탄 디자인으로 잔량 표시)
+    // 2. 우상단 폭탄 잔량 표시 (닌텐도 아이템 슬롯 스타일)
     ctx.save();
-    const bombAreaW = 100 * scale;
+    const bombAreaW = 90 * scale;
     const bombAreaX = canvas.width - bombAreaW - 20 * scale;
     const bombAreaY = 20 * scale;
     
-    // 폭탄 패널 배경
-    ctx.fillStyle = 'rgba(26, 26, 26, 0.8)';
-    ctx.strokeStyle = '#ff4757';
-    ctx.lineWidth = 3 * scale;
+    // 폭탄 슬롯 배경
+    ctx.fillStyle = '#bdc3c7';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 4 * scale;
     ctx.fillRect(bombAreaX, bombAreaY, bombAreaW, 50 * scale);
     ctx.strokeRect(bombAreaX, bombAreaY, bombAreaW, 50 * scale);
 
-    // 폭탄 아이콘 (도트)
+    // 폭탄 아이콘 (2D 플랫 도트)
     const bx = bombAreaX + 25 * scale;
     const by = bombAreaY + 25 * scale;
-    ctx.fillStyle = '#1e272e';
-    ctx.beginPath();
-    ctx.arc(bx, by, 12 * scale, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#ff4757';
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = '#ff4757';
-    // 심지
-    ctx.fillRect(bx - 2 * scale, by - 18 * scale, 4 * scale, 8 * scale);
-    if (time % 200 < 100) {
-        ctx.fillStyle = '#f1c40f';
-        ctx.fillRect(bx - 3 * scale, by - 22 * scale, 6 * scale, 6 * scale);
-    }
-    ctx.shadowBlur = 0;
+    
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.arc(bx, by, 12 * scale, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f1c40f';
+    ctx.fillRect(bx - 2 * scale, by - 18 * scale, 4 * scale, 8 * scale); // 심지
+    
+    // 하이라이트
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(bx - 6 * scale, by - 6 * scale, 4 * scale, 4 * scale);
 
     // 잔량 텍스트
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#000';
     ctx.font = `${Math.floor(18 * scale)}px "Press Start 2P"`;
     ctx.textAlign = 'left';
-    ctx.fillText('x' + Player.bombCount, bx + 20 * scale, by + 8 * scale);
+    ctx.fillText('x' + Player.bombCount, bx + 18 * scale, by + 8 * scale);
     ctx.restore();
 }
 
@@ -1441,130 +1437,186 @@ class GatePair {
     drawGateStructure(ctx, gate) {
         const x = this.x; const y = gate.y; const w = this.width; const h = gate.height;
         const time = Date.now();
+        const stage = currentStage;
 
-        // 1. 게이트 기본 배경 (금속 질감)
-        ctx.fillStyle = '#1a1c2c'; // 다크 네이비 메탈
-        ctx.fillRect(x, y, w, h);
-        
-        // 2. 회로 패턴 (Circuit Patterns)
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-        ctx.lineWidth = 1;
-        for(let i = 0; i < h; i += 20) {
-            ctx.beginPath();
-            ctx.moveTo(x + 5, y + i);
-            ctx.lineTo(x + w - 5, y + i);
-            ctx.stroke();
-        }
-
-        // 3. 내부 깊이감 (그라데이션)
-        const grad = ctx.createLinearGradient(x, y, x + w, y);
-        grad.addColorStop(0, 'rgba(0,0,0,0.5)');
-        grad.addColorStop(0.5, 'rgba(255,255,255,0.1)');
-        grad.addColorStop(1, 'rgba(0,0,0,0.5)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(x + 4, y + 4, w - 8, h - 8);
-
-        // 4. 네온 프레임 (상/하단 테두리 - 플리커 효과)
-        const flicker = Math.random() > 0.95 ? 0.5 : 1.0;
-        ctx.fillStyle = gate.color;
-        ctx.globalAlpha = flicker;
-        ctx.shadowBlur = 15 * flicker;
-        ctx.shadowColor = gate.color;
-        ctx.fillRect(x - 4, y, w + 8, 12); // 상단 바
-        ctx.fillRect(x - 4, y + h - 12, w + 8, 12); // 하단 바
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1.0;
-
-        // 5. 해저드 텍스처 (픽셀 아트 스타일)
-        ctx.fillStyle = '#000';
-        for (let i = 0; i < w + 8; i += 12) {
-            ctx.beginPath();
-            ctx.moveTo(x - 4 + i, y);
-            ctx.lineTo(x + 2 + i, y);
-            ctx.lineTo(x - 4 + i, y + 12);
-            ctx.lineTo(x - 10 + i, y + 12);
-            ctx.fill();
-        }
-
-        // 6. 중앙 코어 에너지 (애니메이션)
-        const corePulse = Math.sin(time / 200) * 0.2 + 0.8;
-        ctx.globalAlpha = 0.3 * corePulse;
-        ctx.fillStyle = gate.color;
-        ctx.fillRect(x + 10, y + 20, w - 20, h - 40);
-        ctx.globalAlpha = 1.0;
-        
-        // 코어 코일 (픽셀 화이트 라인)
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(x + w / 2 - 2, y + 20, 4, h - 40);
-
-        // 7. 레이저 스캐닝 효과 (위아래로 움직이는 빔)
-        const scanY = y + 20 + ((time / 4) % (h - 40));
-        ctx.fillStyle = '#fff';
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#fff';
-        ctx.fillRect(x + 5, scanY, w - 10, 2);
-        ctx.shadowBlur = 0;
-
-        // 8. 아이콘 및 텍스트
         ctx.save();
-        ctx.translate(x + w / 2, y + h / 2);
         
-        // 아이콘 광채
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = gate.color;
-        this.drawPixelIcon(ctx, gate.icon, -15, -45, 30);
-        ctx.shadowBlur = 0;
+        // 스테이지별 테마 결정
+        if (stage <= 3) {
+            this.drawScrapGate(ctx, x, y, w, h, gate.color, time);
+        } else if (stage <= 6) {
+            this.drawMilitaryGate(ctx, x, y, w, h, gate.color, time);
+        } else {
+            this.drawSubwayGate(ctx, x, y, w, h, gate.color, time);
+        }
 
-        // 텍스트 (픽셀 폰트)
+        // 아이콘 및 텍스트 (공통 레이어)
+        ctx.translate(x + w / 2, y + h / 2);
+        this.drawPixelIcon(ctx, gate.icon, -15, -45, 30);
+        
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 11px "Press Start 2P"';
+        ctx.font = 'bold 10px "Press Start 2P"';
         ctx.textAlign = 'center';
-        ctx.shadowBlur = 5;
+        ctx.shadowBlur = 4;
         ctx.shadowColor = '#000';
-        ctx.fillText(gate.text, 0, 25);
-        
-        // 값 표시 (작은 텍스트)
-        ctx.font = '8px "Press Start 2P"';
-        ctx.fillStyle = gate.color;
-        ctx.fillText(`+${gate.value}`, 0, 42);
-        
+        ctx.fillText(gate.text, 0, 28);
         ctx.restore();
     }
+
+    // 테마 1: 생존형 고철 게이트 (Stage 1-3)
+    drawScrapGate(ctx, x, y, w, h, color, time) {
+        // 배경 (녹슨 철판)
+        ctx.fillStyle = '#5d4037';
+        ctx.fillRect(x, y, w, h);
+        
+        // 나무 판자 덧댐
+        ctx.fillStyle = '#3e2723';
+        for(let i = 10; i < h - 20; i += 30) {
+            ctx.fillRect(x - 5, y + i, w + 10, 15);
+            // 못 자국
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x - 2, y + i + 5, 2, 2);
+            ctx.fillRect(x + w, y + i + 5, 2, 2);
+            ctx.fillStyle = '#3e2723';
+        }
+
+        // 가시철사 (바브드 와이어)
+        ctx.strokeStyle = '#9e9e9e';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for(let i = 0; i < h; i += 10) {
+            const offsetX = Math.sin(i * 0.5) * 5;
+            ctx.lineTo(x + offsetX, y + i);
+            ctx.lineTo(x + w + offsetX, y + i);
+        }
+        ctx.stroke();
+
+        // 혈흔 효과
+        ctx.fillStyle = 'rgba(128, 0, 0, 0.6)';
+        ctx.fillRect(x + 10, y + 20, 5, 15);
+        ctx.fillRect(x + w - 15, y + 50, 8, 20);
+
+        // 네온 바 (생존형 조명)
+        const flicker = Math.random() > 0.9 ? 0.7 : 1.0;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = flicker;
+        ctx.fillRect(x - 2, y, w + 4, 8);
+        ctx.fillRect(x - 2, y + h - 8, w + 4, 8);
+        ctx.globalAlpha = 1.0;
+    }
+
+    // 테마 2: 군사용 철제 게이트 (Stage 4-6)
+    drawMilitaryGate(ctx, x, y, w, h, color, time) {
+        // 배경 (군사용 슬레이트 그레이)
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(x, y, w, h);
+        
+        // 강철 프레임 및 리벳
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(x, y, w, h);
+        
+        ctx.fillStyle = '#34495e';
+        for(let i = 5; i < h; i += 20) {
+            ctx.fillRect(x + 2, y + i, 4, 4); // 리벳
+            ctx.fillRect(x + w - 6, y + i, 4, 4);
+        }
+
+        // "KEEP OUT" 스프레이
+        ctx.fillStyle = 'rgba(192, 57, 43, 0.8)';
+        ctx.font = 'bold 12px Arial'; // 픽셀 느낌을 위해 작게
+        ctx.textAlign = 'center';
+        ctx.fillText('KEEP OUT', x + w/2, y + h - 40);
+
+        // 움푹 들어간 자국 (Dents)
+        ctx.fillStyle = '#1a252f';
+        ctx.fillRect(x + 10, y + 30, 15, 10);
+        
+        // 군사용 네온 지시등
+        ctx.fillStyle = color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = color;
+        ctx.fillRect(x + w/2 - 20, y + 2, 40, 5);
+        ctx.shadowBlur = 0;
+    }
+
+    // 테마 3: 지하철 셔터 게이트 (Stage 7+)
+    drawSubwayGate(ctx, x, y, w, h, color, time) {
+        // 배경 (어두운 지하철 역)
+        ctx.fillStyle = '#121212';
+        ctx.fillRect(x, y, w, h);
+        
+        // 롤링 셔터 주름
+        ctx.fillStyle = '#333';
+        for(let i = 0; i < h; i += 6) {
+            ctx.fillRect(x + 2, y + i, w - 4, 3);
+        }
+
+        // 마른 혈흔 손자국 (Handprints)
+        ctx.fillStyle = 'rgba(100, 0, 0, 0.5)';
+        ctx.fillRect(x + 15, y + h/2, 10, 12); // 손바닥
+        for(let i = 0; i < 5; i++) ctx.fillRect(x + 15 + i*2, y + h/2 - 8, 2, 6); // 손가락
+
+        // 깜빡이는 "SUBWAY" 네온 사인
+        const isNeonOn = time % 1500 > 100;
+        if (isNeonOn) {
+            ctx.fillStyle = '#00d2ff';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#00d2ff';
+            ctx.font = 'bold 10px Arial';
+            ctx.fillText('SUBWAY', x + w/2, y + 15);
+            ctx.shadowBlur = 0;
+        }
+
+        // 셔터 레일 테두리
+        ctx.fillStyle = '#000';
+        ctx.fillRect(x, y, 4, h);
+        ctx.fillRect(x + w - 4, y, 4, h);
+    }
+
     drawPixelIcon(ctx, type, x, y, size) {
-        ctx.fillStyle = '#fff';
-        // 픽셀 아이콘 렌더링 (더 정교하게)
+        // 닌텐도 스타일의 더 명확하고 플랫한 아이콘
+        ctx.save();
+        ctx.translate(x, y);
+        
+        // 아이콘 외곽선
+        ctx.fillStyle = '#000';
+        
         if (type === 'gun') {
-            ctx.fillRect(x, y + 15, 25, 8); // 총열
-            ctx.fillRect(x + 20, y + 10, 5, 5); // 가늠쇠
-            ctx.fillRect(x + 5, y + 23, 6, 12); // 손잡이
-        } else if (type === 'sword') {
-            ctx.fillRect(x + 12, y, 6, 30); // 검신
-            ctx.fillStyle = '#f1c40f';
-            ctx.fillRect(x, y + 30, 30, 4); // 가드
+            ctx.fillRect(0, 15, 30, 12); // 총신
+            ctx.fillRect(5, 27, 8, 10); // 손잡이
             ctx.fillStyle = '#fff';
-            ctx.fillRect(x + 12, y + 34, 6, 8); // 자루
+            ctx.fillRect(2, 17, 26, 8);
+        } else if (type === 'sword') {
+            ctx.fillRect(10, 0, 10, 35); // 검신
+            ctx.fillRect(0, 25, 30, 6); // 가드
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(12, 2, 6, 22);
         } else if (type === 'heart') {
-            ctx.fillStyle = '#ff4757';
-            ctx.fillRect(x + 6, y, 8, 8); ctx.fillRect(x + 18, y, 8, 8);
-            ctx.fillRect(x, y + 8, 32, 12);
-            ctx.fillRect(x + 4, y + 20, 24, 8);
-            ctx.fillRect(x + 12, y + 28, 8, 8);
+            ctx.fillStyle = '#ff0000'; // 클래식 닌텐도 레드
+            ctx.fillRect(4, 0, 8, 8); ctx.fillRect(18, 0, 8, 8);
+            ctx.fillRect(0, 8, 30, 10);
+            ctx.fillRect(4, 18, 22, 6);
+            ctx.fillRect(11, 24, 8, 6);
+            // 하이라이트
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(6, 4, 4, 4);
         } else if (type === 'shield') {
             ctx.fillStyle = '#3498db';
-            ctx.fillRect(x, y, 30, 25);
+            ctx.fillRect(0, 0, 30, 25);
             ctx.beginPath();
-            ctx.moveTo(x, y + 25); ctx.lineTo(x + 15, y + 40); ctx.lineTo(x + 30, y + 25); ctx.fill();
+            ctx.moveTo(0, 25); ctx.lineTo(15, 38); ctx.lineTo(30, 25); ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(8, 8, 14, 14);
         } else if (type === 'bomb') {
-            ctx.fillStyle = '#1e272e';
-            ctx.beginPath(); ctx.arc(x + 15, y + 20, 14, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath(); ctx.arc(15, 20, 12, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#f1c40f';
-            ctx.fillRect(x + 12, y, 6, 8); // 심지
-            // 불꽃 효과
-            if (Date.now() % 200 < 100) {
-                ctx.fillStyle = '#ff4757';
-                ctx.fillRect(x + 14, y - 5, 4, 4);
-            }
+            ctx.fillRect(13, 0, 4, 10); // 심지
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(10, 15, 5, 5); // 반사광
         }
+        ctx.restore();
     }
 }
 

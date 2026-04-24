@@ -188,13 +188,9 @@ html {
     }
 
     #start-btn {
-        padding: 20px 40px;
-        font-size: 16px;
-        min-width: 180px;
-        border-width: 5px;
-        border-radius: 4px;
-        box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.6), 6px 6px 0px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 172, 13, 0.4);
-        animation: pulse-btn 2s infinite;
+        padding: 10px 20px;
+        font-size: 12px;
+        border-width: 3px;
     }
 
     .install-container {
@@ -671,12 +667,12 @@ html {
    ========================================== */
 /* 위치는 상단 미디어 쿼리 레이아웃으로 통합되었습니다. */
 
-/* 패스워드 패널 - 고급 2D 도트 RPG 스타일 */
+/* 패스워드 패널 - 기존 고급 다크 스타일 복구 */
 .password-panel {
     background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
     border: 4px solid #4a0080;
     padding: 25px 30px;
-    box-shadow:
+    box-shadow: 
         inset -4px -4px 0px rgba(0, 0, 0, 0.5),
         6px 6px 0px rgba(0, 0, 0, 0.7),
         0 0 40px rgba(138, 43, 226, 0.4);
@@ -1253,25 +1249,6 @@ html {
 .btn-icon {
     font-size: 36px;
     filter: drop-shadow(2px 2px 0px #000);
-}
-    height: 80px;
-    border-radius: 50%;
-    background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
-    border: 4px solid #f1c40f;
-    color: #fff;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: inset -3px -3px 0px rgba(0,0,0,0.5), 4px 4px 0px rgba(0,0,0,0.8);
-    transition: all 0.1s;
-}
-
-.action-btn:active {
-    transform: translateY(4px);
-    box-shadow: inset -2px -2px 0px rgba(0,0,0,0.5), 0px 0px 0px rgba(0,0,0,0.8);
 }
 
 /* ==========================================
