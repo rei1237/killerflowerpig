@@ -90,7 +90,7 @@ const EASY_MODE_CONFIG = {
 
     // 보스 관련 - 소환 패턴 제외하고 정상
     bossMoveScaleMultiplier: 1.0,     // 정상 이동 속도
-    bossAttackIntervalMultiplier: 3.0, // 3배 덜 자주 공격 (유지)
+    bossAttackIntervalMultiplier: 2.0, // 2배 덜 자주 공격
     bossSummonEnemySpeedMultiplier: 1.0, // 정상 (소환 패턴 자체가 안나옴)
     bossSummonEnemyHpMultiplier: 1.0, // 정상 (소환 패턴 자체가 안나옴)
     bossProjectileSpeedMultiplier: 1.0, // 정상 발체 속도
