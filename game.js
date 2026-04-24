@@ -382,7 +382,7 @@ function startGame() {
 function startGameplay() {
     currentState = GAME_STATE.PLAYING;
     storyTypingIndex = 0;
-    storyDisplayTime = 0;
+    // storyDisplayTime은 다음 스토리에서 다시 설정됨
     updateMainMenuVisibility();
     
     // 게임 시작 시 모바일 이지 모드 상태 확인
@@ -449,6 +449,8 @@ document.addEventListener('keydown', (e) => {
 // 스토리 스킵 함수
 function skipStory() {
     console.log('[Story] Skip to gameplay');
+    // 다음 스토리를 위해 시간 초기화
+    storyDisplayTime = 0;
     startGameplay();
 }
 
@@ -2217,7 +2219,13 @@ function drawStoryScreen(ctx, timestamp) {
         storyDisplayTime = Date.now();
         storyTextComplete = false;
         lastTypedCharIndex = 0;
-        console.log(`[Story] Stage ${currentStage} story initialized, pages: ${storyTotalPages}`);
+        console.log(`[Story] Stage ${currentStage} story initialized, pages: ${storyTotalPages}, time: ${storyDisplayTime}`);
+    }
+    
+    // 추가 안전장치: storyDisplayTime이 0이거나 미래면 현재 시간으로 재설정
+    if (!storyDisplayTime || storyDisplayTime <= 0 || storyDisplayTime > Date.now() + 1000) {
+        storyDisplayTime = Date.now();
+        console.log(`[Story] Time reset to now: ${storyDisplayTime}`);
     }
 
     // 검은 배경
