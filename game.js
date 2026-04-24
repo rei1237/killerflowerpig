@@ -798,8 +798,8 @@ if (retryButton) {
 if (quitButton) {
     quitButton.addEventListener('click', (e) => {
         e.stopPropagation();
-        console.log('[GameOver] Quit clicked - Exiting game');
-        exitGame();
+        console.log('[GameOver] Quit clicked - Returning to main menu');
+        resetGameToMain();
     });
 }
 
@@ -1667,16 +1667,40 @@ class GatePair {
             ctx.fillRect(14, 5, 4, 15);
             ctx.fillRect(8, 10, 16, 4);
         } else if (type === 'support') {
-            // 서포트 (드론 & 플러스 기호 - 쉴드와 구분되게)
-            ctx.fillStyle = '#2ecc71'; // 초록색 (지원/회복 계열)
-            // 드론 날개
-            ctx.fillRect(0, 10, 10, 6); ctx.fillRect(22, 10, 10, 6);
-            // 드론 몸체
-            ctx.fillRect(8, 5, 16, 16);
-            // 플러스 기호 (Support 상징)
+            // 서포트 (3인 지원대 - 삼각형 위상 구조로 명확히 구분)
+            ctx.fillStyle = '#e67e22'; // 주황색 (지원/분대 컬러)
+
+            // 중앙 대형 원형 (지휘 본체)
+            ctx.beginPath();
+            ctx.arc(16, 14, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 좌우 상위 보조 원 (2명의 지원군을 상징)
+            ctx.fillStyle = '#f39c12';
+            ctx.beginPath();
+            ctx.arc(8, 8, 5, 0, Math.PI * 2);   // 좌측 상단
+            ctx.arc(24, 8, 5, 0, Math.PI * 2);  // 우측 상단
+            ctx.fill();
+
+            // 하단 중앙 원 (3번째 지원군)
+            ctx.beginPath();
+            ctx.arc(16, 26, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 연결선 (팀워크/연합 표시)
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(8, 8); ctx.lineTo(16, 14);   // 좌상단 -> 중앙
+            ctx.moveTo(24, 8); ctx.lineTo(16, 14);  // 우상단 -> 중앙
+            ctx.moveTo(16, 14); ctx.lineTo(16, 26); // 중앙 -> 하단
+            ctx.stroke();
+
+            // 중앙에 "3" 숫자 표시
             ctx.fillStyle = '#fff';
-            ctx.fillRect(14, 8, 4, 10);
-            ctx.fillRect(11, 11, 10, 4);
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('3', 16, 18);
         } else if (type === 'bomb') {
             // 폭탄
             ctx.fillStyle = '#000';
@@ -2685,7 +2709,7 @@ function drawStartScreen() {
         panelW = Math.min(320 * scaleFactor, canvas.width * 0.35);
         panelH = Math.min(120 * scaleFactor, canvas.height * 0.3);
         panelX = 30 * scaleFactor;
-        panelY = canvas.height - panelH - 30 * scaleFactor;
+        panelY = canvas.height - panelH - 120 * scaleFactor; // 90px 위로 이동
         
         // 비밀번호 UI가 좌측에 있으므로, 가이드는 약간 위로 올리거나 비밀번호 UI와 간격 조정 필요
         // CSS에서 비밀번호 UI 위치를 확인하고 조정할 예정
@@ -2741,16 +2765,38 @@ function drawWinScreen() {
     }
 
     const img = ImageLoader.get('win');
-    const minDimWin = Math.min(canvas.width, canvas.height);
-    const winScale = Math.min(1, minDimWin / 600);
     if (img) {
         ctx.save();
+
+        // 화면 크기에 따른 동적 스케일 계산
+        const isLandscape = canvas.width > canvas.height;
+        const minDim = Math.min(canvas.width, canvas.height);
+        const maxDim = Math.max(canvas.width, canvas.height);
+
+        // 가로/세로 모드에 따른 크기 계산
+        let winSize, drawX, drawY;
+
+        if (isLandscape) {
+            // 가로 모드: 화면 높이의 70%를 최대로 사용, 가로 중앙
+            winSize = Math.min(minDim * 0.7, maxDim * 0.5, 400);
+            drawX = canvas.width / 2 - winSize / 2;
+            drawY = canvas.height / 2 - winSize / 2; // 정중앙 배치
+        } else {
+            // 세로 모드: 화면 너비의 80%를 최대로 사용
+            winSize = Math.min(canvas.width * 0.8, 350);
+            drawX = canvas.width / 2 - winSize / 2;
+            drawY = canvas.height / 2 - winSize * 0.6; // 약간 위쪽 배치
+        }
+
+        // 화면 밖으로 나가지 않도록 clamp
+        drawX = Math.max(10, Math.min(drawX, canvas.width - winSize - 10));
+        drawY = Math.max(10, Math.min(drawY, canvas.height - winSize - 10));
+
+        const winScale = winSize / 300; // 기준 크기 300px 기준 스케일
         ctx.shadowBlur = 60 * winScale; ctx.shadowColor = '#f1c40f';
-        const winSize = 300 * winScale;
-        ctx.drawImage(img, canvas.width / 2 - winSize / 2, canvas.height / 2 - winSize * 0.85, winSize, winSize);
+        ctx.drawImage(img, drawX, drawY, winSize, winSize);
         ctx.restore();
     }
-
 }
 
 function drawStageClearScreen() {

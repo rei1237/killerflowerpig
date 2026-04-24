@@ -146,10 +146,10 @@ html {
     }
 
     #start-btn {
-        padding: 24px 48px;
-        font-size: 18px;
-        border-width: 6px;
-        box-shadow: inset -6px -6px 0px rgba(0,0,0,0.6), 8px 8px 0px rgba(0,0,0,0.8), 0 0 40px rgba(212, 172, 13, 0.4);
+        padding: 12px 24px;
+        font-size: 12px;
+        border-width: 3px;
+        box-shadow: inset -3px -3px 0px rgba(0,0,0,0.6), 3px 3px 0px rgba(0,0,0,0.8), 0 0 20px rgba(212, 172, 13, 0.4);
         animation: pulse-btn 2s infinite;
     }
 
