@@ -415,6 +415,7 @@ function resetPasswordInput() {
 // 패스워드 확인 및 스테이지 언락
 function checkStagePassword() {
     const input = stagePasswordInput ? stagePasswordInput.value.trim() : '';
+    if (input === STAGE_PASSWORD) {
         // 패스워드 일치
         isStageUnlocked = true;
         isGodMode = true; // 비밀번호 입력 시 무적 모드 강제 활성화
