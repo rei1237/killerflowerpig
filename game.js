@@ -2772,8 +2772,48 @@ async function init() {
         passwordSubmitBtn.addEventListener('click', checkStagePassword);
     }
     if (stagePasswordInput) {
+        // 키 입력 시 dots 업데이트
+        stagePasswordInput.addEventListener('input', (e) => {
+            updatePasswordDots(e.target.value.length);
+        });
+        // 포커스 시 활성화 표시
+        stagePasswordInput.addEventListener('focus', () => {
+            updatePasswordDots(stagePasswordInput.value.length);
+        });
+        stagePasswordInput.addEventListener('blur', () => {
+            updatePasswordDots(stagePasswordInput.value.length);
+        });
+        // Enter 키로 제출
         stagePasswordInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') checkStagePassword();
+        });
+        // 입력 필드 클릭 이벤트 (디버깅용)
+        stagePasswordInput.addEventListener('click', () => {
+            console.log('[Password] Input clicked/focused');
+        });
+    }
+    // password-dots 영역 클릭 시 입력 필드 포커스
+    if (passwordDots && stagePasswordInput) {
+        passwordDots.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[Password] Dots clicked, focusing input');
+            stagePasswordInput.focus();
+        });
+        // 터치 이벤트도 추가 (모바일)
+        passwordDots.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            console.log('[Password] Dots touched, focusing input');
+            stagePasswordInput.focus();
+        });
+    }
+    // password-input-wrapper 클릭 시 입력 필드 포커스
+    const passwordInputWrapper = document.querySelector('.password-input-wrapper');
+    if (passwordInputWrapper && stagePasswordInput) {
+        passwordInputWrapper.addEventListener('click', (e) => {
+            if (e.target !== stagePasswordInput) {
+                console.log('[Password] Wrapper clicked, focusing input');
+                stagePasswordInput.focus();
+            }
         });
     }
     if (stageSelectCloseBtn) {

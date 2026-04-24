@@ -697,6 +697,20 @@ html {
 .password-input-wrapper {
     position: relative;
     margin-bottom: 20px;
+    cursor: text;
+    min-height: 50px; /* 명시적 높이 */
+}
+
+/* 입력 영역 전체를 클릭 가능하도록 */
+.password-input-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    cursor: text;
 }
 
 /* 도트 스타일 비밀번호 표시 (●●●●●●) */
@@ -758,23 +772,24 @@ html {
     left: 0;
     width: 100%;
     height: 100%;
-    opacity: 0.001; /* 완전 투명하면 클릭 안될 수 있어 극소량만 표시 */
+    opacity: 0.01; /* 완전 투명하면 클릭 안될 수 있어 약간만 표시 */
     border: none;
-    background: transparent;
+    background: rgba(255,0,0,0.01); /* 디버깅용 극소량 레드 (거의 투명) */
     color: transparent;
-    font-size: 20px; /* 더 큰 터치 영역 */
-    letter-spacing: 25px;
-    padding: 0 15px;
+    font-size: 24px; /* 더 큰 터치 영역 */
+    letter-spacing: 20px;
+    padding: 0 10px;
     text-align: center;
     cursor: text;
-    z-index: 100; /* 반드시 최상위에 위치 */
-    pointer-events: auto; /* 클릭 이벤트 반드시 수신 */
+    z-index: 9999; /* 절대 최상위 */
+    pointer-events: all; /* 모든 클릭 이벤트 수신 */
     caret-color: transparent; /* 커서 숨김 */
 }
 
 .password-input-hidden:focus {
     outline: none;
-    opacity: 0.001; /* 포커스 시에도 투명 유지 */
+    opacity: 0.01;
+    background: rgba(255,0,0,0.01);
 }
 
 /* 언락 버튼 - 고급 도트 스타일 */
