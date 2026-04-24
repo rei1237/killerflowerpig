@@ -21,6 +21,7 @@ const quitButton = document.getElementById('quit-btn');
 // 패스워드 및 스테이지 선택 UI
 const passwordContainer = document.getElementById('password-container');
 const stagePasswordInput = document.getElementById('stage-password');
+const passwordDots = document.getElementById('password-dots');
 const passwordSubmitBtn = document.getElementById('password-submit');
 const passwordError = document.getElementById('password-error');
 const stageSelectContainer = document.getElementById('stage-select-container');
@@ -382,23 +383,52 @@ function updateGameOverButtonVisibility() {
     if (gameoverButtons) gameoverButtons.hidden = !shouldShow;
 }
 
+// 패스워드 dots UI 업데이트
+function updatePasswordDots(length) {
+    if (!passwordDots) return;
+    const dots = passwordDots.querySelectorAll('.dot');
+    dots.forEach((dot, index) => {
+        if (index < length) {
+            dot.classList.add('filled');
+        } else {
+            dot.classList.remove('filled');
+        }
+    });
+    // 포커스 시 활성화 표시
+    if (document.activeElement === stagePasswordInput) {
+        passwordDots.classList.add('active');
+    } else {
+        passwordDots.classList.remove('active');
+    }
+}
+
+// 패스워드 입력 초기화
+function resetPasswordInput() {
+    if (stagePasswordInput) {
+        stagePasswordInput.value = '';
+    }
+    updatePasswordDots(0);
+}
+
 // 패스워드 확인 및 스테이지 언락
 function checkStagePassword() {
-    const input = stagePasswordInput.value.trim();
+    const input = stagePasswordInput ? stagePasswordInput.value.trim() : '';
     if (input === STAGE_PASSWORD) {
         // 패스워드 일치
         isStageUnlocked = true;
-        passwordError.hidden = true;
-        passwordContainer.hidden = true;
+        if (passwordError) passwordError.hidden = true;
+        if (passwordContainer) passwordContainer.hidden = true;
         // 스테이지 선택 UI 표시
         showStageSelectUI();
         // 성공 피드백
         AudioManager.playSFX('powerup');
+        // 패스워드 입력 초기화
+        resetPasswordInput();
     } else {
         // 패스워드 불일치
-        passwordError.hidden = false;
-        stagePasswordInput.value = '';
-        stagePasswordInput.focus();
+        if (passwordError) passwordError.hidden = false;
+        resetPasswordInput();
+        if (stagePasswordInput) stagePasswordInput.focus();
         // 실패 피드백
         AudioManager.playSFX('hit');
     }
@@ -428,21 +458,46 @@ function hideStageSelectUI() {
 
 // 특정 스테이지로 바로 시작
 function startGameAtStage(stageNum) {
-    if (stageNum < 1 || stageNum > 10) return;
+    console.log(`[Stage Select] Starting stage ${stageNum}`);
+    
+    if (stageNum < 1 || stageNum > 10) {
+        console.warn(`[Stage Select] Invalid stage number: ${stageNum}`);
+        return;
+    }
+    
+    // 현재 상태 확인
+    if (currentState !== GAME_STATE.START) {
+        console.warn(`[Stage Select] Cannot start from state: ${currentState}`);
+        return;
+    }
     
     currentStage = stageNum;
     hideStageSelectUI();
+    
+    // 전체화면 진입
     enterMobileFullscreen();
+    
+    // 오디오 초기화 및 BGM 시작
     AudioManager.init();
     AudioManager.startBGM();
     
-    // 스토리 상태로 진입
+    // 스토리 상태로 진입 - 모든 관련 변수 초기화
     storyPages = [];
     storyCurrentPage = 0;
     storyTotalPages = 0;
+    storyTypingIndex = 0;
+    storyTextComplete = false;
+    lastTypedCharIndex = 0;
+    storyClickPending = false;
+    
     currentState = GAME_STATE.STORY;
     storyStateEnterTime = Date.now();
+    storyDisplayTime = Date.now();
+    
+    // UI 업데이트
     updateMainMenuVisibility();
+    
+    console.log(`[Stage Select] Stage ${stageNum} started successfully`);
 }
 
 // 게임 시작 - 스토리 먼저 표시
@@ -2717,25 +2772,59 @@ async function init() {
         passwordSubmitBtn.addEventListener('click', checkStagePassword);
     }
     if (stagePasswordInput) {
-        stagePasswordInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') checkStagePassword();
+        // 키 입력 시 dots 업데이트
+        stagePasswordInput.addEventListener('input', (e) => {
+            updatePasswordDots(e.target.value.length);
         });
+        // 포커스 시 활성화 표시
+        stagePasswordInput.addEventListener('focus', () => {
+            updatePasswordDots(stagePasswordInput.value.length);
+        });
+        stagePasswordInput.addEventListener('blur', () => {
+            updatePasswordDots(stagePasswordInput.value.length);
+        });
+        // Enter 키로 제출
+        stagePasswordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                checkStagePassword();
+            }
+        });
+        // dots 영역 클릭 시 입력 필드 포커스
+        if (passwordDots) {
+            passwordDots.addEventListener('click', () => {
+                stagePasswordInput.focus();
+            });
+        }
     }
     if (stageSelectCloseBtn) {
         stageSelectCloseBtn.addEventListener('click', () => {
             hideStageSelectUI();
             // 메인 메뉴로 돌아가기
             isStageUnlocked = false;
+            resetPasswordInput();
             updateMainMenuVisibility();
         });
     }
-    // 스테이지 버튼 이벤트 리스너
-    stageButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
+    // 스테이지 버튼 이벤트 리스너 - 각 버튼에 명시적으로 설정
+    stageButtons.forEach((btn, index) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             const stageNum = parseInt(btn.dataset.stage);
+            console.log(`[Stage Select] Button ${stageNum} clicked`);
+            startGameAtStage(stageNum);
+        });
+        // 터치 이벤트도 추가 (모바일 대응)
+        btn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const stageNum = parseInt(btn.dataset.stage);
+            console.log(`[Stage Select] Button ${stageNum} touched`);
             startGameAtStage(stageNum);
         });
     });
+    console.log(`[Init] ${stageButtons.length} stage buttons initialized`);
     
     // 모바일 메인 화면 즉시 전체화면
     if (isMobileTouchDevice()) {

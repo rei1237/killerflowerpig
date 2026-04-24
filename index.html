@@ -49,12 +49,32 @@
                 <span class="btn-icon">📲</span> INSTALL GAME
             </button>
         </div>
-        <!-- 패스워드 입력 UI -->
+        <!-- 패스워드 입력 UI - 2D 도트 RPG 스타일 -->
         <div id="password-container" class="btn-container password-container" hidden>
-            <div class="password-label">🔐 연이의 생일 (6자리)</div>
-            <input type="password" id="stage-password" class="pixel-input" maxlength="6" placeholder="910902">
-            <button id="password-submit" type="button" class="pixel-btn secondary">UNLOCK</button>
-            <div id="password-error" class="password-error" hidden>잘못된 비밀번호입니다</div>
+            <div class="password-panel">
+                <div class="password-header">
+                    <div class="password-icon">🔐</div>
+                    <div class="password-title">SECRET CODE</div>
+                    <div class="password-subtitle">연이의 생일 6자리</div>
+                </div>
+                <div class="password-input-wrapper">
+                    <div class="password-dots" id="password-dots">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                    <input type="password" id="stage-password" class="password-input-hidden" maxlength="6" autocomplete="off">
+                </div>
+                <button id="password-submit" type="button" class="password-unlock-btn">
+                    <span class="btn-icon">⚔️</span> UNLOCK
+                </button>
+                <div id="password-error" class="password-error" hidden>
+                    <span class="error-icon">❌</span> 코드가 틀렸습니다
+                </div>
+            </div>
         </div>
         <!-- 스테이지 선택 UI (패스워드 입력 후 표시) -->
         <div id="stage-select-container" class="btn-container stage-select-container" hidden>
