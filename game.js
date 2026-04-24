@@ -1479,6 +1479,9 @@ function drawHUD(ctx) {
 
     // 3. 스테이지 및 목표 텍스트 (중앙 상단)
     ctx.textAlign = 'center'; ctx.fillStyle = '#00ffff';
+    const isLandscape = window.innerWidth > window.innerHeight;
+    const stageFontSize = isLandscape ? '16px' : '12px';
+    ctx.font = `${stageFontSize} "Press Start 2P"`;
     ctx.fillText(`STAGE ${currentStage}`, canvas.width / 2, 25);
     ctx.fillStyle = '#e74c3c';
     ctx.fillText(`OBJ: ${enemiesKilled}/${getCurrentStageData().goal}`, canvas.width / 2, 45); // EASY MODE
@@ -2030,6 +2033,11 @@ function resizeCanvas() {
 function handleResize() {
     applyMobileOptimizations();
     resizeCanvas();
+    
+    // 화면 크기가 변하면 스토리 페이지 재계산
+    if (currentState === GAME_STATE.STORY) {
+        storyPages = []; // 다음 프레임에서 재분할 유도
+    }
 
     // 모바일 가로 모드에서 자동 전체화면
     if (isMobileLandscapeOrientation() && !document.fullscreenElement) {
@@ -2707,11 +2715,11 @@ function drawStoryScreen(ctx, timestamp) {
         const isPortrait = window.innerHeight > window.innerWidth;
         const isMobileLandscape = isMobile && !isPortrait;
         
-        // 가로 모드: 더 작은 폰트와 줄 높이, 여백
-        const storyFontSize = isMobileLandscape ? 11 : 13; // 폰트 크기
-        const storyLineHeight = isMobileLandscape ? 22 : 26;
-        const topMargin = isMobileLandscape ? 140 : 170; // 상단 여백
-        const bottomMargin = isMobileLandscape ? 70 : 80; // 하단 여백
+        // 가로 모드: 더 큰 폰트와 줄 높이, 여백
+        const storyFontSize = isMobileLandscape ? 13 : 13; // 가시성 위해 가로 모드에서도 최소 13px 유지
+        const storyLineHeight = isMobileLandscape ? 24 : 26;
+        const topMargin = isMobileLandscape ? 120 : 170; // 상단 여백 줄임
+        const bottomMargin = isMobileLandscape ? 60 : 80; // 하단 여백
         
         const maxHeight = canvas.height - topMargin - bottomMargin; // 효과적인 텍스트 영역 높이
         const lineHeight = storyLineHeight;
@@ -2794,14 +2802,16 @@ function drawStoryScreen(ctx, timestamp) {
     ctx.textBaseline = 'top';
     
     // isMobileLandscape는 위에서 이미 선언됨
-    // 가로 모드: 더 작은 폰트와 줄 높이로 더 많은 내용 표시
-    const storyFontSize = isMobileLandscape ? 11 : 13;
-    const storyLineHeight = isMobileLandscape ? 22 : 26;
-    const storyStartY = isMobileLandscape ? 70 : 85; // 상단 여백 줄임
+    // 가로 모드: 텍스트 가시성 강화
+    const storyFontSize = isMobileLandscape ? 14 : 13; // 가로 모드에서 폰트 크기 상향
+    const storyLineHeight = isMobileLandscape ? 24 : 26;
+    const storyStartY = isMobileLandscape ? 70 : 85; 
     
     ctx.font = `${storyFontSize}px "Press Start 2P"`;
     ctx.fillStyle = '#ffffff';
-    ctx.shadowBlur = 0;
+    // 텍스트 그림자 추가로 가시성 극대화
+    ctx.shadowBlur = 4;
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
 
     const maxWidth = Math.min(canvas.width * 0.85, 800);
     const startX = (canvas.width - maxWidth) / 2;
