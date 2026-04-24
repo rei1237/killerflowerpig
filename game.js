@@ -632,15 +632,64 @@ if (retryButton) {
 if (quitButton) {
     quitButton.addEventListener('click', (e) => {
         e.stopPropagation();
-        console.log('[GameOver] Quit clicked');
-        // 메인 화면으로 돌아가기
-        currentState = GAME_STATE.START;
-        resetGame();
-        updateMainMenuVisibility();
-        updateInstallButtonVisibility();
-        // 게임 오버 버튼 숨김
-        if (gameoverButtons) gameoverButtons.hidden = true;
+        console.log('[GameOver] Quit clicked - Exiting game');
+        exitGame();
     });
+}
+
+// 게임 종료 함수
+function exitGame() {
+    // 게임 상태 정지
+    currentState = GAME_STATE.GAME_OVER;
+    
+    // 게임 루프 정지 (선택적)
+    // cancelAnimationFrame(animationId);
+    
+    // 방법 1: 창 닫기 시도 (팝업으로 열린 경우에만 작동)
+    try {
+        window.close();
+    } catch (err) {
+        console.log('[Exit] window.close() failed:', err);
+    }
+    
+    // 방법 2: 홈 화면으로 이동 (모바일 웹앱/홈 화면 추가된 경우)
+    // location.href = 'about:blank';
+    
+    // 방법 3: 게임 종료 화면 표시
+    if (gameoverButtons) gameoverButtons.hidden = true;
+    
+    // 캔버스에 종료 메시지 표시
+    const exitOverlay = document.createElement('div');
+    exitOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        font-family: 'Press Start 2P', cursive;
+        color: #fff;
+    `;
+    exitOverlay.innerHTML = `
+        <div style="font-size: 24px; margin-bottom: 20px; color: #ff4757;">GAME EXITED</div>
+        <div style="font-size: 12px; color: #888;">Thanks for playing!</div>
+        <button onclick="location.reload()" style="
+            margin-top: 30px;
+            padding: 15px 30px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
+            border: 4px solid #1e8449;
+            color: #fff;
+            cursor: pointer;
+        ">RESTART</button>
+    `;
+    document.body.appendChild(exitOverlay);
 }
 
 window.addEventListener('beforeinstallprompt', (event) => {
@@ -1435,7 +1484,8 @@ function checkCollision(r1, r2) {
     return r1.x < r2.x + r2.width && r1.x + r1.width > r2.x && r1.y < r2.y + r2.height && r1.y + r1.height > r2.y;
 }
 
-const BOSS_SPRITE_MAP = { // MOBILE LANDSCAPE
+// 기존 보스 (청토끼 보스.png) 스프라이트 매핑
+const BOSS_SPRITE_MAP = {
     WALK: {
         y: 10, h: 116,
         frames: [
@@ -1467,6 +1517,62 @@ const BOSS_SPRITE_MAP = { // MOBILE LANDSCAPE
             { x: 608, w: 118 },
             { x: 730, w: 128 },
             { x: 867, w: 88 }
+        ]
+    }
+};
+
+// 보스2 (청토끼 보스2.png) 스프라이트 매핑 - 3x3 그리드 가정
+const BOSS2_SPRITE_MAP = {
+    WALK: {
+        y: 0, h: 150,
+        frames: [
+            { x: 0, w: 150 },
+            { x: 150, w: 150 },
+            { x: 300, w: 150 }
+        ]
+    },
+    ATTACK: {
+        y: 150, h: 150,
+        frames: [
+            { x: 0, w: 150 },
+            { x: 150, w: 150 },
+            { x: 300, w: 150 }
+        ]
+    },
+    DEAD: {
+        y: 300, h: 150,
+        frames: [
+            { x: 0, w: 150 },
+            { x: 150, w: 150 },
+            { x: 300, w: 150 }
+        ]
+    }
+};
+
+// 보스킹 (청토끼 킹.png) 스프라이트 매핑 - 3x3 그리드 가정
+const BOSS_KING_SPRITE_MAP = {
+    WALK: {
+        y: 0, h: 160,
+        frames: [
+            { x: 0, w: 160 },
+            { x: 160, w: 160 },
+            { x: 320, w: 160 }
+        ]
+    },
+    ATTACK: {
+        y: 160, h: 160,
+        frames: [
+            { x: 0, w: 160 },
+            { x: 160, w: 160 },
+            { x: 320, w: 160 }
+        ]
+    },
+    DEAD: {
+        y: 320, h: 160,
+        frames: [
+            { x: 0, w: 160 },
+            { x: 160, w: 160 },
+            { x: 320, w: 160 }
         ]
     }
 };
@@ -1653,40 +1759,20 @@ class Boss {
         
         const img = ImageLoader.get(imgKey);
         if (img) {
-            // 보스2/보스킹은 전체 이미지를 사용 (스프라이트 맵 사용 안함)
-            if (isBoss2 || isBossKing) {
-                // 보스킹은 더 큰 스케일
-                const bossScale = isBossKing ? 0.5 : 0.4;
-                const drawW = img.width * bossScale;
-                const drawH = img.height * bossScale;
-                const drawX = this.x + (this.width - drawW) / 2;
-                const drawY = this.y + (this.height - drawH) / 2;
-                
-                // 사망 시 투명도 효과
-                if (this.state === 'DEAD') {
-                    ctx.save();
-                    ctx.globalAlpha = Math.max(0.3, 1 - this.aniFrame * 0.1);
-                    ctx.drawImage(img, drawX, drawY, drawW, drawH);
-                    ctx.restore();
-                } else {
-                    // 공격 시 붉은색 플래시 효과 (보스킹은 더 강하게)
-                    if (this.state === 'ATTACK') {
-                        ctx.save();
-                        ctx.shadowBlur = isBossKing ? 30 : 20;
-                        ctx.shadowColor = '#ff0000';
-                        ctx.drawImage(img, drawX, drawY, drawW, drawH);
-                        ctx.restore();
-                    } else {
-                        ctx.drawImage(img, drawX, drawY, drawW, drawH);
-                    }
-                }
-                
-                // 체력 바는 draw 메서드 끝에서 공통으로 그림
-                return;
+            // 보스 타입별 스프라이트 매핑 선택
+            let spriteMap = BOSS_SPRITE_MAP;
+            let scale = 1.25;
+            
+            if (isBossKing) {
+                spriteMap = BOSS_KING_SPRITE_MAP;
+                scale = 1.5; // 보스킹은 더 크게
+            } else if (isBoss2) {
+                spriteMap = BOSS2_SPRITE_MAP;
+                scale = 1.35; // 보스2는 중간 크기
             }
             
-            // 기존 보스 스프라이트 애니메이션
-            const animSet = BOSS_SPRITE_MAP[this.state] || BOSS_SPRITE_MAP.WALK;
+            // 스프라이트 애니메이션 (모든 보스 타입)
+            const animSet = spriteMap[this.state] || spriteMap.WALK;
             const frame = animSet.frames[this.aniFrame % animSet.frames.length];
             const frameW = frame.w;
             const frameH = animSet.h;
@@ -1694,7 +1780,6 @@ class Boss {
             const sy = animSet.y;
 
             // 원본 비율 유지 + 약간 확대해 잘림 없이 표현
-            const scale = 1.25;
             const drawW = this.width * scale;
             const drawH = (frameH / frameW) * drawW;
             const anchorY = this.y + this.height;
@@ -1703,6 +1788,20 @@ class Boss {
             ctx.save();
             ctx.translate(drawCenterX, anchorY - drawH / 2);
             ctx.scale(-1, 1);
+            
+            // 보스2/보스킹 특수 효과
+            if (isBoss2 || isBossKing) {
+                // 사망 시 투명도 효과
+                if (this.state === 'DEAD') {
+                    ctx.globalAlpha = Math.max(0.3, 1 - this.aniFrame * 0.1);
+                }
+                // 공격 시 붉은색 글로우 효과
+                if (this.state === 'ATTACK') {
+                    ctx.shadowBlur = isBossKing ? 30 : 20;
+                    ctx.shadowColor = '#ff0000';
+                }
+            }
+            
             ctx.drawImage(img, sx, sy, frameW, frameH, -drawW / 2, -drawH / 2, drawW, drawH);
             ctx.restore();
         }
@@ -2888,3 +2987,88 @@ if (isMobileTouchDevice()) {
         }
     }, { once: true });
 }
+
+// ==========================================
+// 모바일 뒤로가기 버튼 처리 (2번 누르면 종료)
+// ==========================================
+let backButtonPressCount = 0;
+let backButtonTimer = null;
+const BACK_BUTTON_EXIT_DELAY = 2000; // 2초 내에 2번 눌러야 종료
+
+// History API를 사용하여 뒤로가기 감지
+if (isMobileTouchDevice()) {
+    // 초기 상태 푸시
+    history.pushState({ page: 'game' }, '', location.href);
+    
+    // 뒤로가기 버튼 감지
+    window.addEventListener('popstate', (e) => {
+        // 뒤로가기 버튼 눌림
+        backButtonPressCount++;
+        console.log(`[Back Button] Pressed ${backButtonPressCount} time(s)`);
+        
+        if (backButtonPressCount === 1) {
+            // 첫 번째 누름: 토스트 메시지 표시
+            showBackButtonToast('Press back again to exit');
+            
+            // 타이머 시작
+            backButtonTimer = setTimeout(() => {
+                backButtonPressCount = 0;
+                console.log('[Back Button] Timer reset');
+            }, BACK_BUTTON_EXIT_DELAY);
+            
+            // 상태 다시 푸시 (뒤로가기 막기)
+            history.pushState({ page: 'game' }, '', location.href);
+            
+        } else if (backButtonPressCount >= 2) {
+            // 두 번째 누름: 게임 종료
+            console.log('[Back Button] Exit game');
+            clearTimeout(backButtonTimer);
+            exitGame();
+        }
+    });
+}
+
+// 뒤로가기 토스트 메시지 표시
+function showBackButtonToast(message) {
+    // 기존 토스트 제거
+    const existingToast = document.getElementById('back-button-toast');
+    if (existingToast) existingToast.remove();
+    
+    // 새 토스트 생성
+    const toast = document.createElement('div');
+    toast.id = 'back-button-toast';
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.8);
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 4px;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 10px;
+        z-index: 10000;
+        border: 2px solid #ff4757;
+        animation: fadeInOut 2s ease-in-out;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // 2초 후 제거
+    setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+    }, 2000);
+}
+
+// 페이드 인/아웃 애니메이션 CSS
+const backButtonStyle = document.createElement('style');
+backButtonStyle.textContent = `
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+        20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    }
+`;
+document.head.appendChild(backButtonStyle);
