@@ -1524,84 +1524,82 @@ const BOSS_SPRITE_MAP = {
     }
 };
 
-// 보스2 (청토끼 보스2.png) - 3행 7열 구조 (첫 열 텍스트 제외, 6프레임 사용)
-// 이미지 크기 기준: W_total x H_total
-// 단일 셀: w = W_total/7, h = H_total/3
-// 시작 x = w (첫 번째 텍스트 칸 스킵)
-// 실제 사용: 6개 열 (Columns 1-6)
+// 보스2 (청토끼 보스2.png) - 3x7 그리드, 텍스트 완전 제외
+// 그리드: 7열(140px each) x 3행(140px each) = 980x420px
+// 텍스트 열: Column 0 (0-140px) - 완전 제외
+// 스프라이트: Columns 1-6 (140-980px), 여백 고려해 135px 사용
 const BOSS2_SPRITE_MAP = {
     WALK: {
-        y: 0, h: 140,
+        y: 2, h: 135,
         frames: [
-            { x: 100, w: 120 },   // Column 1
-            { x: 240, w: 120 },   // Column 2
-            { x: 380, w: 120 },   // Column 3
-            { x: 520, w: 120 },   // Column 4
-            { x: 660, w: 120 },   // Column 5
-            { x: 800, w: 120 }    // Column 6
+            { x: 142, w: 135 },   // Column 1 (140px + 2px 여백)
+            { x: 282, w: 135 },   // Column 2
+            { x: 422, w: 135 },   // Column 3
+            { x: 562, w: 135 },   // Column 4
+            { x: 702, w: 135 },   // Column 5
+            { x: 842, w: 135 }    // Column 6
         ]
     },
     ATTACK: {
-        y: 140, h: 140,
+        y: 142, h: 135,
         frames: [
-            { x: 100, w: 120 },   // Column 1
-            { x: 240, w: 120 },   // Column 2
-            { x: 380, w: 120 },   // Column 3 (임팩트 프레임)
-            { x: 520, w: 120 },   // Column 4
-            { x: 660, w: 120 },   // Column 5
-            { x: 800, w: 120 }    // Column 6
+            { x: 142, w: 135 },   // Column 1
+            { x: 282, w: 135 },   // Column 2
+            { x: 422, w: 135 },   // Column 3 (임팩트)
+            { x: 562, w: 135 },   // Column 4
+            { x: 702, w: 135 },   // Column 5
+            { x: 842, w: 135 }    // Column 6
         ]
     },
     DEAD: {
-        y: 280, h: 140,
+        y: 282, h: 135,
         frames: [
-            { x: 100, w: 120 },   // Column 1
-            { x: 240, w: 120 },   // Column 2
-            { x: 380, w: 120 },   // Column 3
-            { x: 520, w: 120 },   // Column 4
-            { x: 660, w: 120 },   // Column 5
-            { x: 800, w: 120 }    // Column 6 (묘비 상태)
+            { x: 142, w: 135 },   // Column 1
+            { x: 282, w: 135 },   // Column 2
+            { x: 422, w: 135 },   // Column 3
+            { x: 562, w: 135 },   // Column 4
+            { x: 702, w: 135 },   // Column 5
+            { x: 842, w: 135 }    // Column 6 (묘비)
         ]
     }
 };
 
-// 보스킹 (청토끼 킹.png) - 3행 7열 구조 (첫 열 텍스트 제외, 6프레임 사용)
-// 이미지 크기 기준: W_total x H_total
-// 단일 셀: w = W_total/7, h = H_total/3
-// 시작 x = w (첫 번째 텍스트 칸 스킵)
-// 실제 사용: 6개 열 (Columns 1-6)
+// 보스킹 (청토끼 킹.png) - 3x7 그리드, 텍스트 완전 제외
+// 그리드: 7열(140px each) x 3행(140px each) = 980x420px
+// 텍스트 열: Column 0 (0-140px) - 완전 제외
+// 스프라이트: Columns 1-6 (140-980px), 여백 고려해 135px 사용
 const BOSS_KING_SPRITE_MAP = {
     WALK: {
-        y: 0, h: 140,
+        y: 2, h: 135,
         frames: [
-            { x: 100, w: 120 },   // Column 1
-            { x: 240, w: 120 },   // Column 2
-            { x: 380, w: 120 },   // Column 3
-            { x: 520, w: 120 },   // Column 4
-            { x: 660, w: 120 },   // Column 5
-            { x: 800, w: 120 }    // Column 6
+            { x: 142, w: 135 },   // Column 1 (140px + 2px 여백)
+            { x: 282, w: 135 },   // Column 2
+            { x: 422, w: 135 },   // Column 3
+            { x: 562, w: 135 },   // Column 4
+            { x: 702, w: 135 },   // Column 5
+            { x: 842, w: 135 }    // Column 6
         ]
     },
     ATTACK: {
-        y: 140, h: 140,
+        y: 142, h: 135,
         frames: [
-            { x: 100, w: 120 },   // Column 1 (타격 지점: Frame 3)
-            { x: 240, w: 120 },   // Column 2
-            { x: 380, w: 120 },   // Column 3 (임팩트 프레임)
-            { x: 520, w: 120 },   // Column 4
-            { x: 660, w: 120 },   // Column 5
-            { x: 800, w: 120 }    // Column 6
+            { x: 142, w: 135 },   // Column 1
+            { x: 282, w: 135 },   // Column 2
+            { x: 422, w: 135 },   // Column 3 (임팩트)
+            { x: 562, w: 135 },   // Column 4
+            { x: 702, w: 135 },   // Column 5
+            { x: 842, w: 135 }    // Column 6
         ]
     },
     DEAD: {
-        y: 280, h: 140,
+        y: 282, h: 135,
         frames: [
-            { x: 100, w: 120 },   // Column 1
-            { x: 240, w: 120 },   // Column 2
-            { x: 380, w: 120 },   // Column 3
-            { x: 520, w: 120 },   // Column 4
-            { x: 660, w: 120 },   // Column 5
-            { x: 800, w: 120 }    // Column 6 (묘비 상태)
+            { x: 142, w: 135 },   // Column 1
+            { x: 282, w: 135 },   // Column 2
+            { x: 422, w: 135 },   // Column 3
+            { x: 562, w: 135 },   // Column 4
+            { x: 702, w: 135 },   // Column 5
+            { x: 842, w: 135 }    // Column 6 (묘비)
         ]
     }
 };
