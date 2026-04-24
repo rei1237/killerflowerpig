@@ -365,11 +365,11 @@ function startGame() {
     
     // 스토리 상태로 전환
     currentState = GAME_STATE.STORY;
-    storyDisplayTime = Date.now();
+    // storyDisplayTime은 drawStoryScreen에서 페이지 분할 시 설정됨
     storyTextComplete = false;
     storyClickPending = false;
     
-    // 페이지네이션 초기화
+    // 페이지네이션 초기화 (drawStoryScreen에서 첫 프레임에 분할 및 시간 설정)
     storyPages = [];
     storyCurrentPage = 0;
     storyTotalPages = 0;
@@ -1163,10 +1163,10 @@ function advanceStage() {
         // 다음 스테이지 스토리 표시
         currentState = GAME_STATE.STORY;
         storyTypingIndex = 0; 
-        storyDisplayTime = Date.now();
+        // storyDisplayTime은 drawStoryScreen에서 페이지 분할 시 설정됨
         storyTextComplete = false;
         
-        // 페이지네이션 초기화
+        // 페이지네이션 초기화 (drawStoryScreen에서 첫 프레임에 분할 및 시간 설정)
         storyPages = [];
         storyCurrentPage = 0;
         storyTotalPages = 0;
@@ -2213,10 +2213,11 @@ function drawStoryScreen(ctx, timestamp) {
         storyPages = splitStoryIntoPages(stage.storyText, maxWidth, maxHeight, lineHeight);
         storyTotalPages = storyPages.length;
         storyCurrentPage = 0;
-        // storyDisplayTime은 advanceStage/startGame에서 이미 설정됨
-        // 여기서 다시 설정하면 타이핑이 처음부터 시작하지 않을 수 있음
-        // lastTypedCharIndex도 초기화
+        // 처음부터 타이핑되도록 시간 초기화
+        storyDisplayTime = Date.now();
+        storyTextComplete = false;
         lastTypedCharIndex = 0;
+        console.log(`[Story] Stage ${currentStage} story initialized, pages: ${storyTotalPages}`);
     }
 
     // 검은 배경
