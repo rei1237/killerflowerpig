@@ -114,12 +114,12 @@ function applyMobileOptimizations() {
 }
 
 function isMobileLandscapePlayMode() {
-    // 세로 모드일 때는 이지 모드 활성화 (더 쉬운 게임)
-    return isMobileTouchDevice() && window.innerWidth < window.innerHeight;
+    // 가로 모드일 때 이지 모드 활성화 (더 쉬운 게임)
+    return isMobileTouchDevice() && window.innerWidth > window.innerHeight;
 }
 
 function isMobileLandscapeOrientation() {
-    // 진짜 가로 모드 (width > height)
+    // 진짜 가로 모드 (width > height) - 풀스크린용
     return isMobileTouchDevice() && window.innerWidth > window.innerHeight;
 }
 
@@ -194,13 +194,29 @@ function handleMobileOrientation() {
 // 화면 방향 변경 감지
 if (isMobileTouchDevice()) {
     window.addEventListener('orientationchange', () => {
-        setTimeout(handleMobileOrientation, 100);
+        setTimeout(() => {
+            handleMobileOrientation();
+            checkMobileEasyModeStatus();
+        }, 100);
     });
     
     // 리사이즈도 감지 (방향 변경 감지 보조)
     window.addEventListener('resize', () => {
         handleMobileOrientation();
+        checkMobileEasyModeStatus();
     });
+}
+
+// 모바일 이지 모드 상태 체크 및 로그
+function checkMobileEasyModeStatus() {
+    const isMobile = isMobileTouchDevice();
+    const isLandscape = window.innerWidth > window.innerHeight;
+    const easyModeActive = isMobileEasyModeActive();
+    
+    console.log(`[Mobile Check] Device: ${isMobile ? 'Mobile' : 'Desktop'}, Landscape: ${isLandscape}, EasyMode: ${easyModeActive}`);
+    console.log(`[Screen] Width: ${window.innerWidth}, Height: ${window.innerHeight}`);
+    
+    return easyModeActive;
 }
 
 function updateInstallButtonVisibility() { // MOBILE LANDSCAPE
@@ -319,6 +335,12 @@ function startGame() {
     storyTypingIndex = 0;
     storyDisplayTime = Date.now();
     updateMainMenuVisibility();
+    
+    // 게임 시작 시 모바일 이지 모드 상태 확인
+    if (isMobileTouchDevice()) {
+        const easyMode = checkMobileEasyModeStatus();
+        console.log(`[Game Start] Mobile Easy Mode: ${easyMode ? 'ACTIVE' : 'INACTIVE'}`);
+    }
 }
 
 if (installButton) {
@@ -1907,6 +1929,9 @@ async function init() {
         requestMobileMainFullscreen();
         handleMobileOrientation();
     }
+    
+    // 초기 모바일 상태 체크
+    checkMobileEasyModeStatus();
     
     requestAnimationFrame(gameLoop);
 }
