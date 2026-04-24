@@ -1463,115 +1463,151 @@ class GatePair {
         ctx.restore();
     }
 
-    // 테마 1: 생존형 고철 게이트 (Stage 1-3)
+    // 테마 1: 생존형 고철 게이트 (Stage 1-3) - 고급화
     drawScrapGate(ctx, x, y, w, h, color, time) {
-        // 배경 (녹슨 철판)
-        ctx.fillStyle = '#5d4037';
+        // 배경 (부식된 철판 질감)
+        ctx.fillStyle = '#4e342e';
         ctx.fillRect(x, y, w, h);
         
-        // 나무 판자 덧댐
-        ctx.fillStyle = '#3e2723';
-        for(let i = 10; i < h - 20; i += 30) {
-            ctx.fillRect(x - 5, y + i, w + 10, 15);
-            // 못 자국
-            ctx.fillStyle = '#000';
-            ctx.fillRect(x - 2, y + i + 5, 2, 2);
-            ctx.fillRect(x + w, y + i + 5, 2, 2);
-            ctx.fillStyle = '#3e2723';
+        // 픽셀 노이즈/녹 (Rust)
+        for(let i = 0; i < 20; i++) {
+            ctx.fillStyle = i % 2 === 0 ? '#3e2723' : '#6d4c41';
+            ctx.fillRect(x + Math.random() * w, y + Math.random() * h, 4, 4);
         }
 
-        // 가시철사 (바브드 와이어)
-        ctx.strokeStyle = '#9e9e9e';
+        // 나무 판자 (결이 살아있는 도트 아트)
+        for(let i = 15; i < h - 25; i += 35) {
+            ctx.fillStyle = '#3e2723'; // 어두운 나무
+            ctx.fillRect(x - 8, y + i, w + 16, 18);
+            
+            // 나뭇결 (Highlights)
+            ctx.fillStyle = '#5d4037';
+            ctx.fillRect(x - 4, y + i + 4, w + 8, 2);
+            ctx.fillRect(x + 10, y + i + 10, 20, 2);
+            
+            // 박힌 못 (Metallic Pins)
+            ctx.fillStyle = '#9e9e9e';
+            ctx.fillRect(x - 4, y + i + 6, 3, 3);
+            ctx.fillRect(x + w + 1, y + i + 6, 3, 3);
+        }
+
+        // 가시철사 (정교한 픽셀 와이어)
+        ctx.strokeStyle = '#757575';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        for(let i = 0; i < h; i += 10) {
-            const offsetX = Math.sin(i * 0.5) * 5;
-            ctx.lineTo(x + offsetX, y + i);
-            ctx.lineTo(x + w + offsetX, y + i);
+        for(let i = 0; i < h; i += 8) {
+            const ox = Math.sin(i * 0.4 + time/500) * 4;
+            ctx.lineTo(x + ox, y + i);
+            if (i % 16 === 0) { // 가시 (Barbs)
+                ctx.moveTo(x + ox - 4, y + i); ctx.lineTo(x + ox + 4, y + i);
+            }
         }
         ctx.stroke();
 
-        // 혈흔 효과
-        ctx.fillStyle = 'rgba(128, 0, 0, 0.6)';
-        ctx.fillRect(x + 10, y + 20, 5, 15);
-        ctx.fillRect(x + w - 15, y + 50, 8, 20);
+        // 흘러내린 피 (Weathered Blood)
+        ctx.fillStyle = '#800000';
+        ctx.fillRect(x + w - 12, y + 40, 4, 30);
+        ctx.fillRect(x + w - 16, y + 65, 8, 4);
 
-        // 네온 바 (생존형 조명)
-        const flicker = Math.random() > 0.9 ? 0.7 : 1.0;
+        // 조명 (플리커링 램프)
+        const flicker = Math.random() > 0.98 ? 0.2 : 1.0;
         ctx.fillStyle = color;
-        ctx.globalAlpha = flicker;
-        ctx.fillRect(x - 2, y, w + 4, 8);
-        ctx.fillRect(x - 2, y + h - 8, w + 4, 8);
-        ctx.globalAlpha = 1.0;
-    }
-
-    // 테마 2: 군사용 철제 게이트 (Stage 4-6)
-    drawMilitaryGate(ctx, x, y, w, h, color, time) {
-        // 배경 (군사용 슬레이트 그레이)
-        ctx.fillStyle = '#2c3e50';
-        ctx.fillRect(x, y, w, h);
-        
-        // 강철 프레임 및 리벳
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(x, y, w, h);
-        
-        ctx.fillStyle = '#34495e';
-        for(let i = 5; i < h; i += 20) {
-            ctx.fillRect(x + 2, y + i, 4, 4); // 리벳
-            ctx.fillRect(x + w - 6, y + i, 4, 4);
-        }
-
-        // "KEEP OUT" 스프레이
-        ctx.fillStyle = 'rgba(192, 57, 43, 0.8)';
-        ctx.font = 'bold 12px Arial'; // 픽셀 느낌을 위해 작게
-        ctx.textAlign = 'center';
-        ctx.fillText('KEEP OUT', x + w/2, y + h - 40);
-
-        // 움푹 들어간 자국 (Dents)
-        ctx.fillStyle = '#1a252f';
-        ctx.fillRect(x + 10, y + 30, 15, 10);
-        
-        // 군사용 네온 지시등
-        ctx.fillStyle = color;
-        ctx.shadowBlur = 10;
+        ctx.globalAlpha = 0.8 * flicker;
+        ctx.shadowBlur = 10 * flicker;
         ctx.shadowColor = color;
-        ctx.fillRect(x + w/2 - 20, y + 2, 40, 5);
+        ctx.fillRect(x + w/2 - 15, y + 2, 30, 4);
+        ctx.globalAlpha = 1.0;
         ctx.shadowBlur = 0;
     }
 
-    // 테마 3: 지하철 셔터 게이트 (Stage 7+)
-    drawSubwayGate(ctx, x, y, w, h, color, time) {
-        // 배경 (어두운 지하철 역)
-        ctx.fillStyle = '#121212';
+    // 테마 2: 군사용 철제 게이트 (Stage 4-6) - 고급화
+    drawMilitaryGate(ctx, x, y, w, h, color, time) {
+        // 배경 (강화 강철)
+        ctx.fillStyle = '#263238';
         ctx.fillRect(x, y, w, h);
         
-        // 롤링 셔터 주름
-        ctx.fillStyle = '#333';
-        for(let i = 0; i < h; i += 6) {
-            ctx.fillRect(x + 2, y + i, w - 4, 3);
-        }
-
-        // 마른 혈흔 손자국 (Handprints)
-        ctx.fillStyle = 'rgba(100, 0, 0, 0.5)';
-        ctx.fillRect(x + 15, y + h/2, 10, 12); // 손바닥
-        for(let i = 0; i < 5; i++) ctx.fillRect(x + 15 + i*2, y + h/2 - 8, 2, 6); // 손가락
-
-        // 깜빡이는 "SUBWAY" 네온 사인
-        const isNeonOn = time % 1500 > 100;
-        if (isNeonOn) {
-            ctx.fillStyle = '#00d2ff';
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#00d2ff';
-            ctx.font = 'bold 10px Arial';
-            ctx.fillText('SUBWAY', x + w/2, y + 15);
-            ctx.shadowBlur = 0;
-        }
-
-        // 셔터 레일 테두리
+        // 경고 스트라이프 (Yellow/Black Strips)
+        ctx.fillStyle = '#f1c40f';
+        ctx.fillRect(x, y, w, 8);
+        ctx.fillRect(x, y + h - 8, w, 8);
         ctx.fillStyle = '#000';
-        ctx.fillRect(x, y, 4, h);
-        ctx.fillRect(x + w - 4, y, 4, h);
+        for(let i = 0; i < w; i += 16) {
+            ctx.beginPath();
+            ctx.moveTo(x + i, y); ctx.lineTo(x + i + 8, y); ctx.lineTo(x + i, y + 8); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x + i, y + h - 8); ctx.lineTo(x + i + 8, y + h - 8); ctx.lineTo(x + i, y + h); ctx.fill();
+        }
+
+        // 중앙 패널 (철제 질감 하이라이트)
+        ctx.fillStyle = '#37474f';
+        ctx.fillRect(x + 6, y + 15, w - 12, h - 30);
+        
+        // 긁힌 자국 (Scratches)
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.beginPath();
+        ctx.moveTo(x + 20, y + 40); ctx.lineTo(x + 50, y + 60);
+        ctx.moveTo(x + 10, y + h - 40); ctx.lineTo(x + 30, y + h - 20);
+        ctx.stroke();
+
+        // "KEEP OUT" 스텐실 (정교한 픽셀 폰트 스타일)
+        ctx.fillStyle = '#c0392b';
+        ctx.font = 'bold 10px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.fillText('KEEP', x + w/2, y + h - 45);
+        ctx.fillText('OUT', x + w/2, y + h - 28);
+
+        // 군용 조명 (적색 경고등)
+        const lightOn = time % 1000 < 500;
+        ctx.fillStyle = lightOn ? '#ff0000' : '#4a0000';
+        ctx.fillRect(x + 4, y + 10, 6, 6);
+        ctx.fillRect(x + w - 10, y + 10, 6, 6);
+    }
+
+    // 테마 3: 지하철 셔터 게이트 (Stage 7+) - 고급화
+    drawSubwayGate(ctx, x, y, w, h, color, time) {
+        // 배경
+        ctx.fillStyle = '#1c1c1c';
+        ctx.fillRect(x, y, w, h);
+        
+        // 셔터 날 (Slats - 그림자 포함)
+        for(let i = 0; i < h; i += 8) {
+            ctx.fillStyle = '#333';
+            ctx.fillRect(x + 2, y + i, w - 4, 4);
+            ctx.fillStyle = '#222';
+            ctx.fillRect(x + 2, y + i + 4, w - 4, 4);
+        }
+
+        // 그라피티 (Graffiti Art)
+        ctx.fillStyle = 'rgba(155, 89, 182, 0.4)';
+        ctx.font = 'bold 14px Script';
+        ctx.fillText('Z-ZONE', x + 25, y + h - 30);
+
+        // 핏자국 손바닥 (Handprints - 픽셀 디테일)
+        ctx.fillStyle = 'rgba(128, 0, 0, 0.6)';
+        const hx = x + 12; const hy = y + h/2;
+        ctx.fillRect(hx, hy, 12, 14); // 손바닥
+        for(let i = 0; i < 5; i++) {
+            ctx.fillRect(hx + i*2.5, hy - 10 + (i === 2 ? -2 : 0), 2, 10);
+        }
+
+        // 지하철 네온 사인 (Flickering SUBWAY)
+        const flicker = Math.random() > 0.96 ? 0.3 : 1.0;
+        ctx.fillStyle = '#00d2ff';
+        ctx.globalAlpha = flicker;
+        ctx.shadowBlur = 15 * flicker;
+        ctx.shadowColor = '#00d2ff';
+        ctx.font = 'bold 9px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.fillText('SUBWAY', x + w/2, y + 18);
+        ctx.globalAlpha = 1.0;
+        ctx.shadowBlur = 0;
+
+        // 사이드 레일 및 오일 스테인
+        ctx.fillStyle = '#000';
+        ctx.fillRect(x, y, 6, h);
+        ctx.fillRect(x + w - 6, y, 6, h);
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(x + 6, y + h - 15, 15, 10);
     }
 
     drawPixelIcon(ctx, type, x, y, size) {
