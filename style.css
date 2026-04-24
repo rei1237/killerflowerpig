@@ -920,6 +920,9 @@ html {
     box-shadow: 
         inset -2px -2px 0px rgba(0,0,0,0.3),
         3px 3px 0px rgba(0,0,0,0.5);
+    pointer-events: auto; /* 클릭 이벤트 수신 */
+    z-index: 1002; /* 최상위 클릭 우선순위 */
+    position: relative; /* z-index 적용을 위해 */
 }
 
 .stage-btn:hover {

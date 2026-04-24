@@ -2772,47 +2772,34 @@ async function init() {
         passwordSubmitBtn.addEventListener('click', checkStagePassword);
     }
     if (stagePasswordInput) {
-        // 키 입력 시 dots 업데이트
-        stagePasswordInput.addEventListener('input', (e) => {
-            updatePasswordDots(e.target.value.length);
-        });
-        // 포커스 시 활성화 표시
-        stagePasswordInput.addEventListener('focus', () => {
-            updatePasswordDots(stagePasswordInput.value.length);
-        });
-        stagePasswordInput.addEventListener('blur', () => {
-            updatePasswordDots(stagePasswordInput.value.length);
-        });
-        // Enter 키로 제출
         stagePasswordInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                checkStagePassword();
-            }
+            if (e.key === 'Enter') checkStagePassword();
         });
-        // dots 영역 클릭 시 입력 필드 포커스
-        if (passwordDots) {
-            passwordDots.addEventListener('click', () => {
-                stagePasswordInput.focus();
-            });
-        }
     }
     if (stageSelectCloseBtn) {
         stageSelectCloseBtn.addEventListener('click', () => {
             hideStageSelectUI();
             // 메인 메뉴로 돌아가기
             isStageUnlocked = false;
-            resetPasswordInput();
             updateMainMenuVisibility();
         });
     }
     // 스테이지 버튼 이벤트 리스너 - 각 버튼에 명시적으로 설정
     stageButtons.forEach((btn, index) => {
+        // 클릭 이벤트
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             const stageNum = parseInt(btn.dataset.stage);
             console.log(`[Stage Select] Button ${stageNum} clicked`);
+            startGameAtStage(stageNum);
+        });
+        // 마우스 다운 이벤트 (더 빠른 반응)
+        btn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const stageNum = parseInt(btn.dataset.stage);
+            console.log(`[Stage Select] Button ${stageNum} mousedown`);
             startGameAtStage(stageNum);
         });
         // 터치 이벤트도 추가 (모바일 대응)
@@ -2826,6 +2813,20 @@ async function init() {
     });
     console.log(`[Init] ${stageButtons.length} stage buttons initialized`);
     
+    // 스테이지 선택 컨테이너에 이벤트 위임 (백업 방법)
+    if (stageSelectContainer) {
+        stageSelectContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.stage-btn');
+            if (btn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const stageNum = parseInt(btn.dataset.stage);
+                console.log(`[Stage Select] Delegated click for stage ${stageNum}`);
+                startGameAtStage(stageNum);
+            }
+        });
+    }
+
     // 모바일 메인 화면 즉시 전체화면
     if (isMobileTouchDevice()) {
         requestMobileMainFullscreen();
