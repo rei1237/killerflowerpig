@@ -30,6 +30,7 @@ const stageButtons = document.querySelectorAll('.stage-btn');
 
 const MOBILE_OPTIMIZED_CLASS = 'mobile-optimized';
 let deferredInstallPrompt = null;
+let animationId = null;
 
 // 패스워드 및 스테이지 언락 상태
 const STAGE_PASSWORD = '910902'; // 연이의 생년월일
@@ -642,8 +643,27 @@ function exitGame() {
     // 게임 상태 정지
     currentState = GAME_STATE.GAME_OVER;
     
-    // 게임 루프 정지 (선택적)
-    // cancelAnimationFrame(animationId);
+    // 게임 루프 정지
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+    }
+    
+    // 게임 오버 버튼 숨김
+    if (gameoverButtons) gameoverButtons.hidden = true;
+    
+    // 모든 게임 객체 정리
+    projectiles = [];
+    enemies = [];
+    particles = [];
+    gates = [];
+    floatingTexts = [];
+    
+    // BGM 정지
+    if (bgmAudio) {
+        bgmAudio.pause();
+        bgmAudio.currentTime = 0;
+    }
     
     // 방법 1: 창 닫기 시도 (팝업으로 열린 경우에만 작동)
     try {
@@ -656,17 +676,15 @@ function exitGame() {
     // location.href = 'about:blank';
     
     // 방법 3: 게임 종료 화면 표시
-    if (gameoverButtons) gameoverButtons.hidden = true;
-    
-    // 캔버스에 종료 메시지 표시
     const exitOverlay = document.createElement('div');
+    exitOverlay.id = 'game-exit-overlay';
     exitOverlay.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.9);
+        background: rgba(0,0,0,0.95);
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -676,10 +694,11 @@ function exitGame() {
         color: #fff;
     `;
     exitOverlay.innerHTML = `
-        <div style="font-size: 24px; margin-bottom: 20px; color: #ff4757;">GAME EXITED</div>
-        <div style="font-size: 12px; color: #888;">Thanks for playing!</div>
+        <div style="font-size: 28px; margin-bottom: 30px; color: #ff4757; text-shadow: 0 0 20px #ff4757;">게임 종료</div>
+        <div style="font-size: 12px; color: #888; margin-bottom: 20px;">플레이해 주셔서 감사합니다!</div>
+        <div style="font-size: 10px; color: #666;">GAME EXITED</div>
         <button onclick="location.reload()" style="
-            margin-top: 30px;
+            margin-top: 40px;
             padding: 15px 30px;
             font-family: 'Press Start 2P', cursive;
             font-size: 10px;
@@ -687,9 +706,12 @@ function exitGame() {
             border: 4px solid #1e8449;
             color: #fff;
             cursor: pointer;
-        ">RESTART</button>
+            border-radius: 4px;
+        ">다시 시작</button>
     `;
     document.body.appendChild(exitOverlay);
+    
+    console.log('[Exit] Game has been terminated successfully');
 }
 
 window.addEventListener('beforeinstallprompt', (event) => {
@@ -1997,7 +2019,7 @@ function gameLoop(timestamp) {
     // 스토리 화면
     if (currentState === GAME_STATE.STORY) {
         drawStoryScreen(ctx, timestamp);
-        requestAnimationFrame(gameLoop);
+        animationId = requestAnimationFrame(gameLoop);
         return;
     }
     
@@ -2086,7 +2108,7 @@ function gameLoop(timestamp) {
     if (currentState === GAME_STATE.GAME_OVER) drawGameOverScreen();
     if (currentState === GAME_STATE.WIN) drawWinScreen();
     if (currentState === GAME_STATE.STAGE_CLEAR) drawStageClearScreen();
-    requestAnimationFrame(gameLoop);
+    animationId = requestAnimationFrame(gameLoop);
 }
 
 function drawStartScreen() {
@@ -3001,7 +3023,7 @@ async function init() {
     // 초기 모바일 상태 체크
     checkMobileEasyModeStatus();
     
-    requestAnimationFrame(gameLoop);
+    animationId = requestAnimationFrame(gameLoop);
 }
 init();
 
