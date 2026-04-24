@@ -2160,6 +2160,7 @@ function drawStartScreen() {
     const titleImg = ImageLoader.get('title');
     const time = Date.now();
     const pulse = Math.sin(time / 400) * 0.05 + 1.0;
+    const floatY = Math.sin(time / 1000) * 15; // 부드러운 상하 유동 애니메이션
 
     // 좀비 분위기의 피 흘러내리는 픽셀 효과 (위에서 아래로)
     ctx.fillStyle = '#450a0a';
@@ -2235,7 +2236,7 @@ function drawStartScreen() {
             titleX = canvas.width * 0.18 - w / 2; // 좌측 18% 지점 (더 왼쪽)
         }
         
-        ctx.drawImage(titleImg, titleX, titleY, w, h);
+        ctx.drawImage(titleImg, titleX, titleY + floatY, w, h); // floatY 적용
         ctx.restore();
     }
 
@@ -2267,24 +2268,24 @@ function drawStartScreen() {
         textY = canvas.height / 2 + 30 * scaleFactor;
     }
     
-    ctx.fillText('Yeon', textX, textY);
+    ctx.fillText('Yeon', textX, textY + floatY);
 
     const subtitleFontSize = isMobile ? Math.max(12, Math.floor(14 * scaleFactor)) : Math.floor(13 * scaleFactor);
     ctx.font = `${subtitleFontSize}px "Press Start 2P"`;
     ctx.fillStyle = '#e74c3c';
     ctx.shadowBlur = 15 * scaleFactor;
-    ctx.fillText('THE KILLER OF BLUE ZOMBIE', textX, textY + 45 * scaleFactor);
+    ctx.fillText('THE KILLER OF BLUE ZOMBIE', textX, textY + 45 * scaleFactor + floatY);
     ctx.restore();
 
     // 2D 도트 스타일 게임 가이드 패널
     let panelW, panelH, panelX, panelY;
     
     if (isMobile && !isPortrait) {
-        // 가로 모드: 좌측 하단에 패널 배치 (우측 UI 버튼과 겹치지 않도록)
+        // 가로 모드: 좌측 상단 영역에 패널 배치 (타이틀 아래)
         panelW = Math.min(320 * scaleFactor, canvas.width * 0.4);
-        panelH = Math.min(160 * scaleFactor, canvas.height * 0.4);
+        panelH = Math.min(160 * scaleFactor, canvas.height * 0.45);
         panelX = 20 * scaleFactor;
-        panelY = canvas.height - panelH - 20 * scaleFactor;
+        panelY = 120 * scaleFactor; // 타이틀 아래쪽으로 배치
     } else if (isMobile) {
         // 세로 모드: 중앙에 배치
         panelW = canvas.width * 0.95;
@@ -2308,9 +2309,9 @@ function drawStartScreen() {
     ctx.fillRect(panelX - 3, panelY - 3, panelW + 6, panelH + 6);
 
     // 본문 패널
-    ctx.fillStyle = 'rgba(8, 12, 20, 0.92)';
+    ctx.fillStyle = 'rgba(8, 12, 20, 0.85)'; // 투명도 조정
     ctx.fillRect(panelX, panelY, panelW, panelH);
-    ctx.strokeStyle = '#00ffff';
+    ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 + pulseAlpha * 0.5})`; // 네온 글로우 효과
     ctx.lineWidth = 2;
     ctx.strokeRect(panelX + 2, panelY + 2, panelW - 4, panelH - 4);
 
@@ -2645,16 +2646,19 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight, fontSize = 1
             // 제목/특수 문단: 여백 추가
             paragraphHeight = lineHeight + paragraphSpacing;
         } else {
-            // 일반 텍스트의 줄 수 계산
+            // 일반 텍스트의 줄 수 계산 (Word Wrap 적용)
+            const words = paragraph.split(' ');
             let line = '';
             let lineCount = 1;
-            for (let n = 0; n < paragraph.length; n++) {
-                const char = paragraph[n];
-                const testLine = line + char;
+            
+            for (let i = 0; i < words.length; i++) {
+                const word = words[i];
+                const testLine = line + (line === '' ? '' : ' ') + word;
                 const metrics = tempCtx.measureText(testLine);
-                if (metrics.width > maxWidth && n > 0) {
+                
+                if (metrics.width > maxWidth && line !== '') {
                     lineCount++;
-                    line = char;
+                    line = word;
                 } else {
                     line = testLine;
                 }
@@ -2663,10 +2667,12 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight, fontSize = 1
             paragraphHeight = (lineCount * lineHeight) + paragraphSpacing;
         }
         
-        // 현재 페이지에 추가할 수 있는지 확인 (효과적인 최대 높이 사용)
+        // 현재 페이지에 추가할 수 있는지 확인
         if (currentPageHeight + paragraphHeight > effectiveMaxHeight && currentPage.length > 0) {
             // 새 페이지 시작
-            pages.push(currentPage.join('\n'));
+            const pageText = currentPage.join('\n').trim();
+            if (pageText) pages.push(pageText);
+            
             currentPage = [paragraph];
             currentPageHeight = paragraphHeight;
         } else {
@@ -2677,10 +2683,13 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight, fontSize = 1
     
     // 마지막 페이지 추가
     if (currentPage.length > 0) {
-        pages.push(currentPage.join('\n'));
+        const pageText = currentPage.join('\n').trim();
+        if (pageText) pages.push(pageText);
     }
     
-    return pages;
+    // 최종 검증: 빈 페이지 필터링 및 최소 한 페이지 보장
+    const finalPages = pages.filter(p => p.length > 0);
+    return finalPages.length > 0 ? finalPages : [text];
 }
 
 // 스토리 다음 페이지로 이동
@@ -2891,19 +2900,20 @@ function drawStoryScreen(ctx, timestamp) {
 }
 
 function wrapTextLeftAlign(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
     let line = '';
     let currentY = y;
     let lineCount = 0;
 
-    for (let n = 0; n < text.length; n++) {
-        const char = text[n];
-        const testLine = line + char;
+    for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        const testLine = line + (line === '' ? '' : ' ') + word;
         const metrics = ctx.measureText(testLine);
         const testWidth = metrics.width;
 
-        if (testWidth > maxWidth && n > 0) {
+        if (testWidth > maxWidth && line !== '') {
             ctx.fillText(line, x, currentY);
-            line = char;
+            line = word;
             currentY += lineHeight;
             lineCount++;
         } else {

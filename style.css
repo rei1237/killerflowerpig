@@ -97,165 +97,173 @@ html {
 }
 
 /* ==========================================
-   개별 버튼 컨테이너 - MISSION GUIDE 아래 배치
+   전문가급 메인 메뉴 UI & 버튼 스타일
    ========================================== */
+.pixel-btn {
+    font-family: 'Press Start 2P', cursive;
+    background: rgba(231, 76, 60, 0.9);
+    color: #fff;
+    border: 4px solid #922b21;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 
+        inset -4px -4px 0px rgba(0,0,0,0.3),
+        0 6px 15px rgba(0,0,0,0.4);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+    image-rendering: pixelated;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-/* 버튼 컨테이너 기본 - z-index 최상위 */
+.pixel-btn:hover {
+    transform: scale(1.05) translateY(-2px);
+    filter: brightness(1.1);
+    box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3), 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.pixel-btn:active {
+    transform: scale(0.95) translateY(1px);
+}
+
+/* 메인 메뉴 UI 공통 */
+.main-menu-ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    pointer-events: none;
+}
+
 .btn-container {
     position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000 !important;
-    pointer-events: none;
+    pointer-events: auto;
+    z-index: 1001;
 }
 
 .btn-container[hidden] {
     display: none !important;
 }
 
-.btn-container .pixel-btn {
-    pointer-events: auto;
-}
-
-/* ==========================================
-   데스크톱 - 꽃돼지 옆에 배치
-   ========================================== */
-@media screen and (min-width: 769px) {
-    /* START 버튼 - 화면 하단에서 더 위로 */
-    .start-container {
-        bottom: 12%;
-        left: 50%;
-        transform: translateX(-50%);
-    }
-    
-    #start-btn {
-        padding: 18px 36px;
-        font-size: 15px;
-    }
-    
-    /* INSTALL 버튼 - 꽃돼지 우측에 배치 */
-    .install-container {
-        bottom: auto;
-        top: 45%;
-        left: auto;
-        right: 15%;
-        transform: translateY(-50%);
-    }
-    
-    #install-btn {
-        padding: 12px 20px;
-        font-size: 10px;
-        white-space: nowrap;
-    }
-}
-
-/* ==========================================
-   모바일 가로 모드 - UX 최적화된 버튼 배치
-   ========================================== */
-@media screen and (max-width: 768px) and (orientation: landscape) {
-    #game-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 0;
-    }
-
-    /* 메인 메뉴 UI - 좌우 균형 잡힌 배치 */
+/* 세로 모드 (Portrait) 레이아웃 */
+@media screen and (orientation: portrait) {
     .main-menu-ui {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: flex-end; /* 기본적으로 우측 정렬 */
-        padding-right: 5%;
-        z-index: 1000;
-        pointer-events: none;
-    }
-
-    .btn-container {
-        position: relative;
-        left: auto;
-        transform: none;
-        width: auto;
-        display: flex;
         justify-content: flex-end;
-        margin-bottom: 10px;
+        align-items: center;
+        padding-bottom: 60px;
     }
 
-    /* START 버튼 - 우측 하단 강조 */
     .start-container {
-        position: absolute;
-        right: 40px;
-        bottom: 40px;
-        margin-bottom: 0;
+        position: relative;
+        margin-bottom: 20px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
     }
 
     #start-btn {
-        padding: 20px 40px;
+        width: 85%;
+        padding: 20px;
         font-size: 16px;
-        width: auto;
-        min-width: 200px;
-        border-width: 5px;
-        border-radius: 4px;
-        box-shadow: 
-            inset -4px -4px 0px rgba(0,0,0,0.3),
-            6px 6px 0px rgba(0,0,0,0.5),
-            0 0 40px rgba(231, 76, 60, 0.5);
-        animation: pulse-btn-landscape 2s infinite;
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        animation: pulse-glow-portrait 2s infinite;
     }
 
-    @keyframes pulse-btn-landscape {
-        0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(231, 76, 60, 0.4); }
-        50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(231, 76, 60, 0.7); }
-    }
-
-    /* INSTALL 버튼 - 우측 상단 */
-    .install-container {
-        position: absolute;
-        right: 40px;
-        top: 20px;
-    }
-
-    #install-btn {
-        padding: 12px 24px;
-        font-size: 10px;
-        width: auto;
-        background: rgba(46, 204, 113, 0.8);
-        backdrop-filter: blur(4px);
-        border: 3px solid #145a32;
-    }
-
-    /* 패스워드 컨테이너 - 좌측 하단 */
     .password-container {
-        position: absolute;
+        position: relative;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .password-panel {
+        width: 85%;
+        max-width: 320px;
+    }
+}
+
+@keyframes pulse-glow-portrait {
+    0%, 100% { box-shadow: 0 0 15px rgba(231, 76, 60, 0.4); }
+    50% { box-shadow: 0 0 40px rgba(231, 76, 60, 0.7); }
+}
+
+/* 가로 모드 (Landscape) 전문가급 레이아웃 */
+@media screen and (orientation: landscape) {
+    /* START 버튼 - 우측 하단 */
+    .start-container {
+        right: 40px;
+        bottom: 30px;
+        left: auto;
+        transform: none;
+    }
+
+    #start-btn {
+        padding: 18px 45px;
+        font-size: 16px;
+        min-width: 220px;
+        animation: pulse-glow-landscape 2s infinite;
+    }
+
+    /* 패스워드 패널 - 좌측 하단 (가이드와 겹치지 않도록 컴팩트화) */
+    .password-container {
         left: 40px;
-        bottom: 40px;
-        width: auto;
-        top: auto;
+        bottom: 30px;
         right: auto;
+        top: auto;
         transform: none;
     }
 
     .password-panel {
-        width: 240px;
-        padding: 15px;
-        background: rgba(26, 26, 46, 0.8);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 4px solid #4a0080;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        width: 220px;
+        padding: 12px;
+        background: rgba(20, 20, 35, 0.8);
+        border: 3px solid rgba(138, 43, 226, 0.7);
     }
 
-    .password-header { margin-bottom: 10px; }
-    .password-icon { font-size: 20px; margin-bottom: 2px; }
-    .password-title { font-size: 10px; margin-bottom: 2px; }
-    .password-subtitle { font-size: 7px; }
-    .password-dots { padding: 8px; gap: 8px; }
-    .dot { width: 12px; height: 12px; }
+    .password-header { margin-bottom: 8px; }
+    .password-icon { font-size: 18px; }
+    .password-title { font-size: 9px; }
+    .password-subtitle { font-size: 6px; }
+    .password-dots { padding: 6px; gap: 8px; }
+    .dot { width: 11px; height: 11px; }
+
+    /* INSTALL 버튼 - 우측 상단 */
+    .install-container {
+        right: 40px;
+        top: 25px;
+        left: auto;
+        bottom: auto;
+        transform: none;
+    }
+
+    #install-btn {
+        padding: 10px 20px;
+        font-size: 10px;
+        background: rgba(46, 204, 113, 0.7);
+        border: 3px solid #145a32;
+    }
+}
+
+@keyframes pulse-glow-landscape {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(231, 76, 60, 0.5); }
+    50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(231, 76, 60, 0.8); }
+}
+
+.password-panel {
+    background: rgba(15, 15, 25, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 4px solid #4a0080;
+    border-radius: 4px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    pointer-events: auto;
 }
 
 /* ==========================================
