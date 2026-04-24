@@ -283,34 +283,47 @@ function hideInstallGuide() {
 
 // 실제 PWA 설치 시도 - 자동 설치
 async function installPWA() {
+    console.log('[Install] Starting PWA installation...');
+    
     // 이미 설치된 경우 알림만 표시
     if (isPWAInstalled()) {
+        console.log('[Install] Already installed');
         addFloatingText('✅ Already Installed!', canvas.width / 2, canvas.height / 2 - 50, '#2ecc71');
         return;
     }
 
     // 설치 프롬프트가 있는 경우 (Chrome/Android) - 바로 설치
     if (deferredInstallPrompt) {
+        console.log('[Install] Prompt available, showing...');
         try {
-            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.prompt();
             const { outcome } = await deferredInstallPrompt.userChoice;
+            console.log('[Install] User choice:', outcome);
+            
             if (outcome === 'accepted') {
                 console.log('PWA installed successfully');
                 deferredInstallPrompt = null;
                 addFloatingText('✅ Installing...', canvas.width / 2, canvas.height / 2 - 50, '#2ecc71');
+                
+                // 버튼 숨기기
+                if (installButton) installButton.hidden = true;
+                if (installBtnContainer) installBtnContainer.hidden = true;
             } else {
                 addFloatingText('❌ Install Cancelled', canvas.width / 2, canvas.height / 2 - 50, '#e74c3c');
             }
         } catch (error) {
-            console.error('Install failed:', error);
+            console.error('[Install] Failed:', error);
             addFloatingText('❌ Install Failed', canvas.width / 2, canvas.height / 2 - 50, '#e74c3c');
         }
     }
     // iOS Safari나 설치 프롬프트가 없는 경우 - 간단한 안내 표시
     else {
+        console.log('[Install] No prompt available');
         // iOS Safari용 간단한 안내
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        if (isIOS) {
+        const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+        
+        if (isIOS || isSafari) {
             addFloatingText('📱 Tap Share → Add to Home Screen', canvas.width / 2, canvas.height / 2 - 50, '#f1c40f');
         } else {
             addFloatingText('💻 Check address bar for install icon', canvas.width / 2, canvas.height / 2 - 50, '#f1c40f');
@@ -1537,8 +1550,8 @@ function drawStartScreen() {
             // 세로 모드: 더 작은 스케일 사용
             scaleFactor = Math.max(0.65, Math.min(0.85, minDim / 500));
         } else {
-            // 가로 모드: 중간 스케일 사용
-            scaleFactor = Math.max(0.75, Math.min(1, minDim / 600));
+            // 가로 모드: 더 큰 스케일 사용 (캐릭터와 제목 보이게)
+            scaleFactor = Math.max(0.85, Math.min(1.2, minDim / 400));
         }
     } else {
         // 데스크톱
@@ -1546,18 +1559,28 @@ function drawStartScreen() {
     }
 
     // 화면 크기별 레이아웃 계산
-    const marginTop = isMobile ? 30 * scaleFactor : 50;
-    const contentSpacing = isMobile ? 20 * scaleFactor : 40;
+    const marginTop = isMobile ? 20 * scaleFactor : 50;
+    const contentSpacing = isMobile ? 15 * scaleFactor : 40;
 
     if (titleImg) {
         ctx.save();
         ctx.shadowBlur = 30;
         ctx.shadowColor = '#00ffff';
-        const maxTitleW = isMobile ? Math.min(400 * scaleFactor, canvas.width * 0.9) : 500 * pulse * scaleFactor;
+        const maxTitleW = isMobile ? Math.min(350 * scaleFactor, canvas.width * 0.85) : 500 * pulse * scaleFactor;
         const w = maxTitleW;
         const h = (w / titleImg.width) * titleImg.height;
-        // 모바일에서는 상단에 배치
-        const titleY = isMobile ? marginTop : canvas.height / 2 - h / 2 - 80 * scaleFactor;
+        // 모바일 가로모드: 중앙에 캐릭터와 제목 함께 배치
+        let titleY;
+        if (isMobile && !isPortrait) {
+            // 가로 모드: 화면 중앙에 배치
+            titleY = canvas.height / 2 - h / 2 - 20 * scaleFactor;
+        } else if (isMobile) {
+            // 세로 모드: 상단에 배치
+            titleY = marginTop;
+        } else {
+            // 데스크톱
+            titleY = canvas.height / 2 - h / 2 - 80 * scaleFactor;
+        }
         ctx.drawImage(titleImg, canvas.width / 2 - w / 2, titleY, w, h);
         ctx.restore();
     }
@@ -1586,22 +1609,26 @@ function drawStartScreen() {
     ctx.restore();
 
     // 2D 도트 스타일 게임 가이드 패널
-    // 모바일에서는 패널 크기를 더 작게 조정
-    const panelW = isMobile ? canvas.width * 0.95 : Math.min(760 * scaleFactor, canvas.width * 0.9);
-    const panelH = isMobile ? Math.min(200 * scaleFactor, canvas.height * 0.35) : Math.min(180 * scaleFactor, canvas.height * 0.25);
-    const panelX = canvas.width / 2 - panelW / 2;
-    // 모바일에서는 타이틀 아래 또는 중앙 근처에 배치
-    let panelY;
-    if (isMobile) {
-        if (isPortrait) {
-            // 세로: 중앙에 배치
-            panelY = canvas.height / 2 - panelH / 2 + 20 * scaleFactor;
-        } else {
-            // 가로: 하단에 배치
-            panelY = canvas.height - panelH - 60 * scaleFactor;
-        }
+    // 모바일에서는 패널 크기와 위치 조정
+    let panelW, panelH, panelX, panelY;
+    
+    if (isMobile && !isPortrait) {
+        // 가로 모드: 좌측 하단에 작은 패널 배치
+        panelW = Math.min(280 * scaleFactor, canvas.width * 0.4);
+        panelH = Math.min(140 * scaleFactor, canvas.height * 0.4);
+        panelX = 20 * scaleFactor;
+        panelY = canvas.height - panelH - 20 * scaleFactor;
+    } else if (isMobile) {
+        // 세로 모드: 중앙에 배치
+        panelW = canvas.width * 0.95;
+        panelH = Math.min(200 * scaleFactor, canvas.height * 0.35);
+        panelX = canvas.width / 2 - panelW / 2;
+        panelY = canvas.height / 2 - panelH / 2 + 20 * scaleFactor;
     } else {
-        // 데스크톱: 하단
+        // 데스크톱: 하단 중앙
+        panelW = Math.min(760 * scaleFactor, canvas.width * 0.9);
+        panelH = Math.min(180 * scaleFactor, canvas.height * 0.25);
+        panelX = canvas.width / 2 - panelW / 2;
         panelY = canvas.height - panelH - 40 * scaleFactor;
     }
     const pulseAlpha = 0.5 + Math.sin(time / 250) * 0.15;

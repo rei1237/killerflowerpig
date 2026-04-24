@@ -150,31 +150,36 @@ html {
 }
 
 /* ==========================================
-   모바일 가로 모드 - MISSION GUIDE 아래 배치
+   모바일 가로 모드 - 우측 상단 버튼 배치
    ========================================== */
 @media screen and (max-width: 768px) and (orientation: landscape) {
-    /* START 버튼 - 화면 하단 중앙 */
+    /* START 버튼 - 우측 상단에 배치 */
     .start-container {
-        bottom: 10%;
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: auto;
+        top: 10%;
+        left: auto;
+        right: 5%;
+        transform: translateX(0);
     }
     
     #start-btn {
-        padding: 12px 24px;
-        font-size: 11px;
+        padding: 10px 20px;
+        font-size: 10px;
     }
     
     /* INSTALL 버튼 - START 버튼 아래 */
     .install-container {
-        bottom: 3%;
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: auto;
+        top: 22%;
+        left: auto;
+        right: 5%;
+        transform: translateX(0);
     }
     
     #install-btn {
-        padding: 8px 16px;
-        font-size: 9px;
+        padding: 6px 12px;
+        font-size: 8px;
+        white-space: nowrap;
     }
 }
 
