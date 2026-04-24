@@ -2230,10 +2230,19 @@ function drawStoryScreen(ctx, timestamp) {
     // 페이지 분할 (처음 한 번만)
     if (storyPages.length === 0) {
         const maxWidth = Math.min(canvas.width * 0.85, 800);
-        // 상단: EPISODE 표시(30px) + 페이지 인디케이터(55px) + 시작 여백(85px) = ~170px
-        // 하단: 안내 텍스트(30px) + 스킵 안내(12px) + 여백 = ~80px
-        const maxHeight = canvas.height - 170 - 80; // 효과적인 텍스트 영역 높이
-        const lineHeight = 26;
+        
+        // 모바일 가로 모드 감지
+        const isMobile = isMobileTouchDevice();
+        const isPortrait = window.innerHeight > window.innerWidth;
+        const isMobileLandscape = isMobile && !isPortrait;
+        
+        // 가로 모드: 더 작은 폰트와 줄 높이, 여백
+        const storyLineHeight = isMobileLandscape ? 22 : 26;
+        const topMargin = isMobileLandscape ? 140 : 170; // 상단 여백
+        const bottomMargin = isMobileLandscape ? 70 : 80; // 하단 여백
+        
+        const maxHeight = canvas.height - topMargin - bottomMargin; // 효과적인 텍스트 영역 높이
+        const lineHeight = storyLineHeight;
         storyPages = splitStoryIntoPages(stage.storyText, maxWidth, maxHeight, lineHeight);
         storyTotalPages = storyPages.length;
         storyCurrentPage = 0;
@@ -2255,23 +2264,32 @@ function drawStoryScreen(ctx, timestamp) {
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
+    // 모바일 가로 모드 감지 (이미 위에서 정의된 값 사용)
+    const isMobileLandscape = isMobileTouchDevice() && window.innerHeight <= window.innerWidth;
+    
     // 상단 에피소드 및 페이지 표시
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.font = 'bold 16px "Press Start 2P"';
+    
+    // 가로 모드: 더 작은 폰트와 위치
+    const episodeFontSize = isMobileLandscape ? 14 : 16;
+    const episodeY = isMobileLandscape ? 20 : 30;
+    const pageY = isMobileLandscape ? 42 : 55;
+    
+    ctx.font = `bold ${episodeFontSize}px "Press Start 2P"`;
     ctx.fillStyle = '#e74c3c';
     ctx.shadowBlur = 20;
     ctx.shadowColor = '#e74c3c';
-    ctx.fillText(`EPISODE ${currentStage}`, canvas.width / 2, 30);
+    ctx.fillText(`EPISODE ${currentStage}`, canvas.width / 2, episodeY);
     
     // 페이지 인디케이터
     if (storyTotalPages > 1) {
-        ctx.font = '12px "Press Start 2P"';
+        ctx.font = `${isMobileLandscape ? 10 : 12}px "Press Start 2P"`;
         ctx.fillStyle = '#00ffff';
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#00ffff';
-        ctx.fillText(`PAGE ${storyCurrentPage + 1} / ${storyTotalPages}`, canvas.width / 2, 55);
+        ctx.fillText(`PAGE ${storyCurrentPage + 1} / ${storyTotalPages}`, canvas.width / 2, pageY);
     }
     ctx.restore();
 
@@ -2301,14 +2319,21 @@ function drawStoryScreen(ctx, timestamp) {
     ctx.save();
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.font = '13px "Press Start 2P"';
+    
+    // isMobileLandscape는 위에서 이미 선언됨
+    // 가로 모드: 더 작은 폰트와 줄 높이로 더 많은 내용 표시
+    const storyFontSize = isMobileLandscape ? 11 : 13;
+    const storyLineHeight = isMobileLandscape ? 22 : 26;
+    const storyStartY = isMobileLandscape ? 70 : 85; // 상단 여백 줄임
+    
+    ctx.font = `${storyFontSize}px "Press Start 2P"`;
     ctx.fillStyle = '#ffffff';
     ctx.shadowBlur = 0;
 
     const maxWidth = Math.min(canvas.width * 0.85, 800);
     const startX = (canvas.width - maxWidth) / 2;
-    const startY = 85;
-    const lineHeight = 26;
+    const startY = storyStartY;
+    const lineHeight = storyLineHeight;
     
     const paragraphs = displayText.split('\n');
     let currentY = startY;
