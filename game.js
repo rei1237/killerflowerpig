@@ -88,12 +88,12 @@ const EASY_MODE_CONFIG = {
     playerSpeedMultiplier: 1.2,       // 20% 더 빠른 이동
     fireRateMultiplier: 0.7,          // 30% 더 빠른 발사
 
-    // 보스 관련 - 훨씬 쉬운 보스
-    bossMoveScaleMultiplier: 0.3,     // 50% → 30% (보스 이동 느림)
-    bossAttackIntervalMultiplier: 4.0, // 모바일: 4배 덜 자주 공격 (더 느림)
-    bossSummonEnemySpeedMultiplier: 0.3, // 50% → 30% (소환된 적 더 느림)
-    bossSummonEnemyHpMultiplier: 0.4, // 60% → 40% (소환된 적 체력 감소)
-    bossProjectileSpeedMultiplier: 0.6, // 보스 발체 속도 60% 감소
+    // 보스 관련 - 적정 난이도
+    bossMoveScaleMultiplier: 0.4,     // 40% 이동 속도 (조금 느림)
+    bossAttackIntervalMultiplier: 3.0, // 3배 덜 자주 공격 (적정)
+    bossSummonEnemySpeedMultiplier: 0.4, // 40% 소환 적 속도
+    bossSummonEnemyHpMultiplier: 0.5, // 50% 소환 적 체력
+    bossProjectileSpeedMultiplier: 0.7, // 보스 발체 속도 30% 감소
 
     // 게임 템포
     gameSpeedMultiplier: 0.75           // 전체 게임 속도 75% (25% 느림)
@@ -1201,10 +1201,9 @@ class Boss {
             return;
         }
         this.y += this.speedY; if (this.y < 50 || this.y + this.height > canvas.height - 50) this.speedY *= -1;
-        // 모바일에서는 보스 공격 속도 대폭 감소 (더 느리게 공격)
+        // 모바일에서는 보스 공격 속도 감소 (적정 수준)
         const bossAttackIntervalMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossAttackIntervalMultiplier : 1; // EASY MODE
-        const mobileExtraDelay = isMobileEasyModeActive() ? 1.5 : 1; // 모바일 추가 지연
-        const interval = (this.hp < 3000 ? 1000 : 1800) * bossAttackIntervalMultiplier * mobileExtraDelay; // EASY MODE
+        const interval = (this.hp < 3000 ? 1000 : 1800) * bossAttackIntervalMultiplier; // EASY MODE
         if (timestamp - this.lastAttackTime > interval) {
             const p = Math.random();
             // 모바일에서는 7스테이지 이후부터만 소환 패턴 사용 (초보 보호)
