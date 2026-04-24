@@ -487,28 +487,18 @@ async function installPWA() {
 function updateMainMenuVisibility() {
     // 개별 버튼 컨테이너 가시성 업데이트
     const shouldShow = currentState === GAME_STATE.START;
-    
-    // 메인 버튼들
     if (startBtnContainer) startBtnContainer.hidden = !shouldShow;
     if (installBtnContainer) installBtnContainer.hidden = !shouldShow;
-    
-    // 타이틀 및 가이드 (DOM)
-    const domTitle = document.querySelector('.dom-game-title');
-    const domGuide = document.getElementById('dom-mission-guide');
-    if (domTitle) domTitle.hidden = !shouldShow;
-    if (domGuide) domGuide.hidden = !shouldShow;
-
     // 패스워드 입력 UI 표시 (스테이지 언락되지 않았을 때만)
     if (passwordContainer) {
         passwordContainer.hidden = !shouldShow || isStageUnlocked;
     }
-    
+    // 스테이지 선택 UI는 별도로 관리
     // 스테이지 선택 UI는 별도로 관리
     if (stageSelectContainer && shouldShow && !isStageUnlocked) {
         stageSelectContainer.hidden = true;
     }
     
-    // 인게임 UI 숨김
     updateInGameUIVisibility();
     updateOverlayVisibility();
 }
@@ -642,7 +632,7 @@ function startGameAtStage(stageNum) {
     }
     
     // 현재 상태 확인
-    if (currentState !== GAME_STATE.START) {
+    if (currentState !== GAME_STATE.START && currentState !== GAME_STATE.STAGE_CLEAR) {
         console.warn(`[Stage Select] Cannot start from state: ${currentState}`);
         return;
     }
@@ -808,37 +798,9 @@ if (retryButton) {
 if (quitButton) {
     quitButton.addEventListener('click', (e) => {
         e.stopPropagation();
-        console.log('[GameOver] Quit clicked - Returning to main menu');
-        resetGameToMain();
+        console.log('[GameOver] Quit clicked - Exiting game');
+        exitGame();
     });
-}
-
-function resetGameToMain() {
-    // 모든 상태 초기화
-    projectiles = []; enemies = []; particles = []; gates = []; floatingTexts = [];
-    currentStage = 1; enemiesKilled = 0; boss = null; score = 0;
-    
-    // START 상태로 전환 (메인 메뉴)
-    currentState = GAME_STATE.START;
-    gameOverStartTime = 0;
-    
-    // 플레이어 초기화
-    Player.init();
-    
-    // UI 가시성 업데이트
-    updateMainMenuVisibility();
-    updateOverlayVisibility();
-    updateGameOverButtonVisibility();
-    
-    // 배경음 정지
-    AudioManager.stopBGM();
-    
-    // 게임 루프 재시작 (정지된 상태일 수 있음)
-    if (!animationId) {
-        animationId = requestAnimationFrame(gameLoop);
-    }
-    
-    console.log('[Reset] Returned to Main Menu');
 }
 
 // 게임 종료 함수
@@ -1705,18 +1667,16 @@ class GatePair {
             ctx.fillRect(14, 5, 4, 15);
             ctx.fillRect(8, 10, 16, 4);
         } else if (type === 'support') {
-            // 서포트 (명확하게 구분되는 렌치/정비 아이콘)
-            ctx.fillStyle = '#2ecc71'; // 초록색
-            // 렌치 머리
-            ctx.fillRect(5, 5, 22, 10);
-            ctx.fillRect(5, 15, 10, 5); ctx.fillRect(17, 15, 10, 5);
-            // 렌치 몸통 (대각선 느낌)
-            ctx.fillRect(12, 20, 8, 15);
-            // 하단 링
-            ctx.fillRect(10, 32, 12, 5);
-            // 중앙 하이라이트
+            // 서포트 (드론 & 플러스 기호 - 쉴드와 구분되게)
+            ctx.fillStyle = '#2ecc71'; // 초록색 (지원/회복 계열)
+            // 드론 날개
+            ctx.fillRect(0, 10, 10, 6); ctx.fillRect(22, 10, 10, 6);
+            // 드론 몸체
+            ctx.fillRect(8, 5, 16, 16);
+            // 플러스 기호 (Support 상징)
             ctx.fillStyle = '#fff';
-            ctx.fillRect(14, 22, 4, 10);
+            ctx.fillRect(14, 8, 4, 10);
+            ctx.fillRect(11, 11, 10, 4);
         } else if (type === 'bomb') {
             // 폭탄
             ctx.fillStyle = '#000';
@@ -2249,44 +2209,55 @@ class Boss {
             
             if (this.isBoss2 || this.isBossKing) {
                 // [정밀도 최적화] 1676x640 해상도 기반 7x3 그리드 정밀 계산
-                // 각 프레임의 정밀 크기
-                const unitW = 1676 / 7; // 239.428...
-                const unitH = 640 / 3;  // 213.333...
+                // 1px의 오차도 허용하지 않기 위해 이미지 너비/높이를 분할하여 직접 계산
+                const cols = 7;
+                const rows = 3;
+                const unitW = img.width / cols;
+                const unitH = img.height / rows;
                 
                 // 행 선택: WALK(0), ATTACK(1), DEAD(2)
                 const rowIdx = this.state === 'ATTACK' ? 1 : (this.state === 'DEAD' ? 2 : 0);
                 // 열 선택: 첫 번째 열(0)은 텍스트 레이블이므로 건너뛰고 1~6번 프레임 사용
                 const colIdx = (this.aniFrame % 6) + 1;
                 
-                // 정밀 좌표 계산 (누적 오차 방지)
                 sx = colIdx * unitW;
                 sy = rowIdx * unitH;
-                const sw = unitW;
-                const sh = unitH;
-                
-                // 원본 비율 유지 + 약간 확대해 잘림 없이 표현
-                const drawW = this.width * scale;
-                const drawH = (sh / sw) * drawW;
-                const anchorY = this.y + this.height;
-                const drawCenterX = this.x + this.width / 2;
+                frameW = unitW;
+                frameH = unitH;
+            } else {
+                const animSet = spriteMap[this.state] || spriteMap.WALK;
+                const frame = animSet.frames[this.aniFrame % animSet.frames.length];
+                frameW = frame.w;
+                frameH = animSet.h;
+                sx = frame.x;
+                sy = animSet.y;
+            }
 
-                ctx.save();
-                ctx.translate(drawCenterX, anchorY - drawH / 2);
-                ctx.scale(-1, 1);
-                
-                // 보스2/보스킹 특수 효과
+            // 원본 비율 유지 + 약간 확대해 잘림 없이 표현
+            const drawW = this.width * scale;
+            const drawH = (frameH / frameW) * drawW;
+            const anchorY = this.y + this.height;
+            const drawCenterX = this.x + this.width / 2;
+
+            ctx.save();
+            ctx.translate(drawCenterX, anchorY - drawH / 2);
+            ctx.scale(-1, 1);
+            
+            // 보스2/보스킹 특수 효과
+            if (this.isBoss2 || this.isBossKing) {
+                // 사망 시 투명도 효과
                 if (this.state === 'DEAD') {
                     ctx.globalAlpha = Math.max(0.3, 1 - this.aniFrame * 0.1);
                 }
+                // 공격 시 붉은색 글로우 효과
                 if (this.state === 'ATTACK') {
                     ctx.shadowBlur = this.isBossKing ? 30 : 20;
                     ctx.shadowColor = '#ff0000';
                 }
-                
-                ctx.drawImage(img, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
-                ctx.restore();
-                return;
             }
+            
+            ctx.drawImage(img, sx, sy, frameW, frameH, -drawW / 2, -drawH / 2, drawW, drawH);
+            ctx.restore();
         }
         // 보스 체력 바 (정교한 픽셀 프레임)
         const bx = canvas.width / 2 - 200; const by = 70; const bw = 400; const bh = 20;
@@ -2323,7 +2294,13 @@ function endGame() {
     if (currentState !== GAME_STATE.GAME_OVER) gameOverStartTime = Date.now();
     currentState = GAME_STATE.GAME_OVER;
 }
-function resetGame() { projectiles = []; enemies = []; particles = []; gates = []; currentStage = 1; enemiesKilled = 0; boss = null; currentState = GAME_STATE.PLAYING; gameOverStartTime = 0; Player.init(); updateMainMenuVisibility(); }
+function resetGame(stageToStart = 1) {
+    projectiles = []; enemies = []; particles = []; gates = [];
+    currentStage = stageToStart; // 파라미터로 받은 스테이지로 시작
+    enemiesKilled = 0; boss = null;
+    currentState = GAME_STATE.PLAYING; gameOverStartTime = 0;
+    Player.init(); updateMainMenuVisibility();
+}
 
 function createBombExplosion() {
     const cx = canvas.width / 2; const cy = canvas.height / 2;
