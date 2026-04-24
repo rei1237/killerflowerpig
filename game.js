@@ -226,9 +226,19 @@ function updateInstallButtonVisibility() { // MOBILE LANDSCAPE
         if (installBtnContainer) installBtnContainer.hidden = true;
         return;
     }
-    // PWA 설치 가능하거나 이미 설치된 경우에 표시 (가이드용)
-    const shouldShow = deferredInstallPrompt || !isPWAInstalled();
-    if (installButton) installButton.hidden = !shouldShow;
+    
+    // 이미 설치된 경우 버튼 숨김
+    if (isPWAInstalled()) {
+        if (installButton) installButton.hidden = true;
+        return;
+    }
+    
+    // PWA 설치 가능한 경우 표시 (프롬프트 있거나 iOS/Safari)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    const canShowInstall = deferredInstallPrompt || isIOS || isSafari || true; // 대부분의 모바일 브라우저에서 표시
+    
+    if (installButton) installButton.hidden = !canShowInstall;
     // installBtnContainer는 updateMainMenuVisibility에서 관리
 }
 
@@ -251,6 +261,8 @@ function showInstallGuide() {
     const mobileGuide = document.getElementById('install-mobile-guide');
     const desktopGuide = document.getElementById('install-desktop-guide');
     const installedMsg = document.getElementById('install-installed-msg');
+    const iosGuide = document.getElementById('ios-guide');
+    const androidGuide = document.getElementById('android-guide');
 
     if (!modal) return;
 
@@ -265,6 +277,11 @@ function showInstallGuide() {
         mobileGuide.hidden = false;
         desktopGuide.hidden = true;
         installedMsg.hidden = true;
+        
+        // iOS/Android 구분
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (iosGuide) iosGuide.hidden = !isIOS;
+        if (androidGuide) androidGuide.hidden = isIOS;
     }
     // 데스크톱
     else {
@@ -316,18 +333,10 @@ async function installPWA() {
             addFloatingText('❌ Install Failed', canvas.width / 2, canvas.height / 2 - 50, '#e74c3c');
         }
     }
-    // iOS Safari나 설치 프롬프트가 없는 경우 - 간단한 안내 표시
+    // iOS Safari나 설치 프롬프트가 없는 경우 - 설치 가이드 모달 표시
     else {
-        console.log('[Install] No prompt available');
-        // iOS Safari용 간단한 안내
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-        
-        if (isIOS || isSafari) {
-            addFloatingText('📱 Tap Share → Add to Home Screen', canvas.width / 2, canvas.height / 2 - 50, '#f1c40f');
-        } else {
-            addFloatingText('💻 Check address bar for install icon', canvas.width / 2, canvas.height / 2 - 50, '#f1c40f');
-        }
+        console.log('[Install] No prompt available - showing install guide');
+        showInstallGuide();
     }
 }
 
