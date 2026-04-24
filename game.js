@@ -365,6 +365,7 @@ function startGame() {
     
     // 스토리 상태로 전환
     currentState = GAME_STATE.STORY;
+    storyStateEnterTime = Date.now(); // 스토리 상태 진입 시간 기록
     // storyDisplayTime은 drawStoryScreen에서 페이지 분할 시 설정됨
     storyTextComplete = false;
     storyClickPending = false;
@@ -410,6 +411,13 @@ function handleStoryClick(e) {
     if (currentState === GAME_STATE.STORY) {
         e.preventDefault();
         e.stopPropagation();
+        
+        // 스토리 상태 진입 후 300ms 이내 클릭은 무시 (디바운스)
+        const timeSinceEnter = Date.now() - storyStateEnterTime;
+        if (timeSinceEnter < 300) {
+            console.log(`[Story] Click ignored, too soon after enter: ${timeSinceEnter}ms`);
+            return;
+        }
         
         if (storyTextComplete) {
             // 텍스트가 모두 표시되었으면 다음 페이지로
@@ -1164,6 +1172,7 @@ function advanceStage() {
         currentStage++; enemiesKilled = 0; boss = null;
         // 다음 스테이지 스토리 표시
         currentState = GAME_STATE.STORY;
+        storyStateEnterTime = Date.now(); // 스토리 상태 진입 시간 기록
         storyTypingIndex = 0; 
         // storyDisplayTime은 drawStoryScreen에서 페이지 분할 시 설정됨
         storyTextComplete = false;
@@ -2069,6 +2078,7 @@ let storyPages = []; // 페이지 분할된 스토리
 let storyCurrentPage = 0; // 현재 페이지
 let storyTotalPages = 0; // 전체 페이지 수
 let lastTypedCharIndex = 0; // 마지막으로 소리낸 문자 인덱스
+let storyStateEnterTime = 0; // 스토리 상태 진입 시간 (클릭 디바운스용)
 
 // 타자기 효과음 (Web Audio API)
 let typewriterAudioContext = null;
@@ -2190,6 +2200,7 @@ function nextStoryPage() {
     if (storyCurrentPage < storyTotalPages - 1) {
         storyCurrentPage++;
         storyDisplayTime = Date.now();
+        storyStateEnterTime = Date.now(); // 새 페이지 진입 시간 갱신
         storyTextComplete = false;
         lastTypedCharIndex = 0; // 타자기 인덱스 초기화
         return false; // 아직 끝나지 않음
@@ -2217,6 +2228,7 @@ function drawStoryScreen(ctx, timestamp) {
         storyCurrentPage = 0;
         // 처음부터 타이핑되도록 시간 초기화
         storyDisplayTime = Date.now();
+        storyStateEnterTime = Date.now(); // 페이지 초기화 시에도 시간 갱신
         storyTextComplete = false;
         lastTypedCharIndex = 0;
         console.log(`[Story] Stage ${currentStage} story initialized, pages: ${storyTotalPages}, time: ${storyDisplayTime}`);
