@@ -65,15 +65,91 @@ function updateInGameUIVisibility() {
     if (inGameUi) inGameUi.hidden = !shouldShow;
 }
 
-function updateDOMHUD() {
-    if (!inGameUi || inGameUi.hidden) return;
-    if (domHpBar) {
-        const hpPercent = Math.max(0, (Player.hp / Player.maxHp) * 100);
-        domHpBar.style.width = hpPercent + '%';
+// --- 캔버스 기반 HUD 렌더링 (최고급 2D 도트 스타일) ---
+function drawHUD(ctx) {
+    const time = Date.now();
+    const isMobile = isMobileTouchDevice();
+    const isLandscape = window.innerWidth > window.innerHeight;
+    const scale = isMobile ? (isLandscape ? 0.8 : 0.7) : 1.0;
+    
+    // 1. 좌상단 체력 & 점수 영역
+    ctx.save();
+    const hudX = 20 * scale;
+    const hudY = 20 * scale;
+    
+    // HUD 금속 프레임 (입체감 있는 도트 아트)
+    ctx.fillStyle = '#1a1c2c'; // 메탈 배경
+    ctx.fillRect(hudX, hudY, 220 * scale, 70 * scale);
+    
+    // 테두리 빛 (네온 옐로우)
+    ctx.strokeStyle = '#f1c40f';
+    ctx.lineWidth = 4 * scale;
+    ctx.strokeRect(hudX + 2, hudY + 2, 216 * scale, 66 * scale);
+    
+    // 체력 바 배경
+    ctx.fillStyle = '#2c0000';
+    ctx.fillRect(hudX + 15 * scale, hudY + 12 * scale, 190 * scale, 18 * scale);
+    
+    // 체력 바 채우기 (그라데이션 + 하이라이트)
+    const hpPercent = Math.max(0, Player.hp / Player.maxHp);
+    if (hpPercent > 0) {
+        const hpGrad = ctx.createLinearGradient(hudX, 0, hudX + 190 * scale, 0);
+        hpGrad.addColorStop(0, '#ff4757'); // 네온 레드
+        hpGrad.addColorStop(1, '#ff6b81');
+        ctx.fillStyle = hpGrad;
+        ctx.fillRect(hudX + 15 * scale, hudY + 12 * scale, 190 * scale * hpPercent, 18 * scale);
+        
+        // 윗부분 하이라이트 (글래스 효과)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.fillRect(hudX + 15 * scale, hudY + 12 * scale, 190 * scale * hpPercent, 6 * scale);
     }
-    if (domScore) {
-        domScore.innerText = 'SCORE: ' + String(score).padStart(6, '0');
+    
+    // 점수 표시 (네온 텍스트)
+    ctx.fillStyle = '#fff';
+    ctx.font = `${Math.floor(14 * scale)}px "Press Start 2P"`;
+    ctx.textAlign = 'left';
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#f1c40f';
+    ctx.fillText(String(score).padStart(7, '0'), hudX + 15 * scale, hudY + 55 * scale);
+    ctx.restore();
+
+    // 2. 우상단 폭탄 잔량 표시 (폭탄 디자인으로 잔량 표시)
+    ctx.save();
+    const bombAreaW = 100 * scale;
+    const bombAreaX = canvas.width - bombAreaW - 20 * scale;
+    const bombAreaY = 20 * scale;
+    
+    // 폭탄 패널 배경
+    ctx.fillStyle = 'rgba(26, 26, 26, 0.8)';
+    ctx.strokeStyle = '#ff4757';
+    ctx.lineWidth = 3 * scale;
+    ctx.fillRect(bombAreaX, bombAreaY, bombAreaW, 50 * scale);
+    ctx.strokeRect(bombAreaX, bombAreaY, bombAreaW, 50 * scale);
+
+    // 폭탄 아이콘 (도트)
+    const bx = bombAreaX + 25 * scale;
+    const by = bombAreaY + 25 * scale;
+    ctx.fillStyle = '#1e272e';
+    ctx.beginPath();
+    ctx.arc(bx, by, 12 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ff4757';
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#ff4757';
+    // 심지
+    ctx.fillRect(bx - 2 * scale, by - 18 * scale, 4 * scale, 8 * scale);
+    if (time % 200 < 100) {
+        ctx.fillStyle = '#f1c40f';
+        ctx.fillRect(bx - 3 * scale, by - 22 * scale, 6 * scale, 6 * scale);
     }
+    ctx.shadowBlur = 0;
+
+    // 잔량 텍스트
+    ctx.fillStyle = '#fff';
+    ctx.font = `${Math.floor(18 * scale)}px "Press Start 2P"`;
+    ctx.textAlign = 'left';
+    ctx.fillText('x' + Player.bombCount, bx + 20 * scale, by + 8 * scale);
+    ctx.restore();
 }
 
 const MOBILE_OPTIMIZED_CLASS = 'mobile-optimized';
@@ -1370,7 +1446,17 @@ class GatePair {
         ctx.fillStyle = '#1a1c2c'; // 다크 네이비 메탈
         ctx.fillRect(x, y, w, h);
         
-        // 2. 내부 깊이감 (그라데이션)
+        // 2. 회로 패턴 (Circuit Patterns)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.lineWidth = 1;
+        for(let i = 0; i < h; i += 20) {
+            ctx.beginPath();
+            ctx.moveTo(x + 5, y + i);
+            ctx.lineTo(x + w - 5, y + i);
+            ctx.stroke();
+        }
+
+        // 3. 내부 깊이감 (그라데이션)
         const grad = ctx.createLinearGradient(x, y, x + w, y);
         grad.addColorStop(0, 'rgba(0,0,0,0.5)');
         grad.addColorStop(0.5, 'rgba(255,255,255,0.1)');
@@ -1378,64 +1464,69 @@ class GatePair {
         ctx.fillStyle = grad;
         ctx.fillRect(x + 4, y + 4, w - 8, h - 8);
 
-        // 3. 네온 프레임 (상/하단 테두리)
+        // 4. 네온 프레임 (상/하단 테두리 - 플리커 효과)
+        const flicker = Math.random() > 0.95 ? 0.5 : 1.0;
         ctx.fillStyle = gate.color;
-        ctx.shadowBlur = 15;
+        ctx.globalAlpha = flicker;
+        ctx.shadowBlur = 15 * flicker;
         ctx.shadowColor = gate.color;
-        ctx.fillRect(x - 2, y, w + 4, 10); // 상단 바
-        ctx.fillRect(x - 2, y + h - 10, w + 4, 10); // 하단 바
+        ctx.fillRect(x - 4, y, w + 8, 12); // 상단 바
+        ctx.fillRect(x - 4, y + h - 12, w + 8, 12); // 하단 바
         ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1.0;
 
-        // 4. 해저드 텍스처 (픽셀 아트 스타일)
+        // 5. 해저드 텍스처 (픽셀 아트 스타일)
         ctx.fillStyle = '#000';
-        for (let i = 0; i < w + 4; i += 12) {
+        for (let i = 0; i < w + 8; i += 12) {
             ctx.beginPath();
-            ctx.moveTo(x - 2 + i, y);
-            ctx.lineTo(x + 4 + i, y);
-            ctx.lineTo(x - 2 + i, y + 10);
-            ctx.lineTo(x - 8 + i, y + 10);
+            ctx.moveTo(x - 4 + i, y);
+            ctx.lineTo(x + 2 + i, y);
+            ctx.lineTo(x - 4 + i, y + 12);
+            ctx.lineTo(x - 10 + i, y + 12);
             ctx.fill();
         }
 
-        // 5. 중앙 코어 에너지 (애니메이션)
+        // 6. 중앙 코어 에너지 (애니메이션)
         const corePulse = Math.sin(time / 200) * 0.2 + 0.8;
         ctx.globalAlpha = 0.3 * corePulse;
         ctx.fillStyle = gate.color;
-        ctx.fillRect(x + 10, y + 15, w - 20, h - 30);
+        ctx.fillRect(x + 10, y + 20, w - 20, h - 40);
         ctx.globalAlpha = 1.0;
         
         // 코어 코일 (픽셀 화이트 라인)
         ctx.fillStyle = '#fff';
-        ctx.fillRect(x + w / 2 - 2, y + 15, 4, h - 30);
+        ctx.fillRect(x + w / 2 - 2, y + 20, 4, h - 40);
 
-        // 6. 레이저 스캐닝 효과 (위아래로 움직이는 빔)
-        const scanY = y + 20 + ((time / 5) % (h - 40));
+        // 7. 레이저 스캐닝 효과 (위아래로 움직이는 빔)
+        const scanY = y + 20 + ((time / 4) % (h - 40));
         ctx.fillStyle = '#fff';
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 15;
         ctx.shadowColor = '#fff';
         ctx.fillRect(x + 5, scanY, w - 10, 2);
         ctx.shadowBlur = 0;
 
-        // 7. 아이콘 및 텍스트
+        // 8. 아이콘 및 텍스트
         ctx.save();
         ctx.translate(x + w / 2, y + h / 2);
         
         // 아이콘 광채
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 25;
         ctx.shadowColor = gate.color;
         this.drawPixelIcon(ctx, gate.icon, -15, -45, 30);
         ctx.shadowBlur = 0;
 
         // 텍스트 (픽셀 폰트)
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 10px "Press Start 2P"';
+        ctx.font = 'bold 11px "Press Start 2P"';
         ctx.textAlign = 'center';
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = '#000';
         ctx.fillText(gate.text, 0, 25);
         
         // 값 표시 (작은 텍스트)
-        ctx.font = '7px "Press Start 2P"';
+        ctx.font = '8px "Press Start 2P"';
         ctx.fillStyle = gate.color;
-        ctx.fillText(`+${gate.value}`, 0, 40);
+        ctx.fillText(`+${gate.value}`, 0, 42);
         
         ctx.restore();
     }
@@ -2279,13 +2370,18 @@ function gameLoop(timestamp) {
         for (let i = enemies.length - 1; i >= 0; i--) { enemies[i].update(timestamp); if (!enemies[i].active) enemies.splice(i, 1); }
         for (let i = particles.length - 1; i >= 0; i--) { particles[i].update(); if (particles[i].life <= 0) particles.splice(i, 1); }
     }
-    Background.draw(ctx); updateDOMHUD();
+    Background.draw(ctx);
     if (boss) boss.draw(ctx);
     for (const g of gates) g.draw(ctx);
     for (const p of projectiles) p.draw(ctx);
     for (const e of enemies) e.draw(ctx);
     for (const pt of particles) pt.draw(ctx);
     Player.draw(ctx);
+
+    // 캔버스 기반 HUD 렌더링 (최상단 레이어)
+    if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT || currentState === GAME_STATE.STAGE_CLEAR) {
+        drawHUD(ctx);
+    }
 
     // 플로팅 텍스트 업데이트 및 그리기
     for (let i = floatingTexts.length - 1; i >= 0; i--) {
