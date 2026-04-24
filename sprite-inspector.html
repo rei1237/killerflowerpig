@@ -393,23 +393,23 @@
                 }
             },
             boss2: {
-                name: '보스2 (청토끼 보스2.png) - 3x6, 글씨 제외',
+                name: '보스2 (청토끼 보스2.png) - 3x6 (2400x840)',
                 rows: 3,
                 cols: 6,
                 map: {
-                    WALK:   { y: 25,  h: 115, frames: [{x:10,w:120},{x:150,w:120},{x:290,w:120},{x:430,w:120},{x:570,w:120},{x:710,w:120}] },
-                    ATTACK: { y: 165, h: 115, frames: [{x:10,w:120},{x:150,w:120},{x:290,w:120},{x:430,w:120},{x:570,w:120},{x:710,w:120}] },
-                    DEAD:   { y: 305, h: 115, frames: [{x:10,w:120},{x:150,w:120},{x:290,w:120},{x:430,w:120},{x:570,w:120},{x:710,w:120}] }
+                    WALK:   { y: 0,   h: 280, frames: [{x:400,w:333},{x:733,w:333},{x:1066,w:333},{x:1399,w:333},{x:1732,w:333},{x:2065,w:333}] },
+                    ATTACK: { y: 280, h: 280, frames: [{x:400,w:333},{x:733,w:333},{x:1066,w:333},{x:1399,w:333},{x:1732,w:333},{x:2065,w:333}] },
+                    DEAD:   { y: 560, h: 280, frames: [{x:400,w:333},{x:733,w:333},{x:1066,w:333},{x:1399,w:333},{x:1732,w:333},{x:2065,w:333}] }
                 }
             },
             king: {
-                name: '보스킹 (청토끼 킹.png) - 3x6, 글씨 제외',
+                name: '보스킹 (청토끼 킹.png) - 3x7 (첫 열 텍스트 제외)',
                 rows: 3,
-                cols: 6,
+                cols: 7,
                 map: {
-                    WALK:   { y: 25,  h: 115, frames: [{x:10,w:120},{x:150,w:120},{x:290,w:120},{x:430,w:120},{x:570,w:120},{x:710,w:120}] },
-                    ATTACK: { y: 165, h: 115, frames: [{x:10,w:120},{x:150,w:120},{x:290,w:120},{x:430,w:120},{x:570,w:120},{x:710,w:120}] },
-                    DEAD:   { y: 305, h: 115, frames: [{x:10,w:120},{x:150,w:120},{x:290,w:120},{x:430,w:120},{x:570,w:120},{x:710,w:120}] }
+                    WALK:   { y: 0,   h: 140, frames: [{x:100,w:120},{x:240,w:120},{x:380,w:120},{x:520,w:120},{x:660,w:120},{x:800,w:120}] },
+                    ATTACK: { y: 140, h: 140, frames: [{x:100,w:120},{x:240,w:120},{x:380,w:120},{x:520,w:120},{x:660,w:120},{x:800,w:120}] },
+                    DEAD:   { y: 280, h: 140, frames: [{x:100,w:120},{x:240,w:120},{x:380,w:120},{x:520,w:120},{x:660,w:120},{x:800,w:120}] }
                 }
             }
         };
@@ -454,12 +454,36 @@
                 currentBoss = this.dataset.boss;
                 
                 const config = SPRITE_MAPS[currentBoss];
+                const map = config.map;
+                
+                // 입력 필드 업데이트
                 document.getElementById('rowCount').value = config.rows;
                 document.getElementById('colCount').value = config.cols;
+                
+                // 첫 번째 상태의 프레임 정보로 나머지 설정 추정
+                const firstState = Object.values(map)[0];
+                if (firstState) {
+                    const firstFrame = firstState.frames[0];
+                    if (firstFrame) {
+                        document.getElementById('frameWidth').value = firstFrame.w;
+                        document.getElementById('frameHeight').value = firstState.h;
+                        document.getElementById('startY').value = firstState.y;
+                        // 간격 계산 (두 번째 프레임이 있으면)
+                        if (firstState.frames[1]) {
+                            const spacing = firstState.frames[1].x - firstFrame.x - firstFrame.w;
+                            document.getElementById('spacing').value = Math.max(0, spacing);
+                        }
+                    }
+                }
                 
                 updateMappingInfo();
                 drawGridOverlay();
                 updateJsonOutput();
+                
+                // 이미지가 업로드된 상태면 메시지 표시
+                if (currentImage) {
+                    showMessage(`${config.name} 매핑이 적용되었습니다. 설정 적용 버튼을 눌러 그리드를 업데이트하세요.`, 'success');
+                }
             });
         });
 
