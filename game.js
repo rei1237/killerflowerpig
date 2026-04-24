@@ -1521,56 +1521,88 @@ const BOSS_SPRITE_MAP = {
     }
 };
 
-// 보스2 (청토끼 보스2.png) 스프라이트 매핑 - 3x3 그리드 가정
+// 보스2 (청토끼 보스2.png) 스프라이트 매핑
+// 이미지 구조: 4행 x 4열 그리드 (추정)
+// Row 0: IDLE/WALK (대기/이동) - 4프레임
+// Row 1: ATTACK (공격) - 4프레임  
+// Row 2: DEAD (사망) - 4프레임
+// Row 3: HIT/ damaged (피격) - 4프레임
 const BOSS2_SPRITE_MAP = {
     WALK: {
-        y: 0, h: 150,
+        y: 0, h: 140,
         frames: [
-            { x: 0, w: 150 },
-            { x: 150, w: 150 },
-            { x: 300, w: 150 }
+            { x: 0, w: 140 },      // 프레임 1: 기본 자세
+            { x: 140, w: 140 },    // 프레임 2: 왼발 앞
+            { x: 280, w: 140 },    // 프레임 3: 기본 자세
+            { x: 420, w: 140 }     // 프레임 4: 오른발 앞
         ]
     },
     ATTACK: {
-        y: 150, h: 150,
+        y: 140, h: 140,
         frames: [
-            { x: 0, w: 150 },
-            { x: 150, w: 150 },
-            { x: 300, w: 150 }
+            { x: 0, w: 140 },      // 프레임 1: 준비 자세
+            { x: 140, w: 160 },    // 프레임 2: 돌진 시작
+            { x: 300, w: 180 },    // 프레임 3: 공격 피크
+            { x: 480, w: 140 }     // 프레임 4: 복귀
         ]
     },
     DEAD: {
-        y: 300, h: 150,
+        y: 280, h: 140,
         frames: [
-            { x: 0, w: 150 },
-            { x: 150, w: 150 },
-            { x: 300, w: 150 }
+            { x: 0, w: 140 },      // 프레임 1: 피격 반응
+            { x: 140, w: 160 },    // 프레임 2: 쓰러지기 시작
+            { x: 300, w: 180 },    // 프레임 3: 바닥에 눕기
+            { x: 480, w: 200 }     // 프레임 4: 완전 사망
+        ]
+    },
+    HIT: {
+        y: 420, h: 140,
+        frames: [
+            { x: 0, w: 140 },      // 피격 반응
+            { x: 140, w: 140 },
+            { x: 280, w: 140 }
         ]
     }
 };
 
-// 보스킹 (청토끼 킹.png) 스프라이트 매핑 - 3x3 그리드 가정
+// 보스킹 (청토끼 킹.png) 스프라이트 매핑
+// 이미지 구조: 4행 x 4열 그리드 (추정) - 보스2보다 15% 더 큼
+// Row 0: IDLE/WALK (대기/이동) - 4프레임
+// Row 1: ATTACK (공격) - 4프레임 (더 강력한 공격 동작)
+// Row 2: DEAD (사망) - 4프레임
+// Row 3: HIT/ damaged (피격) - 4프레임
 const BOSS_KING_SPRITE_MAP = {
     WALK: {
         y: 0, h: 160,
         frames: [
-            { x: 0, w: 160 },
-            { x: 160, w: 160 },
-            { x: 320, w: 160 }
+            { x: 0, w: 160 },      // 프레임 1: 위엄있는 서있기
+            { x: 160, w: 170 },    // 프레임 2: 왼발 앞 (크게)
+            { x: 330, w: 160 },    // 프레임 3: 서있기
+            { x: 490, w: 170 }     // 프레임 4: 오른발 앞 (크게)
         ]
     },
     ATTACK: {
         y: 160, h: 160,
         frames: [
-            { x: 0, w: 160 },
-            { x: 160, w: 160 },
-            { x: 320, w: 160 }
+            { x: 0, w: 160 },      // 프레임 1: 공격 준비
+            { x: 160, w: 190 },    // 프레임 2: 돌진 (팔 휘두르기)
+            { x: 350, w: 220 },    // 프레임 3: 공격 피크 (최대 확장)
+            { x: 570, w: 180 }     // 프레임 4: 복귀
         ]
     },
     DEAD: {
         y: 320, h: 160,
         frames: [
-            { x: 0, w: 160 },
+            { x: 0, w: 160 },      // 프레임 1: 피격 반응 (경악)
+            { x: 160, w: 180 },    // 프레임 2: 무릎 꿇기
+            { x: 340, w: 200 },    // 프레임 3: 바닥에 눕기
+            { x: 540, w: 220 }     // 프레임 4: 완전 사망 (확장)
+        ]
+    },
+    HIT: {
+        y: 480, h: 160,
+        frames: [
+            { x: 0, w: 160 },      // 피격 반응
             { x: 160, w: 160 },
             { x: 320, w: 160 }
         ]
@@ -1582,17 +1614,17 @@ class Boss {
         this.x = canvas.width - 250; this.y = canvas.height / 2 - 100;
         this.width = 200; this.height = 200; this.level = level;
         
-        // 스테이지별 보스 타입 확인
-        const isBoss2 = currentStage >= 6 && currentStage < 9;
-        const isBossKing = currentStage >= 9; // 스테이지 9-10: 보스킹
+        // 스테이지별 보스 타입 확인 (인스턴스 속성으로 저장)
+        this.isBoss2 = currentStage >= 6 && currentStage < 9;
+        this.isBossKing = currentStage >= 9; // 스테이지 9-10: 보스킹
         
         // 기본 체력 계산
         const baseHp = 2500 * level + (level === 10 ? 15000 : 0);
         
         // 보스킹: 80% 더 많은 체력, 보스2: 40% 더 많은 체력
-        if (isBossKing) {
+        if (this.isBossKing) {
             this.hp = Math.floor(baseHp * 1.8);
-        } else if (isBoss2) {
+        } else if (this.isBoss2) {
             this.hp = Math.floor(baseHp * 1.4);
         } else {
             this.hp = baseHp;
@@ -1604,9 +1636,9 @@ class Boss {
         
         // 이동 속도: 보스킹 50% 증가, 보스2 30% 증가
         const baseSpeed = 3 + (level * 0.5);
-        if (isBossKing) {
+        if (this.isBossKing) {
             this.speedY = baseSpeed * 1.5 * bossMoveMultiplier * gameSpeed;
-        } else if (isBoss2) {
+        } else if (this.isBoss2) {
             this.speedY = baseSpeed * 1.3 * bossMoveMultiplier * gameSpeed;
         } else {
             this.speedY = baseSpeed * bossMoveMultiplier * gameSpeed;
@@ -1618,9 +1650,16 @@ class Boss {
     }
     update(timestamp) {
         if (!this.active) return;
-        const deadFrameCount = BOSS_SPRITE_MAP.DEAD.frames.length;
-        const attackFrameCount = BOSS_SPRITE_MAP.ATTACK.frames.length;
-        const walkFrameCount = BOSS_SPRITE_MAP.WALK.frames.length;
+        
+        // 보스 타입별 스프라이트 매핑 선택 (인스턴스 속성 사용)
+        let spriteMap = BOSS_SPRITE_MAP;
+        if (this.isBossKing) spriteMap = BOSS_KING_SPRITE_MAP;
+        else if (this.isBoss2) spriteMap = BOSS2_SPRITE_MAP;
+        
+        const deadFrameCount = spriteMap.DEAD.frames.length;
+        const attackFrameCount = spriteMap.ATTACK.frames.length;
+        const walkFrameCount = spriteMap.WALK.frames.length;
+        
         if (this.state === 'DEAD') {
             if (timestamp - this.lastFrameTime > 150) {
                 this.aniFrame++;
@@ -1641,16 +1680,12 @@ class Boss {
         // 모바일에서는 보스 공격 속도 감소 (적정 수준)
         const bossAttackIntervalMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossAttackIntervalMultiplier : 1; // EASY MODE
         
-        // 스테이지별 보스 타입 확인
-        const isBoss2 = currentStage >= 6 && currentStage < 9;
-        const isBossKing = currentStage >= 9; // 스테이지 9-10: 보스킹
-        
         // 공격 간격: 보스킹 50% 더 빠름, 보스2 30% 더 빠름
         const baseInterval = this.hp < 3000 ? 1000 : 1800;
         let interval;
-        if (isBossKing) {
+        if (this.isBossKing) {
             interval = baseInterval * 0.5; // 보스킹: 50% 더 빠른 공격
-        } else if (isBoss2) {
+        } else if (this.isBoss2) {
             interval = baseInterval * 0.7; // 보스2: 30% 더 빠른 공격
         } else {
             interval = baseInterval;
@@ -1659,31 +1694,31 @@ class Boss {
         if (timestamp - this.lastAttackTime > interval * bossAttackIntervalMultiplier) {
             const p = Math.random();
             // 소환 가능 여부
-            const canSummonMinions = isBossKing || isBoss2 || !isMobileEasyModeActive() || currentStage >= 7;
+            const canSummonMinions = this.isBossKing || this.isBoss2 || !isMobileEasyModeActive() || currentStage >= 7;
 
             if (p < 0.3 && canSummonMinions) {
                 // 부하 소환 패턴
                 // 보스킹: 7마리, 보스2: 5마리, 일반: 3마리
-                const summonCount = isBossKing ? 7 : (isBoss2 ? 5 : 3);
+                const summonCount = this.isBossKing ? 7 : (this.isBoss2 ? 5 : 3);
                 for (let i = 0; i < summonCount; i++) {
                     const e = new Enemy(this.x, this.y + this.height / 2 + (i - Math.floor(summonCount/2)) * 50);
                     const summonEnemySpeedMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossSummonEnemySpeedMultiplier : 1; // EASY MODE
                     const summonEnemyHpMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossSummonEnemyHpMultiplier : 1; // EASY MODE
                     // 보스킹 소환몹: 매우 빠르고 튼튼함
-                    e.speed = (isBossKing ? 9 : (isBoss2 ? 7 : 5)) * summonEnemySpeedMultiplier; 
-                    e.hp = Math.round((isBossKing ? 500 : (isBoss2 ? 350 : 200)) * summonEnemyHpMultiplier); 
+                    e.speed = (this.isBossKing ? 9 : (this.isBoss2 ? 7 : 5)) * summonEnemySpeedMultiplier; 
+                    e.hp = Math.round((this.isBossKing ? 500 : (this.isBoss2 ? 350 : 200)) * summonEnemyHpMultiplier); 
                     enemies.push(e); // EASY MODE
                 }
             } else if (p < 0.55) {
                 // 보스 에너지 볼
                 const bossProjSpeed = isMobileEasyModeActive() ? 
-                    (isBossKing ? 12 : (isBoss2 ? 9 : 6)) * EASY_MODE_CONFIG.bossProjectileSpeedMultiplier : 
-                    (isBossKing ? 12 : (isBoss2 ? 9 : 6));
+                    (this.isBossKing ? 12 : (this.isBoss2 ? 9 : 6)) * EASY_MODE_CONFIG.bossProjectileSpeedMultiplier : 
+                    (this.isBossKing ? 12 : (this.isBoss2 ? 9 : 6));
                 const bossProjDamage = isMobileEasyModeActive() ? 
-                    (isBossKing ? 4 : (isBoss2 ? 3 : 2)) : 
-                    (isBossKing ? 5 : (isBoss2 ? 4 : 3));
+                    (this.isBossKing ? 4 : (this.isBoss2 ? 3 : 2)) : 
+                    (this.isBossKing ? 5 : (this.isBoss2 ? 4 : 3));
                 // 보스킹: 더 큰 에너지 볼 (75px)
-                const projSize = isBossKing ? 75 : (isBoss2 ? 60 : 45);
+                const projSize = this.isBossKing ? 75 : (this.isBoss2 ? 60 : 45);
                 const b = new Projectile(this.x, this.y + this.height / 2, -bossProjSpeed, 0, 0);
                 b.isBossEnergyBall = true; 
                 b.lifeDamage = bossProjDamage; 
@@ -1693,20 +1728,20 @@ class Boss {
             } else if (p < 0.8) {
                 // 보스 산탄
                 const bossScatterSpeed = isMobileEasyModeActive() ? 
-                    (isBossKing ? 14 : (isBoss2 ? 11 : 8)) * EASY_MODE_CONFIG.bossProjectileSpeedMultiplier : 
-                    (isBossKing ? 14 : (isBoss2 ? 11 : 8));
+                    (this.isBossKing ? 14 : (this.isBoss2 ? 11 : 8)) * EASY_MODE_CONFIG.bossProjectileSpeedMultiplier : 
+                    (this.isBossKing ? 14 : (this.isBoss2 ? 11 : 8));
                 // 보스킹: 7방향, 보스2: 5방향, 일반: 3방향
-                const scatterCount = isBossKing ? 7 : (isBoss2 ? 5 : 3);
-                const angleStep = isBossKing ? 0.6 : (isBoss2 ? 0.8 : 1.5);
+                const scatterCount = this.isBossKing ? 7 : (this.isBoss2 ? 5 : 3);
+                const angleStep = this.isBossKing ? 0.6 : (this.isBoss2 ? 0.8 : 1.5);
                 const startAngle = -(scatterCount - 1) * angleStep / 2;
                 for (let i = 0; i < scatterCount; i++) {
                     const angle = startAngle + i * angleStep;
                     const b = new Projectile(this.x, this.y + this.height / 2, -bossScatterSpeed, angle, 0);
                     b.isEnemyBullet = true; 
-                    b.lifeDamage = isBossKing ? 3 : (isBoss2 ? 2 : 1); // 보스킹 산탄 데미지 증가
+                    b.lifeDamage = this.isBossKing ? 3 : (this.isBoss2 ? 2 : 1); // 보스킹 산탄 데미지 증가
                     projectiles.push(b);
                 }
-            } else if (isBossKing) {
+            } else if (this.isBossKing) {
                 // 보스킹 전용: 5연속 에너지 볼 (더 빠른 간격)
                 for (let i = 0; i < 5; i++) {
                     setTimeout(() => {
@@ -1719,7 +1754,7 @@ class Boss {
                         }
                     }, i * 150); // 150ms 간격으로 5연발
                 }
-            } else if (isBoss2) {
+            } else if (this.isBoss2) {
                 // 보스2 전용: 연속 에너지 볼 (3연발)
                 for (let i = 0; i < 3; i++) {
                     setTimeout(() => {
@@ -1748,25 +1783,21 @@ class Boss {
         }
     }
     draw(ctx) {
-        // 스테이지별 보스 타입 확인
-        const isBoss2 = currentStage >= 6 && currentStage < 9;
-        const isBossKing = currentStage >= 9; // 스테이지 9-10: 보스킹
-        
-        // 이미지 선택
+        // 이미지 선택 (인스턴스 속성 사용)
         let imgKey = 'boss';
-        if (isBossKing) imgKey = 'bossKing';
-        else if (isBoss2) imgKey = 'boss2';
+        if (this.isBossKing) imgKey = 'bossKing';
+        else if (this.isBoss2) imgKey = 'boss2';
         
         const img = ImageLoader.get(imgKey);
         if (img) {
-            // 보스 타입별 스프라이트 매핑 선택
+            // 보스 타입별 스프라이트 매핑 선택 (인스턴스 속성 사용)
             let spriteMap = BOSS_SPRITE_MAP;
             let scale = 1.25;
             
-            if (isBossKing) {
+            if (this.isBossKing) {
                 spriteMap = BOSS_KING_SPRITE_MAP;
                 scale = 1.5; // 보스킹은 더 크게
-            } else if (isBoss2) {
+            } else if (this.isBoss2) {
                 spriteMap = BOSS2_SPRITE_MAP;
                 scale = 1.35; // 보스2는 중간 크기
             }
@@ -1790,14 +1821,14 @@ class Boss {
             ctx.scale(-1, 1);
             
             // 보스2/보스킹 특수 효과
-            if (isBoss2 || isBossKing) {
+            if (this.isBoss2 || this.isBossKing) {
                 // 사망 시 투명도 효과
                 if (this.state === 'DEAD') {
                     ctx.globalAlpha = Math.max(0.3, 1 - this.aniFrame * 0.1);
                 }
                 // 공격 시 붉은색 글로우 효과
                 if (this.state === 'ATTACK') {
-                    ctx.shadowBlur = isBossKing ? 30 : 20;
+                    ctx.shadowBlur = this.isBossKing ? 30 : 20;
                     ctx.shadowColor = '#ff0000';
                 }
             }
