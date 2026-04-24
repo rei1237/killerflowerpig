@@ -427,7 +427,7 @@ function handleStoryClick(e) {
     }
 }
 
-// 키보드 이벤트 - 스토리 화면에서 TAB/SPACE/ENTER로 페이지 넘기기
+// 키보드 이벤트 - 스토리 화면에서 TAB/SPACE/ENTER로 페이지 넘기기, ESC로 스킵
 document.addEventListener('keydown', (e) => {
     if (currentState === GAME_STATE.STORY) {
         if (e.key === 'Tab' || e.key === ' ' || e.key === 'Enter') {
@@ -438,9 +438,19 @@ document.addEventListener('keydown', (e) => {
                 // 타이핑 중이면 즉시 완료
                 storyDisplayTime = Date.now() - (999999);
             }
+        } else if (e.key === 'Escape') {
+            // ESC 키로 스토리 스킵
+            e.preventDefault();
+            skipStory();
         }
     }
 });
+
+// 스토리 스킵 함수
+function skipStory() {
+    console.log('[Story] Skip to gameplay');
+    startGameplay();
+}
 
 // 스토리 화면용 이벤트 리스너
 canvas.addEventListener('click', handleStoryClick);
@@ -1500,12 +1510,19 @@ window.addEventListener('touchstart', (e) => {
     if (currentState === GAME_STATE.GAME_OVER || currentState === GAME_STATE.WIN) resetGame();
     else if (currentState === GAME_STATE.STAGE_CLEAR) advanceStage();
 
-    // 더블 탭 감지 (폭탄 사용)
+    // 더블 탭 감지
     const currentTime = Date.now();
     const tapLength = currentTime - lastTapTime;
-    if (tapLength > 0 && tapLength < 300 && (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT)) {
-        useBomb();
-        e.preventDefault();
+    if (tapLength > 0 && tapLength < 300) {
+        if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT) {
+            // 게임 중: 폭탄 사용
+            useBomb();
+            e.preventDefault();
+        } else if (currentState === GAME_STATE.STORY) {
+            // 스토리 화면: 스킵
+            skipStory();
+            e.preventDefault();
+        }
     }
     lastTapTime = currentTime;
 
@@ -2310,6 +2327,14 @@ function drawStoryScreen(ctx, timestamp) {
     }
     
     ctx.fillText(promptText, canvas.width / 2, canvas.height - 30);
+    
+    // 스킵 안내 (ESC 키 또는 화면 하단 클릭)
+    ctx.font = '10px "Press Start 2P"';
+    ctx.fillStyle = '#666666';
+    ctx.shadowBlur = 0;
+    const skipText = isMobileTouchDevice() ? '▼ DOUBLE TAP TO SKIP ▼' : '▼ PRESS ESC TO SKIP ▼';
+    ctx.fillText(skipText, canvas.width / 2, canvas.height - 12);
+    
     ctx.restore();
 }
 
