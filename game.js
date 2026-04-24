@@ -90,7 +90,7 @@ const EASY_MODE_CONFIG = {
 
     // 보스 관련 - 훨씬 쉬운 보스
     bossMoveScaleMultiplier: 0.3,     // 50% → 30% (보스 이동 느림)
-    bossAttackIntervalMultiplier: 3.0, // 2배 → 3배 덜 자주 공격
+    bossAttackIntervalMultiplier: 4.0, // 모바일: 4배 덜 자주 공격 (더 느림)
     bossSummonEnemySpeedMultiplier: 0.3, // 50% → 30% (소환된 적 더 느림)
     bossSummonEnemyHpMultiplier: 0.4, // 60% → 40% (소환된 적 체력 감소)
     bossProjectileSpeedMultiplier: 0.6, // 보스 발체 속도 60% 감소
@@ -1179,12 +1179,19 @@ class Boss {
             return;
         }
         this.y += this.speedY; if (this.y < 50 || this.y + this.height > canvas.height - 50) this.speedY *= -1;
+        // 모바일에서는 보스 공격 속도 대폭 감소 (더 느리게 공격)
         const bossAttackIntervalMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossAttackIntervalMultiplier : 1; // EASY MODE
-        const interval = (this.hp < 3000 ? 1000 : 1800) * bossAttackIntervalMultiplier; // EASY MODE
+        const mobileExtraDelay = isMobileEasyModeActive() ? 1.5 : 1; // 모바일 추가 지연
+        const interval = (this.hp < 3000 ? 1000 : 1800) * bossAttackIntervalMultiplier * mobileExtraDelay; // EASY MODE
         if (timestamp - this.lastAttackTime > interval) {
             const p = Math.random();
             // 모바일에서는 7스테이지 이후부터만 소환 패턴 사용 (초보 보호)
             const canSummonMinions = !isMobileEasyModeActive() || currentStage >= 7;
+            
+            // 디버깅용: 모바일에서 소환 가능 여부 로그
+            if (isMobileEasyModeActive() && currentStage < 7) {
+                // 모바일 7스테이지 미만: 소환 금지
+            }
 
             if (p < 0.4 && canSummonMinions) {
                 // 부하 소환 패턴 (7스테이지 이후 모바일에서만)
