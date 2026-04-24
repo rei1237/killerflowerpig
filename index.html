@@ -54,7 +54,7 @@
             </div>
             <!-- 패스워드 입력 UI - 2D 도트 RPG 스타일 -->
             <div id="password-container" class="btn-container password-container" hidden>
-                <div class="password-panel">
+                <div id="password-panel" class="password-panel collapsed">
                     <div class="password-header">
                         <div class="password-icon">🔐</div>
                         <div class="password-title">SECRET CODE</div>
@@ -100,14 +100,14 @@
         <!-- 게임 오버 버튼들 - 2D 도트 스타일, 화면 가리지 않도록 하단 배치 -->
         <div id="gameover-buttons" class="btn-container gameover-container" hidden>
             <div class="gameover-panel">
-                <div class="gameover-title">☠️ DEFEAT ☠️</div>
+                <div class="gameover-title">☠️ GAME OVER ☠️</div>
                 <div class="gameover-stats" id="gameover-stats"></div>
                 <div class="gameover-actions">
                     <button id="retry-btn" type="button" class="pixel-btn gameover-btn retry-btn">
                         <span class="btn-icon">⚔️</span> 부활하여 재출격
                     </button>
                     <button id="quit-btn" type="button" class="pixel-btn gameover-btn quit-btn">
-                        <span class="btn-icon">�</span> 전선에서 후퇴
+                        <span class="btn-icon">👣</span> 전선에서 후퇴
                     </button>
                 </div>
             </div>
@@ -120,7 +120,7 @@
                     <div id="ios-guide">
                         <p>🍎 <strong>iPhone / iPad</strong></p>
                         <ol>
-                            <li>Tap <strong>Share</strong> (�) button in Safari</li>
+                            <li>Tap <strong>Share</strong> () button in Safari</li>
                             <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
                             <li>Tap <strong>Add</strong></li>
                         </ol>
@@ -152,12 +152,18 @@
 
         <!-- 전체화면 오버레이: 스테이지 클리어 -->
         <div id="overlay-stage-clear" class="fullscreen-overlay" hidden>
+            <div class="victory-neon-frame">
+                <img src="asset/꽃돼지 승리.png" alt="Victory" class="victory-img">
+            </div>
             <h1 class="overlay-title gold">STAGE CLEAR!</h1>
             <p class="overlay-desc">좀비 무리를 물리쳤습니다.</p>
         </div>
 
         <!-- 전체화면 오버레이: 게임 올 클리어 (Win) -->
         <div id="overlay-win" class="fullscreen-overlay" hidden>
+            <div class="victory-neon-frame">
+                <img src="asset/꽃돼지 승리.png" alt="All Clear" class="victory-img">
+            </div>
             <h1 class="overlay-title neon-blue">ALL CLEAR!</h1>
             <p class="overlay-desc">연이가 모든 좀비를 멸종시켰습니다.</p>
             <div class="win-score-box">

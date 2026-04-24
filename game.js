@@ -168,7 +168,7 @@ const ASSETS = {
     boss: 'asset/청토끼 보스.png',
     boss2: 'asset/청토끼 보스2.png',
     bossKing: 'asset/청토끼 킹.png',
-    win: 'asset/꽦돼지 승리.png',
+    win: 'asset/꽃돼지 승리.png',
     gameover: 'asset/게임오버.png',
     title: 'asset/꽃돼지 the killer of zombie.png',
     bgm: 'asset/freepik-silent-ops.mp3',
@@ -487,18 +487,28 @@ async function installPWA() {
 function updateMainMenuVisibility() {
     // 개별 버튼 컨테이너 가시성 업데이트
     const shouldShow = currentState === GAME_STATE.START;
+    
+    // 메인 버튼들
     if (startBtnContainer) startBtnContainer.hidden = !shouldShow;
     if (installBtnContainer) installBtnContainer.hidden = !shouldShow;
+    
+    // 타이틀 및 가이드 (DOM)
+    const domTitle = document.querySelector('.dom-game-title');
+    const domGuide = document.getElementById('dom-mission-guide');
+    if (domTitle) domTitle.hidden = !shouldShow;
+    if (domGuide) domGuide.hidden = !shouldShow;
+
     // 패스워드 입력 UI 표시 (스테이지 언락되지 않았을 때만)
     if (passwordContainer) {
         passwordContainer.hidden = !shouldShow || isStageUnlocked;
     }
-    // 스테이지 선택 UI는 별도로 관리
+    
     // 스테이지 선택 UI는 별도로 관리
     if (stageSelectContainer && shouldShow && !isStageUnlocked) {
         stageSelectContainer.hidden = true;
     }
     
+    // 인게임 UI 숨김
     updateInGameUIVisibility();
     updateOverlayVisibility();
 }
@@ -798,9 +808,37 @@ if (retryButton) {
 if (quitButton) {
     quitButton.addEventListener('click', (e) => {
         e.stopPropagation();
-        console.log('[GameOver] Quit clicked - Exiting game');
-        exitGame();
+        console.log('[GameOver] Quit clicked - Returning to main menu');
+        resetGameToMain();
     });
+}
+
+function resetGameToMain() {
+    // 모든 상태 초기화
+    projectiles = []; enemies = []; particles = []; gates = []; floatingTexts = [];
+    currentStage = 1; enemiesKilled = 0; boss = null; score = 0;
+    
+    // START 상태로 전환 (메인 메뉴)
+    currentState = GAME_STATE.START;
+    gameOverStartTime = 0;
+    
+    // 플레이어 초기화
+    Player.init();
+    
+    // UI 가시성 업데이트
+    updateMainMenuVisibility();
+    updateOverlayVisibility();
+    updateGameOverButtonVisibility();
+    
+    // 배경음 정지
+    AudioManager.stopBGM();
+    
+    // 게임 루프 재시작 (정지된 상태일 수 있음)
+    if (!animationId) {
+        animationId = requestAnimationFrame(gameLoop);
+    }
+    
+    console.log('[Reset] Returned to Main Menu');
 }
 
 // 게임 종료 함수
@@ -824,11 +862,8 @@ function exitGame() {
     gates = [];
     floatingTexts = [];
     
-    // BGM 정지
-    if (bgmAudio) {
-        bgmAudio.pause();
-        bgmAudio.currentTime = 0;
-    }
+    // BGM 및 모든 사운드 정지
+    AudioManager.stopBGM();
     
     // 방법 1: 창 닫기 시도 (팝업으로 열린 경우에만 작동)
     try {
@@ -837,12 +872,13 @@ function exitGame() {
         console.log('[Exit] window.close() failed:', err);
     }
     
-    // 방법 2: 홈 화면으로 이동 (모바일 웹앱/홈 화면 추가된 경우)
-    // location.href = 'about:blank';
-    
-    // 방법 3: 게임 종료 화면 표시
+    // 방법 2: 게임 종료 화면 표시 (이미 있으면 중복 생성 방지)
+    if (document.getElementById('game-exit-overlay')) return;
+
     const exitOverlay = document.createElement('div');
     exitOverlay.id = 'game-exit-overlay';
+    
+    // 스타일 설정
     exitOverlay.style.cssText = `
         position: fixed;
         top: 0;
@@ -858,6 +894,7 @@ function exitGame() {
         font-family: 'Press Start 2P', cursive;
         color: #fff;
     `;
+    
     exitOverlay.innerHTML = `
         <div style="font-size: 28px; margin-bottom: 30px; color: #ff4757; text-shadow: 0 0 20px #ff4757;">게임 종료</div>
         <div style="font-size: 12px; color: #888; margin-bottom: 20px;">플레이해 주셔서 감사합니다!</div>
@@ -874,8 +911,8 @@ function exitGame() {
             border-radius: 4px;
         ">다시 시작</button>
     `;
-    document.body.appendChild(exitOverlay);
     
+    document.body.appendChild(exitOverlay);
     console.log('[Exit] Game has been terminated successfully');
 }
 
@@ -1100,6 +1137,31 @@ const Player = {
         AudioManager.playSFX('shoot');
     },
     draw: function (ctx) {
+        // 승리 모션 처리
+        if (currentState === GAME_STATE.STAGE_CLEAR || currentState === GAME_STATE.WIN) {
+            const winImg = ImageLoader.get('win');
+            if (winImg) {
+                const time = Date.now();
+                const bounce = Math.sin(time / 200) * 15;
+                const winSize = this.width * 2.0; // 크기 확대
+                
+                ctx.save();
+                // 네온 사인 효과 (이중 그림자)
+                ctx.shadowBlur = 30 + Math.sin(time / 150) * 10;
+                ctx.shadowColor = currentState === GAME_STATE.WIN ? '#00ffff' : '#f1c40f';
+                
+                // 캐릭터 그리기
+                ctx.drawImage(winImg, this.x - winSize/2 + this.width/2, this.y - winSize/2 + this.height/2 + bounce, winSize, winSize);
+                
+                // 한 번 더 그려서 광채 강화
+                ctx.globalAlpha = 0.5 + Math.sin(time / 150) * 0.3;
+                ctx.drawImage(winImg, this.x - winSize/2 + this.width/2, this.y - winSize/2 + this.height/2 + bounce, winSize, winSize);
+                
+                ctx.restore();
+                return;
+            }
+        }
+
         const img = ImageLoader.get('player');
         if (img) {
             const cols = 4;
@@ -1643,16 +1705,18 @@ class GatePair {
             ctx.fillRect(14, 5, 4, 15);
             ctx.fillRect(8, 10, 16, 4);
         } else if (type === 'support') {
-            // 서포트 (드론 & 플러스 기호 - 쉴드와 구분되게)
-            ctx.fillStyle = '#2ecc71'; // 초록색 (지원/회복 계열)
-            // 드론 날개
-            ctx.fillRect(0, 10, 10, 6); ctx.fillRect(22, 10, 10, 6);
-            // 드론 몸체
-            ctx.fillRect(8, 5, 16, 16);
-            // 플러스 기호 (Support 상징)
+            // 서포트 (명확하게 구분되는 렌치/정비 아이콘)
+            ctx.fillStyle = '#2ecc71'; // 초록색
+            // 렌치 머리
+            ctx.fillRect(5, 5, 22, 10);
+            ctx.fillRect(5, 15, 10, 5); ctx.fillRect(17, 15, 10, 5);
+            // 렌치 몸통 (대각선 느낌)
+            ctx.fillRect(12, 20, 8, 15);
+            // 하단 링
+            ctx.fillRect(10, 32, 12, 5);
+            // 중앙 하이라이트
             ctx.fillStyle = '#fff';
-            ctx.fillRect(14, 8, 4, 10);
-            ctx.fillRect(11, 11, 10, 4);
+            ctx.fillRect(14, 22, 4, 10);
         } else if (type === 'bomb') {
             // 폭탄
             ctx.fillStyle = '#000';
@@ -1753,26 +1817,26 @@ function advanceStage() {
         currentStage++; enemiesKilled = 0; boss = null;
         // 다음 스테이지 스토리 표시
         currentState = GAME_STATE.STORY;
-        storyStateEnterTime = Date.now(); // 스토리 상태 진입 시간 기록
+        storyStateEnterTime = Date.now();
         storyTypingIndex = 0; 
-        // storyDisplayTime은 drawStoryScreen에서 페이지 분할 시 설정됨
         storyTextComplete = false;
         
-        // 페이지네이션 초기화 (drawStoryScreen에서 첫 프레임에 분할 및 시간 설정)
         storyPages = [];
         storyCurrentPage = 0;
         storyTotalPages = 0;
-        lastTypedCharIndex = 0; // 타자기 인덱스 초기화
+        lastTypedCharIndex = 0;
         
-        // 기존 적들과 총탄 제거 (다음 스테이지에서 새로 시작)
         enemies = [];
         projectiles = [];
         gates = [];
         
         Player.fireRate = 200;
-        Player.damage = isMobileEasyModeActive() ? Math.round(10 * EASY_MODE_CONFIG.playerDamageMultiplier) : 10; // EASY MODE
+        Player.damage = isMobileEasyModeActive() ? Math.round(10 * EASY_MODE_CONFIG.playerDamageMultiplier) : 10;
         Player.hp = Player.maxHp;
         particles.push(...Array(30).fill(0).map(() => new Particle(canvas.width / 2, canvas.height / 2, '#f1c40f')));
+        
+        // 오버레이 강제 숨김
+        if (overlayStageClear) overlayStageClear.hidden = true;
     } else { currentState = GAME_STATE.WIN; }
 }
 
@@ -2042,6 +2106,13 @@ class Boss {
                         this.active = false;
                         currentState = GAME_STATE.STAGE_CLEAR;
                         AudioManager.playSFX('explode');
+                        
+                        // 3초 후 자동으로 스테이지 진행 (사용자가 클릭하지 않아도 스토리가 나오도록)
+                        setTimeout(() => {
+                            if (currentState === GAME_STATE.STAGE_CLEAR) {
+                                advanceStage();
+                            }
+                        }, 3000);
                     }
                 }
             }
@@ -2178,55 +2249,44 @@ class Boss {
             
             if (this.isBoss2 || this.isBossKing) {
                 // [정밀도 최적화] 1676x640 해상도 기반 7x3 그리드 정밀 계산
-                // 1px의 오차도 허용하지 않기 위해 이미지 너비/높이를 분할하여 직접 계산
-                const cols = 7;
-                const rows = 3;
-                const unitW = img.width / cols;
-                const unitH = img.height / rows;
+                // 각 프레임의 정밀 크기
+                const unitW = 1676 / 7; // 239.428...
+                const unitH = 640 / 3;  // 213.333...
                 
                 // 행 선택: WALK(0), ATTACK(1), DEAD(2)
                 const rowIdx = this.state === 'ATTACK' ? 1 : (this.state === 'DEAD' ? 2 : 0);
                 // 열 선택: 첫 번째 열(0)은 텍스트 레이블이므로 건너뛰고 1~6번 프레임 사용
                 const colIdx = (this.aniFrame % 6) + 1;
                 
+                // 정밀 좌표 계산 (누적 오차 방지)
                 sx = colIdx * unitW;
                 sy = rowIdx * unitH;
-                frameW = unitW;
-                frameH = unitH;
-            } else {
-                const animSet = spriteMap[this.state] || spriteMap.WALK;
-                const frame = animSet.frames[this.aniFrame % animSet.frames.length];
-                frameW = frame.w;
-                frameH = animSet.h;
-                sx = frame.x;
-                sy = animSet.y;
-            }
+                const sw = unitW;
+                const sh = unitH;
+                
+                // 원본 비율 유지 + 약간 확대해 잘림 없이 표현
+                const drawW = this.width * scale;
+                const drawH = (sh / sw) * drawW;
+                const anchorY = this.y + this.height;
+                const drawCenterX = this.x + this.width / 2;
 
-            // 원본 비율 유지 + 약간 확대해 잘림 없이 표현
-            const drawW = this.width * scale;
-            const drawH = (frameH / frameW) * drawW;
-            const anchorY = this.y + this.height;
-            const drawCenterX = this.x + this.width / 2;
-
-            ctx.save();
-            ctx.translate(drawCenterX, anchorY - drawH / 2);
-            ctx.scale(-1, 1);
-            
-            // 보스2/보스킹 특수 효과
-            if (this.isBoss2 || this.isBossKing) {
-                // 사망 시 투명도 효과
+                ctx.save();
+                ctx.translate(drawCenterX, anchorY - drawH / 2);
+                ctx.scale(-1, 1);
+                
+                // 보스2/보스킹 특수 효과
                 if (this.state === 'DEAD') {
                     ctx.globalAlpha = Math.max(0.3, 1 - this.aniFrame * 0.1);
                 }
-                // 공격 시 붉은색 글로우 효과
                 if (this.state === 'ATTACK') {
                     ctx.shadowBlur = this.isBossKing ? 30 : 20;
                     ctx.shadowColor = '#ff0000';
                 }
+                
+                ctx.drawImage(img, sx, sy, sw, sh, -drawW / 2, -drawH / 2, drawW, drawH);
+                ctx.restore();
+                return;
             }
-            
-            ctx.drawImage(img, sx, sy, frameW, frameH, -drawW / 2, -drawH / 2, drawW, drawH);
-            ctx.restore();
         }
         // 보스 체력 바 (정교한 픽셀 프레임)
         const bx = canvas.width / 2 - 200; const by = 70; const bw = 400; const bh = 20;
@@ -2863,6 +2923,8 @@ function playTypewriterSound() {
 // 스토리 텍스트를 페이지로 분할하는 함수 (UI/UX 개선)
 function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight, fontSize = 13) {
     const pages = [];
+    // 앞뒤 공백 및 불필요한 연속 개행 정리
+    text = text.trim().replace(/\n{3,}/g, '\n\n');
     const paragraphs = text.split('\n');
     let currentPage = [];
     let currentPageHeight = 0;
@@ -2874,7 +2936,7 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight, fontSize = 1
     // 문단 간 여백
     const paragraphSpacing = lineHeight * 0.5; // 줄 높이의 50%
     
-    // 임시 캔버스 컨텍스트 생성 (너비 측정용) - 전달된 fontSize 사용
+    // 임시 캔버스 컨텍스트 생성 (너비 측정용)
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
     tempCtx.font = `${fontSize}px "Press Start 2P"`;
@@ -2906,7 +2968,16 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight, fontSize = 1
             paragraphHeight = (lineCount * lineHeight) + paragraphSpacing;
         }
         
-        // 현재 페이지에 추가할 수 있는지 확인 (효과적인 최대 높이 사용)
+        // 현재 문단이 단독으로 최대 높이를 초과하는 경우 (방어 코드)
+        if (paragraphHeight > effectiveMaxHeight && currentPage.length === 0) {
+            currentPage.push(paragraph);
+            pages.push(currentPage.join('\n'));
+            currentPage = [];
+            currentPageHeight = 0;
+            continue;
+        }
+
+        // 현재 페이지에 추가할 수 있는지 확인
         if (currentPageHeight + paragraphHeight > effectiveMaxHeight && currentPage.length > 0) {
             // 새 페이지 시작
             pages.push(currentPage.join('\n'));
@@ -2918,12 +2989,13 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight, fontSize = 1
         }
     }
     
-    // 마지막 페이지 추가
-    if (currentPage.length > 0) {
+    // 마지막 페이지 추가 (비어있지 않은 경우에만)
+    if (currentPage.length > 0 && currentPage.join('\n').trim() !== '') {
         pages.push(currentPage.join('\n'));
     }
     
-    return pages;
+    // 빈 페이지 필터링 (최종 안전장치)
+    return pages.filter(p => p.trim().length > 0);
 }
 
 // 스토리 다음 페이지로 이동
@@ -3240,16 +3312,29 @@ async function init() {
             stagePasswordInput.focus();
         });
     }
-    // password-input-wrapper 클릭 시 입력 필드 포커스
-    const passwordInputWrapper = document.querySelector('.password-input-wrapper');
-    if (passwordInputWrapper && stagePasswordInput) {
-        passwordInputWrapper.addEventListener('click', (e) => {
-            if (e.target !== stagePasswordInput) {
-                console.log('[Password] Wrapper clicked, focusing input');
-                stagePasswordInput.focus();
+    // password-panel 접기/펴기 토글
+    const passwordPanel = document.getElementById('password-panel');
+    if (passwordPanel) {
+        passwordPanel.addEventListener('click', (e) => {
+            // 입력 필드나 버튼을 클릭한 경우는 무시 (접힌 상태에서 아이콘 클릭시에만 토글)
+            if (passwordPanel.classList.contains('collapsed')) {
+                passwordPanel.classList.remove('collapsed');
+                e.stopPropagation();
             }
         });
+        
+        // 아이콘(열쇠) 클릭 시에도 토글 지원
+        const passwordIcon = passwordPanel.querySelector('.password-icon');
+        if (passwordIcon) {
+            passwordIcon.addEventListener('click', (e) => {
+                if (!passwordPanel.classList.contains('collapsed')) {
+                    passwordPanel.classList.add('collapsed');
+                    e.stopPropagation();
+                }
+            });
+        }
     }
+
     if (stageSelectCloseBtn) {
         stageSelectCloseBtn.addEventListener('click', () => {
             hideStageSelectUI();

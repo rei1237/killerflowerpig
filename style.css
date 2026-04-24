@@ -209,29 +209,79 @@ html {
 
     /* 패스워드 컨테이너 - 좌측 상단으로 이동 (미션 가이드와 겹침 방지) */
     .password-container {
-        left: 20px;
-        top: 20px;
+        left: 10px;
+        top: 10px;
         bottom: auto;
         right: auto;
         transform: none;
+        width: auto;
     }
 
-    .password-panel {
-        width: 220px;
-        padding: 12px;
-        background: rgba(15, 10, 10, 0.9);
-        border: 3px solid #ff4757;
-        box-shadow: 0 0 20px rgba(255, 71, 87, 0.3);
-    }
-    
-    .password-title { font-size: 9px; }
-    .password-subtitle { font-size: 7px; }
-    .password-dots .dot { width: 8px; height: 8px; margin: 0 3px; }
     /* 가로 모드에서 패널들이 너무 크지 않게 조정 */
     .password-panel {
+        width: 180px;
+        padding: 8px;
+        background: rgba(15, 10, 10, 0.9);
+        border: 2px solid #ff4757;
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
         max-height: 80vh;
         overflow-y: auto;
     }
+
+    .password-panel.collapsed {
+        width: 50px;
+        height: 50px;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        background: linear-gradient(135deg, #4a0080 0%, #2a0040 100%);
+        border: 3px solid #f1c40f;
+        border-radius: 8px;
+        box-shadow: 
+            inset -3px -3px 0px rgba(0,0,0,0.5),
+            0 0 15px rgba(241, 196, 15, 0.4);
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .password-panel.collapsed:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 25px rgba(241, 196, 15, 0.7);
+    }
+
+    .password-panel.collapsed .password-header {
+        margin-bottom: 0;
+    }
+
+    .password-panel.collapsed .password-icon {
+        font-size: 24px;
+        margin-bottom: 0;
+        filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.5));
+        display: block !important;
+    }
+
+    .password-panel.collapsed .password-title,
+    .password-panel.collapsed .password-subtitle,
+    .password-panel.collapsed .password-input-wrapper,
+    .password-panel.collapsed .password-unlock-btn,
+    .password-panel.collapsed .password-error {
+        display: none !important;
+    }
+
+    .password-panel.collapsed .password-icon {
+        margin: 0;
+        font-size: 20px;
+        animation: none;
+    }
+
+    .password-panel.collapsed .password-title {
+        display: none;
+    }
+    
+    .password-title { font-size: 8px; }
+    .password-subtitle { font-size: 6px; }
+    .password-dots .dot { width: 6px; height: 6px; margin: 0 2px; }
 }
 
 /* ==========================================
@@ -411,7 +461,7 @@ html {
     pointer-events: none;
 }
 
-/* 게임 오버 타이틀 - DEFEAT */
+/* 게임 오버 타이틀 - GAME OVER */
 .gameover-title {
     font-family: 'Press Start 2P', cursive;
     font-size: 18px;
@@ -478,62 +528,63 @@ html {
 .retry-btn {
     background: linear-gradient(180deg, #f1c40f 0%, #d4ac0d 100%);
     color: #000;
-    border-color: #7d6608;
+    border: 4px solid #000;
+    border-right-color: #7d6608;
+    border-bottom-color: #7d6608;
     text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.3);
     animation: retry-glow 2s infinite;
+    image-rendering: pixelated;
+}
+
+.retry-btn::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px; right: 2px; height: 50%;
+    background: rgba(255,255,255,0.2);
+    pointer-events: none;
 }
 
 .retry-btn:hover {
     background: linear-gradient(180deg, #f4d03f 0%, #f1c40f 100%);
     transform: translate(-2px, -2px);
     box-shadow:
-        inset -3px -3px 0px rgba(0, 0, 0, 0.3),
-        6px 6px 0px rgba(0, 0, 0, 0.5),
+        4px 4px 0px rgba(0, 0, 0, 0.8),
         0 0 20px rgba(241, 196, 15, 0.8);
 }
 
 .retry-btn:active {
     transform: translate(2px, 2px);
-    box-shadow:
-        inset -3px -3px 0px rgba(0, 0, 0, 0.3),
-        2px 2px 0px rgba(0, 0, 0, 0.5);
+    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
 }
 
 @keyframes retry-glow {
-
-    0%,
-    100% {
-        box-shadow: inset -3px -3px 0px rgba(0, 0, 0, 0.3), 4px 4px 0px rgba(0, 0, 0, 0.5), 0 0 10px rgba(241, 196, 15, 0.5);
-    }
-
-    50% {
-        box-shadow: inset -3px -3px 0px rgba(0, 0, 0, 0.3), 4px 4px 0px rgba(0, 0, 0, 0.5), 0 0 25px rgba(241, 196, 15, 1);
-    }
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.2); }
 }
 
-/* 후퇴 버튼 - 그레이/블루 테마 */
+/* 후퇴 버튼 - 그레이/다크 테마 */
 .quit-btn {
-    background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
-    color: #bdc3c7;
-    border-color: #1a252f;
+    background: linear-gradient(180deg, #5d6d7e 0%, #2c3e50 100%);
+    color: #ecf0f1;
+    border: 4px solid #000;
+    border-right-color: #1a252f;
+    border-bottom-color: #1a252f;
     text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
+    image-rendering: pixelated;
 }
 
 .quit-btn:hover {
-    background: linear-gradient(180deg, #5d6d7e 0%, #34495e 100%);
+    background: linear-gradient(180deg, #7f8c8d 0%, #34495e 100%);
     color: #fff;
     transform: translate(-2px, -2px);
     box-shadow:
-        inset -3px -3px 0px rgba(0, 0, 0, 0.3),
-        6px 6px 0px rgba(0, 0, 0, 0.5),
+        4px 4px 0px rgba(0, 0, 0, 0.8),
         0 0 15px rgba(127, 140, 141, 0.6);
 }
 
 .quit-btn:active {
     transform: translate(2px, 2px);
-    box-shadow:
-        inset -3px -3px 0px rgba(0, 0, 0, 0.3),
-        2px 2px 0px rgba(0, 0, 0, 0.5);
+    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
 }
 
 /* 모바일 게임 오버 UI */
@@ -679,6 +730,65 @@ html {
     position: relative;
     image-rendering: pixelated;
     min-width: 220px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.password-panel.collapsed {
+    min-width: 60px;
+    width: 60px;
+    height: 60px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.password-panel.collapsed .password-header,
+.password-panel.collapsed .password-input-wrapper,
+.password-panel.collapsed {
+    min-width: 50px !important;
+    width: 50px !important;
+    height: 50px !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    background: linear-gradient(135deg, #4a0080 0%, #2a0040 100%) !important;
+    border: 3px solid #f1c40f !important;
+    border-radius: 8px !important;
+    box-shadow: 
+        inset -3px -3px 0px rgba(0,0,0,0.5),
+        0 0 15px rgba(241, 196, 15, 0.4) !important;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    overflow: hidden !important;
+}
+
+.password-panel.collapsed:hover {
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 25px rgba(241, 196, 15, 0.7) !important;
+}
+
+.password-panel.collapsed .password-header {
+    margin-bottom: 0 !important;
+}
+
+.password-panel.collapsed .password-icon {
+    font-size: 24px !important;
+    margin: 0 !important;
+    filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.5)) !important;
+    animation: icon-float 2s ease-in-out infinite !important;
+    display: block !important;
+}
+
+.password-panel.collapsed .password-title,
+.password-panel.collapsed .password-subtitle,
+.password-panel.collapsed .password-input-wrapper,
+.password-panel.collapsed .password-unlock-btn,
+.password-panel.collapsed .password-error {
+    display: none !important;
 }
 
 /* 패널 외곽 장식 - 도트 느낌의 더블 테두리 */
@@ -1430,4 +1540,119 @@ html {
 @keyframes float-up-down {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
+}
+
+/* 승리 이미지 및 네온 사인 효과 */
+.victory-neon-frame {
+    position: relative;
+    margin-bottom: 30px;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 20px;
+    /* 네온 테두리 효과 */
+    border: 4px solid #f1c40f;
+    box-shadow: 
+        0 0 10px #f1c40f,
+        inset 0 0 10px #f1c40f,
+        0 0 20px #e67e22,
+        inset 0 0 20px #e67e22;
+    animation: neon-pulse 1.5s infinite alternate;
+}
+
+#overlay-win .victory-neon-frame {
+    border-color: #00ffff;
+    box-shadow: 
+        0 0 10px #00ffff,
+        inset 0 0 10px #00ffff,
+        0 0 20px #3498db,
+        inset 0 0 20px #3498db;
+    animation: neon-pulse-blue 1.5s infinite alternate;
+}
+
+.victory-img {
+    width: clamp(150px, 30vw, 300px);
+    height: auto;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+    animation: victory-bounce 0.6s infinite ease-in-out alternate;
+}
+
+@keyframes neon-pulse {
+    from {
+        box-shadow: 0 0 10px #f1c40f, inset 0 0 10px #f1c40f, 0 0 20px #e67e22, inset 0 0 20px #e67e22;
+        border-color: #f1c40f;
+    }
+    to {
+        box-shadow: 0 0 25px #f1c40f, inset 0 0 15px #f1c40f, 0 0 50px #e67e22, inset 0 0 30px #e67e22;
+        border-color: #fff;
+    }
+}
+
+@keyframes neon-pulse-blue {
+    from {
+        box-shadow: 0 0 10px #00ffff, inset 0 0 10px #00ffff, 0 0 20px #3498db, inset 0 0 20px #3498db;
+        border-color: #00ffff;
+    }
+    to {
+        box-shadow: 0 0 25px #00ffff, inset 0 0 15px #00ffff, 0 0 50px #3498db, inset 0 0 30px #3498db;
+        border-color: #fff;
+    }
+}
+
+@keyframes victory-bounce {
+    from { transform: scale(1) translateY(0); }
+    to { transform: scale(1.05) translateY(-10px); }
+}
+
+/* 게임 종료 오버레이 */
+#game-exit-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    font-family: 'Press Start 2P', cursive;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: radial-gradient(circle, #1a1a2e 0%, #000 100%) !important;
+    color: #fff;
+    border: 10px solid #2c3e50;
+    box-sizing: border-box;
+}
+
+#game-exit-overlay h2 {
+    font-size: 24px;
+    color: #ff4757;
+    margin-bottom: 30px;
+    text-shadow: 4px 4px 0px #000;
+}
+
+#game-exit-overlay p {
+    font-size: 12px;
+    line-height: 2;
+    color: #bdc3c7;
+    margin-bottom: 40px;
+}
+
+#game-exit-overlay .exit-btn {
+    padding: 15px 30px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    background: #e74c3c;
+    color: #fff;
+    border: 4px solid #000;
+    cursor: pointer;
+    box-shadow: 4px 4px 0px #c0392b;
+}
+
+#game-exit-overlay .exit-btn:hover {
+    background: #ff6b81;
+    transform: scale(1.05);
 }
