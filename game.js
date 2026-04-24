@@ -2258,9 +2258,9 @@ function drawStartScreen() {
     let textY;
     
     if (isMobile && !isPortrait) {
-        // 가로 모드: 캐릭터 우측, 우측 버튼들 왼쪽에 텍스트 배치
-        textX = canvas.width * 0.35; // 좌측 영역으로 이동
-        textY = canvas.height / 2 - 60 * scaleFactor;
+        // 가로 모드: 캐릭터 좌측, 타이틀을 위로 올려 겹침 방지
+        textX = canvas.width * 0.5; // 다시 중앙으로
+        textY = canvas.height * 0.15; // 더 위로 올려서 캐릭터와 분리
     } else if (isMobile) {
         textY = marginTop + (350 * scaleFactor) + 20 * scaleFactor;
     } else {
@@ -2280,11 +2280,11 @@ function drawStartScreen() {
     let panelW, panelH, panelX, panelY;
     
     if (isMobile && !isPortrait) {
-        // 가로 모드: 좌측 하단에 패널 배치 (우측 UI 버튼과 겹치지 않도록)
-        panelW = Math.min(320 * scaleFactor, canvas.width * 0.4);
-        panelH = Math.min(160 * scaleFactor, canvas.height * 0.4);
-        panelX = 20 * scaleFactor;
-        panelY = canvas.height - panelH - 20 * scaleFactor;
+        // 가로 모드: 좌측 상단 영역에 패널 배치 (타이틀/캐릭터와 겹치지 않도록)
+        panelW = Math.min(320 * scaleFactor, canvas.width * 0.35);
+        panelH = Math.min(180 * scaleFactor, canvas.height * 0.45);
+        panelX = 30 * scaleFactor;
+        panelY = 30 * scaleFactor; 
     } else if (isMobile) {
         // 세로 모드: 중앙에 배치
         panelW = canvas.width * 0.95;
@@ -2645,16 +2645,19 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight, fontSize = 1
             // 제목/특수 문단: 여백 추가
             paragraphHeight = lineHeight + paragraphSpacing;
         } else {
-            // 일반 텍스트의 줄 수 계산
+            // 일반 텍스트의 줄 수 계산 (Word Wrap 적용)
+            const words = paragraph.split(' ');
             let line = '';
             let lineCount = 1;
-            for (let n = 0; n < paragraph.length; n++) {
-                const char = paragraph[n];
-                const testLine = line + char;
+            
+            for (let i = 0; i < words.length; i++) {
+                const word = words[i];
+                const testLine = line + (line === '' ? '' : ' ') + word;
                 const metrics = tempCtx.measureText(testLine);
-                if (metrics.width > maxWidth && n > 0) {
+                
+                if (metrics.width > maxWidth && line !== '') {
                     lineCount++;
-                    line = char;
+                    line = word;
                 } else {
                     line = testLine;
                 }
@@ -2677,10 +2680,13 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight, fontSize = 1
     
     // 마지막 페이지 추가
     if (currentPage.length > 0) {
-        pages.push(currentPage.join('\n'));
+        const pageText = currentPage.join('\n').trim();
+        if (pageText) pages.push(pageText);
     }
     
-    return pages;
+    // 최종 검증: 빈 페이지 필터링 및 최소 한 페이지 보장
+    const finalPages = pages.filter(p => p.trim().length > 0);
+    return finalPages.length > 0 ? finalPages : [text];
 }
 
 // 스토리 다음 페이지로 이동
@@ -2891,19 +2897,20 @@ function drawStoryScreen(ctx, timestamp) {
 }
 
 function wrapTextLeftAlign(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
     let line = '';
     let currentY = y;
     let lineCount = 0;
 
-    for (let n = 0; n < text.length; n++) {
-        const char = text[n];
-        const testLine = line + char;
+    for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        const testLine = line + (line === '' ? '' : ' ') + word;
         const metrics = ctx.measureText(testLine);
         const testWidth = metrics.width;
 
-        if (testWidth > maxWidth && n > 0) {
+        if (testWidth > maxWidth && line !== '') {
             ctx.fillText(line, x, currentY);
-            line = char;
+            line = word;
             currentY += lineHeight;
             lineCount++;
         } else {
