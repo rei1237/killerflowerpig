@@ -39,21 +39,21 @@ const ASSETS = {
     gate: ''
 };
 
-const GAME_STATE = { START: 'START', PLAYING: 'PLAYING', STAGE_CLEAR: 'STAGE_CLEAR', BOSS_FIGHT: 'BOSS_FIGHT', GAME_OVER: 'GAME_OVER', WIN: 'WIN' };
+const GAME_STATE = { START: 'START', STORY: 'STORY', PLAYING: 'PLAYING', STAGE_CLEAR: 'STAGE_CLEAR', BOSS_FIGHT: 'BOSS_FIGHT', GAME_OVER: 'GAME_OVER', WIN: 'WIN' };
 let currentState = GAME_STATE.START;
 
 // --- 1-1. 스테이지 및 보스 설정 ---
 const STAGE_DATA = {
-    1: { goal: 20, enemySpeed: 2.0, spawnRate: 2800, homing: false, sky: '#050a14', city: '#0a1220', fog: '#0f172a', storyText: "꽃돼지 연이의 분홍빛 코 끝에 닿은 공기는\n이미 부패해 있었다. 놈들이 오고 있다.\n\n청색 털을 적신 것은 피인가, 아니면 저주인가.\n연이는 총구의 차가운 감촉을 느끼며 방아쇠에 발을 올렸다." },
-    2: { goal: 30, enemySpeed: 2.3, spawnRate: 2500, homing: false, enemyShoot: true, sky: '#0a0a14', city: '#161625', fog: '#1e1e2e', storyText: "폐허가 된 도시, 한때 평화로웠던 거리는\n이제 살육의 메아리만이 맴돈다.\n\n썩어가는 청토끼들의 눈빛엔 이성이 없었다.\n오직 생명을 찢어발기려는 갈망뿐." },
-    3: { goal: 40, enemySpeed: 2.6, spawnRate: 2200, homing: true, homingSpeed: 0.3, enemyShoot: true, sky: '#0f0f0f', city: '#1a1a1a', fog: '#262626', storyText: "독성 안개가 숨통을 조여온다.\n시야가 흐려지지만, 연이의 총구는 흔들림이 없다.\n\n쓰러진 동료들의 복수를 위해\n이 지옥을 벗어나야만 한다." },
-    4: { goal: 50, enemySpeed: 2.9, spawnRate: 2000, homing: true, homingSpeed: 0.5, enemyShoot: true, sky: '#0a0d14', city: '#141a26', fog: '#1e293b', storyText: "끝없는 무리의 습격. 네온사인의 잔해 아래서\n놈들은 그림자처럼 피어났다.\n\n자비란 없다.\n방아쇠를 당기는 것만이 유일한 대화일 뿐." },
-    5: { goal: 60, enemySpeed: 3.2, spawnRate: 1800, homing: true, homingSpeed: 0.7, enemyShoot: true, sky: '#14051a', city: '#1f0a28', fog: '#2d1a3a', storyText: "도시의 네온사인이 꺼져갈수록\n청토끼들의 저주받은 울음소리는 더욱 기괴해졌다.\n\n세상을 좀먹는 역병의 근원.\n연이는 결심했다. 모든 것을 끝내겠노라고." },
-    6: { goal: 70, enemySpeed: 3.5, spawnRate: 1600, homing: true, homingSpeed: 0.9, enemyShoot: true, sky: '#1a0505', city: '#2a0a0a', fog: '#3a1a1a', storyText: "오염된 강줄기를 따라 지옥의 중심부로 다가선다.\n흐르는 것은 물이 아니라 썩어문드러진 절망.\n\n하지만 핏빛 꽃잎은\n진흙 속에서도 피어나는 법이다." },
-    7: { goal: 80, enemySpeed: 3.8, spawnRate: 1400, homing: true, homingSpeed: 1.1, enemyShoot: true, sky: '#02040a', city: '#0a0e1a', fog: '#101a2a', storyText: "어둠이 빛을 삼키는 심연의 입구.\n숨소리조차 들리지 않는 적막 속에서\n놈들의 심장 박동만이 울려 퍼진다.\n\n두려움은 이미 버린 지 오래다." },
-    8: { goal: 90, enemySpeed: 4.1, spawnRate: 1200, homing: true, homingSpeed: 1.3, enemyShoot: true, sky: '#0a0908', city: '#141210', fog: '#1a1816', storyText: "마치 살아있는 듯 꿈틀거리는 핏빛 안개.\n환영인지 현실인지 모를 악몽 속에서,\n연이는 묵묵히 탄창을 갈아 끼웠다.\n\n이곳이 무덤이 될지언정 물러서지 않는다." },
-    9: { goal: 100, enemySpeed: 4.5, spawnRate: 1000, homing: true, homingSpeed: 1.5, enemyShoot: true, sky: '#02040a', city: '#000000', fog: '#0f172a', storyText: "모든 희망이 부서진 땅.\n남은 것은 거대한 절망의 잔해뿐이다.\n\n놈들의 왕이 가까워질수록 하늘은 핏빛으로 물들고,\n대지는 비명을 지른다." },
-    10: { goal: 150, enemySpeed: 5.0, spawnRate: 800, homing: true, homingSpeed: 2.0, enemyShoot: true, sky: '#000000', city: '#000000', fog: '#450a0a', storyText: "심연의 끝에서 마침내 마주한 진실.\n거대한 그림자가 세상을 덮치려 할 때,\n\n꽃돼지 연이의 눈동자에선\n마지막 희망의 불꽃이 타올랐다." }
+    1: { goal: 20, enemySpeed: 2.0, spawnRate: 2800, homing: false, sky: '#050a14', city: '#0a1220', fog: '#0f172a', storyText: "■■■■ EPISODE 1: LAST DAWN ■■■■\n\n세계는 21일 전 멸망했다.\n\n누구도 예상하지 못한 재앙이 찾아왔다. 평화롭던 네온 도시, 한때 웃음소리가 가득했던 거리는 이제 죽음의 침묵만이 맴돈다.\n\n원인은 청토끼들이다... 예쁜 푸른 털을 가진 작고 귀여운 생명체들이. 그들이 변했다. 눈동자가 검게 물들고, 온몸에서 썩은 핏물이 흐르기 시작했다. 무엇이 그들을 이렇게 만들었는가? 바이러스인가? 마법인가? 아니면 신의 저주인가?\n\n꽃돼지 연이는 마지막 생존자다. 분홍빛 피부에 꽃무늬가 박힌 돼지 종족의 마지막 전사. 농장의 평화로웠던 날들은 이미 먼 과거가 되었다. 이제 그녀의 손에는 낡은 산탄총이, 눈에는复仇의 불꽃이 타오른다.\n\n'연이, 살아남아야 해.'\n\n어머니의 마지막 말이 귓가를 스쳐간다. 문 앞에서, 이미 변해버린 어머니를 향해 방아쇠를 당겼던 그 순간이 뇌리에 새겨져 있다.\n\n오늘은 도시 외곽을 지나는 첫날이다. 푸른 어둠 속에서 뭔가가 다가오는 걸 느낀다. 그들의 숨소리. 그들의 굶주림.\n\n연이는 총구를 들어 올렸다.\n\n'오라. 내 총알이 기다리고 있다.'" },
+    2: { goal: 30, enemySpeed: 2.3, spawnRate: 2500, homing: false, enemyShoot: true, sky: '#0a0a14', city: '#161625', fog: '#1e1e2e', storyText: "■■■■ EPISODE 2: NEON GRAVEYARD ■■■■\n\n도시 중심부로 들어섰다.\n\n네온사인의 잔해가 깜빡이며 죽어가는 거리. 한때 번화했던 상가는 이제 시체 더미로 변했다. 썩어가는 냄새가 안개처럼 피어오른다.\n\n청토끼들은 무리를 지어 돌아다닌다. 그들의 눈은 더 이상 푸르지 않다. 검은 핏물이 맺힌 눈동자는 오직 살육을 향한 갈망만을 반사할 뿐이다. 무엇이 그들의 마음을 집어삼킨 것인가?\n\n연이는 버려진 편의점에서 탄약을 더 찾았다. 셸의 금이 간 거울 앞에서, 자신의 모습을 보았다. 먼지 쌓인 분홍빛 꽃무늬. 더러워진 털. 그러나 눈빛만은 여전히 살아있다.\n\n'왜 살아남은 걸까...'\n\n스스로에게 묻지만 답은 없다. 살아남기 위해 싸우고, 싸우기 위해 살아남는 순환.\n\n거리 끝에서 청토끼 무리의 울음소리가 들린다. 이번에는 총을 든 녀석들도 있다. 변이체 중 일부는 도구를 사용하는 법을 기억하는 모양이다.\n\n연이는 방아쇠에 힘을 주었다.\n\n'좋아. 한 발 한 발, 지옥을 뚫고 가자.'" },
+    3: { goal: 40, enemySpeed: 2.6, spawnRate: 2200, homing: true, homingSpeed: 0.3, enemyShoot: true, sky: '#0f0f0f', city: '#1a1a1a', fog: '#262626', storyText: "■■■■ EPISODE 3: POISON MIST ■■■■\n\n안개가 짙어졌다.\n\n독성 가스가 도시 전체를 뒤덮었다. 사람들이 피했던 공업 지구는 이제 변이체들의 소굴이 되었다. 공장 굴뚝에서 검은 연기가 피어오른다.\n\n연이는 마스크를 찾지 못했다. 숨을 쉴 때마다 폐가 타는 듯한 고통이 밀려온다. 하지만 멈출 수 없다. 뒤로 물러서면 죽음뿐이다.\n\n'이 안개... 놈들을 키우는 건가?'\n\n궁금증이 스쳐 지나간다. 이 재앙의 근원이 어디에 있는지. 누가 이 지옥을 만들었는지.\n\n쓰러진 탱크 앞에서 연이는 쉬었다. 탱크의 조종석 안에는 이미 뼈만 남은 시체가 앉아있었다. 군대도 저항했지만, 결국 패배했던 것이다.\n\n탄약이 떨어져간다. 30발 남았다. 다음 탄약 상자를 찾아야 한다.\n\n안개 속에서 푸른 눈빛들이 나타난다. 그들은 안개 속에서도 연이의 체온을 느낄 수 있는 모양이다.\n\n'왔군.'\n\n연이는 고개를 들고, 총구를 겨눴다.\n\n'내 생명은 아직 끝나지 않았다.'" },
+    4: { goal: 50, enemySpeed: 2.9, spawnRate: 2000, homing: true, homingSpeed: 0.5, enemyShoot: true, sky: '#0a0d14', city: '#141a26', fog: '#1e293b', storyText: "■■■■ EPISODE 4: SHADOWS IN THE RUINS ■■■■\n\n폐허 깊숙이 들어왔다.\n\n콘크리트 건물이 무너진 잔해 사이로 청토끼들이 숨어있다. 그들은 이제 단순한 짐승이 아니다. 교묘함이 생겼다. 먹이를 기다리며 매복하고, 떼를 지어 덮치는 전술을 사용한다.\n\n연이는 버려진 경찰서에서 권총을 한 자루 더 챙겼다. 양손에 무기를 들고, 후퇴할 수 없는 각오를 다진다.\n\n시체들 사이에서 일기장을 발견했다. 피로 얼룩진 페이지.\n\n'...접촉 후 3시간이면 변이가 시작된다. 예방 불가. 치료 불가. 우리는 실패했다...'\n\n일기장을 덮었다. 희망은 없었다. 이제 남은 것은 오직 살육뿐이다.\n\n저녁 노을이 폐허를 붉게 물든다. 아름답고도 비극적인 광경이다. 연이는 밤이 오기 전에 이 구역을 벗어나야 한다는 것을 알고 있다. 변이체들은 어둠 속에서 더 강해진다.\n\n멀리서 비명이 들린다. 아직 살아있는 생존자가 있는 걸까? 아니면 유인하는 함정일까?\n\n연이는 고개를 저었다. 지금은 다른 생명을 구할 여유가 없다. 스스로를 구해야 한다.\n\n밤의 그림자가 길어진다.\n\n'시간이 없다. 가자.'" },
+    5: { goal: 60, enemySpeed: 3.2, spawnRate: 1800, homing: true, homingSpeed: 0.7, enemyShoot: true, sky: '#14051a', city: '#1f0a28', fog: '#2d1a3a', storyText: "■■■■ EPISODE 5: THE FALLEN PARADISE ■■■■\n\n네온 불빛이 사라진 도시의 심장부.\n\n한때 천국이라 불렸던 상업 지구는 이제 지옥이 되었다. 깨진 유리창, 불타는 차량, 쌓인 시체들. 이곳이 얼마 전까지 사람들이 웃고 떠드는 곳이었다는 게 믿어지지 않는다.\n\n연이는 분수대 위에 앉아 잠시 숨을 돌렸다. 물은 이미 피로 붉게 물들었다. 그녀는 흙탄물을 마셨다. 수분은 생존을 위해 필수불가결하다.\n\n'중앙 방송국... 거기에 답이 있을까?'\n\n도시 중심의 거대한 타워. 재앙의 첫 발원지가 그곳이라는 소문이 있다. 만약 그곳에 가면, 무언가를 발견할 수 있을지도 모른다.\n\n하지만 길은 험난하다. 거리마다 수많은 변이체들이 배회한다.\n\n갑자기 무전기가 잡음을 내며 작동했다.\n\n'...구조... 누구... 살아있나...'\n\n연이는 무전기를 귀에 가까이 댔다.\n\n'여기... 살아있다. 누구세요?'\n\n잡음만이 대답했다. 통신은 끊겼다.\n\n'그래도... 누군가 살아있군.'\n\n희망의 불씨는 작지만, 꺼지지 않았다. 연이는 무전기를 챙기고 다시 길을 나섰다.\n\n'중앙 방송국으로. 거기에 미래가 있다.'" },
+    6: { goal: 70, enemySpeed: 3.5, spawnRate: 1600, homing: true, homingSpeed: 0.9, enemyShoot: true, sky: '#1a0505', city: '#2a0a0a', fog: '#3a1a1a', storyText: "■■■■ EPISODE 6: RIVER OF DESPAIR ■■■■\n\n오염된 강을 따라 걷는다.\n\n한때 맑았던 강물은 이제 검은 점액이 되었다. 물고기들은 모두 떼죽음을 당했고, 강변에는 거대한 변이체 발자국이 남아있다.\n\n연이는 강가에서 씻을 수 없었다. 오염된 물은 피부를 태울 것이다. 대신 공기 중의 습기를 찾아 마셨다.\n\n'역병의 원인... 이 강과 관련이 있는 걸까?'\n\n생각이 머릿속을 스쳤다. 공업 단지에서 흘러나온 폐수? 아니면 의도적인 생물학적 테러?\n\n강 건너편에서 거대한 그림자가 움직였다. 보통 크기의 변이체가 아니다. 뭔가 다른 것이 있다. 더 크고, 더 강력한 존재.\n\n연이는 경계 태세를 취했다.\n\n'보스... 놈들의 우두머리인가?'\n\n아직은 아니다. 그 존재는 연이를 인식하지 못한 것 같다. 하지만 언젠가 마주칠 날이 올 것이다.\n\n강을 건너는 부서진 다리를 발견했다. 위험하지만, 중앙 방송국으로 가는 지름길이다.\n\n연이는 신중하게 발을 내디뎠다.\n\n'조심스럽게. 살아남기 위해.'" },
+    7: { goal: 80, enemySpeed: 3.8, spawnRate: 1400, homing: true, homingSpeed: 1.1, enemyShoot: true, sky: '#02040a', city: '#0a0e1a', fog: '#101a2a', storyText: "■■■■ EPISODE 7: ABYSS ENTRANCE ■■■■\n\n중앙 방송국에 도착했다.\n\n50층짜리 거대한 타워가 하늘을 찌른다. 모든 창문이 깨졌고, 벽은 검은 슬라임으로 뒤덮였다. 입구에서부터 피 냄새가 풍겨온다.\n\n연이는 로비를 지나간다. 쓰러진 경비원들의 시체. 그들은 최후까지 싸웠다. 총알은 모두 떨어졌고, 마지막엔 몸으로 저항했다.\n\n엘리베이터는 작동하지 않는다. 계단으로 올라가야 한다. 50층까지.\n\n'미친 짓이야...'\n\n하지만 다른 길은 없다.\n\n2층에서 변이체 무리를 만났다. 로비보다 훨씬 많다. 이 건물은 변이체들의 둥지가 되었다. 왜? 무엇이 그들을 이곳으로 이끌었나?\n\n격렬한 전투가 벌어졌다. 연이는 총을 쏘고, 쏘고, 또 쐈다. 탄약이 떨어질 때까지. 마지막에는 총 몸짓으로 쓰러뜨렸다.\n\n피가 흐르는 팔을 붙잡았다. 상처가 깊지만, 치명적이지는 않다.\n\n'아직은 괜찮아... 아직은...'\n\n연이는 계단을 향해 걸음을 옮겼다. 한 걸음, 한 걸음씩, 지옥의 정상으로.\n\n'꼭대기에서 기다려라. 내가 갈 테니까.'" },
+    8: { goal: 90, enemySpeed: 4.1, spawnRate: 1200, homing: true, homingSpeed: 1.3, enemyShoot: true, sky: '#0a0908', city: '#141210', fog: '#1a1816', storyText: "■■■■ EPISODE 8: HALLUCINATION ■■■■\n\n25층. 반까지 왔다.\n\n하지만 공기가 달라졌다. 뭔가 이상한 기운이 감돈다. 머릿속에 목소리가 들린다. 어머니의 목소리. 친구들의 목소리.\n\n'연이... 여기 왜 있어...\n집에 가자... 농장으로...'\n\n환영이다. 변이체들의 새로운 능력인가? 아니면 이곳의 공기에 마약 성분이 있는 건가?\n\n연이는 혀를 깨물었다. 고통이 환영을 물리쳤다.\n\n'힐끗거리지 마. 너희들은 죽었다. 나는 아직 살아있다.'\n\n계속 올라간다. 30층. 35층. 변이체들은 더 강해지고, 더 교활해진다. 일부는 벽을 타고 이동하고, 천장에서 매달려 공격한다.\n\n38층에서 실험실을 발견했다. 유리관 안에는 변이체 표본들이 떠있다.\n\n'이곳에서... 연구했던 건가?'\n\n컴퓨터 화면은 꺼져있지만, 케이블은 연결되어 있다. 누군가 최근까지 여기 있었다.\n\n책상 위에서 파일을 발견했다. '프로젝트 블루 래빗'.\n\n'...바이러스 인공 조작 확인... 목적: 생물 병기...\n국방부 프로젝트... 누설... 통제 불가능...'\n\n진실이 밝혀졌다. 이 재앙은 사고가 아니었다. 인간이 만든 것이었다.\n\n연이는 손을 떨며 파일을 집어넣었다.\n\n'꼭대기에서. 그들에게 물을 거야.'\n\n눈에서 분노의 불꽃이 타오른다." },
+    9: { goal: 100, enemySpeed: 4.5, spawnRate: 1000, homing: true, homingSpeed: 1.5, enemyShoot: true, sky: '#02040a', city: '#000000', fog: '#0f172a', storyText: "■■■■ EPISODE 9: THRONE OF ROT ■■■■\n\n45층. 거의 다 왔다.\n\n공기가 무겁다. 마치 압력이 증가한 것처럼 흉부가 눌린다. 창밖을 보니 하늘이 핏빛으로 물들었다. 태양은 검은 디스크가 되었고, 세상의 끝이 다가오는 것을 예고한다.\n\n변종들의 보스가 가까이 있다는 직감이 든다. 연이는 마지막 탄창을 장전했다. 15발.\n\n47층에서 거대한 홀을 발견했다. 한때 방송 스튜디오였던 공간은 이제 생물의 소굴이 되었다. 살점으로 뒤덮인 벽, 고동치는 심장 같은 덩어리, 흡혈하는 덩굴들.\n\n중앙에 있었다.\n\n거대한 청토끼. 보통의 변이체들보다 5배는 컸다. 눈은 두 개가 아니라 수십 개가 얼굴 전체에 달려있었다. 입은 귀까지 찢어져 있고, 송곳니는 사람 팔뚝만 했다.\n\n왕이다. 변이체들의 왕.\n\n그리고 왕좌 옆에는 한 남자가 서 있었다. 아직 인간의 모습을 유지하고 있지만, 눈은 이미 변했다.\n\n'마침내 왔군, 꽃돼지.'\n\n남자가 말했다. 미친 듯한 웃음소리가 홀을 울린다.\n\n'너는... 누구야?'\n\n'나? 나는 창조주다. 프로젝트 블루 래빗의 수석 연구원. 당신의 세상을 파괴한 바로 그 남자 말이다.'\n\n연이의 손이 떨렸다. 분노 때문인가? 공포 때문인가?\n\n'왜... 왜 이렇게 만든 거야...?'\n\n'왜? 인류의 진화를 위해서다! 약한 육체를 버리고, 강한 생물로 거듭나는 것! 보아라, 내 창조물들을!'\n\n왕이 고개를 들었다. 수십 개의 눈이 연이를 향했다.\n\n'그래... 너는 살아남은 실험체 중 하나였어. 꽃돼지의 면역계... 흥미로운 결과지. 네 유전자를 분석하면 완벽한 바이러스를 만들 수 있겠구나.'\n\n연이는 총을 들어 올렸다.\n\n'꿈도 꾸지 마. 네 지옥은 여기서 끝나.'\n\n총성이 홀을 울렸다.\n\n최후의 전투가 시작되었다." },
+    10: { goal: 150, enemySpeed: 5.0, spawnRate: 800, homing: true, homingSpeed: 2.0, enemyShoot: true, sky: '#000000', city: '#000000', fog: '#450a0a', storyText: "■■■■ EPISODE 10: FINAL HOPE ■■■■\n\n전투는 끝났다.\n\n연구원의 시체가 바닥에 쓰러져 있다. 그의 미친 웃음은 더 이상 들리지 않는다. 변이체의 왕은 마지막 일격으로 심장이 관통당했다. 거대한 몸이 땅에 쓰러지며 홀 전체가 진동했다.\n\n하지만 연이도 피폐했다. 총은 부서졌고, 몸에는 수십 개의 상처가 있다. 피가 흐르고, 숨은 거칠다.\n\n쓰러지려는 순간, 무전기가 다시 작동했다.\n\n'...연이... 당신의 전투... 봤어...\n살아있구나... 정말 다행이야...'\n\n'누구...세요...?'\n\n'난 다른 생존자야. 당신의 싸움이... 우리에게 희망을 줬어. 이제 우리도 일어날 거야. 당신의 용기를 본받아서.'\n\n연이는 입가에 미소를 지었다.\n\n'그래... 다들... 살아있었구나...'\n\n창밖으로 햇빛이 들어오고 있었다. 핏빛 하늘이 걷히고, 새벽이 밝아오고 있었다.\n\n재앙은 끝났다. 생화학 무기의 중심지가 파괴되었고, 변이체들은 혼돈 속에 빠질 것이다.\n\n연이는 창가로 기어갔다. 아침 햇살이 분홍빛 꽃무늬를 비춘다.\n\n'엄마... 나 살아났어...'\n\n눈물이 흘렀다. 복수의 완수. 생존의 승리. 그리고 새로운 내일에 대한 희망.\n\n연이는 일어섰다. 아프지만, 다시 걸을 수 있다.\n\n'이제... 농장으로 돌아갈까...'\n\n첫 번째 발걸음을 내디뎠다. 폐허를 벗어나, 삶의 땅을 향해.\n\n전설은 여기서 끝나지 않는다.\n꽃돼지 연이의 이야기는 계속될 것이다.\n\n■■■■ THE END ■■■■\n\n그러나 세상의 구석구석에서,\n작은 파란 털들이 아직 움직이고 있었다...\n\n희망은 찾았지만,\n완전한 승리는 아직 먼 이야기.\n\n꽃돼지 연이의 다음 모험이 기다린다.\n\nTO BE CONTINUED..." }
 };
 
 let currentStage = 1;
@@ -356,15 +356,27 @@ function updateGameOverButtonVisibility() {
     if (gameoverButtons) gameoverButtons.hidden = !shouldShow;
 }
 
-// 게임 시작 함수
+// 게임 시작 - 스토리 먼저 표시
 function startGame() {
     if (currentState !== GAME_STATE.START) return;
     enterMobileFullscreen();
     AudioManager.init();
     AudioManager.startBGM();
+    
+    // 스토리 상태로 전환
+    currentState = GAME_STATE.STORY;
+    storyDisplayTime = Date.now();
+    storyTextComplete = false;
+    storyClickPending = false;
+    
+    updateMainMenuVisibility();
+}
+
+// 실제 게임 플레이 시작
+function startGameplay() {
     currentState = GAME_STATE.PLAYING;
     storyTypingIndex = 0;
-    storyDisplayTime = Date.now();
+    storyDisplayTime = 0;
     updateMainMenuVisibility();
     
     // 게임 시작 시 모바일 이지 모드 상태 확인
@@ -386,6 +398,32 @@ const closeInstallGuideBtn = document.getElementById('close-install-guide');
 if (closeInstallGuideBtn) {
     closeInstallGuideBtn.addEventListener('click', hideInstallGuide);
 }
+
+// 스토리 화면 클릭/탭으로 계속
+function handleStoryClick(e) {
+    if (currentState === GAME_STATE.STORY) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (storyTextComplete) {
+            // 텍스트가 모두 표시되었으면 게임 시작
+            console.log('[Story] Text complete, starting gameplay');
+            startGameplay();
+        } else {
+            // 아직 타이핑 중이면 즉시 모든 텍스트 표시
+            console.log('[Story] Fast forward text');
+            storyDisplayTime = Date.now() - (999999); // 즉시 완료
+        }
+    } else if (currentState === GAME_STATE.STAGE_CLEAR) {
+        e.preventDefault();
+        e.stopPropagation();
+        advanceStage();
+    }
+}
+
+// 스토리 화면용 이벤트 리스너
+canvas.addEventListener('click', handleStoryClick);
+canvas.addEventListener('touchstart', handleStoryClick, { passive: false });
 
 // 게임 시작 버튼 이벤트
 if (startButton) {
@@ -1091,8 +1129,11 @@ const Background = {
 function advanceStage() {
     if (currentStage < 10) {
         currentStage++; enemiesKilled = 0; boss = null;
-        currentState = GAME_STATE.PLAYING;
-        storyTypingIndex = 0; storyDisplayTime = Date.now(); // 스토리 타이핑 리셋
+        // 다음 스테이지 스토리 표시
+        currentState = GAME_STATE.STORY;
+        storyTypingIndex = 0; 
+        storyDisplayTime = Date.now();
+        storyTextComplete = false;
         Player.fireRate = 200;
         Player.damage = isMobileEasyModeActive() ? Math.round(10 * EASY_MODE_CONFIG.playerDamageMultiplier) : 10; // EASY MODE
         Player.hp = Player.maxHp;
@@ -1473,10 +1514,19 @@ resizeCanvas();
 
 function gameLoop(timestamp) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // 스토리 화면
+    if (currentState === GAME_STATE.STORY) {
+        drawStoryScreen(ctx, timestamp);
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+    
     // 메인 메뉴 가시성 업데이트 (START 상태에서만 표시)
     updateMainMenuVisibility();
     updateInstallButtonVisibility();
     updateGameOverButtonVisibility();
+    
     if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT || currentState === GAME_STATE.STAGE_CLEAR) {
         // STAGE_CLEAR일 때도 보스 업데이트 필요 (사망 애니메이션 완료)
         if (currentState !== GAME_STATE.STAGE_CLEAR) {
@@ -1587,15 +1637,15 @@ function drawStartScreen() {
     const maxDim = Math.max(canvas.width, canvas.height);
     const isPortrait = window.innerHeight > window.innerWidth;
 
-    // 모바일에서는 더 큰 최소 스케일 보장
+    // 모바일/데스크톱 스케일 계산
     let scaleFactor;
     if (isMobile) {
         if (isPortrait) {
             // 세로 모드: 더 작은 스케일 사용
             scaleFactor = Math.max(0.65, Math.min(0.85, minDim / 500));
         } else {
-            // 가로 모드: 더 큰 스케일 사용 (캐릭터와 제목 보이게)
-            scaleFactor = Math.max(0.85, Math.min(1.2, minDim / 400));
+            // 가로 모드: 데스크톱처럼 크게
+            scaleFactor = Math.max(0.9, Math.min(1.0, minDim / 600));
         }
     } else {
         // 데스크톱
@@ -1603,29 +1653,46 @@ function drawStartScreen() {
     }
 
     // 화면 크기별 레이아웃 계산
-    const marginTop = isMobile ? 20 * scaleFactor : 50;
-    const contentSpacing = isMobile ? 15 * scaleFactor : 40;
+    const marginTop = isMobile ? 30 * scaleFactor : 50;
+    const contentSpacing = isMobile ? 20 * scaleFactor : 40;
 
     if (titleImg) {
         ctx.save();
-        ctx.shadowBlur = 30;
+        ctx.shadowBlur = 30 * pulse;
         ctx.shadowColor = '#00ffff';
-        const maxTitleW = isMobile ? Math.min(350 * scaleFactor, canvas.width * 0.85) : 500 * pulse * scaleFactor;
+        
+        // 모바일/데스크톱 공통: 캐릭터 이미지 크기
+        let maxTitleW;
+        if (isMobile && !isPortrait) {
+            // 가로 모드: 화면 높이 기준으로 크게
+            maxTitleW = Math.min(canvas.height * 0.8, canvas.width * 0.5) * pulse;
+        } else if (isMobile) {
+            maxTitleW = Math.min(350 * scaleFactor, canvas.width * 0.85);
+        } else {
+            maxTitleW = 500 * pulse * scaleFactor;
+        }
+        
         const w = maxTitleW;
         const h = (w / titleImg.width) * titleImg.height;
-        // 모바일 가로모드: 중앙에 캐릭터와 제목 함께 배치
+        
+        // 위치 계산
         let titleY;
         if (isMobile && !isPortrait) {
-            // 가로 모드: 화면 중앙에 배치
-            titleY = canvas.height / 2 - h / 2 - 20 * scaleFactor;
+            // 가로 모드: 좌측 중앙에 배치 (MISSION GUIDE는 우측에)
+            titleY = canvas.height / 2 - h / 2;
         } else if (isMobile) {
-            // 세로 모드: 상단에 배치
             titleY = marginTop;
         } else {
-            // 데스크톱
             titleY = canvas.height / 2 - h / 2 - 80 * scaleFactor;
         }
-        ctx.drawImage(titleImg, canvas.width / 2 - w / 2, titleY, w, h);
+        
+        // 좌측 위치 계산 (가로모드)
+        let titleX = canvas.width / 2 - w / 2;
+        if (isMobile && !isPortrait) {
+            titleX = canvas.width * 0.25 - w / 2; // 좌측 1/4 지점
+        }
+        
+        ctx.drawImage(titleImg, titleX, titleY, w, h);
         ctx.restore();
     }
 
@@ -1635,33 +1702,46 @@ function drawStartScreen() {
     ctx.textBaseline = 'middle';
 
     // 외곽 광채 효과 (거대한 핏빛 광채)
-    ctx.shadowBlur = 30 * scaleFactor;
+    ctx.shadowBlur = 30 * scaleFactor * pulse;
     ctx.shadowColor = '#e74c3c';
     ctx.fillStyle = '#fff';
-    // 모바일에서 더 큰 폰트 크기 보장
-    const titleFontSize = isMobile ? Math.max(24, Math.floor(36 * scaleFactor)) : Math.floor(36 * scaleFactor);
+    
+    // 폰트 크기
+    const titleFontSize = isMobile ? Math.max(28, Math.floor(40 * scaleFactor)) : Math.floor(36 * scaleFactor);
     ctx.font = `bold ${titleFontSize}px "Press Start 2P"`;
-    // 모바일에서는 타이틀 이미지 아래에 텍스트 배치
-    const textY = isMobile && titleImg ? marginTop + (350 * scaleFactor) + 20 * scaleFactor : canvas.height / 2 + 30 * scaleFactor;
-    ctx.fillText('Yeon', canvas.width / 2, textY);
+    
+    // 텍스트 위치
+    let textX = canvas.width / 2;
+    let textY;
+    
+    if (isMobile && !isPortrait) {
+        // 가로 모드: 캐릭터 우측에 텍스트
+        textX = canvas.width * 0.65;
+        textY = canvas.height / 2 - 30 * scaleFactor;
+    } else if (isMobile) {
+        textY = marginTop + (350 * scaleFactor) + 20 * scaleFactor;
+    } else {
+        textY = canvas.height / 2 + 30 * scaleFactor;
+    }
+    
+    ctx.fillText('Yeon', textX, textY);
 
-    const subtitleFontSize = isMobile ? Math.max(10, Math.floor(13 * scaleFactor)) : Math.floor(13 * scaleFactor);
+    const subtitleFontSize = isMobile ? Math.max(12, Math.floor(14 * scaleFactor)) : Math.floor(13 * scaleFactor);
     ctx.font = `${subtitleFontSize}px "Press Start 2P"`;
     ctx.fillStyle = '#e74c3c';
-    ctx.shadowBlur = 10 * scaleFactor;
-    ctx.fillText('THE KILLER OF BLUE ZOMBIE', canvas.width / 2, textY + 40 * scaleFactor);
+    ctx.shadowBlur = 15 * scaleFactor;
+    ctx.fillText('THE KILLER OF BLUE ZOMBIE', textX, textY + 45 * scaleFactor);
     ctx.restore();
 
     // 2D 도트 스타일 게임 가이드 패널
-    // 모바일에서는 패널 크기와 위치 조정
     let panelW, panelH, panelX, panelY;
     
     if (isMobile && !isPortrait) {
-        // 가로 모드: 좌측 하단에 작은 패널 배치
-        panelW = Math.min(280 * scaleFactor, canvas.width * 0.4);
-        panelH = Math.min(140 * scaleFactor, canvas.height * 0.4);
-        panelX = 20 * scaleFactor;
-        panelY = canvas.height - panelH - 20 * scaleFactor;
+        // 가로 모드: 우측 하단에 패널 배치 (데스크톱과 유사)
+        panelW = Math.min(320 * scaleFactor, canvas.width * 0.35);
+        panelH = Math.min(200 * scaleFactor, canvas.height * 0.5);
+        panelX = canvas.width - panelW - 30 * scaleFactor;
+        panelY = canvas.height / 2 - panelH / 2;
     } else if (isMobile) {
         // 세로 모드: 중앙에 배치
         panelW = canvas.width * 0.95;
@@ -1699,41 +1779,55 @@ function drawStartScreen() {
         ctx.fillRect(panelX + i + 8 * scaleFactor, panelY + panelH - 26 * scaleFactor, 4 * scaleFactor, 4 * scaleFactor);
     }
 
-    // 모바일에서 가독성 좋은 폰트 크기
-    const fontSizeGuide = isMobile ? Math.max(10, Math.floor(11 * scaleFactor)) : Math.max(7, Math.floor(10 * scaleFactor));
-    const fontSizeText = isMobile ? Math.max(9, Math.floor(10 * scaleFactor)) : Math.max(6, Math.floor(8 * scaleFactor));
-    const lineHeight = Math.max(18, 24 * scaleFactor);
+    // 폰트 크기 설정
+    let fontSizeGuide, fontSizeText, lineHeight;
+    if (isMobile && !isPortrait) {
+        // 가로 모드: 더 크고 읽기 쉽게
+        fontSizeGuide = Math.max(12, Math.floor(13 * scaleFactor));
+        fontSizeText = Math.max(11, Math.floor(12 * scaleFactor));
+        lineHeight = Math.max(22, 28 * scaleFactor);
+    } else if (isMobile) {
+        fontSizeGuide = Math.max(10, Math.floor(11 * scaleFactor));
+        fontSizeText = Math.max(9, Math.floor(10 * scaleFactor));
+        lineHeight = Math.max(18, 24 * scaleFactor);
+    } else {
+        fontSizeGuide = Math.max(7, Math.floor(10 * scaleFactor));
+        fontSizeText = Math.max(6, Math.floor(8 * scaleFactor));
+        lineHeight = Math.max(18, 24 * scaleFactor);
+    }
 
     ctx.textAlign = 'left';
     ctx.fillStyle = '#f1c40f';
-    ctx.font = `${fontSizeGuide}px "Press Start 2P"`;
-    ctx.fillText('MISSION GUIDE', panelX + 20 * scaleFactor, panelY + 28 * scaleFactor);
+    ctx.font = `bold ${fontSizeGuide}px "Press Start 2P"`;
+    ctx.shadowBlur = 10 * scaleFactor;
+    ctx.shadowColor = '#f1c40f';
+    ctx.fillText('⚔ MISSION GUIDE ⚔', panelX + 20 * scaleFactor, panelY + 32 * scaleFactor);
+    ctx.shadowBlur = 0;
 
     ctx.fillStyle = '#ffffff';
     ctx.font = `${fontSizeText}px "Press Start 2P"`;
-    let lineY = panelY + 56 * scaleFactor;
+    let lineY = panelY + 60 * scaleFactor;
 
-    // 모바일에서는 간단한 안내 텍스트 사용
+    // 모바일 세로 모드: 간략한 가이드
     if (isMobile && isPortrait) {
-        // 세로 모드: 간략한 가이드
-        ctx.fillText('- DRAG to Move', panelX + 20 * scaleFactor, lineY);
+        ctx.fillText('▶ DRAG to Move', panelX + 20 * scaleFactor, lineY);
         lineY += lineHeight;
-        ctx.fillText('- AUTO FIRE', panelX + 20 * scaleFactor, lineY);
+        ctx.fillText('▶ AUTO FIRE', panelX + 20 * scaleFactor, lineY);
         lineY += lineHeight;
-        ctx.fillText('- DOUBLE TAP for BOMB', panelX + 20 * scaleFactor, lineY);
+        ctx.fillText('▶ DOUBLE TAP for BOMB', panelX + 20 * scaleFactor, lineY);
         lineY += lineHeight;
-        ctx.fillText('- DEFEAT BOSS', panelX + 20 * scaleFactor, lineY);
+        ctx.fillText('▶ DEFEAT BOSS', panelX + 20 * scaleFactor, lineY);
     } else {
         // 가로/데스크톱: 전체 가이드
-        ctx.fillText('- MOVE: MOUSE / TOUCH DRAG', panelX + 20 * scaleFactor, lineY);
+        ctx.fillText('▶ MOVE: MOUSE / TOUCH DRAG', panelX + 20 * scaleFactor, lineY);
         lineY += lineHeight;
-        ctx.fillText('- ATTACK: AUTO FIRE', panelX + 20 * scaleFactor, lineY);
+        ctx.fillText('▶ ATTACK: AUTO FIRE', panelX + 20 * scaleFactor, lineY);
         lineY += lineHeight;
-        ctx.fillText('- BOMB: DOUBLE TAP / SPACE', panelX + 20 * scaleFactor, lineY);
+        ctx.fillText('▶ BOMB: DOUBLE TAP / SPACE', panelX + 20 * scaleFactor, lineY);
         lineY += lineHeight;
-        ctx.fillText('- SURVIVE WAVES & DESTROY BOSS', panelX + 20 * scaleFactor, lineY);
+        ctx.fillText('▶ SURVIVE & DESTROY BOSS', panelX + 20 * scaleFactor, lineY);
         lineY += lineHeight;
-        ctx.fillText('- PICK GATES TO GAIN BUFFS', panelX + 20 * scaleFactor, lineY);
+        ctx.fillText('▶ PICK GATES TO GAIN BUFFS', panelX + 20 * scaleFactor, lineY);
     }
     ctx.restore();
 
@@ -1913,46 +2007,117 @@ function drawGameOverScreen() {
 }
 
 // --- 스토리 텍스트 연출 시스템 ---
-function drawStoryText(ctx, timestamp) {
+let storyTypingSpeed = 25; // 더 빠른 타이핑
+let storyTextComplete = false;
+let storyClickPending = false;
+
+function drawStoryScreen(ctx, timestamp) {
     const stage = STAGE_DATA[currentStage];
-    if (!stage || !stage.storyText) return;
-
-    const text = stage.storyText;
-    const typingSpeed = 85; // 속도를 조금 더 느리게 조정
-    const elapsed = Date.now() - storyDisplayTime;
-    const fullTypingTime = text.length * typingSpeed;
-    const holdAfterFullText = 1000;
-    const fadeOutDuration = 2000;
-    const totalDisplayTime = fullTypingTime + holdAfterFullText + fadeOutDuration;
-    if (elapsed > totalDisplayTime) return;
-    const charCount = Math.floor(elapsed / typingSpeed);
-    const displayText = text.substring(0, charCount);
-
-    ctx.save();
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = '14px "Press Start 2P"';
-
-    let alpha = 1.0;
-    if (elapsed < 1000) alpha = elapsed / 1000;
-    const fadeOutStart = fullTypingTime + holdAfterFullText;
-    if (elapsed > fadeOutStart) alpha = Math.max(0, 1 - (elapsed - fadeOutStart) / fadeOutDuration);
-
-    ctx.globalAlpha = alpha;
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillStyle = '#ffffff';
-
-    const maxWidth = canvas.width * 0.7;
-    // 줄바꿈 기호(\n) 처리
-    const paragraphs = displayText.split('\n');
-    let currentY = canvas.height / 2 - (paragraphs.length * 20);
-    for (const p of paragraphs) {
-        currentY = wrapText(ctx, p, canvas.width / 2, currentY, maxWidth, 30);
-        currentY += 10; // 문단 간 간격 추가
+    if (!stage || !stage.storyText) {
+        // 스토리가 없으면 바로 게임 시작
+        startGameplay();
+        return;
     }
 
+    const text = stage.storyText;
+    const elapsed = Date.now() - storyDisplayTime;
+    const charCount = Math.floor(elapsed / storyTypingSpeed);
+    const displayText = text.substring(0, charCount);
+    
+    // 모든 텍스트가 표시되었는지 확인
+    storyTextComplete = charCount >= text.length;
+
+    // 검은 배경 (완전 불투명)
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // 상단 에피소드 표시
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = 'bold 16px "Press Start 2P"';
+    ctx.fillStyle = '#e74c3c';
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#e74c3c';
+    ctx.fillText(`EPISODE ${currentStage}`, canvas.width / 2, 30);
     ctx.restore();
+
+    // 스토리 텍스트
+    ctx.save();
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.font = '13px "Press Start 2P"';
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowBlur = 0;
+
+    const maxWidth = Math.min(canvas.width * 0.85, 800);
+    const startX = (canvas.width - maxWidth) / 2;
+    const startY = 80;
+    const lineHeight = 26;
+    
+    // 줄바꿈 처리하여 표시
+    const paragraphs = displayText.split('\n');
+    let currentY = startY;
+    
+    for (const paragraph of paragraphs) {
+        if (paragraph.trim() === '') {
+            currentY += lineHeight; // 빈 줄
+        } else if (paragraph.startsWith('■■■■') || paragraph.startsWith('EPISODE') || paragraph.startsWith('\'')) {
+            // 제목이나 강조 텍스트는 중앙 정렬
+            ctx.textAlign = 'center';
+            ctx.fillStyle = paragraph.startsWith('■') ? '#f1c40f' : (paragraph.startsWith('\'') ? '#00ffff' : '#ffffff');
+            ctx.fillText(paragraph, canvas.width / 2, currentY);
+            currentY += lineHeight;
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#ffffff';
+        } else {
+            // 일반 텍스트는 왼쪽 정렬로 줄바꿈
+            currentY = wrapTextLeftAlign(ctx, paragraph, startX, currentY, maxWidth, lineHeight);
+        }
+    }
+    ctx.restore();
+    
+    // "계속하려면 클릭/탭" 안내 (텍스트 완료 후 표시)
+    if (storyTextComplete) {
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        const blink = Math.sin(Date.now() / 300) > 0;
+        ctx.fillStyle = blink ? '#00ffff' : '#0088aa';
+        ctx.font = 'bold 14px "Press Start 2P"';
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#00ffff';
+        const promptText = isMobileTouchDevice() ? '▼ TAP TO CONTINUE ▼' : '▼ CLICK TO CONTINUE ▼';
+        ctx.fillText(promptText, canvas.width / 2, canvas.height - 40);
+        ctx.restore();
+    }
+}
+
+function wrapTextLeftAlign(ctx, text, x, y, maxWidth, lineHeight) {
+    let line = '';
+    let currentY = y;
+
+    for (let n = 0; n < text.length; n++) {
+        const char = text[n];
+        const testLine = line + char;
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+
+        if (testWidth > maxWidth && n > 0) {
+            ctx.fillText(line, x, currentY);
+            line = char;
+            currentY += lineHeight;
+        } else {
+            line = testLine;
+        }
+    }
+    ctx.fillText(line, x, currentY);
+    return currentY + lineHeight;
+}
+
+// 레거시 함수 - 게임 중 스토리 표시용 (사용 안함)
+function drawStoryText(ctx, timestamp) {
+    // 이제 게임 시작 전에만 스토리 표시
 }
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
