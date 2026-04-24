@@ -1162,6 +1162,11 @@ function advanceStage() {
         storyTotalPages = 0;
         lastTypedCharIndex = 0; // 타자기 인덱스 초기화
         
+        // 기존 적들과 총탄 제거 (다음 스테이지에서 새로 시작)
+        enemies = [];
+        projectiles = [];
+        gates = [];
+        
         Player.fireRate = 200;
         Player.damage = isMobileEasyModeActive() ? Math.round(10 * EASY_MODE_CONFIG.playerDamageMultiplier) : 10; // EASY MODE
         Player.hp = Player.maxHp;
