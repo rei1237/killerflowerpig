@@ -35,6 +35,7 @@ let animationId = null;
 // 패스워드 및 스테이지 언락 상태
 const STAGE_PASSWORD = '910902'; // 연이의 생년월일
 let isStageUnlocked = false; // 패스워드 입력 성공 여부
+let isGodMode = false; // 비밀번호 입력 시 활성화되는 무적 모드 (라이프 감소 없음)
 
 // --- 1. 에셋 및 전역 상태 설정 ---
 
@@ -414,9 +415,9 @@ function resetPasswordInput() {
 // 패스워드 확인 및 스테이지 언락
 function checkStagePassword() {
     const input = stagePasswordInput ? stagePasswordInput.value.trim() : '';
-    if (input === STAGE_PASSWORD) {
         // 패스워드 일치
         isStageUnlocked = true;
+        isGodMode = true; // 비밀번호 입력 시 무적 모드 강제 활성화
         if (passwordError) passwordError.hidden = true;
         if (passwordContainer) passwordContainer.hidden = true;
         // 스테이지 선택 UI 표시
@@ -1094,10 +1095,13 @@ class Enemy {
             }
             if (this.x + this.width < 0) {
                 this.active = false;
-                // 놓친 적은 무적 상태와 관계없이 1마리당 HP 1 감소
-                if (this.state !== 'DEAD') {
+                // 놓친 적은 무적 상태와 관계없이 1마리당 HP 1 감소 (무적 모드일 때는 감소 안함)
+                if (this.state !== 'DEAD' && !isGodMode) {
                     Player.hp--; AudioManager.playSFX('hit');
                     if (Player.hp <= 0) endGame();
+                } else if (this.state !== 'DEAD' && isGodMode) {
+                    // 무적 모드일 때는 효과음만 출력하거나 무시
+                    AudioManager.playSFX('powerup'); 
                 }
             }
             if (stage.enemyShoot && timestamp - this.lastShootTime > this.shootInterval && this.x < canvas.width - 100) {
@@ -1122,8 +1126,14 @@ class Enemy {
             }
             if (checkCollision(this, Player) && Player.shield <= 0) {
                 this.state = 'ATTACK'; this.aniFrame = 0; this.lastFrameTime = timestamp;
-                Player.hp--; Player.shield = getPlayerInvincibleDuration(); AudioManager.playSFX('hit'); // EASY MODE
-                if (Player.hp <= 0) endGame();
+                if (!isGodMode) {
+                    Player.hp--; Player.shield = getPlayerInvincibleDuration(); AudioManager.playSFX('hit');
+                    if (Player.hp <= 0) endGame();
+                } else {
+                    // 무적 모드: 쉴드만 부여하거나 피격 판정만 표시
+                    Player.shield = 30; // 짧은 시각적 무적 프레임
+                    AudioManager.playSFX('powerup');
+                }
             }
         }
         if (timestamp - this.lastFrameTime > this.frameRate) {
@@ -1552,76 +1562,72 @@ const BOSS_SPRITE_MAP = {
 // 스프라이트: Columns 1-6 (140-980px), 여백 고려해 135px 사용
 const BOSS2_SPRITE_MAP = {
     WALK: {
-        y: 2, h: 135,
+        y: 0, h: 213,
         frames: [
-            { x: 142, w: 135 },   // Column 1 (140px + 2px 여백)
-            { x: 282, w: 135 },   // Column 2
-            { x: 422, w: 135 },   // Column 3
-            { x: 562, w: 135 },   // Column 4
-            { x: 702, w: 135 },   // Column 5
-            { x: 842, w: 135 }    // Column 6
+            { x: 239, w: 239 },   // Column 1 (0-239px은 레이블이므로 239px부터 시작)
+            { x: 478, w: 239 },   // Column 2
+            { x: 717, w: 239 },   // Column 3
+            { x: 956, w: 239 },   // Column 4
+            { x: 1195, w: 239 },  // Column 5
+            { x: 1434, w: 239 }   // Column 6
         ]
     },
     ATTACK: {
-        y: 142, h: 135,
+        y: 213, h: 213,
         frames: [
-            { x: 142, w: 135 },   // Column 1
-            { x: 282, w: 135 },   // Column 2
-            { x: 422, w: 135 },   // Column 3 (임팩트)
-            { x: 562, w: 135 },   // Column 4
-            { x: 702, w: 135 },   // Column 5
-            { x: 842, w: 135 }    // Column 6
+            { x: 239, w: 239 },   // Column 1
+            { x: 478, w: 239 },   // Column 2
+            { x: 717, w: 239 },   // Column 3
+            { x: 956, w: 239 },   // Column 4
+            { x: 1195, w: 239 },  // Column 5
+            { x: 1434, w: 239 }   // Column 6
         ]
     },
     DEAD: {
-        y: 282, h: 135,
+        y: 426, h: 213,
         frames: [
-            { x: 142, w: 135 },   // Column 1
-            { x: 282, w: 135 },   // Column 2
-            { x: 422, w: 135 },   // Column 3
-            { x: 562, w: 135 },   // Column 4
-            { x: 702, w: 135 },   // Column 5
-            { x: 842, w: 135 }    // Column 6 (묘비)
+            { x: 239, w: 239 },   // Column 1
+            { x: 478, w: 239 },   // Column 2
+            { x: 717, w: 239 },   // Column 3
+            { x: 956, w: 239 },   // Column 4
+            { x: 1195, w: 239 },  // Column 5
+            { x: 1434, w: 239 }   // Column 6 (묘비)
         ]
     }
 };
 
-// 보스킹 (청토끼 킹.png) - 3x7 그리드, 텍스트 완전 제외
-// 그리드: 7열(140px each) x 3행(140px each) = 980x420px
-// 텍스트 열: Column 0 (0-140px) - 완전 제외
-// 스프라이트: Columns 1-6 (140-980px), 여백 고려해 135px 사용
 const BOSS_KING_SPRITE_MAP = {
     WALK: {
-        y: 2, h: 135,
+        y: 0, h: 213,
         frames: [
-            { x: 142, w: 135 },   // Column 1 (140px + 2px 여백)
-            { x: 282, w: 135 },   // Column 2
-            { x: 422, w: 135 },   // Column 3
-            { x: 562, w: 135 },   // Column 4
-            { x: 702, w: 135 },   // Column 5
-            { x: 842, w: 135 }    // Column 6
+            { x: 239, w: 239 },
+            { x: 478, w: 239 },
+            { x: 717, w: 239 },
+            { x: 956, w: 239 },
+            { x: 1195, w: 239 },
+            { x: 1434, w: 239 }
         ]
     },
     ATTACK: {
-        y: 142, h: 135,
+        y: 213, h: 213,
         frames: [
-            { x: 142, w: 135 },   // Column 1
-            { x: 282, w: 135 },   // Column 2
-            { x: 422, w: 135 },   // Column 3 (임팩트)
-            { x: 562, w: 135 },   // Column 4
-            { x: 702, w: 135 },   // Column 5
-            { x: 842, w: 135 }    // Column 6
+            { x: 239, w: 239 },
+            { x: 478, w: 239 },
+            { x: 717, w: 239 },
+            { x: 956, w: 239 },
+            { x: 1195, w: 239 },
+            { x: 1434, w: 239 }
         ]
     },
     DEAD: {
-        y: 282, h: 135,
+        y: 426, h: 213,
         frames: [
-            { x: 142, w: 135 },   // Column 1
-            { x: 282, w: 135 },   // Column 2
-            { x: 422, w: 135 },   // Column 3
-            { x: 562, w: 135 },   // Column 4
-            { x: 702, w: 135 },   // Column 5
-            { x: 842, w: 135 }    // Column 6 (묘비)
+            { x: 239, w: 239 },
+            { x: 478, w: 239 },
+            { x: 717, w: 239 },
+            { x: 956, w: 239 },
+            { x: 1195, w: 239 },
+            { x: 1434, w: 239 }
         ]
     }
 };
@@ -1819,13 +1825,34 @@ class Boss {
                 scale = 1.35; // 보스2는 중간 크기
             }
             
-            // 스프라이트 애니메이션 (모든 보스 타입)
-            const animSet = spriteMap[this.state] || spriteMap.WALK;
-            const frame = animSet.frames[this.aniFrame % animSet.frames.length];
-            const frameW = frame.w;
-            const frameH = animSet.h;
-            const sx = frame.x;
-            const sy = animSet.y;
+            // 스프라이트 애니메이션 좌표 계산
+            let sx, sy, frameW, frameH;
+            
+            if (this.isBoss2 || this.isBossKing) {
+                // [정밀도 최적화] 1676x640 해상도 기반 7x3 그리드 정밀 계산
+                // 1px의 오차도 허용하지 않기 위해 이미지 너비/높이를 분할하여 직접 계산
+                const cols = 7;
+                const rows = 3;
+                const unitW = img.width / cols;
+                const unitH = img.height / rows;
+                
+                // 행 선택: WALK(0), ATTACK(1), DEAD(2)
+                const rowIdx = this.state === 'ATTACK' ? 1 : (this.state === 'DEAD' ? 2 : 0);
+                // 열 선택: 첫 번째 열(0)은 텍스트 레이블이므로 건너뛰고 1~6번 프레임 사용
+                const colIdx = (this.aniFrame % 6) + 1;
+                
+                sx = colIdx * unitW;
+                sy = rowIdx * unitH;
+                frameW = unitW;
+                frameH = unitH;
+            } else {
+                const animSet = spriteMap[this.state] || spriteMap.WALK;
+                const frame = animSet.frames[this.aniFrame % animSet.frames.length];
+                frameW = frame.w;
+                frameH = animSet.h;
+                sx = frame.x;
+                sy = animSet.y;
+            }
 
             // 원본 비율 유지 + 약간 확대해 잘림 없이 표현
             const drawW = this.width * scale;
@@ -1871,7 +1898,7 @@ class Boss {
         } else {
             bossName = 'BOSS: BLUE RABBIT';
         }
-        ctx.fillText(bossName, canvas.width / 2, by + 15);
+        // ctx.fillText(bossName, canvas.width / 2, by + 15);
     }
 }
 
@@ -2065,13 +2092,19 @@ function gameLoop(timestamp) {
                 if (Player.state === 'ALIVE' && checkCollision(p, Player)) {
                     p.active = false; createExplosion(p.x, p.y, '#ff4757');
                     if (Player.shield <= 0) {
-                        Player.hp -= (p.isBossEnergyBall ? 3 : 1);
-                        Player.shield = getPlayerInvincibleDuration(); AudioManager.playSFX('hit'); // EASY MODE
-                        if (Player.hp <= 0) {
-                            Player.state = 'DEAD';
-                            Player.aniFrame = 0;
-                            Player.lastFrameTime = timestamp;
-                            createExplosion(Player.x, Player.y, '#c0392b');
+                        if (!isGodMode) {
+                            Player.hp -= (p.isBossEnergyBall ? 3 : 1);
+                            Player.shield = getPlayerInvincibleDuration(); AudioManager.playSFX('hit');
+                            if (Player.hp <= 0) {
+                                Player.state = 'DEAD';
+                                Player.aniFrame = 0;
+                                Player.lastFrameTime = timestamp;
+                                createExplosion(Player.x, Player.y, '#c0392b');
+                            }
+                        } else {
+                            // 무적 모드: 피격 효과만 발생
+                            Player.shield = 30;
+                            AudioManager.playSFX('powerup');
                         }
                     }
                 }
@@ -2216,9 +2249,9 @@ function drawStartScreen() {
     let textY;
     
     if (isMobile && !isPortrait) {
-        // 가로 모드: 캐릭터 우측, MISSION GUIDE 왼쪽에 텍스트 배치
-        textX = canvas.width * 0.48; // 중앙에서 약간 왼쪽
-        textY = canvas.height / 2 - 40 * scaleFactor;
+        // 가로 모드: 캐릭터 우측, 우측 버튼들 왼쪽에 텍스트 배치
+        textX = canvas.width * 0.35; // 좌측 영역으로 이동
+        textY = canvas.height / 2 - 60 * scaleFactor;
     } else if (isMobile) {
         textY = marginTop + (350 * scaleFactor) + 20 * scaleFactor;
     } else {
@@ -2238,11 +2271,11 @@ function drawStartScreen() {
     let panelW, panelH, panelX, panelY;
     
     if (isMobile && !isPortrait) {
-        // 가로 모드: 우측 하단에 패널 배치 (타이틀과 겹치지 않도록)
-        panelW = Math.min(300 * scaleFactor, canvas.width * 0.32);
-        panelH = Math.min(220 * scaleFactor, canvas.height * 0.55);
-        panelX = canvas.width - panelW - 20 * scaleFactor;
-        panelY = canvas.height / 2 - panelH / 2 + 10 * scaleFactor;
+        // 가로 모드: 좌측 하단에 패널 배치 (우측 UI 버튼과 겹치지 않도록)
+        panelW = Math.min(320 * scaleFactor, canvas.width * 0.4);
+        panelH = Math.min(160 * scaleFactor, canvas.height * 0.4);
+        panelX = 20 * scaleFactor;
+        panelY = canvas.height - panelH - 20 * scaleFactor;
     } else if (isMobile) {
         // 세로 모드: 중앙에 배치
         panelW = canvas.width * 0.95;
