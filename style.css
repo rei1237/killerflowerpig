@@ -710,6 +710,9 @@ html {
     box-shadow: 
         inset -3px -3px 0px rgba(0,0,0,0.5),
         3px 3px 0px rgba(0,0,0,0.3);
+    pointer-events: none; /* 클릭이 아래 입력 필드로 전달되도록 */
+    position: relative; /* z-index 적용을 위해 */
+    z-index: 1;
 }
 
 .password-dots.active {
@@ -755,22 +758,23 @@ html {
     left: 0;
     width: 100%;
     height: 100%;
-    opacity: 0.01; /* 완전 투명하면 클릭 안될 수 있어 0.01로 설정 */
+    opacity: 0.001; /* 완전 투명하면 클릭 안될 수 있어 극소량만 표시 */
     border: none;
     background: transparent;
     color: transparent;
-    font-size: 16px;
-    letter-spacing: 20px;
-    padding: 0 20px;
+    font-size: 20px; /* 더 큰 터치 영역 */
+    letter-spacing: 25px;
+    padding: 0 15px;
     text-align: center;
     cursor: text;
-    z-index: 10; /* 위에 올라오도록 */
-    pointer-events: auto; /* 클릭 이벤트 받도록 */
+    z-index: 100; /* 반드시 최상위에 위치 */
+    pointer-events: auto; /* 클릭 이벤트 반드시 수신 */
+    caret-color: transparent; /* 커서 숨김 */
 }
 
 .password-input-hidden:focus {
     outline: none;
-    opacity: 0.01; /* 포커스 시에도 투명 유지 */
+    opacity: 0.001; /* 포커스 시에도 투명 유지 */
 }
 
 /* 언락 버튼 - 고급 도트 스타일 */
