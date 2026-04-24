@@ -298,6 +298,108 @@ html {
     transform: translate(1px, 1px);
 }
 
+/* ==========================================
+   게임 오버 버튼들 - CONTINUE?
+   ========================================== */
+.gameover-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.gameover-text {
+    font-family: 'Press Start 2P', cursive, sans-serif;
+    font-size: 24px;
+    color: #e74c3c;
+    text-shadow: 
+        3px 3px 0px #000,
+        0 0 20px rgba(231, 76, 60, 0.8);
+    margin-bottom: 20px;
+    animation: blink-text 1s infinite;
+}
+
+@keyframes blink-text {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+/* 다시 도전하기 버튼 */
+.pixel-btn.retry {
+    background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+    color: #fff;
+    border-color: #1a5276;
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+    padding: 14px 28px;
+    font-size: 12px;
+    animation: pulse-retry 2s infinite;
+}
+
+.pixel-btn.retry:hover {
+    background: linear-gradient(180deg, #5dade2 0%, #3498db 100%);
+    transform: translate(-2px, -2px);
+    box-shadow: 
+        inset -4px -4px 0px rgba(0,0,0,0.3),
+        6px 6px 0px rgba(0,0,0,0.5),
+        0 0 20px rgba(52, 152, 219, 0.6);
+}
+
+.pixel-btn.retry:active {
+    transform: translate(2px, 2px);
+}
+
+@keyframes pulse-retry {
+    0%, 100% { box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.5), 0 0 10px rgba(52, 152, 219, 0.5); }
+    50% { box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.5), 0 0 25px rgba(52, 152, 219, 0.9); }
+}
+
+/* 끝내기 버튼 */
+.pixel-btn.quit {
+    background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+    color: #95a5a6;
+    border-color: #000;
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+    padding: 12px 24px;
+    font-size: 11px;
+}
+
+.pixel-btn.quit:hover {
+    background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
+    color: #bdc3c7;
+    transform: translate(-1px, -1px);
+    box-shadow: 
+        inset -4px -4px 0px rgba(0,0,0,0.3),
+        5px 5px 0px rgba(0,0,0,0.5),
+        0 0 15px rgba(149, 165, 166, 0.4);
+}
+
+.pixel-btn.quit:active {
+    transform: translate(1px, 1px);
+}
+
+/* 모바일 게임 오버 버튼 */
+@media screen and (max-width: 768px) {
+    .gameover-text {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+    
+    .pixel-btn.retry {
+        padding: 10px 20px;
+        font-size: 10px;
+    }
+    
+    .pixel-btn.quit {
+        padding: 8px 16px;
+        font-size: 9px;
+    }
+}
+
 /* 버튼 아이콘 */
 .btn-icon {
     margin-right: 8px;

@@ -14,6 +14,9 @@ const installButton = document.getElementById('install-btn');
 const startButton = document.getElementById('start-btn');
 const startBtnContainer = document.getElementById('start-btn-container');
 const installBtnContainer = document.getElementById('install-btn-container');
+const gameoverButtons = document.getElementById('gameover-buttons');
+const retryButton = document.getElementById('retry-btn');
+const quitButton = document.getElementById('quit-btn');
 const MOBILE_OPTIMIZED_CLASS = 'mobile-optimized';
 let deferredInstallPrompt = null;
 
@@ -347,6 +350,12 @@ function updateMainMenuVisibility() {
     if (installBtnContainer) installBtnContainer.hidden = !shouldShow;
 }
 
+// 게임 오버 버튼 가시성 업데이트
+function updateGameOverButtonVisibility() {
+    const shouldShow = currentState === GAME_STATE.GAME_OVER;
+    if (gameoverButtons) gameoverButtons.hidden = !shouldShow;
+}
+
 // 게임 시작 함수
 function startGame() {
     if (currentState !== GAME_STATE.START) return;
@@ -383,6 +392,31 @@ if (startButton) {
     startButton.addEventListener('click', (e) => {
         e.stopPropagation();
         startGame();
+    });
+}
+
+// 게임 오버 버튼 이벤트
+if (retryButton) {
+    retryButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log('[GameOver] Retry clicked');
+        resetGame();
+        // 게임 오버 버튼 숨김
+        if (gameoverButtons) gameoverButtons.hidden = true;
+    });
+}
+
+if (quitButton) {
+    quitButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log('[GameOver] Quit clicked');
+        // 메인 화면으로 돌아가기
+        currentState = GAME_STATE.START;
+        resetGame();
+        updateMainMenuVisibility();
+        updateInstallButtonVisibility();
+        // 게임 오버 버튼 숨김
+        if (gameoverButtons) gameoverButtons.hidden = true;
     });
 }
 
@@ -1442,6 +1476,7 @@ function gameLoop(timestamp) {
     // 메인 메뉴 가시성 업데이트 (START 상태에서만 표시)
     updateMainMenuVisibility();
     updateInstallButtonVisibility();
+    updateGameOverButtonVisibility();
     if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT || currentState === GAME_STATE.STAGE_CLEAR) {
         // STAGE_CLEAR일 때도 보스 업데이트 필요 (사망 애니메이션 완료)
         if (currentState !== GAME_STATE.STAGE_CLEAR) {
@@ -1874,12 +1909,6 @@ function drawGameOverScreen() {
         ctx.fillText(line, canvas.width / 2, canvas.height / 2 + 150 * goScale + (i * lineHeight));
     });
 
-    // 다시 시작 안내
-    const blink = Math.sin(time / 300) > 0;
-    if (blink) {
-        ctx.fillStyle = '#e74c3c'; ctx.font = `${Math.max(11, Math.floor(14 * goScale))}px "Press Start 2P"`;
-        ctx.fillText(isMobileTouchDevice() ? 'TAP TO RISE AGAIN' : 'CLICK TO RISE AGAIN', canvas.width / 2, canvas.height / 2 + 230 * goScale);
-    }
     ctx.restore();
 }
 
@@ -1958,6 +1987,7 @@ async function init() {
     Player.init();
     updateMainMenuVisibility();
     updateInstallButtonVisibility();
+    updateGameOverButtonVisibility();
     
     // 모바일 메인 화면 즉시 전체화면
     if (isMobileTouchDevice()) {
