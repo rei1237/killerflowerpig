@@ -1575,46 +1575,54 @@ class GatePair {
     }
 
     drawPixelIcon(ctx, type, x, y, size) {
-        // 닌텐도 스타일의 더 명확하고 플랫한 아이콘
+        // 닌텐도 스타일의 더 명확하고 플랫한 아이콘 (시인성 강화)
         ctx.save();
         ctx.translate(x, y);
         
-        // 아이콘 외곽선
+        // 아이콘 외곽선 및 기본 색상 설정
         ctx.fillStyle = '#000';
         
         if (type === 'gun') {
-            ctx.fillRect(0, 15, 30, 12); // 총신
-            ctx.fillRect(5, 27, 8, 10); // 손잡이
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(2, 17, 26, 8);
+            // 공격력 강화 (총)
+            ctx.fillRect(0, 15, 30, 12); ctx.fillRect(5, 27, 8, 10);
+            ctx.fillStyle = '#fff'; ctx.fillRect(2, 17, 26, 8);
         } else if (type === 'sword') {
-            ctx.fillRect(10, 0, 10, 35); // 검신
-            ctx.fillRect(0, 25, 30, 6); // 가드
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(12, 2, 6, 22);
+            // 공격 속도 (검)
+            ctx.fillRect(12, 0, 8, 35); ctx.fillRect(0, 25, 32, 6);
+            ctx.fillStyle = '#fff'; ctx.fillRect(14, 2, 4, 23);
         } else if (type === 'heart') {
-            ctx.fillStyle = '#ff0000'; // 클래식 닌텐도 레드
-            ctx.fillRect(4, 0, 8, 8); ctx.fillRect(18, 0, 8, 8);
-            ctx.fillRect(0, 8, 30, 10);
-            ctx.fillRect(4, 18, 22, 6);
-            ctx.fillRect(11, 24, 8, 6);
-            // 하이라이트
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(6, 4, 4, 4);
+            // 체력 회복 (하트)
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(4, 0, 8, 8); ctx.fillRect(20, 0, 8, 8);
+            ctx.fillRect(0, 8, 32, 12); ctx.fillRect(4, 20, 24, 8); ctx.fillRect(12, 28, 8, 6);
+            ctx.fillStyle = '#fff'; ctx.fillRect(6, 4, 4, 4);
         } else if (type === 'shield') {
-            ctx.fillStyle = '#3498db';
-            ctx.fillRect(0, 0, 30, 25);
+            // 쉴드업 (방패 - 명확한 V자형)
+            ctx.fillStyle = '#3498db'; // 진한 파랑
+            ctx.fillRect(0, 0, 32, 20);
             ctx.beginPath();
-            ctx.moveTo(0, 25); ctx.lineTo(15, 38); ctx.lineTo(30, 25); ctx.fill();
+            ctx.moveTo(0, 20); ctx.lineTo(16, 35); ctx.lineTo(32, 20); ctx.fill();
+            // 내부 십자 패턴 (방패 강조)
             ctx.fillStyle = '#fff';
-            ctx.fillRect(8, 8, 14, 14);
+            ctx.fillRect(14, 5, 4, 15);
+            ctx.fillRect(8, 10, 16, 4);
+        } else if (type === 'support') {
+            // 서포트 (드론 & 플러스 기호 - 쉴드와 구분되게)
+            ctx.fillStyle = '#2ecc71'; // 초록색 (지원/회복 계열)
+            // 드론 날개
+            ctx.fillRect(0, 10, 10, 6); ctx.fillRect(22, 10, 10, 6);
+            // 드론 몸체
+            ctx.fillRect(8, 5, 16, 16);
+            // 플러스 기호 (Support 상징)
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(14, 8, 4, 10);
+            ctx.fillRect(11, 11, 10, 4);
         } else if (type === 'bomb') {
+            // 폭탄
             ctx.fillStyle = '#000';
-            ctx.beginPath(); ctx.arc(15, 20, 12, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#f1c40f';
-            ctx.fillRect(13, 0, 4, 10); // 심지
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(10, 15, 5, 5); // 반사광
+            ctx.beginPath(); ctx.arc(16, 20, 14, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#f1c40f'; ctx.fillRect(14, 0, 4, 10);
+            ctx.fillStyle = '#fff'; ctx.fillRect(10, 15, 6, 6);
         }
         ctx.restore();
     }
