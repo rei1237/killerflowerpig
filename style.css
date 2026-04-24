@@ -54,6 +54,7 @@ html {
         border: 3px solid #f1c40f;
         box-shadow: 0 0 20px rgba(241, 196, 15, 0.5);
     }
+
     #gameCanvas {
         opacity: 0.3;
         pointer-events: none;
@@ -67,8 +68,10 @@ html {
 }
 
 #gameCanvas.mobile-optimized {
-    cursor: default; /* MOBILE LANDSCAPE */
-    image-rendering: pixelated; /* MOBILE LANDSCAPE */
+    cursor: default;
+    /* MOBILE LANDSCAPE */
+    image-rendering: pixelated;
+    /* MOBILE LANDSCAPE */
 }
 
 #install-btn {
@@ -97,14 +100,12 @@ html {
 }
 
 /* ==========================================
-   개별 버튼 컨테이너 - MISSION GUIDE 아래 배치
+   메인 메뉴 UI 레이아웃 (모바일 게임 스타일)
    ========================================== */
 
 /* 버튼 컨테이너 기본 - z-index 최상위 */
 .btn-container {
     position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
     z-index: 1000 !important;
     pointer-events: none;
 }
@@ -113,169 +114,165 @@ html {
     display: none !important;
 }
 
-.btn-container .pixel-btn {
+/* Fallback: 모든 미디어 쿼리가 실패할 경우의 기본 위치 */
+.start-container {
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#start-btn {
+    padding: 16px 32px;
+    font-size: 14px;
+    border-width: 4px;
+    box-shadow: inset -4px -4px 0px rgba(0,0,0,0.6), 4px 4px 0px rgba(0,0,0,0.8), 0 0 20px rgba(212, 172, 13, 0.4);
+    animation: pulse-btn-gold 2s infinite;
+}
+
+.btn-container .pixel-btn, .password-panel {
     pointer-events: auto;
 }
 
 /* ==========================================
-   데스크톱 - 꽃돼지 옆에 배치
+   데스크톱 - 기본 세로버전 (모바일 게임 느낌)
    ========================================== */
-@media screen and (min-width: 769px) {
-    /* START 버튼 - 화면 하단에서 더 위로 */
+@media screen and (min-width: 1025px) and (orientation: landscape), screen and (min-width: 769px) and (orientation: portrait) {
+    /* 데스크톱 기본 세로버전: 중앙 정렬 */
     .start-container {
-        bottom: 12%;
+        bottom: 8%;
         left: 50%;
         transform: translateX(-50%);
+        right: auto;
     }
-    
+
     #start-btn {
-        padding: 18px 36px;
-        font-size: 15px;
+        padding: 24px 48px;
+        font-size: 18px;
+        border-width: 6px;
+        box-shadow: inset -6px -6px 0px rgba(0,0,0,0.6), 8px 8px 0px rgba(0,0,0,0.8), 0 0 40px rgba(212, 172, 13, 0.4);
+        animation: pulse-btn 2s infinite;
     }
-    
-    /* INSTALL 버튼 - 꽃돼지 우측에 배치 */
+
     .install-container {
+        top: 30px;
+        right: 30px;
         bottom: auto;
-        top: 45%;
         left: auto;
-        right: 15%;
-        transform: translateY(-50%);
+        transform: none;
     }
-    
+
     #install-btn {
-        padding: 12px 20px;
+        padding: 12px 24px;
         font-size: 10px;
         white-space: nowrap;
+    }
+
+    .password-container {
+        bottom: 8%;
+        left: 30px;
+        right: auto;
+        transform: none;
     }
 }
 
 /* ==========================================
-   프리미엄 메인 메뉴 UI & 버튼 스타일
+   모바일 가로 모드 - 2D 도트 콘솔 느낌
    ========================================== */
-.pixel-btn {
-    font-family: 'Press Start 2P', cursive;
-    background: #e74c3c;
-    color: #fff;
-    border: 4px solid #c0392b;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: transform 0.1s, box-shadow 0.1s;
-    box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3);
-    image-rendering: pixelated;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.pixel-btn:active {
-    transform: translateY(2px);
-    box-shadow: inset -2px -2px 0px rgba(0,0,0,0.3);
-}
-
-/* 모바일 가로 모드 - 클린 레이아웃 패치 */
-@media screen and (max-width: 900px) and (orientation: landscape) {
-    .main-menu-ui {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1000;
-        pointer-events: none;
-    }
-
-    .btn-container {
-        position: absolute;
-        pointer-events: auto;
-    }
-
-    /* START 버튼 - 우측 하단 */
+@media screen and (max-width: 1024px) and (orientation: landscape) {
+    /* START 버튼 - 우측 여백에 완전히 밀착 (조이패드) */
     .start-container {
-        right: 40px;
-        bottom: 30px;
+        right: 20px;
+        bottom: 20px;
         left: auto;
-        top: auto;
         transform: none;
     }
 
     #start-btn {
-        padding: 18px 40px;
+        padding: 20px 40px;
         font-size: 16px;
-        min-width: 220px;
-        background: #e74c3c;
-        border: 4px solid #c0392b;
-        box-shadow: 
-            inset -4px -4px 0px rgba(0,0,0,0.3),
-            0 0 20px rgba(231, 76, 60, 0.4);
+        min-width: 180px;
+        border-width: 5px;
+        border-radius: 4px;
+        box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.6), 6px 6px 0px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 172, 13, 0.4);
+        animation: pulse-btn 2s infinite;
     }
 
-    /* 패스워드 패널 - 좌측 하단 (가이드와 겹침 방지를 위해 컴팩트화) */
-    .password-container {
-        left: 40px;
-        bottom: 30px;
-        right: auto;
+    .install-container {
+        right: 20px;
+        bottom: 100px; /* 스타트 버튼(20px) 보다 위로 배치 */
         top: auto;
+        left: auto;
+        transform: none;
+    }
+
+    #install-btn {
+        padding: 8px 16px;
+        font-size: 9px;
+        min-width: 150px;
+    }
+
+    /* 패스워드 컨테이너 - 좌측 상단으로 이동 (미션 가이드와 겹침 방지) */
+    .password-container {
+        left: 20px;
+        top: 20px;
+        bottom: auto;
+        right: auto;
         transform: none;
     }
 
     .password-panel {
         width: 220px;
         padding: 12px;
-        background: rgba(10, 10, 20, 0.9);
-        border: 3px solid #4a0080;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        background: rgba(15, 10, 10, 0.9);
+        border: 3px solid #ff4757;
+        box-shadow: 0 0 20px rgba(255, 71, 87, 0.3);
     }
-
-    .password-header { margin-bottom: 8px; }
-    .password-icon { font-size: 18px; margin-bottom: 2px; }
+    
     .password-title { font-size: 9px; }
-    .password-subtitle { font-size: 6px; }
-    .password-dots { padding: 6px; gap: 8px; }
-    .dot { width: 11px; height: 11px; }
-
-    /* INSTALL 버튼 - 우측 상단 */
-    .install-container {
-        right: 40px;
-        top: 25px;
-        left: auto;
-        bottom: auto;
-        transform: none;
-    }
-
-    #install-btn {
-        padding: 10px 20px;
-        font-size: 10px;
-        background: #27ae60;
-        border: 3px solid #1e8449;
+    .password-subtitle { font-size: 7px; }
+    .password-dots .dot { width: 8px; height: 8px; margin: 0 3px; }
+    /* 가로 모드에서 패널들이 너무 크지 않게 조정 */
+    .password-panel {
+        max-height: 80vh;
+        overflow-y: auto;
     }
 }
 
 /* ==========================================
-   모바일 세로 모드 - MISSION GUIDE 아래 배치
+   모바일 세로 모드 - 세로형 모바일 게임 스타일
    ========================================== */
 @media screen and (max-width: 768px) and (orientation: portrait) {
-    /* START 버튼 - 화면 하단 중앙 */
     .start-container {
-        bottom: 15%;
+        bottom: 12%;
         left: 50%;
         transform: translateX(-50%);
+        right: auto;
     }
-    
+
     #start-btn {
-        padding: 14px 28px;
-        font-size: 12px;
+        padding: 16px 32px;
+        font-size: 14px;
+        border-width: 4px;
     }
-    
-    /* INSTALL 버튼 - START 버튼 아래 */
+
     .install-container {
-        bottom: 6%;
+        bottom: 25%;
         left: 50%;
         transform: translateX(-50%);
+        top: auto;
+        right: auto;
     }
-    
+
     #install-btn {
         padding: 8px 16px;
-        font-size: 8px;
+        font-size: 9px;
+    }
+
+    .password-container {
+        bottom: 40%;
+        left: 50%;
+        transform: translateX(-50%);
+        right: auto;
     }
 }
 
@@ -288,33 +285,36 @@ html {
     position: relative;
     transition: all 0.1s;
     image-rendering: pixelated;
-    box-shadow: 
-        inset -4px -4px 0px rgba(0,0,0,0.3),
-        4px 4px 0px rgba(0,0,0,0.5);
+    box-shadow:
+        inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+        4px 4px 0px rgba(0, 0, 0, 0.5);
 }
 
-/* 주요 버튼 (START GAME) */
+/* 주요 버튼 (START GAME) - 레트로 골드/다크 테마 */
 .pixel-btn.primary {
-    background: linear-gradient(180deg, #ff4757 0%, #c0392b 100%);
-    color: #fff;
-    border-color: #8b0000;
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
-    animation: pulse-btn 2s infinite;
+    background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+    color: #f1c40f;
+    border-color: #f1c40f;
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+    animation: pulse-btn-gold 2s infinite;
+}
+
+@keyframes pulse-btn-gold {
+    0%, 100% { box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.6), 4px 4px 0px rgba(0, 0, 0, 0.8), 0 0 10px rgba(241, 196, 15, 0.3); }
+    50% { box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.6), 4px 4px 0px rgba(0, 0, 0, 0.8), 0 0 25px rgba(241, 196, 15, 0.7); }
 }
 
 .pixel-btn.primary:hover {
-    background: linear-gradient(180deg, #ff6b81 0%, #e74c3c 100%);
-    transform: translate(-2px, -2px);
-    box-shadow: 
-        inset -4px -4px 0px rgba(0,0,0,0.3),
-        6px 6px 0px rgba(0,0,0,0.5);
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    color: #fff;
+    border-color: #f1c40f;
+    transform: translate(-1px, -1px);
+    box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.6), 5px 5px 0px rgba(0, 0, 0, 0.8);
 }
 
 .pixel-btn.primary:active {
-    transform: translate(2px, 2px);
-    box-shadow: 
-        inset -2px -2px 0px rgba(0,0,0,0.3),
-        2px 2px 0px rgba(0,0,0,0.5);
+    transform: translateY(2px);
+    box-shadow: inset -2px -2px 0px rgba(0, 0, 0, 0.6), 1px 1px 0px rgba(0, 0, 0, 0.8);
 }
 
 /* 설치 버튼 (INSTALL GAME) */
@@ -328,9 +328,9 @@ html {
 .pixel-btn.install:hover {
     background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
     transform: translate(-2px, -2px);
-    box-shadow: 
-        inset -4px -4px 0px rgba(0,0,0,0.3),
-        6px 6px 0px rgba(0,0,0,0.5),
+    box-shadow:
+        inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+        6px 6px 0px rgba(0, 0, 0, 0.5),
         0 0 20px rgba(46, 204, 113, 0.6);
 }
 
@@ -339,8 +339,15 @@ html {
 }
 
 @keyframes pulse-install {
-    0%, 100% { box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.5), 0 0 10px rgba(46, 204, 113, 0.5); }
-    50% { box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.5), 0 0 25px rgba(46, 204, 113, 0.9); }
+
+    0%,
+    100% {
+        box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.3), 4px 4px 0px rgba(0, 0, 0, 0.5), 0 0 10px rgba(46, 204, 113, 0.5);
+    }
+
+    50% {
+        box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.3), 4px 4px 0px rgba(0, 0, 0, 0.5), 0 0 25px rgba(46, 204, 113, 0.9);
+    }
 }
 
 /* 보조 버튼 (SAVE OFFLINE) */
@@ -355,10 +362,10 @@ html {
     background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
     color: #fff;
     transform: translate(-1px, -1px);
-    box-shadow: 
-        inset -4px -4px 0px rgba(0,0,0,0.3),
-        5px 5px 0px rgba(0,0,0,0.5),
-        0 0 15px rgba(0,255,255,0.4);
+    box-shadow:
+        inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+        5px 5px 0px rgba(0, 0, 0, 0.5),
+        0 0 15px rgba(0, 255, 255, 0.4);
 }
 
 .pixel-btn.secondary:active {
@@ -380,16 +387,18 @@ html {
 
 /* 게임 오버 패널 - 2D 도트 RPG 스타일 */
 .gameover-panel {
-    background: rgba(26, 15, 15, 0.85); /* Glassmorphism */
+    background: rgba(26, 15, 15, 0.85);
+    /* Glassmorphism */
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 4px solid #8b0000;
     border-radius: 0;
     padding: 20px 30px;
-    box-shadow: 
-        inset -4px -4px 0px rgba(0,0,0,0.5),
-        6px 6px 0px rgba(0,0,0,0.7),
-        0 0 40px rgba(139, 0, 0, 0.5); /* 네온 발광 */
+    box-shadow:
+        inset -4px -4px 0px rgba(0, 0, 0, 0.5),
+        6px 6px 0px rgba(0, 0, 0, 0.7),
+        0 0 40px rgba(139, 0, 0, 0.5);
+    /* 네온 발광 */
     position: relative;
     image-rendering: pixelated;
 }
@@ -413,7 +422,7 @@ html {
     color: #ff4757;
     text-align: center;
     margin-bottom: 15px;
-    text-shadow: 
+    text-shadow:
         3px 3px 0px #000,
         0 0 15px rgba(255, 71, 87, 0.8);
     animation: defeat-pulse 1.5s infinite;
@@ -421,11 +430,14 @@ html {
 }
 
 @keyframes defeat-pulse {
-    0%, 100% { 
+
+    0%,
+    100% {
         opacity: 1;
         text-shadow: 3px 3px 0px #000, 0 0 15px rgba(255, 71, 87, 0.8);
     }
-    50% { 
+
+    50% {
         opacity: 0.7;
         text-shadow: 3px 3px 0px #000, 0 0 25px rgba(255, 71, 87, 1);
     }
@@ -439,7 +451,7 @@ html {
     text-align: center;
     margin-bottom: 20px;
     padding: 10px;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0, 0, 0, 0.3);
     border: 2px solid #333;
 }
 
@@ -461,9 +473,9 @@ html {
     position: relative;
     transition: all 0.1s;
     image-rendering: pixelated;
-    box-shadow: 
-        inset -3px -3px 0px rgba(0,0,0,0.3),
-        4px 4px 0px rgba(0,0,0,0.5);
+    box-shadow:
+        inset -3px -3px 0px rgba(0, 0, 0, 0.3),
+        4px 4px 0px rgba(0, 0, 0, 0.5);
 }
 
 /* 부활 버튼 (재출격) - 골드/옐로우 테마 */
@@ -471,29 +483,36 @@ html {
     background: linear-gradient(180deg, #f1c40f 0%, #d4ac0d 100%);
     color: #000;
     border-color: #7d6608;
-    text-shadow: 1px 1px 0px rgba(255,255,255,0.3);
+    text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.3);
     animation: retry-glow 2s infinite;
 }
 
 .retry-btn:hover {
     background: linear-gradient(180deg, #f4d03f 0%, #f1c40f 100%);
     transform: translate(-2px, -2px);
-    box-shadow: 
-        inset -3px -3px 0px rgba(0,0,0,0.3),
-        6px 6px 0px rgba(0,0,0,0.5),
+    box-shadow:
+        inset -3px -3px 0px rgba(0, 0, 0, 0.3),
+        6px 6px 0px rgba(0, 0, 0, 0.5),
         0 0 20px rgba(241, 196, 15, 0.8);
 }
 
 .retry-btn:active {
     transform: translate(2px, 2px);
-    box-shadow: 
-        inset -3px -3px 0px rgba(0,0,0,0.3),
-        2px 2px 0px rgba(0,0,0,0.5);
+    box-shadow:
+        inset -3px -3px 0px rgba(0, 0, 0, 0.3),
+        2px 2px 0px rgba(0, 0, 0, 0.5);
 }
 
 @keyframes retry-glow {
-    0%, 100% { box-shadow: inset -3px -3px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.5), 0 0 10px rgba(241, 196, 15, 0.5); }
-    50% { box-shadow: inset -3px -3px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.5), 0 0 25px rgba(241, 196, 15, 1); }
+
+    0%,
+    100% {
+        box-shadow: inset -3px -3px 0px rgba(0, 0, 0, 0.3), 4px 4px 0px rgba(0, 0, 0, 0.5), 0 0 10px rgba(241, 196, 15, 0.5);
+    }
+
+    50% {
+        box-shadow: inset -3px -3px 0px rgba(0, 0, 0, 0.3), 4px 4px 0px rgba(0, 0, 0, 0.5), 0 0 25px rgba(241, 196, 15, 1);
+    }
 }
 
 /* 후퇴 버튼 - 그레이/블루 테마 */
@@ -501,24 +520,24 @@ html {
     background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
     color: #bdc3c7;
     border-color: #1a252f;
-    text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+    text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
 }
 
 .quit-btn:hover {
     background: linear-gradient(180deg, #5d6d7e 0%, #34495e 100%);
     color: #fff;
     transform: translate(-2px, -2px);
-    box-shadow: 
-        inset -3px -3px 0px rgba(0,0,0,0.3),
-        6px 6px 0px rgba(0,0,0,0.5),
+    box-shadow:
+        inset -3px -3px 0px rgba(0, 0, 0, 0.3),
+        6px 6px 0px rgba(0, 0, 0, 0.5),
         0 0 15px rgba(127, 140, 141, 0.6);
 }
 
 .quit-btn:active {
     transform: translate(2px, 2px);
-    box-shadow: 
-        inset -3px -3px 0px rgba(0,0,0,0.3),
-        2px 2px 0px rgba(0,0,0,0.5);
+    box-shadow:
+        inset -3px -3px 0px rgba(0, 0, 0, 0.3),
+        2px 2px 0px rgba(0, 0, 0, 0.5);
 }
 
 /* 모바일 게임 오버 UI */
@@ -527,35 +546,35 @@ html {
         bottom: 3%;
         width: 95%;
     }
-    
+
     .gameover-panel {
         padding: 15px 20px;
         border-width: 3px;
     }
-    
+
     .gameover-panel::before {
         top: -6px;
         left: -6px;
         right: -6px;
         bottom: -6px;
     }
-    
+
     .gameover-title {
         font-size: 14px;
         margin-bottom: 10px;
     }
-    
+
     .gameover-stats {
         font-size: 8px;
         padding: 8px;
         margin-bottom: 15px;
     }
-    
+
     .gameover-actions {
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .gameover-btn {
         font-size: 9px;
         padding: 10px 18px;
@@ -571,8 +590,15 @@ html {
 
 /* 버튼 펄스 애니메이션 */
 @keyframes pulse-btn {
-    0%, 100% { box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.5), 0 0 10px rgba(255,71,87,0.5); }
-    50% { box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.5), 0 0 25px rgba(255,71,87,0.8); }
+
+    0%,
+    100% {
+        box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.3), 4px 4px 0px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 71, 87, 0.5);
+    }
+
+    50% {
+        box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.3), 4px 4px 0px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 71, 87, 0.8);
+    }
 }
 
 /* 설치 가이드 모달 */
@@ -600,9 +626,9 @@ html {
     max-width: 90%;
     width: 450px;
     text-align: center;
-    box-shadow: 
-        inset -4px -4px 0px rgba(0,0,0,0.3),
-        8px 8px 0px rgba(0,0,0,0.5),
+    box-shadow:
+        inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+        8px 8px 0px rgba(0, 0, 0, 0.5),
         0 0 30px rgba(241, 196, 15, 0.3);
 }
 
@@ -611,7 +637,7 @@ html {
     color: #f1c40f;
     font-size: 16px;
     margin-bottom: 20px;
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
 }
 
 .modal-content p {
@@ -643,47 +669,16 @@ html {
 /* ==========================================
    패스워드 입력 UI - 고급 2D 도트 RPG 스타일
    ========================================== */
-.password-container {
-    position: absolute;
-    bottom: auto;
-    top: auto;
-    /* 인스톨 버튼 밑에 배치 - 데스크톱 기준 */
-    right: 20px;
-    left: auto;
-    top: 58%;
-    transform: translateX(0);
-    z-index: 1000;
-}
-
-/* 데스크톱: 인스톨 버튼 우측 상단 배치 */
-@media screen and (min-width: 769px) {
-    .password-container {
-        right: 15%;
-        left: auto;
-        top: 55%;
-        transform: translateY(0);
-    }
-}
-
-/* 모바일 세로 모드: 하단 중앙 */
-@media screen and (max-width: 768px) and (orientation: portrait) {
-    .password-container {
-        right: auto;
-        left: 50%;
-        top: auto;
-        bottom: 15%;
-        transform: translateX(-50%);
-    }
-}
+/* 위치는 상단 미디어 쿼리 레이아웃으로 통합되었습니다. */
 
 /* 패스워드 패널 - 고급 2D 도트 RPG 스타일 */
 .password-panel {
     background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
     border: 4px solid #4a0080;
     padding: 25px 30px;
-    box-shadow: 
-        inset -4px -4px 0px rgba(0,0,0,0.5),
-        6px 6px 0px rgba(0,0,0,0.7),
+    box-shadow:
+        inset -4px -4px 0px rgba(0, 0, 0, 0.5),
+        6px 6px 0px rgba(0, 0, 0, 0.7),
         0 0 40px rgba(138, 43, 226, 0.4);
     position: relative;
     image-rendering: pixelated;
@@ -724,20 +719,27 @@ html {
 .password-icon {
     font-size: 32px;
     margin-bottom: 8px;
-    text-shadow: 3px 3px 0px rgba(0,0,0,0.5);
+    text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
     animation: icon-float 2s ease-in-out infinite;
 }
 
 @keyframes icon-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-3px);
+    }
 }
 
 .password-title {
     font-family: 'Press Start 2P', cursive;
     font-size: 12px;
     color: #bf40bf;
-    text-shadow: 
+    text-shadow:
         2px 2px 0px #000,
         0 0 15px rgba(191, 64, 191, 0.8);
     letter-spacing: 2px;
@@ -748,7 +750,7 @@ html {
     font-family: 'Press Start 2P', cursive;
     font-size: 8px;
     color: #888;
-    text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+    text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
 }
 
 /* 패스워드 입력 영역 */
@@ -756,7 +758,8 @@ html {
     position: relative;
     margin-bottom: 20px;
     cursor: text;
-    min-height: 50px; /* 명시적 높이 */
+    min-height: 50px;
+    /* 명시적 높이 */
 }
 
 /* 입력 영역 전체를 클릭 가능하도록 */
@@ -779,20 +782,22 @@ html {
     padding: 15px 20px;
     background: linear-gradient(180deg, #0d0d1a 0%, #050510 100%);
     border: 3px solid #4a0080;
-    box-shadow: 
-        inset -3px -3px 0px rgba(0,0,0,0.5),
-        3px 3px 0px rgba(0,0,0,0.3);
-    pointer-events: none; /* 클릭이 아래 입력 필드로 전달되도록 */
-    position: relative; /* z-index 적용을 위해 */
+    box-shadow:
+        inset -3px -3px 0px rgba(0, 0, 0, 0.5),
+        3px 3px 0px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    /* 클릭이 아래 입력 필드로 전달되도록 */
+    position: relative;
+    /* z-index 적용을 위해 */
     z-index: 1;
 }
 
 .password-dots.active {
     border-color: #00ffff;
-    box-shadow: 
-        inset -3px -3px 0px rgba(0,0,0,0.5),
-        3px 3px 0px rgba(0,0,0,0.3),
-        0 0 20px rgba(0,255,255,0.5);
+    box-shadow:
+        inset -3px -3px 0px rgba(0, 0, 0, 0.5),
+        3px 3px 0px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 255, 255, 0.5);
 }
 
 .dot {
@@ -830,24 +835,30 @@ html {
     left: 0;
     width: 100%;
     height: 100%;
-    opacity: 0.01; /* 완전 투명하면 클릭 안될 수 있어 약간만 표시 */
+    opacity: 0.01;
+    /* 완전 투명하면 클릭 안될 수 있어 약간만 표시 */
     border: none;
-    background: rgba(255,0,0,0.01); /* 디버깅용 극소량 레드 (거의 투명) */
+    background: rgba(255, 0, 0, 0.01);
+    /* 디버깅용 극소량 레드 (거의 투명) */
     color: transparent;
-    font-size: 24px; /* 더 큰 터치 영역 */
+    font-size: 24px;
+    /* 더 큰 터치 영역 */
     letter-spacing: 20px;
     padding: 0 10px;
     text-align: center;
     cursor: text;
-    z-index: 9999; /* 절대 최상위 */
-    pointer-events: all; /* 모든 클릭 이벤트 수신 */
-    caret-color: transparent; /* 커서 숨김 */
+    z-index: 9999;
+    /* 절대 최상위 */
+    pointer-events: all;
+    /* 모든 클릭 이벤트 수신 */
+    caret-color: transparent;
+    /* 커서 숨김 */
 }
 
 .password-input-hidden:focus {
     outline: none;
     opacity: 0.01;
-    background: rgba(255,0,0,0.01);
+    background: rgba(255, 0, 0, 0.01);
 }
 
 /* 언락 버튼 - 고급 도트 스타일 */
@@ -858,14 +869,14 @@ html {
     background: linear-gradient(180deg, #8a2be2 0%, #6a0dad 100%);
     color: #fff;
     border: 4px solid #4a0080;
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
     cursor: pointer;
     position: relative;
     transition: all 0.1s;
     image-rendering: pixelated;
-    box-shadow: 
-        inset -3px -3px 0px rgba(255,255,255,0.1),
-        4px 4px 0px rgba(0,0,0,0.5);
+    box-shadow:
+        inset -3px -3px 0px rgba(255, 255, 255, 0.1),
+        4px 4px 0px rgba(0, 0, 0, 0.5);
     width: 100%;
     animation: unlock-pulse 2s infinite;
 }
@@ -873,22 +884,29 @@ html {
 .password-unlock-btn:hover {
     background: linear-gradient(180deg, #9d4eed 0%, #8a2be2 100%);
     transform: translate(-2px, -2px);
-    box-shadow: 
-        inset -3px -3px 0px rgba(255,255,255,0.1),
-        6px 6px 0px rgba(0,0,0,0.5),
+    box-shadow:
+        inset -3px -3px 0px rgba(255, 255, 255, 0.1),
+        6px 6px 0px rgba(0, 0, 0, 0.5),
         0 0 25px rgba(138, 43, 226, 0.8);
 }
 
 .password-unlock-btn:active {
     transform: translate(2px, 2px);
-    box-shadow: 
-        inset -3px -3px 0px rgba(255,255,255,0.1),
-        2px 2px 0px rgba(0,0,0,0.5);
+    box-shadow:
+        inset -3px -3px 0px rgba(255, 255, 255, 0.1),
+        2px 2px 0px rgba(0, 0, 0, 0.5);
 }
 
 @keyframes unlock-pulse {
-    0%, 100% { box-shadow: inset -3px -3px 0px rgba(255,255,255,0.1), 4px 4px 0px rgba(0,0,0,0.5), 0 0 10px rgba(138, 43, 226, 0.5); }
-    50% { box-shadow: inset -3px -3px 0px rgba(255,255,255,0.1), 4px 4px 0px rgba(0,0,0,0.5), 0 0 30px rgba(138, 43, 226, 1); }
+
+    0%,
+    100% {
+        box-shadow: inset -3px -3px 0px rgba(255, 255, 255, 0.1), 4px 4px 0px rgba(0, 0, 0, 0.5), 0 0 10px rgba(138, 43, 226, 0.5);
+    }
+
+    50% {
+        box-shadow: inset -3px -3px 0px rgba(255, 255, 255, 0.1), 4px 4px 0px rgba(0, 0, 0, 0.5), 0 0 30px rgba(138, 43, 226, 1);
+    }
 }
 
 /* 에러 메시지 - 고급 스타일 */
@@ -896,7 +914,7 @@ html {
     font-family: 'Press Start 2P', cursive;
     font-size: 8px;
     color: #ff4757;
-    text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+    text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
     text-align: center;
     margin-top: 12px;
     animation: shake-error 0.5s;
@@ -907,11 +925,27 @@ html {
 }
 
 @keyframes shake-error {
-    0%, 100% { transform: translateX(0); }
-    20% { transform: translateX(-5px); }
-    40% { transform: translateX(5px); }
-    60% { transform: translateX(-5px); }
-    80% { transform: translateX(5px); }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-5px);
+    }
+
+    40% {
+        transform: translateX(5px);
+    }
+
+    60% {
+        transform: translateX(-5px);
+    }
+
+    80% {
+        transform: translateX(5px);
+    }
 }
 
 /* 모바일 반응형 */
@@ -920,30 +954,30 @@ html {
         bottom: 15%;
         width: 90%;
     }
-    
+
     .password-panel {
         padding: 20px 25px;
         min-width: auto;
     }
-    
+
     .password-title {
         font-size: 10px;
     }
-    
+
     .password-subtitle {
         font-size: 7px;
     }
-    
+
     .password-dots {
         padding: 12px 15px;
         gap: 6px;
     }
-    
+
     .dot {
         width: 14px;
         height: 14px;
     }
-    
+
     .password-unlock-btn {
         font-size: 9px;
         padding: 10px 20px;
@@ -959,22 +993,24 @@ html {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 1001;
-    background: rgba(26, 26, 46, 0.9); /* Glassmorphism */
+    background: rgba(26, 26, 46, 0.9);
+    /* Glassmorphism */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 4px solid #f1c40f;
     padding: 25px;
-    box-shadow: 
-        inset -4px -4px 0px rgba(0,0,0,0.3),
-        8px 8px 0px rgba(0,0,0,0.5),
-        0 0 40px rgba(241, 196, 15, 0.4); /* 네온 발광 */
+    box-shadow:
+        inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+        8px 8px 0px rgba(0, 0, 0, 0.5),
+        0 0 40px rgba(241, 196, 15, 0.4);
+    /* 네온 발광 */
 }
 
 .stage-select-label {
     font-family: 'Press Start 2P', cursive;
     font-size: 12px;
     color: #f1c40f;
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
     margin-bottom: 15px;
     text-align: center;
 }
@@ -996,28 +1032,31 @@ html {
     color: #fff;
     cursor: pointer;
     transition: all 0.1s;
-    box-shadow: 
-        inset -2px -2px 0px rgba(0,0,0,0.3),
-        3px 3px 0px rgba(0,0,0,0.5);
-    pointer-events: auto; /* 클릭 이벤트 수신 */
-    z-index: 1002; /* 최상위 클릭 우선순위 */
-    position: relative; /* z-index 적용을 위해 */
+    box-shadow:
+        inset -2px -2px 0px rgba(0, 0, 0, 0.3),
+        3px 3px 0px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+    /* 클릭 이벤트 수신 */
+    z-index: 1002;
+    /* 최상위 클릭 우선순위 */
+    position: relative;
+    /* z-index 적용을 위해 */
 }
 
 .stage-btn:hover {
     background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
     transform: translate(-1px, -1px);
-    box-shadow: 
-        inset -2px -2px 0px rgba(0,0,0,0.3),
-        4px 4px 0px rgba(0,0,0,0.5),
+    box-shadow:
+        inset -2px -2px 0px rgba(0, 0, 0, 0.3),
+        4px 4px 0px rgba(0, 0, 0, 0.5),
         0 0 10px rgba(52, 152, 219, 0.6);
 }
 
 .stage-btn:active {
     transform: translate(1px, 1px);
-    box-shadow: 
-        inset -2px -2px 0px rgba(0,0,0,0.3),
-        2px 2px 0px rgba(0,0,0,0.5);
+    box-shadow:
+        inset -2px -2px 0px rgba(0, 0, 0, 0.3),
+        2px 2px 0px rgba(0, 0, 0, 0.5);
 }
 
 .stage-btn.special {
@@ -1028,15 +1067,22 @@ html {
 
 .stage-btn.special:hover {
     background: linear-gradient(180deg, #ff6b81 0%, #e74c3c 100%);
-    box-shadow: 
-        inset -2px -2px 0px rgba(0,0,0,0.3),
-        4px 4px 0px rgba(0,0,0,0.5),
+    box-shadow:
+        inset -2px -2px 0px rgba(0, 0, 0, 0.3),
+        4px 4px 0px rgba(0, 0, 0, 0.5),
         0 0 10px rgba(255, 71, 87, 0.6);
 }
 
 @keyframes pulse-stage {
-    0%, 100% { box-shadow: inset -2px -2px 0px rgba(0,0,0,0.3), 3px 3px 0px rgba(0,0,0,0.5), 0 0 5px rgba(231, 76, 60, 0.5); }
-    50% { box-shadow: inset -2px -2px 0px rgba(0,0,0,0.3), 3px 3px 0px rgba(0,0,0,0.5), 0 0 15px rgba(231, 76, 60, 0.9); }
+
+    0%,
+    100% {
+        box-shadow: inset -2px -2px 0px rgba(0, 0, 0, 0.3), 3px 3px 0px rgba(0, 0, 0, 0.5), 0 0 5px rgba(231, 76, 60, 0.5);
+    }
+
+    50% {
+        box-shadow: inset -2px -2px 0px rgba(0, 0, 0, 0.3), 3px 3px 0px rgba(0, 0, 0, 0.5), 0 0 15px rgba(231, 76, 60, 0.9);
+    }
 }
 
 .close-btn {
@@ -1050,40 +1096,380 @@ html {
     .password-container {
         bottom: 20%;
     }
-    
+
     .password-label {
         font-size: 8px;
     }
-    
+
     .pixel-input {
         width: 100px;
         font-size: 12px;
         padding: 8px;
     }
-    
+
     #password-submit {
         font-size: 8px;
         padding: 8px 16px;
     }
-    
+
     .stage-select-container {
         padding: 15px;
         width: 90%;
         max-width: 280px;
     }
-    
+
     .stage-select-label {
         font-size: 10px;
     }
-    
+
     .stage-buttons {
         grid-template-columns: repeat(5, 1fr);
         gap: 8px;
     }
-    
+
     .stage-btn {
         width: 35px;
         height: 35px;
         font-size: 10px;
     }
+}
+
+/* ==========================================
+   인게임 DOM 기반 UI (HUD & Controllers) - Retro Pixel Art
+   ========================================== */
+
+.in-game-ui {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 500;
+}
+
+.in-game-ui[hidden] {
+    display: none !important;
+}
+
+/* HUD (좌상단 체력/점수) */
+.hud-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(10, 10, 15, 0.9);
+    padding: 10px 18px;
+    border: 4px solid #f1c40f;
+    box-shadow: 
+        inset -4px -4px 0px rgba(0,0,0,0.6), 
+        inset 4px 4px 0px rgba(255,255,255,0.1),
+        4px 4px 0px rgba(0,0,0,0.8),
+        0 0 20px rgba(241, 196, 15, 0.3);
+    image-rendering: pixelated;
+    backdrop-filter: blur(5px);
+}
+
+.hud-profile {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #f1c40f;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hud-profile img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.hud-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.hp-bar-bg {
+    width: 150px;
+    height: 16px;
+    background: #2c0000;
+    border: 2px solid #000;
+    position: relative;
+    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.5);
+}
+
+.hp-bar-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #ff4757 0%, #ff6b81 40%, #e84118 60%, #c23616 100%);
+    box-shadow: 
+        inset 0px 4px 0px rgba(255, 255, 255, 0.4),
+        0 0 10px rgba(231, 76, 60, 0.6);
+    transition: width 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.score-text {
+    font-family: 'Press Start 2P', cursive;
+    color: #f1c40f;
+    font-size: 14px;
+    text-shadow: 2px 2px 0px #000, 0 0 15px rgba(241, 196, 15, 0.4);
+    animation: hud-score-pulse 2s infinite ease-in-out;
+}
+
+@keyframes hud-score-pulse {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.05); filter: brightness(1.2); }
+}
+
+/* 컨트롤 센터 (조이스틱 & 액션 버튼) */
+.control-center {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    pointer-events: none;
+}
+
+/* 데스크탑 세로 모드 중앙 정렬 오버라이드 */
+@media screen and (min-width: 1025px) and (orientation: landscape), screen and (min-width: 769px) and (orientation: portrait) {
+    .control-center {
+        justify-content: center;
+        gap: 150px;
+        bottom: 50px;
+    }
+}
+
+.dpad-container, .action-container {
+    pointer-events: auto;
+}
+
+.dpad-joystick {
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 4px dashed rgba(241, 196, 15, 0.5);
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px);
+}
+
+.dpad-knob {
+    width: 50px;
+    height: 50px;
+    background: radial-gradient(circle, #f1c40f 0%, #d4ac0d 100%);
+    border-radius: 50%;
+    border: 3px solid #000;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    position: absolute;
+}
+
+.action-btn {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
+    border: 4px solid #f1c40f;
+    color: #fff;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: inset -3px -3px 0px rgba(0,0,0,0.5), 4px 4px 0px rgba(0,0,0,0.8);
+    transition: all 0.1s;
+}
+
+.action-btn:active {
+    transform: translateY(4px);
+    box-shadow: inset -2px -2px 0px rgba(0,0,0,0.5), 0px 0px 0px rgba(0,0,0,0.8);
+}
+
+/* ==========================================
+   DOM 기반 메인 메뉴 UI (타이틀 & 가이드)
+   ========================================== */
+
+/* 전체 타이틀 공통 */
+.dom-game-title {
+    position: absolute;
+    text-align: center;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.title-main {
+    font-family: 'Press Start 2P', cursive;
+    color: #fff;
+    margin: 0;
+    text-shadow: 0 0 20px #e74c3c, 4px 4px 0px rgba(0,0,0,0.8);
+    font-size: clamp(32px, 6vw, 60px);
+}
+
+.title-sub {
+    font-family: 'Press Start 2P', cursive;
+    color: #e74c3c;
+    margin: 10px 0 0 0;
+    text-shadow: 0 0 10px rgba(231,76,60,0.5), 2px 2px 0px rgba(0,0,0,0.8);
+    font-size: clamp(10px, 2vw, 18px);
+}
+
+/* 데스크탑 및 모바일 세로 모드 타이틀 위치 */
+@media screen and (min-width: 1025px) and (orientation: landscape), screen and (min-width: 769px) and (orientation: portrait), screen and (max-width: 768px) and (orientation: portrait) {
+    .dom-game-title {
+        top: 15%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+    }
+}
+
+/* 모바일 가로 모드 타이틀 위치 (최적화) */
+@media screen and (max-width: 1024px) and (orientation: landscape) {
+    .dom-game-title {
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        width: 100%;
+    }
+    .title-main {
+        font-size: clamp(20px, 4vw, 32px);
+        margin: 0;
+    }
+    .title-sub {
+        font-size: clamp(7px, 1vw, 10px);
+        margin: 2px 0 0 0;
+    }
+}
+
+/* 미션 가이드 공통 */
+.dom-mission-guide {
+    position: absolute;
+    background: rgba(8, 12, 20, 0.92);
+    border: 4px solid #f1c40f;
+    box-shadow: inset -4px -4px 0px rgba(0,0,0,0.6), 6px 6px 0px rgba(0,0,0,0.8);
+    padding: 15px;
+    z-index: 90;
+    pointer-events: auto;
+}
+
+.guide-header {
+    font-family: 'Press Start 2P', cursive;
+    color: #f1c40f;
+    font-size: clamp(10px, 2vw, 14px);
+    margin-bottom: 15px;
+    text-shadow: 0 0 10px rgba(241,196,15,0.5);
+    text-align: center;
+}
+
+.guide-content p {
+    font-family: 'Press Start 2P', cursive;
+    color: #fff;
+    font-size: clamp(8px, 1.5vw, 11px);
+    line-height: 1.8;
+    margin: 0 0 8px 0;
+}
+
+.guide-content .highlight {
+    color: #3498db;
+    text-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+/* 데스크탑 및 모바일 세로 모드 가이드 위치 */
+@media screen and (min-width: 1025px) and (orientation: landscape), screen and (min-width: 769px) and (orientation: portrait), screen and (max-width: 768px) and (orientation: portrait) {
+    .dom-mission-guide {
+        top: 45%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80%;
+        max-width: 400px;
+    }
+}
+
+/* 모바일 가로 모드 가이드 위치 (좌측 상단) */
+@media screen and (max-width: 1024px) and (orientation: landscape) {
+    .dom-mission-guide {
+        top: 20px;
+        left: 20px;
+        width: 30%;
+        min-width: 220px;
+        max-height: 45%;
+        overflow-y: auto;
+    }
+}
+
+/* ==========================================
+   전체화면 오버레이 (스테이지 클리어, 윈스크린)
+   ========================================== */
+.fullscreen-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.fullscreen-overlay[hidden] {
+    display: none !important;
+}
+
+.overlay-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: clamp(24px, 6vw, 60px);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.overlay-title.gold {
+    color: #f1c40f;
+    text-shadow: 0 0 20px rgba(241, 196, 15, 0.8), 4px 4px 0px rgba(0,0,0,0.8);
+    animation: float-up-down 3s infinite ease-in-out;
+}
+
+.overlay-title.neon-blue {
+    color: #00ffff;
+    text-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 4px 4px 0px rgba(0,0,0,0.8);
+    animation: float-up-down 3s infinite ease-in-out;
+}
+
+.overlay-desc {
+    font-family: 'Press Start 2P', cursive;
+    color: #fff;
+    font-size: clamp(10px, 2vw, 16px);
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 40px;
+}
+
+.win-score-box {
+    font-family: 'Press Start 2P', cursive;
+    color: #e74c3c;
+    font-size: clamp(14px, 3vw, 24px);
+    background: #111;
+    border: 4px solid #e74c3c;
+    padding: 15px 30px;
+    margin-bottom: 40px;
+    box-shadow: 0 0 20px rgba(231,76,60,0.5);
+}
+
+.win-btn {
+    font-size: clamp(12px, 2vw, 18px) !important;
+    padding: 20px 40px !important;
+}
+
+@keyframes float-up-down {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
 }

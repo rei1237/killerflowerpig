@@ -28,6 +28,54 @@ const stageSelectContainer = document.getElementById('stage-select-container');
 const stageSelectCloseBtn = document.getElementById('stage-select-close');
 const stageButtons = document.querySelectorAll('.stage-btn');
 
+// 인게임 DOM UI
+const inGameUi = document.getElementById('in-game-ui');
+const domHpBar = document.getElementById('dom-hp-bar');
+const domScore = document.getElementById('dom-score');
+const btnBomb = document.getElementById('btn-bomb');
+const virtualJoystick = document.getElementById('virtual-joystick');
+const joystickKnob = document.getElementById('joystick-knob');
+
+// 오버레이 및 타이틀 UI
+const overlayStageClear = document.getElementById('overlay-stage-clear');
+const overlayWin = document.getElementById('overlay-win');
+const winScoreText = document.getElementById('win-score-text');
+const winRestartBtn = document.getElementById('win-restart-btn');
+const gameoverStats = document.getElementById('gameover-stats');
+
+if (winRestartBtn) {
+    winRestartBtn.addEventListener('click', () => {
+        resetGame();
+    });
+}
+
+if (btnBomb) {
+    const handleBomb = (e) => {
+        e.preventDefault();
+        if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT) {
+            useBomb();
+        }
+    };
+    btnBomb.addEventListener('touchstart', handleBomb, {passive: false});
+    btnBomb.addEventListener('mousedown', handleBomb);
+}
+
+function updateInGameUIVisibility() {
+    const shouldShow = (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT || currentState === GAME_STATE.STAGE_CLEAR);
+    if (inGameUi) inGameUi.hidden = !shouldShow;
+}
+
+function updateDOMHUD() {
+    if (!inGameUi || inGameUi.hidden) return;
+    if (domHpBar) {
+        const hpPercent = Math.max(0, (Player.hp / Player.maxHp) * 100);
+        domHpBar.style.width = hpPercent + '%';
+    }
+    if (domScore) {
+        domScore.innerText = 'SCORE: ' + String(score).padStart(6, '0');
+    }
+}
+
 const MOBILE_OPTIMIZED_CLASS = 'mobile-optimized';
 let deferredInstallPrompt = null;
 let animationId = null;
@@ -374,8 +422,28 @@ function updateMainMenuVisibility() {
         passwordContainer.hidden = !shouldShow || isStageUnlocked;
     }
     // 스테이지 선택 UI는 별도로 관리
+    // 스테이지 선택 UI는 별도로 관리
     if (stageSelectContainer && shouldShow && !isStageUnlocked) {
         stageSelectContainer.hidden = true;
+    }
+    
+    updateInGameUIVisibility();
+    updateOverlayVisibility();
+}
+
+function updateOverlayVisibility() {
+    if (overlayStageClear) {
+        overlayStageClear.hidden = currentState !== GAME_STATE.STAGE_CLEAR;
+        if (currentState === GAME_STATE.STAGE_CLEAR) {
+            const titleElem = overlayStageClear.querySelector('.overlay-title');
+            if (titleElem) titleElem.innerText = `STAGE ${currentStage} CLEAR!`;
+        }
+    }
+    if (overlayWin) {
+        overlayWin.hidden = currentState !== GAME_STATE.WIN;
+        if (currentState === GAME_STATE.WIN && winScoreText) {
+            winScoreText.innerText = score.toLocaleString();
+        }
     }
 }
 
@@ -383,6 +451,29 @@ function updateMainMenuVisibility() {
 function updateGameOverButtonVisibility() {
     const shouldShow = currentState === GAME_STATE.GAME_OVER;
     if (gameoverButtons) gameoverButtons.hidden = !shouldShow;
+    
+    // 게임오버 스탯 갱신
+    if (shouldShow && gameoverStats) {
+        let loreMessage = "";
+        let messageColor = "#bdc3c7";
+        if (score < 10000) {
+            loreMessage = "세상은 푸른 어둠에 잠겼습니다.<br>하지만 연이의 분홍빛 투지는 아직 지지 않았습니다.";
+        } else if (score < 30000) {
+            loreMessage = "수많은 청토끼를 물리쳤으나, 역병의 근원은 여전히 날뜁니다.<br>다시 일어나세요, 세상을 구할 유일한 꽃돼지여!";
+            messageColor = "#e67e22";
+        } else if (score < 70000) {
+            loreMessage = "당신의 분홍빛 희망은 어둠 속에서도 찬란했습니다.<br>세상은 당신의 숭고한 희생과 총성을 영원히 기억할 것입니다.";
+            messageColor = "#9b59b6";
+        } else {
+            loreMessage = "전설적인 좀비 킬러.<br>당신의 투혼은 사악한 청토끼들에게 영원한 공포로 각인될 것입니다.";
+            messageColor = "#00ffff";
+        }
+        
+        gameoverStats.innerHTML = `
+            <div style="font-size: 14px; margin-bottom: 10px; color: #f1c40f;">FINAL SCORE: ${score.toLocaleString()}</div>
+            <div style="font-size: 10px; line-height: 1.5; color: ${messageColor};">${loreMessage}</div>
+        `;
+    }
 }
 
 // 패스워드 dots UI 업데이트
@@ -1273,49 +1364,115 @@ class GatePair {
     }
     drawGateStructure(ctx, gate) {
         const x = this.x; const y = gate.y; const w = this.width; const h = gate.height;
+        const time = Date.now();
 
-        // 격리 구역 바리케이드 금속 기둥
-        ctx.fillStyle = '#1a1a1a'; ctx.fillRect(x, y, w, h);
-        ctx.fillStyle = '#333'; ctx.fillRect(x + 5, y, w - 10, h);
+        // 1. 게이트 기본 배경 (금속 질감)
+        ctx.fillStyle = '#1a1c2c'; // 다크 네이비 메탈
+        ctx.fillRect(x, y, w, h);
+        
+        // 2. 내부 깊이감 (그라데이션)
+        const grad = ctx.createLinearGradient(x, y, x + w, y);
+        grad.addColorStop(0, 'rgba(0,0,0,0.5)');
+        grad.addColorStop(0.5, 'rgba(255,255,255,0.1)');
+        grad.addColorStop(1, 'rgba(0,0,0,0.5)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(x + 4, y + 4, w - 8, h - 8);
 
-        // 해저드 테이프 띠 (위/아래)
-        ctx.save();
-        ctx.fillStyle = '#f1c40f'; ctx.fillRect(x, y, w, 15); ctx.fillRect(x, y + h - 15, w, 15);
+        // 3. 네온 프레임 (상/하단 테두리)
+        ctx.fillStyle = gate.color;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = gate.color;
+        ctx.fillRect(x - 2, y, w + 4, 10); // 상단 바
+        ctx.fillRect(x - 2, y + h - 10, w + 4, 10); // 하단 바
+        ctx.shadowBlur = 0;
+
+        // 4. 해저드 텍스처 (픽셀 아트 스타일)
         ctx.fillStyle = '#000';
-        for (let i = 0; i < w; i += 10) {
-            ctx.beginPath(); ctx.moveTo(x + i, y); ctx.lineTo(x + i + 5, y); ctx.lineTo(x + i - 2, y + 15); ctx.lineTo(x + i - 7, y + 15); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(x + i, y + h - 15); ctx.lineTo(x + i + 5, y + h - 15); ctx.lineTo(x + i - 2, y + h); ctx.lineTo(x + i - 7, y + h); ctx.fill();
+        for (let i = 0; i < w + 4; i += 12) {
+            ctx.beginPath();
+            ctx.moveTo(x - 2 + i, y);
+            ctx.lineTo(x + 4 + i, y);
+            ctx.lineTo(x - 2 + i, y + 10);
+            ctx.lineTo(x - 8 + i, y + 10);
+            ctx.fill();
         }
-        ctx.restore();
 
-        // 픽셀 코어 라이트 (버프 색상 - 방사능 물질 느낌)
-        ctx.fillStyle = gate.color; ctx.globalAlpha = 0.6; ctx.fillRect(x + 10, y + 20, w - 20, h - 40); ctx.globalAlpha = 1.0;
-        ctx.fillStyle = '#fff'; ctx.fillRect(x + w / 2 - 2, y + 20, 4, h - 40); // 중앙 코어 코일
+        // 5. 중앙 코어 에너지 (애니메이션)
+        const corePulse = Math.sin(time / 200) * 0.2 + 0.8;
+        ctx.globalAlpha = 0.3 * corePulse;
+        ctx.fillStyle = gate.color;
+        ctx.fillRect(x + 10, y + 15, w - 20, h - 30);
+        ctx.globalAlpha = 1.0;
+        
+        // 코어 코일 (픽셀 화이트 라인)
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(x + w / 2 - 2, y + 15, 4, h - 30);
 
-        // 아이콘 및 텍스트
+        // 6. 레이저 스캐닝 효과 (위아래로 움직이는 빔)
+        const scanY = y + 20 + ((time / 5) % (h - 40));
+        ctx.fillStyle = '#fff';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#fff';
+        ctx.fillRect(x + 5, scanY, w - 10, 2);
+        ctx.shadowBlur = 0;
+
+        // 7. 아이콘 및 텍스트
         ctx.save();
         ctx.translate(x + w / 2, y + h / 2);
-        this.drawPixelIcon(ctx, gate.icon, -15, -40, 30);
+        
+        // 아이콘 광채
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = gate.color;
+        this.drawPixelIcon(ctx, gate.icon, -15, -45, 30);
+        ctx.shadowBlur = 0;
 
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 10px "Press Start 2P"'; ctx.textAlign = 'center';
-        ctx.shadowBlur = 5; ctx.shadowColor = '#000'; // 텍스트 가독성
+        // 텍스트 (픽셀 폰트)
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px "Press Start 2P"';
+        ctx.textAlign = 'center';
         ctx.fillText(gate.text, 0, 25);
+        
+        // 값 표시 (작은 텍스트)
+        ctx.font = '7px "Press Start 2P"';
+        ctx.fillStyle = gate.color;
+        ctx.fillText(`+${gate.value}`, 0, 40);
+        
         ctx.restore();
     }
     drawPixelIcon(ctx, type, x, y, size) {
         ctx.fillStyle = '#fff';
+        // 픽셀 아이콘 렌더링 (더 정교하게)
         if (type === 'gun') {
-            ctx.fillRect(x, y + 10, 20, 10); ctx.fillRect(x + 5, y + 20, 5, 10);
+            ctx.fillRect(x, y + 15, 25, 8); // 총열
+            ctx.fillRect(x + 20, y + 10, 5, 5); // 가늠쇠
+            ctx.fillRect(x + 5, y + 23, 6, 12); // 손잡이
         } else if (type === 'sword') {
-            ctx.fillRect(x + 10, y, 10, 25); ctx.fillRect(x, y + 25, 30, 5); ctx.fillRect(x + 10, y + 30, 10, 5);
+            ctx.fillRect(x + 12, y, 6, 30); // 검신
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(x, y + 30, 30, 4); // 가드
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(x + 12, y + 34, 6, 8); // 자루
         } else if (type === 'heart') {
-            ctx.fillRect(x + 5, y, 10, 5); ctx.fillRect(x + 20, y, 10, 5);
-            ctx.fillRect(x, y + 5, 35, 15); ctx.fillRect(x + 5, y + 20, 25, 5); ctx.fillRect(x + 15, y + 25, 5, 5);
+            ctx.fillStyle = '#ff4757';
+            ctx.fillRect(x + 6, y, 8, 8); ctx.fillRect(x + 18, y, 8, 8);
+            ctx.fillRect(x, y + 8, 32, 12);
+            ctx.fillRect(x + 4, y + 20, 24, 8);
+            ctx.fillRect(x + 12, y + 28, 8, 8);
         } else if (type === 'shield') {
-            ctx.fillRect(x, y, 30, 20); ctx.fillRect(x + 5, y + 20, 20, 10); ctx.fillRect(x + 12, y + 30, 6, 5);
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(x, y, 30, 25);
+            ctx.beginPath();
+            ctx.moveTo(x, y + 25); ctx.lineTo(x + 15, y + 40); ctx.lineTo(x + 30, y + 25); ctx.fill();
         } else if (type === 'bomb') {
-            ctx.beginPath(); ctx.arc(x + 15, y + 15, 12, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#f1c40f'; ctx.fillRect(x + 12, y - 5, 6, 10);
+            ctx.fillStyle = '#1e272e';
+            ctx.beginPath(); ctx.arc(x + 15, y + 20, 14, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(x + 12, y, 6, 8); // 심지
+            // 불꽃 효과
+            if (Date.now() % 200 < 100) {
+                ctx.fillStyle = '#ff4757';
+                ctx.fillRect(x + 14, y - 5, 4, 4);
+            }
         }
     }
 }
@@ -2122,7 +2279,7 @@ function gameLoop(timestamp) {
         for (let i = enemies.length - 1; i >= 0; i--) { enemies[i].update(timestamp); if (!enemies[i].active) enemies.splice(i, 1); }
         for (let i = particles.length - 1; i >= 0; i--) { particles[i].update(); if (particles[i].life <= 0) particles.splice(i, 1); }
     }
-    Background.draw(ctx); drawHUD(ctx);
+    Background.draw(ctx); updateDOMHUD();
     if (boss) boss.draw(ctx);
     for (const g of gates) g.draw(ctx);
     for (const p of projectiles) p.draw(ctx);
@@ -2201,16 +2358,27 @@ function drawStartScreen() {
 
     if (titleImg) {
         ctx.save();
-        ctx.shadowBlur = 30 * pulse;
-        ctx.shadowColor = '#00ffff';
         
-        // 모바일/데스크톱 공통: 캐릭터 이미지 크기
+        // --- 타이틀 이미지 글리치 및 네온 연출 ---
+        const glitchTime = time % 2000;
+        let glitchX = 0;
+        let glitchAlpha = 1;
+        
+        // 가끔 발생하는 강렬한 글리치 (2초마다)
+        if (glitchTime < 100) {
+            glitchX = (Math.random() - 0.5) * 15;
+            glitchAlpha = 0.8;
+            ctx.filter = `hue-rotate(${Math.random() * 360}deg) brightness(1.5)`;
+        }
+        
+        ctx.shadowBlur = 40 * pulse;
+        ctx.shadowColor = '#e74c3c';
+        
         let maxTitleW;
         if (isMobile && !isPortrait) {
-            // 가로 모드: 화면 높이 기준으로 적당한 크기 (더 작게)
-            maxTitleW = Math.min(canvas.height * 0.55, canvas.width * 0.35) * pulse;
+            maxTitleW = Math.min(canvas.height * 0.45, canvas.width * 0.28) * pulse;
         } else if (isMobile) {
-            maxTitleW = Math.min(350 * scaleFactor, canvas.width * 0.85);
+            maxTitleW = Math.min(350 * scaleFactor, canvas.width * 0.8);
         } else {
             maxTitleW = 500 * pulse * scaleFactor;
         }
@@ -2218,167 +2386,115 @@ function drawStartScreen() {
         const w = maxTitleW;
         const h = (w / titleImg.width) * titleImg.height;
         
-        // 위치 계산
         let titleY;
         if (isMobile && !isPortrait) {
-            // 가로 모드: 좌측 중앙에 배치
-            titleY = canvas.height / 2 - h / 2;
+            titleY = 20 * scaleFactor;
         } else if (isMobile) {
             titleY = marginTop;
         } else {
-            titleY = canvas.height / 2 - h / 2 - 80 * scaleFactor;
+            titleY = canvas.height / 2 - h / 2 - 120 * scaleFactor;
         }
         
-        // 좌측 위치 계산 (가로모드: 더 왼쪽으로)
-        let titleX = canvas.width / 2 - w / 2;
-        if (isMobile && !isPortrait) {
-            titleX = canvas.width * 0.18 - w / 2; // 좌측 18% 지점 (더 왼쪽)
-        }
+        let titleX = canvas.width / 2 - w / 2 + glitchX;
         
+        ctx.globalAlpha = glitchAlpha;
         ctx.drawImage(titleImg, titleX, titleY, w, h);
         ctx.restore();
     }
 
-    // 메인 타이틀 텍스트
+    // --- 프리미엄 네온 & 글리치 연출 (임팩트 강화) ---
     ctx.save();
+    
+    // 네온 깜빡임 효과 (랜덤하게 깜빡거림)
+    const flicker = Math.random() > 0.05 ? 1 : (Math.random() > 0.5 ? 0.3 : 0);
+    const glitchX = Math.random() > 0.98 ? (Math.random() - 0.5) * 10 : 0;
+    
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-
-    // 외곽 광채 효과 (거대한 핏빛 광채)
-    ctx.shadowBlur = 30 * scaleFactor * pulse;
-    ctx.shadowColor = '#e74c3c';
-    ctx.fillStyle = '#fff';
     
-    // 폰트 크기
-    const titleFontSize = isMobile ? Math.max(28, Math.floor(40 * scaleFactor)) : Math.floor(36 * scaleFactor);
+    // 텍스트 위치 계산
+    let textX = canvas.width / 2 + glitchX;
+    let textY;
+    if (isMobile && !isPortrait) {
+        const titleImgH = titleImg ? (Math.min(canvas.height * 0.5, canvas.width * 0.3) / titleImg.width) * titleImg.height : 100;
+        textY = 15 * scaleFactor + titleImgH + 25 * scaleFactor;
+    } else if (isMobile) {
+        textY = marginTop + (350 * scaleFactor) + 25 * scaleFactor;
+    } else {
+        textY = canvas.height / 2 + 50 * scaleFactor;
+    }
+
+    // 네온 광채 (Back Glow)
+    ctx.shadowBlur = 30 * scaleFactor * pulse * flicker;
+    ctx.shadowColor = '#f1c40f';
+    ctx.fillStyle = `rgba(241, 196, 15, ${0.4 * flicker})`;
+    
+    const titleFontSize = isMobile ? Math.max(24, Math.floor(32 * scaleFactor)) : Math.floor(36 * scaleFactor);
     ctx.font = `bold ${titleFontSize}px "Press Start 2P"`;
     
-    // 텍스트 위치
-    let textX = canvas.width / 2;
-    let textY;
+    // 이중 렌더링으로 네온 느낌 극대화
+    ctx.fillText('FLOWER PIG', textX + 2, textY + 2);
     
-    if (isMobile && !isPortrait) {
-        // 가로 모드: 캐릭터 좌측, 타이틀을 위로 올려 겹침 방지
-        textX = canvas.width * 0.5; // 다시 중앙으로
-        textY = canvas.height * 0.15; // 더 위로 올려서 캐릭터와 분리
-    } else if (isMobile) {
-        textY = marginTop + (350 * scaleFactor) + 20 * scaleFactor;
-    } else {
-        textY = canvas.height / 2 + 30 * scaleFactor;
-    }
-    
-    ctx.fillText('Yeon', textX, textY);
+    ctx.shadowBlur = 15 * scaleFactor * flicker;
+    ctx.fillStyle = `rgba(255, 255, 255, ${flicker})`;
+    ctx.fillText('FLOWER PIG', textX, textY);
 
-    const subtitleFontSize = isMobile ? Math.max(12, Math.floor(14 * scaleFactor)) : Math.floor(13 * scaleFactor);
+    // 서브타이틀 (네온 레드)
+    const subtitleFontSize = isMobile ? Math.max(10, Math.floor(12 * scaleFactor)) : Math.floor(14 * scaleFactor);
     ctx.font = `${subtitleFontSize}px "Press Start 2P"`;
+    ctx.shadowColor = '#e74c3c';
+    ctx.shadowBlur = 10 * scaleFactor * flicker;
     ctx.fillStyle = '#e74c3c';
-    ctx.shadowBlur = 15 * scaleFactor;
-    ctx.fillText('THE KILLER OF BLUE ZOMBIE', textX, textY + 45 * scaleFactor);
+    ctx.fillText('THE KILLER OF ZOMBIE', textX, textY + 40 * scaleFactor);
+    
     ctx.restore();
 
-    // 2D 도트 스타일 게임 가이드 패널
+    // --- 캔버스 기반 미션 가이드 (가로 모드 충돌 방지: 좌측 하단 배치) ---
     let panelW, panelH, panelX, panelY;
-    
     if (isMobile && !isPortrait) {
-        // 가로 모드: 좌측 상단 영역에 패널 배치 (타이틀/캐릭터와 겹치지 않도록)
+        // 가로 모드: 좌측 하단 (비밀번호 UI 위 또는 옆)
         panelW = Math.min(320 * scaleFactor, canvas.width * 0.35);
-        panelH = Math.min(180 * scaleFactor, canvas.height * 0.45);
+        panelH = Math.min(120 * scaleFactor, canvas.height * 0.3);
         panelX = 30 * scaleFactor;
-        panelY = 30 * scaleFactor; 
+        panelY = canvas.height - panelH - 30 * scaleFactor;
+        
+        // 비밀번호 UI가 좌측에 있으므로, 가이드는 약간 위로 올리거나 비밀번호 UI와 간격 조정 필요
+        // CSS에서 비밀번호 UI 위치를 확인하고 조정할 예정
     } else if (isMobile) {
-        // 세로 모드: 중앙에 배치
-        panelW = canvas.width * 0.95;
-        panelH = Math.min(200 * scaleFactor, canvas.height * 0.35);
+        panelW = canvas.width * 0.9;
+        panelH = Math.min(160 * scaleFactor, canvas.height * 0.3);
         panelX = canvas.width / 2 - panelW / 2;
-        panelY = canvas.height / 2 - panelH / 2 + 20 * scaleFactor;
+        panelY = canvas.height / 2 + 100 * scaleFactor;
     } else {
-        // 데스크톱: 하단 중앙
-        panelW = Math.min(760 * scaleFactor, canvas.width * 0.9);
-        panelH = Math.min(180 * scaleFactor, canvas.height * 0.25);
+        panelW = 700 * scaleFactor;
+        panelH = 150 * scaleFactor;
         panelX = canvas.width / 2 - panelW / 2;
-        panelY = canvas.height - panelH - 40 * scaleFactor;
+        panelY = canvas.height - panelH - 50 * scaleFactor;
     }
-    const pulseAlpha = 0.5 + Math.sin(time / 250) * 0.15;
 
     ctx.save();
-    // 외곽 프레임
-    ctx.fillStyle = '#f1c40f';
-    ctx.fillRect(panelX - 6, panelY - 6, panelW + 12, panelH + 12);
-    ctx.fillStyle = '#111';
-    ctx.fillRect(panelX - 3, panelY - 3, panelW + 6, panelH + 6);
-
-    // 본문 패널
-    ctx.fillStyle = 'rgba(8, 12, 20, 0.92)';
-    ctx.fillRect(panelX, panelY, panelW, panelH);
-    ctx.strokeStyle = '#00ffff';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.strokeStyle = '#f1c40f';
     ctx.lineWidth = 2;
-    ctx.strokeRect(panelX + 2, panelY + 2, panelW - 4, panelH - 4);
-
-    // 도트 장식
-    ctx.fillStyle = `rgba(0,255,255,${pulseAlpha})`;
-    const dotSpacing = Math.max(16, 24 * scaleFactor);
-    for (let i = 0; i < panelW; i += dotSpacing) {
-        ctx.fillRect(panelX + i, panelY + 22 * scaleFactor, 4 * scaleFactor, 4 * scaleFactor);
-        ctx.fillRect(panelX + i + 8 * scaleFactor, panelY + panelH - 26 * scaleFactor, 4 * scaleFactor, 4 * scaleFactor);
-    }
-
-    // 폰트 크기 설정
-    let fontSizeGuide, fontSizeText, lineHeight;
-    if (isMobile && !isPortrait) {
-        // 가로 모드: 더 크고 읽기 쉽게
-        fontSizeGuide = Math.max(12, Math.floor(13 * scaleFactor));
-        fontSizeText = Math.max(11, Math.floor(12 * scaleFactor));
-        lineHeight = Math.max(22, 28 * scaleFactor);
-    } else if (isMobile) {
-        fontSizeGuide = Math.max(10, Math.floor(11 * scaleFactor));
-        fontSizeText = Math.max(9, Math.floor(10 * scaleFactor));
-        lineHeight = Math.max(18, 24 * scaleFactor);
-    } else {
-        fontSizeGuide = Math.max(7, Math.floor(10 * scaleFactor));
-        fontSizeText = Math.max(6, Math.floor(8 * scaleFactor));
-        lineHeight = Math.max(18, 24 * scaleFactor);
-    }
+    ctx.fillRect(panelX, panelY, panelW, panelH);
+    ctx.strokeRect(panelX, panelY, panelW, panelH);
 
     ctx.textAlign = 'left';
     ctx.fillStyle = '#f1c40f';
-    ctx.font = `bold ${fontSizeGuide}px "Press Start 2P"`;
-    ctx.shadowBlur = 10 * scaleFactor;
-    ctx.shadowColor = '#f1c40f';
-    ctx.fillText('⚔ MISSION GUIDE ⚔', panelX + 20 * scaleFactor, panelY + 32 * scaleFactor);
-    ctx.shadowBlur = 0;
+    ctx.font = `bold ${Math.max(10, 12 * scaleFactor)}px "Press Start 2P"`;
+    ctx.fillText('⚔ MISSION GUIDE ⚔', panelX + 15 * scaleFactor, panelY + 25 * scaleFactor);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `${fontSizeText}px "Press Start 2P"`;
-    let lineY = panelY + 60 * scaleFactor;
-
-    // 모바일 세로 모드: 간략한 가이드
-    if (isMobile && isPortrait) {
-        ctx.fillText('▶ DRAG to Move', panelX + 20 * scaleFactor, lineY);
-        lineY += lineHeight;
-        ctx.fillText('▶ AUTO FIRE', panelX + 20 * scaleFactor, lineY);
-        lineY += lineHeight;
-        ctx.fillText('▶ DOUBLE TAP for BOMB', panelX + 20 * scaleFactor, lineY);
-        lineY += lineHeight;
-        ctx.fillText('▶ DEFEAT BOSS', panelX + 20 * scaleFactor, lineY);
-    } else {
-        // 가로/데스크톱: 전체 가이드
-        ctx.fillText('▶ MOVE: MOUSE / TOUCH DRAG', panelX + 20 * scaleFactor, lineY);
-        lineY += lineHeight;
-        ctx.fillText('▶ ATTACK: AUTO FIRE', panelX + 20 * scaleFactor, lineY);
-        lineY += lineHeight;
-        ctx.fillText('▶ BOMB: DOUBLE TAP / SPACE', panelX + 20 * scaleFactor, lineY);
-        lineY += lineHeight;
-        ctx.fillText('▶ SURVIVE & DESTROY BOSS', panelX + 20 * scaleFactor, lineY);
-        lineY += lineHeight;
-        ctx.fillText('▶ PICK GATES TO GAIN BUFFS', panelX + 20 * scaleFactor, lineY);
-    }
+    ctx.fillStyle = '#fff';
+    ctx.font = `${Math.max(8, 10 * scaleFactor)}px "Press Start 2P"`;
+    const lines = isMobile && isPortrait ? ['▶ DRAG to Move', '▶ AUTO FIRE', '▶ BOMB: D-TAP'] : ['▶ MOVE: MOUSE / DRAG', '▶ ATTACK: AUTO FIRE', '▶ BOMB: DOUBLE TAP / SPACE'];
+    lines.forEach((line, i) => {
+        ctx.fillText(line, panelX + 15 * scaleFactor, panelY + 50 * scaleFactor + i * (18 * scaleFactor));
+    });
     ctx.restore();
 
     // 스캔라인 효과
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     for (let i = 0; i < canvas.height; i += 4) ctx.fillRect(0, i, canvas.width, 1);
-
-    // 메인 메뉴 버튼은 HTML 오버레이로 표시됨 (drawStartScreen 외부)
 }
 
 function drawWinScreen() {
@@ -2406,19 +2522,6 @@ function drawWinScreen() {
         ctx.restore();
     }
 
-    ctx.fillStyle = '#f1c40f'; ctx.font = `${Math.floor(36 * winScale)}px "Press Start 2P"`; ctx.textAlign = 'center';
-    ctx.shadowBlur = 15 * winScale; ctx.shadowColor = '#f1c40f';
-    ctx.fillText('ALL CLEAR!', canvas.width / 2, canvas.height / 2 + 100 * winScale);
-
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#fff'; ctx.font = `${Math.max(10, Math.floor(14 * winScale))}px "Press Start 2P"`;
-    ctx.fillText('THE LEGENDARY KILLER SAVED THE WORLD', canvas.width / 2, canvas.height / 2 + 160 * winScale);
-
-    const blink = Math.sin(time / 300) > 0;
-    if (blink) {
-        ctx.fillStyle = '#f1c40f'; ctx.font = `${Math.max(10, Math.floor(12 * winScale))}px "Press Start 2P"`;
-        ctx.fillText(isMobileTouchDevice() ? 'TAP TO RETURN' : 'CLICK TO RETURN TO TITLE', canvas.width / 2, canvas.height / 2 + 220 * winScale);
-    }
 }
 
 function drawStageClearScreen() {
@@ -2442,16 +2545,6 @@ function drawStageClearScreen() {
         ctx.restore();
     }
 
-    ctx.fillStyle = '#00ffff'; ctx.font = `${Math.floor(32 * scale)}px "Press Start 2P"`; ctx.textAlign = 'center';
-    ctx.shadowBlur = 20 * scale; ctx.shadowColor = '#00ffff';
-    ctx.fillText('STAGE ' + currentStage + ' CLEAR!', canvas.width / 2, canvas.height / 2 + 120 * scale);
-
-    ctx.shadowBlur = 0;
-    const blink = Math.sin(time / 300) > 0;
-    if (blink) {
-        ctx.fillStyle = '#fff'; ctx.font = `${Math.max(12, Math.floor(16 * scale))}px "Press Start 2P"`;
-        ctx.fillText(isMobileTouchDevice() ? 'TAP FOR NEXT LEVEL' : 'CLICK FOR NEXT LEVEL', canvas.width / 2, canvas.height / 2 + 190 * scale);
-    }
 }
 
 function drawGameOverScreen() {
@@ -2505,48 +2598,6 @@ function drawGameOverScreen() {
         ctx.drawImage(img, nextFrameIndex * frameStride, 0, frameStride, frameHeight, drawX, drawY, w, h);
         ctx.restore();
     }
-
-    ctx.save();
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const minDimGO = Math.min(canvas.width, canvas.height);
-    const goScale = Math.min(1, minDimGO / 600);
-
-    // 메인 사망 메시지
-    ctx.shadowBlur = 20 * goScale; ctx.shadowColor = '#e74c3c';
-    ctx.fillStyle = '#ff4757'; ctx.font = `bold ${Math.floor(36 * goScale)}px "Press Start 2P"`;
-    ctx.fillText('YOU ARE DEAD', canvas.width / 2, canvas.height / 2 + 50 * goScale);
-
-    // 최종 점수 표시
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#f1c40f'; ctx.font = `${Math.max(12, Math.floor(18 * goScale))}px "Press Start 2P"`;
-    ctx.fillText('FINAL SCORE: ' + score.toLocaleString(), canvas.width / 2, canvas.height / 2 + 100 * goScale);
-
-    // 점수별 차등 멘트 (꽃돼지 연이의 좀비 아포칼립스 세계관)
-    let loreMessage = "";
-    let messageColor = "#bdc3c7";
-
-    if (score < 10000) {
-        loreMessage = "세상은 푸른 어둠에 잠겼습니다.\n하지만 연이의 분홍빛 투지는 아직 지지 않았습니다.";
-    } else if (score < 30000) {
-        loreMessage = "수많은 청토끼를 물리쳤으나, 역병의 근원은 여전히 날뜁니다.\n다시 일어나세요, 세상을 구할 유일한 꽃돼지여!";
-        messageColor = "#e67e22";
-    } else if (score < 70000) {
-        loreMessage = "당신의 분홍빛 희망은 어둠 속에서도 찬란했습니다.\n세상은 당신의 숭고한 희생과 총성을 영원히 기억할 것입니다.";
-        messageColor = "#9b59b6";
-    } else {
-        loreMessage = "전설적인 좀비 킬러.\n당신의 투혼은 사악한 청토끼들에게 영원한 공포로 각인될 것입니다.";
-        messageColor = "#00ffff";
-    }
-
-    // 멘트 줄바꿈 처리하여 출력
-    ctx.fillStyle = messageColor; ctx.font = `${Math.max(10, Math.floor(12 * goScale))}px "Press Start 2P"`;
-    const lines = loreMessage.split('\n');
-    const lineHeight = Math.max(18, 25 * goScale);
-    lines.forEach((line, i) => {
-        ctx.fillText(line, canvas.width / 2, canvas.height / 2 + 150 * goScale + (i * lineHeight));
-    });
-
-    ctx.restore();
 }
 
 // --- 스토리 텍스트 연출 시스템 ---
@@ -2645,19 +2696,16 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight, fontSize = 1
             // 제목/특수 문단: 여백 추가
             paragraphHeight = lineHeight + paragraphSpacing;
         } else {
-            // 일반 텍스트의 줄 수 계산 (Word Wrap 적용)
-            const words = paragraph.split(' ');
+            // 일반 텍스트의 줄 수 계산
             let line = '';
             let lineCount = 1;
-            
-            for (let i = 0; i < words.length; i++) {
-                const word = words[i];
-                const testLine = line + (line === '' ? '' : ' ') + word;
+            for (let n = 0; n < paragraph.length; n++) {
+                const char = paragraph[n];
+                const testLine = line + char;
                 const metrics = tempCtx.measureText(testLine);
-                
-                if (metrics.width > maxWidth && line !== '') {
+                if (metrics.width > maxWidth && n > 0) {
                     lineCount++;
-                    line = word;
+                    line = char;
                 } else {
                     line = testLine;
                 }
@@ -2680,13 +2728,10 @@ function splitStoryIntoPages(text, maxWidth, maxHeight, lineHeight, fontSize = 1
     
     // 마지막 페이지 추가
     if (currentPage.length > 0) {
-        const pageText = currentPage.join('\n').trim();
-        if (pageText) pages.push(pageText);
+        pages.push(currentPage.join('\n'));
     }
     
-    // 최종 검증: 빈 페이지 필터링 및 최소 한 페이지 보장
-    const finalPages = pages.filter(p => p.trim().length > 0);
-    return finalPages.length > 0 ? finalPages : [text];
+    return pages;
 }
 
 // 스토리 다음 페이지로 이동
@@ -2897,20 +2942,19 @@ function drawStoryScreen(ctx, timestamp) {
 }
 
 function wrapTextLeftAlign(ctx, text, x, y, maxWidth, lineHeight) {
-    const words = text.split(' ');
     let line = '';
     let currentY = y;
     let lineCount = 0;
 
-    for (let i = 0; i < words.length; i++) {
-        const word = words[i];
-        const testLine = line + (line === '' ? '' : ' ') + word;
+    for (let n = 0; n < text.length; n++) {
+        const char = text[n];
+        const testLine = line + char;
         const metrics = ctx.measureText(testLine);
         const testWidth = metrics.width;
 
-        if (testWidth > maxWidth && line !== '') {
+        if (testWidth > maxWidth && n > 0) {
             ctx.fillText(line, x, currentY);
-            line = word;
+            line = char;
             currentY += lineHeight;
             lineCount++;
         } else {

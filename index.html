@@ -42,6 +42,8 @@
         <canvas id="gameCanvas"></canvas>
         <!-- 메인 화면 UI 버튼들 - 개별 위치 조정 -->
         <div id="main-menu-ui" class="main-menu-ui">
+            <!-- 메인 메뉴 버튼 및 UI 요소들 -->
+
             <div id="start-btn-container" class="btn-container start-container" hidden>
                 <button id="start-btn" type="button" class="pixel-btn primary">START GAME</button>
             </div>
@@ -147,8 +149,54 @@
                 <button id="close-install-guide" class="pixel-btn secondary">CLOSE</button>
             </div>
         </div>
+
+        <!-- 전체화면 오버레이: 스테이지 클리어 -->
+        <div id="overlay-stage-clear" class="fullscreen-overlay" hidden>
+            <h1 class="overlay-title gold">STAGE CLEAR!</h1>
+            <p class="overlay-desc">좀비 무리를 물리쳤습니다.</p>
+        </div>
+
+        <!-- 전체화면 오버레이: 게임 올 클리어 (Win) -->
+        <div id="overlay-win" class="fullscreen-overlay" hidden>
+            <h1 class="overlay-title neon-blue">ALL CLEAR!</h1>
+            <p class="overlay-desc">연이가 모든 좀비를 멸종시켰습니다.</p>
+            <div class="win-score-box">
+                FINAL SCORE: <span id="win-score-text">0</span>
+            </div>
+            <button id="win-restart-btn" type="button" class="pixel-btn primary win-btn">RESTART JOURNEY</button>
+        </div>
+
+        <!-- 인게임 DOM UI (HUD 및 컨트롤러) -->
+        <div id="in-game-ui" class="in-game-ui" hidden>
+            <!-- 좌상단 HUD -->
+            <div id="hud-container" class="hud-container">
+                <div class="hud-profile">
+                    <img src="asset/꽃돼지 총.png" alt="Profile" class="profile-img">
+                </div>
+                <div class="hud-stats">
+                    <div class="hp-bar-bg">
+                        <div id="dom-hp-bar" class="hp-bar-fill"></div>
+                    </div>
+                    <div id="dom-score" class="score-text">000000</div>
+                </div>
+            </div>
+            
+            <!-- 하단 컨트롤 센터 (가로 모드: 좌우 조이패드 / 세로 모드: 하단 바) -->
+            <div id="control-center" class="control-center">
+                <div id="dpad-container" class="dpad-container">
+                    <div class="dpad-joystick" id="virtual-joystick">
+                        <div class="dpad-knob" id="joystick-knob"></div>
+                    </div>
+                </div>
+                <div id="action-container" class="action-container">
+                    <button id="btn-bomb" class="action-btn bomb-btn">
+                        <span class="btn-icon">💣</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-    <script src="game.js?v=3"></script>
+    <script src="game.js?v=4"></script>
 </body>
 
 </html>
