@@ -49,6 +49,30 @@
                 <span class="btn-icon">📲</span> INSTALL GAME
             </button>
         </div>
+        <!-- 패스워드 입력 UI -->
+        <div id="password-container" class="btn-container password-container" hidden>
+            <div class="password-label">🔐 연이의 생일 (6자리)</div>
+            <input type="password" id="stage-password" class="pixel-input" maxlength="6" placeholder="910902">
+            <button id="password-submit" type="button" class="pixel-btn secondary">UNLOCK</button>
+            <div id="password-error" class="password-error" hidden>잘못된 비밀번호입니다</div>
+        </div>
+        <!-- 스테이지 선택 UI (패스워드 입력 후 표시) -->
+        <div id="stage-select-container" class="btn-container stage-select-container" hidden>
+            <div class="stage-select-label">🎮 STAGE SELECT</div>
+            <div class="stage-buttons">
+                <button class="stage-btn" data-stage="1">1</button>
+                <button class="stage-btn" data-stage="2">2</button>
+                <button class="stage-btn" data-stage="3">3</button>
+                <button class="stage-btn" data-stage="4">4</button>
+                <button class="stage-btn" data-stage="5">5</button>
+                <button class="stage-btn" data-stage="6">6</button>
+                <button class="stage-btn" data-stage="7">7</button>
+                <button class="stage-btn" data-stage="8">8</button>
+                <button class="stage-btn" data-stage="9">9</button>
+                <button class="stage-btn" data-stage="10">10</button>
+            </div>
+            <button id="stage-select-close" type="button" class="pixel-btn secondary close-btn">CLOSE</button>
+        </div>
         <!-- 게임 오버 버튼들 -->
         <div id="gameover-buttons" class="btn-container gameover-container" hidden>
             <div class="gameover-text">CONTINUE?</div>

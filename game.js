@@ -17,8 +17,22 @@ const installBtnContainer = document.getElementById('install-btn-container');
 const gameoverButtons = document.getElementById('gameover-buttons');
 const retryButton = document.getElementById('retry-btn');
 const quitButton = document.getElementById('quit-btn');
+
+// 패스워드 및 스테이지 선택 UI
+const passwordContainer = document.getElementById('password-container');
+const stagePasswordInput = document.getElementById('stage-password');
+const passwordSubmitBtn = document.getElementById('password-submit');
+const passwordError = document.getElementById('password-error');
+const stageSelectContainer = document.getElementById('stage-select-container');
+const stageSelectCloseBtn = document.getElementById('stage-select-close');
+const stageButtons = document.querySelectorAll('.stage-btn');
+
 const MOBILE_OPTIMIZED_CLASS = 'mobile-optimized';
 let deferredInstallPrompt = null;
+
+// 패스워드 및 스테이지 언락 상태
+const STAGE_PASSWORD = '910902'; // 연이의 생년월일
+let isStageUnlocked = false; // 패스워드 입력 성공 여부
 
 // --- 1. 에셋 및 전역 상태 설정 ---
 
@@ -352,12 +366,83 @@ function updateMainMenuVisibility() {
     const shouldShow = currentState === GAME_STATE.START;
     if (startBtnContainer) startBtnContainer.hidden = !shouldShow;
     if (installBtnContainer) installBtnContainer.hidden = !shouldShow;
+    // 패스워드 입력 UI 표시 (스테이지 언락되지 않았을 때만)
+    if (passwordContainer) {
+        passwordContainer.hidden = !shouldShow || isStageUnlocked;
+    }
+    // 스테이지 선택 UI는 별도로 관리
+    if (stageSelectContainer && shouldShow && !isStageUnlocked) {
+        stageSelectContainer.hidden = true;
+    }
 }
 
 // 게임 오버 버튼 가시성 업데이트
 function updateGameOverButtonVisibility() {
     const shouldShow = currentState === GAME_STATE.GAME_OVER;
     if (gameoverButtons) gameoverButtons.hidden = !shouldShow;
+}
+
+// 패스워드 확인 및 스테이지 언락
+function checkStagePassword() {
+    const input = stagePasswordInput.value.trim();
+    if (input === STAGE_PASSWORD) {
+        // 패스워드 일치
+        isStageUnlocked = true;
+        passwordError.hidden = true;
+        passwordContainer.hidden = true;
+        // 스테이지 선택 UI 표시
+        showStageSelectUI();
+        // 성공 피드백
+        AudioManager.playSFX('powerup');
+    } else {
+        // 패스워드 불일치
+        passwordError.hidden = false;
+        stagePasswordInput.value = '';
+        stagePasswordInput.focus();
+        // 실패 피드백
+        AudioManager.playSFX('hit');
+    }
+}
+
+// 스테이지 선택 UI 표시
+function showStageSelectUI() {
+    if (stageSelectContainer) {
+        stageSelectContainer.hidden = false;
+        // 스테이지 9-10은 특별 표시
+        stageButtons.forEach(btn => {
+            const stageNum = parseInt(btn.dataset.stage);
+            btn.classList.remove('special');
+            if (stageNum >= 9) {
+                btn.classList.add('special');
+            }
+        });
+    }
+}
+
+// 스테이지 선택 UI 숨김
+function hideStageSelectUI() {
+    if (stageSelectContainer) {
+        stageSelectContainer.hidden = true;
+    }
+}
+
+// 특정 스테이지로 바로 시작
+function startGameAtStage(stageNum) {
+    if (stageNum < 1 || stageNum > 10) return;
+    
+    currentStage = stageNum;
+    hideStageSelectUI();
+    enterMobileFullscreen();
+    AudioManager.init();
+    AudioManager.startBGM();
+    
+    // 스토리 상태로 진입
+    storyPages = [];
+    storyCurrentPage = 0;
+    storyTotalPages = 0;
+    currentState = GAME_STATE.STORY;
+    storyStateEnterTime = Date.now();
+    updateMainMenuVisibility();
 }
 
 // 게임 시작 - 스토리 먼저 표시
@@ -2624,6 +2709,31 @@ async function init() {
     updateMainMenuVisibility();
     updateInstallButtonVisibility();
     updateGameOverButtonVisibility();
+    
+    // 패스워드 및 스테이지 선택 이벤트 리스너 설정
+    if (passwordSubmitBtn) {
+        passwordSubmitBtn.addEventListener('click', checkStagePassword);
+    }
+    if (stagePasswordInput) {
+        stagePasswordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkStagePassword();
+        });
+    }
+    if (stageSelectCloseBtn) {
+        stageSelectCloseBtn.addEventListener('click', () => {
+            hideStageSelectUI();
+            // 메인 메뉴로 돌아가기
+            isStageUnlocked = false;
+            updateMainMenuVisibility();
+        });
+    }
+    // 스테이지 버튼 이벤트 리스너
+    stageButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const stageNum = parseInt(btn.dataset.stage);
+            startGameAtStage(stageNum);
+        });
+    });
     
     // 모바일 메인 화면 즉시 전체화면
     if (isMobileTouchDevice()) {
