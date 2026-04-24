@@ -150,36 +150,124 @@ html {
 }
 
 /* ==========================================
-   모바일 가로 모드 - 우측 상단 버튼 배치
+   모바일 가로 모드 - UX 최적화된 버튼 배치
    ========================================== */
 @media screen and (max-width: 768px) and (orientation: landscape) {
-    /* START 버튼 - 우측 상단에 배치 */
+    /* 메인 UI 그리드 레이아웃 */
+    #game-container {
+        display: grid;
+        grid-template-areas: 
+            "title title install"
+            "start start install"
+            "start start password";
+        grid-template-columns: 1fr 1fr 140px;
+        grid-template-rows: 1fr 1fr 1fr;
+        padding: 20px;
+    }
+    
+    /* START 버튼 - 좌측 하단 중앙 (주요 액션) */
     .start-container {
+        grid-area: start;
+        position: relative;
         bottom: auto;
-        top: 10%;
+        top: auto;
         left: auto;
-        right: 5%;
-        transform: translateX(0);
+        right: auto;
+        transform: none;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding-left: 10%;
     }
     
     #start-btn {
-        padding: 10px 20px;
-        font-size: 10px;
+        padding: 16px 32px;
+        font-size: 14px;
+        border-width: 5px;
+        box-shadow: 
+            inset -4px -4px 0px rgba(0,0,0,0.3),
+            6px 6px 0px rgba(0,0,0,0.5),
+            0 0 30px rgba(231, 76, 60, 0.6);
+        animation: pulse 2s infinite;
     }
     
-    /* INSTALL 버튼 - START 버튼 아래 */
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    /* INSTALL 버튼 - 우측 상단 */
     .install-container {
+        grid-area: install;
+        position: relative;
         bottom: auto;
-        top: 22%;
+        top: auto;
         left: auto;
-        right: 5%;
-        transform: translateX(0);
+        right: auto;
+        transform: none;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 20px;
     }
     
     #install-btn {
-        padding: 6px 12px;
-        font-size: 8px;
+        padding: 8px 14px;
+        font-size: 9px;
         white-space: nowrap;
+        border-width: 3px;
+        background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+        border-color: #1a5276;
+        color: #fff;
+        box-shadow: 
+            inset -3px -3px 0px rgba(0,0,0,0.3),
+            4px 4px 0px rgba(0,0,0,0.5);
+    }
+    
+    /* 패스워드 컨테이너 - 우측 하단 */
+    .password-container {
+        grid-area: password;
+        position: relative;
+        bottom: auto;
+        top: auto;
+        left: auto;
+        right: auto;
+        transform: none;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding-bottom: 20px;
+        width: 100%;
+    }
+    
+    .password-panel {
+        padding: 12px 15px;
+        min-width: auto;
+        width: 130px;
+        border-width: 3px;
+    }
+    
+    .password-title {
+        font-size: 8px;
+    }
+    
+    .password-subtitle {
+        font-size: 6px;
+    }
+    
+    .password-dots {
+        padding: 8px 10px;
+        gap: 4px;
+    }
+    
+    .dot {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .password-unlock-btn {
+        font-size: 8px;
+        padding: 8px 12px;
     }
 }
 
@@ -593,17 +681,6 @@ html {
         left: auto;
         top: 55%;
         transform: translateY(0);
-    }
-}
-
-/* 모바일 가로 모드: 우측 상단 인스톨 버튼 밑 */
-@media screen and (max-width: 768px) and (orientation: landscape) {
-    .password-container {
-        right: 5%;
-        left: auto;
-        top: 32%;
-        bottom: auto;
-        transform: translateX(0);
     }
 }
 
