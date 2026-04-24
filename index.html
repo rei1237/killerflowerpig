@@ -73,15 +73,20 @@
             </div>
             <button id="stage-select-close" type="button" class="pixel-btn secondary close-btn">CLOSE</button>
         </div>
-        <!-- 게임 오버 버튼들 -->
+        <!-- 게임 오버 버튼들 - 2D 도트 스타일, 화면 가리지 않도록 하단 배치 -->
         <div id="gameover-buttons" class="btn-container gameover-container" hidden>
-            <div class="gameover-text">CONTINUE?</div>
-            <button id="retry-btn" type="button" class="pixel-btn retry">
-                <span class="btn-icon">🔄</span> 다시 도전하기
-            </button>
-            <button id="quit-btn" type="button" class="pixel-btn quit">
-                <span class="btn-icon">💀</span> 끝내기
-            </button>
+            <div class="gameover-panel">
+                <div class="gameover-title">☠️ DEFEAT ☠️</div>
+                <div class="gameover-stats" id="gameover-stats"></div>
+                <div class="gameover-actions">
+                    <button id="retry-btn" type="button" class="pixel-btn gameover-btn retry-btn">
+                        <span class="btn-icon">⚔️</span> 부활하여 재출격
+                    </button>
+                    <button id="quit-btn" type="button" class="pixel-btn gameover-btn quit-btn">
+                        <span class="btn-icon">�</span> 전선에서 후퇴
+                    </button>
+                </div>
+            </div>
         </div>
         <!-- 설치 가이드 모달 -->
         <div id="install-guide" class="modal-overlay" hidden>

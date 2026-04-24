@@ -299,104 +299,198 @@ html {
 }
 
 /* ==========================================
-   게임 오버 버튼들 - CONTINUE?
+   게임 오버 UI - 2D 도트 스타일, 화면 하단 배치
    ========================================== */
 .gameover-container {
     position: absolute;
-    top: 50%;
+    bottom: 5%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%);
     z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
+    width: auto;
+    max-width: 90%;
 }
 
-.gameover-text {
-    font-family: 'Press Start 2P', cursive, sans-serif;
-    font-size: 24px;
-    color: #e74c3c;
+/* 게임 오버 패널 - 2D 도트 RPG 스타일 */
+.gameover-panel {
+    background: linear-gradient(180deg, #1a0f0f 0%, #0d0808 100%);
+    border: 4px solid #8b0000;
+    border-radius: 0;
+    padding: 20px 30px;
+    box-shadow: 
+        inset -4px -4px 0px rgba(0,0,0,0.5),
+        6px 6px 0px rgba(0,0,0,0.7),
+        0 0 30px rgba(139, 0, 0, 0.4);
+    position: relative;
+    image-rendering: pixelated;
+}
+
+/* 패널 상단 장식 (도트 느낌의 테두리) */
+.gameover-panel::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    border: 2px dashed #5c0000;
+    pointer-events: none;
+}
+
+/* 게임 오버 타이틀 - DEFEAT */
+.gameover-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 18px;
+    color: #ff4757;
+    text-align: center;
+    margin-bottom: 15px;
     text-shadow: 
         3px 3px 0px #000,
-        0 0 20px rgba(231, 76, 60, 0.8);
+        0 0 15px rgba(255, 71, 87, 0.8);
+    animation: defeat-pulse 1.5s infinite;
+    letter-spacing: 2px;
+}
+
+@keyframes defeat-pulse {
+    0%, 100% { 
+        opacity: 1;
+        text-shadow: 3px 3px 0px #000, 0 0 15px rgba(255, 71, 87, 0.8);
+    }
+    50% { 
+        opacity: 0.7;
+        text-shadow: 3px 3px 0px #000, 0 0 25px rgba(255, 71, 87, 1);
+    }
+}
+
+/* 게임 오버 통계 영역 */
+.gameover-stats {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 9px;
+    color: #95a5a6;
+    text-align: center;
     margin-bottom: 20px;
-    animation: blink-text 1s infinite;
+    padding: 10px;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid #333;
 }
 
-@keyframes blink-text {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0.3; }
+/* 게임 오버 액션 버튼 영역 */
+.gameover-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
 }
 
-/* 다시 도전하기 버튼 */
-.pixel-btn.retry {
-    background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
-    color: #fff;
-    border-color: #1a5276;
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
-    padding: 14px 28px;
-    font-size: 12px;
-    animation: pulse-retry 2s infinite;
+/* 게임 오버 버튼 공통 스타일 */
+.gameover-btn {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 11px;
+    padding: 12px 24px;
+    border: 4px solid #000;
+    cursor: pointer;
+    text-transform: uppercase;
+    position: relative;
+    transition: all 0.1s;
+    image-rendering: pixelated;
+    box-shadow: 
+        inset -3px -3px 0px rgba(0,0,0,0.3),
+        4px 4px 0px rgba(0,0,0,0.5);
 }
 
-.pixel-btn.retry:hover {
-    background: linear-gradient(180deg, #5dade2 0%, #3498db 100%);
+/* 부활 버튼 (재출격) - 골드/옐로우 테마 */
+.retry-btn {
+    background: linear-gradient(180deg, #f1c40f 0%, #d4ac0d 100%);
+    color: #000;
+    border-color: #7d6608;
+    text-shadow: 1px 1px 0px rgba(255,255,255,0.3);
+    animation: retry-glow 2s infinite;
+}
+
+.retry-btn:hover {
+    background: linear-gradient(180deg, #f4d03f 0%, #f1c40f 100%);
     transform: translate(-2px, -2px);
     box-shadow: 
-        inset -4px -4px 0px rgba(0,0,0,0.3),
+        inset -3px -3px 0px rgba(0,0,0,0.3),
         6px 6px 0px rgba(0,0,0,0.5),
-        0 0 20px rgba(52, 152, 219, 0.6);
+        0 0 20px rgba(241, 196, 15, 0.8);
 }
 
-.pixel-btn.retry:active {
+.retry-btn:active {
     transform: translate(2px, 2px);
+    box-shadow: 
+        inset -3px -3px 0px rgba(0,0,0,0.3),
+        2px 2px 0px rgba(0,0,0,0.5);
 }
 
-@keyframes pulse-retry {
-    0%, 100% { box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.5), 0 0 10px rgba(52, 152, 219, 0.5); }
-    50% { box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.5), 0 0 25px rgba(52, 152, 219, 0.9); }
+@keyframes retry-glow {
+    0%, 100% { box-shadow: inset -3px -3px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.5), 0 0 10px rgba(241, 196, 15, 0.5); }
+    50% { box-shadow: inset -3px -3px 0px rgba(0,0,0,0.3), 4px 4px 0px rgba(0,0,0,0.5), 0 0 25px rgba(241, 196, 15, 1); }
 }
 
-/* 끝내기 버튼 */
-.pixel-btn.quit {
-    background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
-    color: #95a5a6;
-    border-color: #000;
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
-    padding: 12px 24px;
-    font-size: 11px;
-}
-
-.pixel-btn.quit:hover {
+/* 후퇴 버튼 - 그레이/블루 테마 */
+.quit-btn {
     background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
     color: #bdc3c7;
-    transform: translate(-1px, -1px);
+    border-color: #1a252f;
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+}
+
+.quit-btn:hover {
+    background: linear-gradient(180deg, #5d6d7e 0%, #34495e 100%);
+    color: #fff;
+    transform: translate(-2px, -2px);
     box-shadow: 
-        inset -4px -4px 0px rgba(0,0,0,0.3),
-        5px 5px 0px rgba(0,0,0,0.5),
-        0 0 15px rgba(149, 165, 166, 0.4);
+        inset -3px -3px 0px rgba(0,0,0,0.3),
+        6px 6px 0px rgba(0,0,0,0.5),
+        0 0 15px rgba(127, 140, 141, 0.6);
 }
 
-.pixel-btn.quit:active {
-    transform: translate(1px, 1px);
+.quit-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 
+        inset -3px -3px 0px rgba(0,0,0,0.3),
+        2px 2px 0px rgba(0,0,0,0.5);
 }
 
-/* 모바일 게임 오버 버튼 */
+/* 모바일 게임 오버 UI */
 @media screen and (max-width: 768px) {
-    .gameover-text {
-        font-size: 18px;
+    .gameover-container {
+        bottom: 3%;
+        width: 95%;
+    }
+    
+    .gameover-panel {
+        padding: 15px 20px;
+        border-width: 3px;
+    }
+    
+    .gameover-panel::before {
+        top: -6px;
+        left: -6px;
+        right: -6px;
+        bottom: -6px;
+    }
+    
+    .gameover-title {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    
+    .gameover-stats {
+        font-size: 8px;
+        padding: 8px;
         margin-bottom: 15px;
     }
     
-    .pixel-btn.retry {
-        padding: 10px 20px;
-        font-size: 10px;
+    .gameover-actions {
+        flex-direction: column;
+        gap: 10px;
     }
     
-    .pixel-btn.quit {
-        padding: 8px 16px;
+    .gameover-btn {
         font-size: 9px;
+        padding: 10px 18px;
+        width: 100%;
     }
 }
 
