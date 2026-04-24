@@ -2191,7 +2191,10 @@ function drawStoryScreen(ctx, timestamp) {
         storyPages = splitStoryIntoPages(stage.storyText, maxWidth, maxHeight, lineHeight);
         storyTotalPages = storyPages.length;
         storyCurrentPage = 0;
-        storyDisplayTime = Date.now();
+        // storyDisplayTime은 advanceStage/startGame에서 이미 설정됨
+        // 여기서 다시 설정하면 타이핑이 처음부터 시작하지 않을 수 있음
+        // lastTypedCharIndex도 초기화
+        lastTypedCharIndex = 0;
     }
 
     // 검은 배경
