@@ -71,32 +71,32 @@ let floatingTexts = []; // "BONUS!" 효과 등을 위한 플로팅 텍스트
 const SPAWN_INTERVAL = 2000;
 const GATE_SPAWN_INTERVAL = 6000;
 const EASY_MODE_CONFIG = {
-    // 적 관련 - 더 느리고 덜 위협적
-    enemySpeedMultiplier: 0.3,        // 45% → 30% (훨씬 느린 적)
-    spawnRateMultiplier: 3.0,       // 2배 → 3배 덜 자주 등장
-    goalMultiplier: 0.6,              // 2배 → 0.6배 (더 적은 적 처치 필요)
-    homingSpeedMultiplier: 0.3,       // 50% → 30% (홈링 더 느림)
-    enemyHpMultiplierA: 0.5,          // 66% → 50% (적 체력 감소)
-    enemyHpMultiplierB: 0.4,        // 60% → 40% (적 체력 더 감소)
-    enemyShootIntervalMultiplier: 3.0, // 2배 → 3배 덜 자주 발사
-    maxActiveEnemies: 4,              // 6 → 4 (동시 적 수 감소)
+    // 적 관련 - 정상 난이도 (1.0 = 동일)
+    enemySpeedMultiplier: 1.0,        // 정상 속도
+    spawnRateMultiplier: 1.0,       // 정상 등장률
+    goalMultiplier: 1.0,              // 정상 목표 수
+    homingSpeedMultiplier: 1.0,       // 정상 홈링 속도
+    enemyHpMultiplierA: 1.0,          // 정상 체력
+    enemyHpMultiplierB: 1.0,        // 정상 체력
+    enemyShootIntervalMultiplier: 1.0, // 정상 발사 간격
+    maxActiveEnemies: 10,             // 정상 동시 적 수
 
-    // 플레이어 관련 - 더 강하고 안전함
-    playerHpMultiplier: 3.0,          // 2배 → 3배 더 많은 HP
-    playerDamageMultiplier: 2.0,      // 1.5배 → 2배 더 강한 공격
-    playerInvincibleMultiplier: 3.0,  // 2배 → 3배 더 긴 무적시간
-    playerSpeedMultiplier: 1.2,       // 20% 더 빠른 이동
-    fireRateMultiplier: 0.7,          // 30% 더 빠른 발사
+    // 플레이어 관련 - 정상 설정 (1.0 = 동일)
+    playerHpMultiplier: 1.0,          // 정상 HP
+    playerDamageMultiplier: 1.0,      // 정상 공격력
+    playerInvincibleMultiplier: 1.0,  // 정상 무적시간
+    playerSpeedMultiplier: 1.0,       // 정상 이동 속도
+    fireRateMultiplier: 1.0,          // 정상 발사 속도
 
-    // 보스 관련 - 적정 난이도
-    bossMoveScaleMultiplier: 0.4,     // 40% 이동 속도 (조금 느림)
-    bossAttackIntervalMultiplier: 3.0, // 3배 덜 자주 공격 (적정)
-    bossSummonEnemySpeedMultiplier: 0.4, // 40% 소환 적 속도
-    bossSummonEnemyHpMultiplier: 0.5, // 50% 소환 적 체력
-    bossProjectileSpeedMultiplier: 0.7, // 보스 발체 속도 30% 감소
+    // 보스 관련 - 소환 패턴 제외하고 정상
+    bossMoveScaleMultiplier: 1.0,     // 정상 이동 속도
+    bossAttackIntervalMultiplier: 3.0, // 3배 덜 자주 공격 (유지)
+    bossSummonEnemySpeedMultiplier: 1.0, // 정상 (소환 패턴 자체가 안나옴)
+    bossSummonEnemyHpMultiplier: 1.0, // 정상 (소환 패턴 자체가 안나옴)
+    bossProjectileSpeedMultiplier: 1.0, // 정상 발체 속도
 
     // 게임 템포
-    gameSpeedMultiplier: 0.75           // 전체 게임 속도 75% (25% 느림)
+    gameSpeedMultiplier: 1.0           // 정상 게임 속도
 };
 
 function isMobileTouchDevice() {
