@@ -1331,10 +1331,10 @@ class Projectile {
 class Enemy {
     constructor(x, y) {
         this.x = x; this.y = y;
-        // 스테이지 6 이후 적 크기 증가 (난이도 조정: 85→75로 감소)
+        // 스테이지 6 이후 적 크기 증가 (30% 키움: 75→98)
         const isStage6Plus = currentStage >= 6;
-        this.width = isStage6Plus ? 75 : 64;
-        this.height = isStage6Plus ? 75 : 64;
+        this.width = isStage6Plus ? 98 : 64;
+        this.height = isStage6Plus ? 98 : 64;
         // 적 체력 대폭 상향 및 난이도 증가 (스테이지 보너스 50→40으로 감소)
         const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : 1; // EASY MODE
         const hpMultiplierB = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierB : 1; // EASY MODE
