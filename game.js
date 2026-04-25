@@ -215,32 +215,32 @@ let floatingTexts = []; // "BONUS!" 효과 등을 위한 플로팅 텍스트
 const SPAWN_INTERVAL = 2000;
 const GATE_SPAWN_INTERVAL = 6000;
 const EASY_MODE_CONFIG = {
-    // 적 관련 - 정상 난이도 (1.0 = 동일)
-    enemySpeedMultiplier: 1.0,        // 정상 속도
-    spawnRateMultiplier: 1.0,       // 정상 등장률
-    goalMultiplier: 1.0,              // 정상 목표 수
-    homingSpeedMultiplier: 1.0,       // 정상 홈링 속도
-    enemyHpMultiplierA: 1.0,          // 정상 체력
-    enemyHpMultiplierB: 1.0,        // 정상 체력
-    enemyShootIntervalMultiplier: 1.0, // 정상 발사 간격
-    maxActiveEnemies: 10,             // 정상 동시 적 수
+    // 적 관련 - 가로 모드에서 30% 쉽게
+    enemySpeedMultiplier: 0.7,        // 적 속도 30% 감소
+    spawnRateMultiplier: 1.3,         // 적 등장 간격 30% 늘림 (더 느리게)
+    goalMultiplier: 0.8,              // 목표 수 20% 감소
+    homingSpeedMultiplier: 0.7,       // 홈링 속도 30% 감소
+    enemyHpMultiplierA: 0.7,          // 적 체력 30% 감소 (기본 체력)
+    enemyHpMultiplierB: 0.7,        // 적 체력 30% 감소 (스테이지 보너스)
+    enemyShootIntervalMultiplier: 1.5, // 적 발사 간격 50% 늘림 (더 느리게)
+    maxActiveEnemies: 8,             // 동시 적 수 20% 감소
 
-    // 플레이어 관련 - 정상 설정 (1.0 = 동일)
-    playerHpMultiplier: 1.0,          // 정상 HP
-    playerDamageMultiplier: 1.0,      // 정상 공격력
-    playerInvincibleMultiplier: 1.0,  // 정상 무적시간
-    playerSpeedMultiplier: 1.0,       // 정상 이동 속도
-    fireRateMultiplier: 1.0,          // 정상 발사 속도
+    // 플레이어 관련 - 가로 모드에서 강화
+    playerHpMultiplier: 1.5,          // 플레이어 HP 50% 증가
+    playerDamageMultiplier: 1.3,      // 공격력 30% 증가
+    playerInvincibleMultiplier: 1.5,  // 무적 시간 50% 증가
+    playerSpeedMultiplier: 1.2,       // 이동 속도 20% 증가
+    fireRateMultiplier: 0.8,          // 발사 속도 20% 증가 (쿨다운 20% 감소)
 
-    // 보스 관련 - 소환 패턴 제외하고 정상
-    bossMoveScaleMultiplier: 1.0,     // 정상 이동 속도
+    // 보스 관련 - 가로 모드에서 쉽게
+    bossMoveScaleMultiplier: 0.8,     // 보스 이동 속도 20% 감소
     bossAttackIntervalMultiplier: 2.0, // 2배 덜 자주 공격
-    bossSummonEnemySpeedMultiplier: 1.0, // 정상 (소환 패턴 자체가 안나옴)
-    bossSummonEnemyHpMultiplier: 1.0, // 정상 (소환 패턴 자체가 안나옴)
-    bossProjectileSpeedMultiplier: 1.0, // 정상 발체 속도
+    bossSummonEnemySpeedMultiplier: 0.7, // 소환된 적 속도 30% 감소
+    bossSummonEnemyHpMultiplier: 0.7, // 소환된 적 체력 30% 감소
+    bossProjectileSpeedMultiplier: 0.7, // 보스 발체 속도 30% 감소
 
     // 게임 템포
-    gameSpeedMultiplier: 1.0           // 정상 게임 속도
+    gameSpeedMultiplier: 0.9          // 전체 게임 속도 10% 감소
 };
 
 function isMobileTouchDevice() {
