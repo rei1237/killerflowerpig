@@ -499,6 +499,11 @@ function updateMainMenuVisibility() {
         stageSelectContainer.hidden = true;
     }
     
+    // 메인 화면에서 BGM 시작 (초기화된 경우에만)
+    if (shouldShow && AudioManager.initialized) {
+        AudioManager.startBGM();
+    }
+    
     updateInGameUIVisibility();
     updateOverlayVisibility();
 }
@@ -700,12 +705,14 @@ function startGameplay() {
     if (isMobileTouchDevice()) {
         const easyMode = checkMobileEasyModeStatus();
         console.log(`[Game Start] Mobile Easy Mode: ${easyMode ? 'ACTIVE' : 'INACTIVE'}`);
+        AudioManager.playSFX('buttonclick');
     }
 }
 
 if (installButton) {
     installButton.addEventListener('click', async (e) => {
         e.stopPropagation();
+        AudioManager.playSFX('buttonclick');
         await installPWA();
     });
 }
@@ -780,6 +787,7 @@ canvas.addEventListener('touchstart', handleStoryClick, { passive: false });
 if (startButton) {
     startButton.addEventListener('click', (e) => {
         e.stopPropagation();
+        AudioManager.playSFX('buttonclick');
         startGame();
     });
 }
@@ -788,6 +796,7 @@ if (startButton) {
 if (retryButton) {
     retryButton.addEventListener('click', (e) => {
         e.stopPropagation();
+        AudioManager.playSFX('buttonclick');
         console.log('[GameOver] Retry clicked');
         resetGame();
         // 게임 오버 버튼 숨김
@@ -798,6 +807,7 @@ if (retryButton) {
 if (quitButton) {
     quitButton.addEventListener('click', (e) => {
         e.stopPropagation();
+        AudioManager.playSFX('buttonclick');
         console.log('[GameOver] Quit clicked - Returning to main menu');
         resetGameToMain();
     });
@@ -976,6 +986,29 @@ const AudioManager = {
             gain.gain.setValueAtTime(0.25, now);
             gain.gain.linearRampToValueAtTime(0, now + 0.4);
             osc.start(); osc.stop(now + 0.4);
+        } else if (type === 'buttonclick') {
+            // 버튼 클릭 - 짧고 날카로운 금속음
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+            osc.start(); osc.stop(now + 0.05);
+        } else if (type === 'buttonhover') {
+            // 버튼 호버 - 매우 짧은 살짝 스치는 소리
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(300, now);
+            gain.gain.setValueAtTime(0.03, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
+            osc.start(); osc.stop(now + 0.03);
+        } else if (type === 'miss') {
+            // 청토끼 놓침 - 낮은 불협화음 (좀비물 느낌)
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(80, now);
+            osc.frequency.linearRampToValueAtTime(60, now + 0.3);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.3);
+            osc.start(); osc.stop(now + 0.3);
         }
     }
 };
@@ -1285,7 +1318,7 @@ class Enemy {
                 this.active = false;
                 // 놓친 적은 무적 상태와 관계없이 1마리당 HP 1 감소 (무적 모드일 때는 감소 안함)
                 if (this.state !== 'DEAD' && !isGodMode) {
-                    Player.hp--; AudioManager.playSFX('hit');
+                    Player.hp--; AudioManager.playSFX('miss');
                     if (Player.hp <= 0) endGame();
                 } else if (this.state !== 'DEAD' && isGodMode) {
                     // 무적 모드일 때는 효과음만 출력하거나 무시
