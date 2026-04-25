@@ -2132,6 +2132,7 @@ class Boss {
         
         // 이동 속도: 보스킹 20% 증가, 보스2 10% 증가
         const baseSpeed = 3 + (level * 0.5);
+        this.baseSpeed = baseSpeed; // 분노 모드용 기본 속도 저장
         if (this.isBossKing) {
             this.speedY = baseSpeed * 1.2 * bossMoveMultiplier * gameSpeed;
         } else if (this.isBoss2) {
@@ -2139,6 +2140,10 @@ class Boss {
         } else {
             this.speedY = baseSpeed * bossMoveMultiplier * gameSpeed;
         }
+        
+        // 보스킹 분노 모드 (체력 50% 이하)
+        this.rageMode = false;
+        this.rageModeTriggered = false;
         
         this.active = true; this.state = 'WALK'; // EASY MODE
         this.aniFrame = 0; this.lastFrameTime = 0; this.lastAttackTime = 0;
@@ -2179,11 +2184,24 @@ class Boss {
             }
             return;
         }
+        // 보스킹 분노 모드 체크 (체력 50% 이하)
+        if (this.isBossKing && !this.rageModeTriggered && this.hp <= this.maxHp * 0.5) {
+            this.rageMode = true;
+            this.rageModeTriggered = true;
+            // 분노 모드: 이동 속도 50% 증가
+            const bossMoveMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossMoveScaleMultiplier : 1;
+            const gameSpeed = getMobileGameSpeedMultiplier();
+            this.speedY = this.baseSpeed * 1.8 * bossMoveMultiplier * gameSpeed; // 1.2 -> 1.8 (50% 증가)
+            // 분노 모드 진입 알림
+            addFloatingText('★ RAGE MODE ★', this.x + this.width/2, this.y - 30, '#ff0000');
+        }
+        
         this.y += this.speedY; if (this.y < 50 || this.y + this.height > canvas.height - 50) this.speedY *= -1;
         // 모바일에서는 보스 공격 속도 감소 (적정 수준)
         const bossAttackIntervalMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossAttackIntervalMultiplier : 1; // EASY MODE
         
         // 공격 간격: 보스킹 30% 더 빠름, 보스2 15% 더 빠름
+        // 분노 모드: 공격 간격 추가 30% 감소 (더 빈번한 공격)
         const baseInterval = this.hp < 3000 ? 1000 : 1800;
         let interval;
         if (this.isBossKing) {
@@ -2192,6 +2210,10 @@ class Boss {
             interval = baseInterval * 0.85; // 보스2: 15% 더 빠른 공격
         } else {
             interval = baseInterval;
+        }
+        // 분노 모드: 공격 속도 추가 25% 증가
+        if (this.rageMode) {
+            interval *= 0.75;
         }
         
         if (timestamp - this.lastAttackTime > interval * bossAttackIntervalMultiplier) {
@@ -2214,9 +2236,11 @@ class Boss {
                 }
             } else if (p < 0.55) {
                 // 보스 에너지 볼
-                const bossProjSpeed = isMobileEasyModeActive() ? 
+                let bossProjSpeed = isMobileEasyModeActive() ? 
                     (this.isBossKing ? 12 : (this.isBoss2 ? 9 : 6)) * EASY_MODE_CONFIG.bossProjectileSpeedMultiplier : 
                     (this.isBossKing ? 12 : (this.isBoss2 ? 9 : 6));
+                // 분노 모드: 탄환 속도 30% 증가
+                if (this.rageMode) bossProjSpeed *= 1.3;
                 const bossProjDamage = isMobileEasyModeActive() ? 
                     (this.isBossKing ? 4 : (this.isBoss2 ? 3 : 2)) : 
                     (this.isBossKing ? 5 : (this.isBoss2 ? 4 : 3));
@@ -2230,11 +2254,15 @@ class Boss {
                 projectiles.push(b);
             } else if (p < 0.8) {
                 // 보스 산탄
-                const bossScatterSpeed = isMobileEasyModeActive() ? 
+                let bossScatterSpeed = isMobileEasyModeActive() ? 
                     (this.isBossKing ? 14 : (this.isBoss2 ? 11 : 8)) * EASY_MODE_CONFIG.bossProjectileSpeedMultiplier : 
                     (this.isBossKing ? 14 : (this.isBoss2 ? 11 : 8));
+                // 분노 모드: 산탄 속도 25% 증가
+                if (this.rageMode) bossScatterSpeed *= 1.25;
                 // 보스킹: 7방향, 보스2: 5방향, 일반: 3방향
-                const scatterCount = this.isBossKing ? 7 : (this.isBoss2 ? 5 : 3);
+                let scatterCount = this.isBossKing ? 7 : (this.isBoss2 ? 5 : 3);
+                // 분노 모드: 산탄 방향 2개 추가
+                if (this.rageMode) scatterCount += 2;
                 const angleStep = this.isBossKing ? 0.6 : (this.isBoss2 ? 0.8 : 1.5);
                 const startAngle = -(scatterCount - 1) * angleStep / 2;
                 for (let i = 0; i < scatterCount; i++) {
@@ -2246,16 +2274,20 @@ class Boss {
                 }
             } else if (this.isBossKing) {
                 // 보스킹 전용: 5연속 에너지 볼 (더 빠른 간격)
-                for (let i = 0; i < 5; i++) {
+                // 분노 모드: 7연속 발사로 증가
+                const rapidCount = this.rageMode ? 7 : 5;
+                const rapidInterval = this.rageMode ? 100 : 150; // 분노 모드: 더 빠른 간격
+                for (let i = 0; i < rapidCount; i++) {
                     setTimeout(() => {
                         if (this.active && this.state !== 'DEAD') {
-                            const b = new Projectile(this.x, this.y + this.height / 2, -13, 0, 0);
+                            const speed = this.rageMode ? -16 : -13; // 분노 모드: 더 빠른 탄환
+                            const b = new Projectile(this.x, this.y + this.height / 2, speed, 0, 0);
                             b.isBossEnergyBall = true;
-                            b.lifeDamage = 4;
+                            b.lifeDamage = this.rageMode ? 5 : 4; // 분노 모드: 더 높은 데미지
                             b.width = 60; b.height = 60;
                             projectiles.push(b);
                         }
-                    }, i * 150); // 150ms 간격으로 5연발
+                    }, i * rapidInterval);
                 }
             } else if (this.isBoss2) {
                 // 보스2 전용: 연속 에너지 볼 (3연발)
@@ -2355,6 +2387,11 @@ class Boss {
                     ctx.shadowBlur = this.isBossKing ? 30 : 20;
                     ctx.shadowColor = '#ff0000';
                 }
+                // 분노 모드: 지속적인 붉은 글로우
+                if (this.rageMode) {
+                    ctx.shadowBlur = 20 + Math.sin(Date.now() / 100) * 10;
+                    ctx.shadowColor = '#ff0000';
+                }
             }
             
             ctx.drawImage(img, sx, sy, frameW, frameH, -drawW / 2, -drawH / 2, drawW, drawH);
@@ -2365,8 +2402,20 @@ class Boss {
         const bossHpClamped = Math.max(0, Math.min(this.hp, this.maxHp));
         ctx.fillStyle = '#2c3e50'; ctx.fillRect(bx - 4, by - 4, bw + 8, bh + 8);
         ctx.fillStyle = '#000'; ctx.fillRect(bx, by, bw, bh);
-        ctx.fillStyle = '#ff4757'; ctx.fillRect(bx, by, (bossHpClamped / this.maxHp) * bw, bh);
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(bx - 2, by - 2, bw + 4, bh + 4);
+        // 분노 모드: 체력바 색상 변경 (핏빛 레드)
+        if (this.rageMode) {
+            ctx.fillStyle = '#ff0000';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#ff0000';
+        } else {
+            ctx.fillStyle = '#ff4757';
+            ctx.shadowBlur = 0;
+        }
+        ctx.fillRect(bx, by, (bossHpClamped / this.maxHp) * bw, bh);
+        ctx.shadowBlur = 0; // 리셋
+        ctx.strokeStyle = this.rageMode ? '#ff0000' : '#fff'; 
+        ctx.lineWidth = 2; 
+        ctx.strokeRect(bx - 2, by - 2, bw + 4, bh + 4);
 
         ctx.fillStyle = '#fff'; ctx.font = 'bold 12px "Press Start 2P"'; ctx.textAlign = 'center';
         // 스테이지별 보스 이름
