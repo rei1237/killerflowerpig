@@ -2822,6 +2822,48 @@ function gameLoop(timestamp) {
     animationId = requestAnimationFrame(gameLoop);
 }
 
+function drawStageClearScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    const time = Date.now();
+    const pulse = Math.sin(time / 300) * 0.1 + 1.0;
+    
+    // 승리 이미지 표시
+    const winImg = ImageLoader.get('win');
+    if (winImg) {
+        ctx.save();
+        const winSize = Math.min(canvas.width * 0.25, 180) * pulse;
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#f1c40f';
+        ctx.drawImage(winImg, canvas.width / 2 - winSize / 2, canvas.height / 2 - winSize / 2 - 50, winSize, winSize);
+        ctx.restore();
+    }
+    
+    // 스테이지 클리어 텍스트
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#f1c40f';
+    ctx.font = 'bold 24px "Press Start 2P"';
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#e67e22';
+    ctx.fillText(`STAGE ${currentStage} CLEAR!`, canvas.width / 2, canvas.height / 2 + 80);
+    
+    // 3초 후 자동 진행 안내
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.font = '10px "Press Start 2P"';
+    ctx.shadowBlur = 0;
+    ctx.fillText('Click to continue...', canvas.width / 2, canvas.height / 2 + 120);
+    ctx.restore();
+    
+    // 축하 파티클 효과
+    if (Math.random() < 0.3) {
+        const colors = ['#f1c40f', '#e67e22', '#ff6b9d', '#4ecdc4'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        particles.push(new Particle(Math.random() * canvas.width, canvas.height + 10, color));
+    }
+}
+
 function drawStartScreen() {
     ctx.fillStyle = '#0a0505'; // 좀비물 특유의 핏빛 섞인 어둠
     ctx.fillRect(0, 0, canvas.width, canvas.height);
