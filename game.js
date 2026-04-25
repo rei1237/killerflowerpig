@@ -1183,12 +1183,14 @@ const Player = {
                 ctx.shadowBlur = 30 + Math.sin(time / 150) * 10;
                 ctx.shadowColor = currentState === GAME_STATE.WIN ? '#00ffff' : '#f1c40f';
                 
-                // 캐릭터 그리기
-                ctx.drawImage(winImg, this.x - winSize/2 + this.width/2, this.y - winSize/2 + this.height/2 + bounce, winSize, winSize);
+                // 캐릭터 그리기 (가로 모드에서 상단 짤림 방지)
+                const winX = this.x - winSize/2 + this.width/2;
+                const winY = Math.max(0, this.y - winSize/2 + this.height/2 + bounce);
+                ctx.drawImage(winImg, winX, winY, winSize, winSize);
                 
                 // 한 번 더 그려서 광채 강화
                 ctx.globalAlpha = 0.5 + Math.sin(time / 150) * 0.3;
-                ctx.drawImage(winImg, this.x - winSize/2 + this.width/2, this.y - winSize/2 + this.height/2 + bounce, winSize, winSize);
+                ctx.drawImage(winImg, winX, winY, winSize, winSize);
                 
                 ctx.restore();
                 return;
@@ -2836,7 +2838,10 @@ function drawStageClearScreen() {
         const winSize = Math.min(canvas.width * 0.25, 180) * pulse;
         ctx.shadowBlur = 30;
         ctx.shadowColor = '#f1c40f';
-        ctx.drawImage(winImg, canvas.width / 2 - winSize / 2, canvas.height / 2 - winSize / 2 - 50, winSize, winSize);
+        // 가로 모드에서 상단이 짤리지 않도록 Y 위치 계산 (최소 20px 여백 확보)
+        const baseY = canvas.height / 2 - winSize / 2 - 50;
+        const winY = Math.max(20, baseY); // 최소 20px from top
+        ctx.drawImage(winImg, canvas.width / 2 - winSize / 2, winY, winSize, winSize);
         ctx.restore();
     }
     
