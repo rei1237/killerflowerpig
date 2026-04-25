@@ -1392,7 +1392,7 @@ class GatePair {
 
         // 스테이지 5부터 지원군 스킬 게이트 등장
         if (currentStage >= 5) {
-            types.push({ type: 'SUPPORT', value: 20000, text: 'SUPPORT', color: '#e67e22', icon: 'shield' });
+            types.push({ type: 'SUPPORT', value: 20000, text: 'SUPPORT', color: '#e67e22', icon: 'support' });
         }
 
         const shuffled = [...types].sort(() => Math.random() - 0.5);
