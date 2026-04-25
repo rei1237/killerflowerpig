@@ -494,13 +494,15 @@ function updateMainMenuVisibility() {
         passwordContainer.hidden = !shouldShow || isStageUnlocked;
     }
     // 스테이지 선택 UI는 별도로 관리
-    // 스테이지 선택 UI는 별도로 관리
     if (stageSelectContainer && shouldShow && !isStageUnlocked) {
         stageSelectContainer.hidden = true;
     }
     
-    // 메인 화면에서 BGM 시작 (초기화된 경우에만)
-    if (shouldShow && AudioManager.initialized) {
+    // 메인 화면에서 BGM 시작 (초기화되지 않았으면 먼저 초기화)
+    if (shouldShow) {
+        if (!AudioManager.initialized) {
+            AudioManager.init();
+        }
         AudioManager.startBGM();
     }
     
@@ -929,10 +931,20 @@ const AudioManager = {
         this.initialized = true;
     },
     startBGM: function () {
-        if (this.bgm) this.bgm.play().catch(e => console.log("Audio play blocked"));
+        // AudioContext가 suspended 상태이면 resume() 시도 (브라우저 자동 재생 정책)
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume().then(() => console.log("[Audio] Context resumed"));
+        }
+        if (this.bgm) {
+            this.bgm.play().catch(e => console.log("[Audio] BGM play blocked:", e));
+        }
     },
     playSFX: function (type) {
         if (!this.ctx) return;
+        // AudioContext가 suspended 상태이면 resume() 시도
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(() => {});
+        }
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.connect(gain);
