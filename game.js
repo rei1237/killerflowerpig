@@ -194,7 +194,7 @@ const STAGE_DATA = {
     7: { goal: 80, enemySpeed: 3.8, spawnRate: 1400, homing: true, homingSpeed: 1.1, enemyShoot: true, sky: '#02040a', city: '#0a0e1a', fog: '#101a2a', storyText: "■■■■ EPISODE 7: ABYSS ENTRANCE ■■■■\n\n절망의 강을 넘어 마침내 도달한 곳, 네온 시티의 한가운데 우뚝 솟은 50층짜리 거대한 마천루 '중앙 방송국'. 이곳은 권력과 진실이 독점되던 곳이자, 재앙의 근원으로 지목받는 심연의 입구였다. 타워의 외관은 참혹했다. 하늘을 찌르던 위용은 온데간데없고, 모든 유리창은 폭격이라도 맞은 듯 산산조각 나 있었다. 건물 외벽은 변이체들이 토해낸 끈적한 검은 슬라임과 정체불명의 촉수들로 흉측하게 뒤덮여, 마치 건물 전체가 살아 숨 쉬는 거대한 유기체처럼 보였다. 1층 메인 로비에 들어서자마자 코를 찌르는 농밀한 피 냄새와 부패한 악취가 연이의 후각을 마비시켰다.\n\n로비의 대리석 바닥은 피로 붉게 코팅되어 있었고, 그 위에는 중무장한 전술 타격대와 특수 경비원들의 시체가 산을 이루고 있었다. 텅 빈 탄창들, 박살 난 방패, 그리고 변이체와 동귀어진하며 수류탄의 안전핀을 움켜쥔 채 굳어버린 손. 그들은 인류의 마지막 저지선을 지키기 위해 최후의 총알 한 발까지 소진하며 장렬하게 산화했다. 연이는 쓰러진 이름 모를 전사들의 눈을 감겨주며, 그들이 남긴 탄약과 수류탄을 전술 조끼에 욱여넣었다. 엘리베이터의 케이블은 이미 다 끊어져 지하로 추락한 지 오래였다. 남은 길은 오직 하나, 50층 꼭대기까지 이어지는 끝없는 비상계단뿐이었다.\n\n'50층을 걸어서 올라가라니... 지옥의 에스컬레이터가 따로 없군.'\n\n자조적인 실소를 터뜨리며 연이는 방화문을 열고 계단실로 진입했다. 2층에 도달하자마자, 밖에서 겪었던 전투는 어린아이 장난에 불과했다는 사실을 깨달았다. 이 건물 내부는 변이체들의 거대한 둥지, 즉 인큐베이터였다. 층을 올라갈수록 계단은 놈들이 분비한 유기물로 질척거렸고, 천장과 벽면에는 알 수 없는 고치들이 주렁주렁 매달려 박동하고 있었다. 왜 그토록 많은 괴물들이 이곳으로 모여들었는가? 무언가가 그들을 이 심연의 중심으로 강력하게 끌어당기고 있음이 틀림없었다.\n\n전투는 처절하고도 끔찍하게 전개되었다. 좁고 가파른 계단에서 위에서 쏟아져 내리는 적들을 상대로 한 수직 전투. 연이는 산탄총을 쏘고, 탄약이 떨어지면 소총을 연사하고, 그마저도 장전할 틈이 없으면 개머리판으로 놈들의 두개골을 함몰시켰다. 좁은 공간에서 적들이 난사하는 총탄은 치명적이었다. 15층을 통과할 무렵, 벽을 타고 내려오던 변이체의 날카로운 발톱이 연이의 왼쪽 어깨를 깊게 찢고 지나갔다.\n\n'크윽...!'\n\n비명이 터져 나오려는 것을 악물고, 연이는 권총을 뽑아 놈의 미간에 영거리 사격을 가했다. 뜨거운 피가 유니폼을 적시며 흘러내렸다. 상처는 깊었지만, 뼈를 다치진 않았다. 구급용 지혈대를 꺼내 상처 부위를 사정없이 묶고, 진통제 두 알을 입에 털어 넣고 우적우적 씹어 삼켰다. 아드레날린과 고통이 뒤섞여 심장이 터질 듯이 요동쳤다.\n\n'아직은 괜찮아... 내 두 다리가 움직이는 한, 이깟 상처 따위...'\n\n연이는 피 묻은 전투화로 다음 계단을 힘차게 밟았다. 그녀의 분홍빛 눈동자는 짐승의 살기보다 더욱 형형하게 빛나고 있었다. '기다려라. 지옥의 꼭대기에 숨어있는 쥐새끼. 내가 그 목통을 뜯으러 갈 테니까.' 위층을 향한 연이의 처절한 등반은 계속되었다." },
     8: { goal: 90, enemySpeed: 4.1, spawnRate: 1200, homing: true, homingSpeed: 1.3, enemyShoot: true, sky: '#0a0908', city: '#141210', fog: '#1a1816', storyText: "■■■■ EPISODE 8: HALLUCINATION ■■■■\n\n어느덧 25층. 거대한 타워의 중간 지점에 도달했을 무렵, 주변의 공기가 기괴하게 뒤틀리기 시작했다. 물리적인 압박감이 아니라, 뇌수를 직접 쥐어짜는 듯한 기분 나쁜 파동이었다. 안개는 이제 시야를 가리는 것을 넘어 신경계로 침투하고 있었다. 갑자기 연이의 귓가에 익숙하고도 다정한 목소리들이 속삭이기 시작했다.\n\n'연이야... 우리 예쁜 연이. 이제 그 무거운 총은 내려놓고 이리 오렴.'\n'언니! 나 여기서 기다리고 있어. 우리 같이 연꽃 마을로 돌아가자!'\n\n과거 청토끼들의 습격으로 잔혹하게 찢겨 죽은 어머니와 동생의 생생한 목소리. 눈앞의 핏빛 계단은 순간적으로 햇살이 내리쬐는 평화로운 고향의 들판으로 변했고, 그 한가운데서 피투성이가 된 가족들이 환하게 웃으며 그녀에게 손을 짓고 있었다. 환각이다. 능력이 극대화되며 진화한 변이체들이 이제는 물리적 타격을 넘어 사냥감의 트라우마를 자극하는 정신적 공격, 즉 신경계 교란까지 일으키고 있는 것이다.\n\n'거짓말 마... 너희들은 이미 내 눈앞에서...'\n\n연이는 무릎을 꿇고 머리를 감싸 쥐었다. 환각 속의 따뜻함에 몸을 맡기고 싶은 유혹이 꿀처럼 달콤하게 밀려왔다. 이대로 눈을 감으면 고통도, 지옥 같은 현실도 끝날 것 같았다. 하지만 그녀는 이빨이 깨져라 혀를 힘껏 깨물었다. 입안 가득 비릿한 쇠맛과 날카로운 고통이 퍼지자, 고향의 환영이 유리창처럼 산산조각 나며 다시 부패한 계단실이 모습을 드러냈다. 환각에 홀려 무방비 상태가 된 연이를 향해, 천장에 매달려 있던 변이체들이 탐욕스러운 침을 흘리며 낙하하고 있었다.\n\n'내 기억을 더럽히지 마, 이 역겨운 괴물 새끼들아!'\n\n연이는 몸을 뒤로 젖히며 쌍권총을 교차해 위쪽을 향해 미친 듯이 난사했다. 쏟아지는 탄환에 놈들의 몸통이 벌집이 되어 쏟아져 내렸다. 정신을 다잡은 연이는 다시 계단을 오르기 시작했다. 30층, 35층. 위로 올라갈수록 적들의 움직임은 짐승을 넘어 거미나 파충류처럼 변모했다. 벽을 타고 미끄러지듯 이동하고, 어둠 속에 완벽하게 위장하여 등 뒤를 노렸다.\n\n38층. 두꺼운 강철 보안문이 반쯤 뜯겨져 있는 곳. 그 안쪽은 일반적인 사무실이 아닌 거대한 생체 실험실이었다. 백색의 타일 바닥 위로 파괴된 기계 장치들이 널브러져 있었고, 방 한가운데 늘어선 거대한 원통형 유리관 속에는 온몸에 파이프가 꽂힌 채 형체를 알 수 없게 개조된 청토끼와 타 종족들의 표본들이 부유하고 있었다.\n\n'이곳에서... 이 끔찍한 괴물들을 연구하고 만들어냈던 건가?'\n\n연이는 조심스럽게 실험실 내부를 수색했다. 컴퓨터 화면은 전력이 끊겨 까맣게 죽어있었지만, 메인 콘솔에는 외부 서버와 연결된 두꺼운 데이터 케이블이 아직 따뜻하게 온기를 유지하고 있었다. 누군가 최근까지, 혹은 방금 전까지 이곳에서 시스템을 조작했다는 명백한 증거였다. 책상 위로 흩어진 기밀문서 파일 더미 중 가장 위에 놓인 붉은색 폴더를 집어 들었다. 제목은 [프로젝트 블루 래빗 - 1급 기밀]. 연이는 떨리는 손으로 문서를 펼쳤다.\n\n'[연구 일지 402호]... 바이러스의 인공적인 유전자 조작 및 병기화 성공. 목적: 국방부 산하 차세대 생물 병기 개발. \n\n부작용: 통제 불가능한 변이와 감염체의 무리 지능 획득. 폐기 프로토콜 가동 실패... 연구소 밖으로 샘플 누출 확인.'\n\n활자들이 망막을 파고들며 뇌리에 박혔다. 이 모든 멸망은 자연의 분노도, 외계의 침공도 아니었다. 그저 끝없는 인간의 탐욕과 권력욕이 빚어낸, 철저하게 인위적인 '사고'였다. 자신의 가족을 찢어 발긴 괴물들이 국방부의 실험실에서 잉태된 병기였다는 진실 앞에, 연이의 손끝이 파르르 떨렸다. 공포나 슬픔 때문이 아니었다. 활화산처럼 끓어오르는 순도 100%의 살의. 연이는 파일을 찢어 바닥에 팽개치고 샷건을 집어 들었다.\n\n'실수라고? 통제 불능이라고? 그렇다면 내 총알도 통제 불능일 거다.' 분노로 타오르는 연이의 시선은 50층 꼭대기를 향해 고정되었다." },
     9: { goal: 100, enemySpeed: 4.5, spawnRate: 1000, homing: true, homingSpeed: 1.5, enemyShoot: true, sky: '#02040a', city: '#000000', fog: '#0f172a', storyText: "■■■■ EPISODE 9: THRONE OF ROT ■■■■\n\n45층을 돌파하자, 타워 내부의 대기가 물리적인 무게를 띤 것처럼 짓눌러왔다. 심해로 잠수하는 듯한 끔찍한 압력. 숨을 들이마실 때마다 폐가 으스러질 것 같은 흉통이 밀려왔다. 깨진 통유리창 너머로 보이는 바깥세상의 하늘은 칠흑 같은 암흑 속에서 오직 불길한 핏빛 자국들만 엉겨 붙어 있었고, 태양은 검은 디스크처럼 빛을 잃어버렸다. 세상의 종말이 시각화된다면 바로 이런 모습일 것이다.\n\n보스가 지근거리에 있다는 짐승의 직감이 연이의 온몸의 솜털을 곤두서게 했다. 전술 조끼를 뒤져보니 남은 것은 소총 탄창 하나, 권총 탄창 하나, 그리고 산탄총의 마지막 슬러그탄 15발이 전부였다. 압도적인 수적, 질적 열세. 하지만 그녀는 차분하고 정교한 동작으로 총기를 점검하고 약실에 탄환을 밀어 넣었다. 철컥- 하는 차가운 금속음이 지옥의 적막을 갈랐다.\n\n마침내 도달한 47층. 그곳은 한때 네온 시티 전체에 전파를 송출하던 거대한 메인 스튜디오 홀이었다. 하지만 지금은 악마의 내장 속으로 들어온 듯했다. 넓은 홀의 벽과 바닥은 맥박이 뛰듯 고동치는 붉은 살점과 덩굴들로 징그럽게 뒤덮여 있었고, 바닥에는 희생자들의 뼈가 카펫처럼 깔려 있었다.\n\n그리고 홀의 정중앙, 그곳에 '왕'이 있었다.\n\n지금껏 연이가 상대해온 변이체들과는 궤를 달리하는, 일반 청토끼의 5배가 넘는 거대한 괴수. 놈의 몸뚱이는 갑각류처럼 단단한 외골격으로 덮여 있었고, 흉측하게 부풀어 오른 얼굴에는 인간의 눈동자를 닮은 수십 개의 안구가 이리저리 굴러가며 사방을 노려보고 있었다. 귀까지 기괴하게 찢어진 아가리 사이로는 사람 팔뚝만 한 누런 송곳니들이 빽빽하게 돋아나 있었다. 모든 청토끼 변이체들을 조종하는 군체의 중심, 그 끔찍한 하이브 마인드의 우두머리였다.\n\n'마침내 여기까지 기어 올라왔군, 꽃돼지 실험체.'\n\n왕좌처럼 솟아오른 살덩어리 옆, 짙은 그림자 속에서 한 남자가 천천히 걸어 나왔다. 흰색 연구 가운은 피와 오물로 검게 물들어 있었고, 그의 겉모습은 아직 인간의 형태를 유지하고 있었지만, 번뜩이는 두 눈동자는 이미 이성을 잃고 짐승처럼 변이된 상태였다. 광기에 사로잡힌 그의 웃음소리가 스튜디오를 기괴하게 울렸다.\n\n연이는 총구를 남자에게 견누며 낮게 으르렁거렸다. '네놈이냐. 이 지옥을 만든 원흉이.'\n\n'나? 나는 창조주다. 프로젝트 블루 래빗의 수석 연구원. 열등한 너희들의 세상을 허물고, 완벽한 진화의 시대를 연 위대한 선구자 말이다!' 남자는 양팔을 벌리며 거대한 청토끼의 왕을 쓰다듬었다. \n\n'왜 이렇게 만들었냐고 묻고 싶겠지? 보아라, 이 아름다운 생명력을! 연약하고 병드는 인간의 육체를 버리고, \n\n죽음을 극복한 완벽한 포식자로 거듭나는 과정이다. 수억 명의 희생은 그저 진화를 위한 거름일 뿐이야!'\n\n연이의 손가락이 방아쇠 위에서 미세하게 떨렸다. 극도의 공포? 아니, 당장이라도 저 역겨운 주둥이를 찢어버리고 싶은 맹렬한 분노였다.\n\n'그래, 넌 살아남았지. 그 연약한 꽃돼지 종족의 면역 체계가 내 바이러스와 결합해 놀라운 저항력을 보여줬어. \n\n네 몸뚱이는 내 최고의 역작을 완성시킬 마지막 퍼즐 조각이다. 네 유전자 코드를 뽑아내면, 지능까지 완벽하게 통제되는 신인류를 양산할 수 있다!'\n\n거대한 청토끼의 왕이 포효하며 수십 개의 눈알을 일제히 연이에게 고정했다. 엄청난 살기와 위압감이 스튜디오를 덮쳤다. 하지만 연이는 흔들리지 않았다. 그녀는 산탄총의 총구를 들어 남자의 미간을 정확히 겨냥했다.\n\n'신인류 좋아하시네. 내 눈엔 그저 대가리에 총알이 박히면 죽는 징그러운 토끼 고기일 뿐이다.'\n\n그녀의 차가운 선고와 함께, 왕이 바닥을 박차고 도약했다. 타앙-! 마침내 지옥의 꼭대기에서, 인류의 생존과 세상의 운명을 건 최후의 결전이 시작되었다." },
-    10: { goal: 150, enemySpeed: 5.0, spawnRate: 800, homing: true, homingSpeed: 2.0, enemyShoot: true, sky: '#000000', city: '#000000', fog: '#450a0a', storyText: "■■■■ EPISODE 10: FINAL HOPE ■■■■\n\n피와 살점이 비처럼 쏟아지던 광란의 전투는 마침내 끝이 났다.\n\n스튜디오의 바닥은 완전히 초토화되었다. 신인류의 창조주를 자처하며 광기에 차 웃어대던 연구원은 연이의 샷건 슬러그탄을 정통으로 맞고 상반신이 형체도 없이 날아간 채 고기 육편이 되어 바닥에 나뒹굴고 있었다. 5배나 거대했던 변이체의 왕 역시, 연이가 마지막 남은 수류탄을 놈의 벌어진 아가리 속으로 쑤셔 넣고 영거리에서 소총탄을 폭발시킨 일격에 두개골이 산산조각 나며 쓰러졌다. 거대한 괴수가 쿵- 소리와 함께 바닥에 처박히자 50층 타워 전체가 거대한 지진이 난 것처럼 격렬하게 요동쳤다.\n\n하지만 승리한 연이의 상태도 처참했다. 주무기였던 산탄총은 놈의 턱에 짓눌려 완전히 두 동강이 났고, 양팔과 허벅지는 날카로운 발톱에 찢겨 뼈가 보일 정도로 깊은 상처를 입었다. 군데군데 찢어진 유니폼 사이로 검붉은 피가 폭포수처럼 쏟아져 내렸다. 그녀는 남은 권총 한 자루를 지팡이 삼아 부들거리는 다리로 간신히 버티고 서 있었다. 호흡할 때마다 찢어진 폐부에서 피 끓는 소리가 났고, 시야는 이미 흑백으로 점멸하며 한계에 달해 있었다.\n\n'끝났어... 드디어... 복수는 끝났다...'\n\n무너져 내리는 몸을 가누지 못하고 차가운 타일 바닥으로 쓰러지려는 찰나, 허리춤에 매달려 있던 피 묻은 무전기에서 투박한 기계음과 함께 노이즈가 흘러나왔다.\n\n치지직... '...연이... 꽃돼지 생존자 연이... 내 말 들리나...'\n\n망막이 흐려지는 와중에 들려온, 분명한 인간의 목소리.\n\n'여기... 당신이 싸우는 걸... 타워 밖에서 저격 스코프로 지켜보고 있었어. 그 거대한 괴물을 쓰러뜨리는 걸... 우리 모두가 봤다고.'\n\n'누구... 쿨럭... 누구세요...?'\n\n연이가 피 섞인 기침을 토내며 쉰 목소리로 물었다. 무전기 너머의 목소리는 미세하게 떨리고 있었다. 슬픔이 아닌, 환희와 벅찬 감동의 떨림.\n\n'난 다른 구역의 생존자 캠프 리더다. 당신의 그 처절한 싸움이, 숨어서 벌벌 떨기만 하던 우리에게 희망의 불씨를 당겼어. 연구소 메인 서버가 파괴되면서 놈들의 하이브 마인드도 붕괴하고 있다! 이제 우리도 숨지 않고 무기를 들고 일어날 거야. 당신의 그 위대한 용기를 본받아서 말이야.'\n\n그 말을 듣는 순간, 연이의 굳게 다문 입술 사이로 실성한 듯한 웃음과 함께 뜨거운 눈물이 흘러내렸다.\n\n'그래... 다들... 어딘가에 숨어서... 살아있었구나...'\n\n깨진 통유리창 너머로, 영원히 걷히지 않을 것 같았던 칠흑 같은 암흑과 핏빛 구름이 천천히 갈라지기 시작했다. 세상의 종말을 고하던 하늘 틈새로 눈부신 황금빛 아침 햇살이 쏟아져 내리며 폐허가 된 네온 시티를 따뜻하게 어루만졌다. 생화학 무기의 중심지이자 괴물들의 통제탑이 파괴되었으니, 구심점을 잃은 청토끼 변이체들은 뿔뿔이 흩어져 자멸의 길을 걷게 될 것이다. 인류를 덮친 끔찍한 재앙의 밤이 끝나고, 기적 같은 새벽이 밝아오고 있었다.\n\n연이는 고통을 억누르며 창가 쪽으로 한 걸음씩 기어갔다. 쏟아지는 아침 햇살이 그녀의 흙먼지 묻은 분홍빛 털과 연꽃 머리핀을 영롱하게 비췄다.\n\n'엄마... 언니... 나 해냈어... 살아남았어.'\n\n가슴을 짓누르던 복수의 무게. 처절했던 생존의 고통. 그리고 마침내 되찾은 새로운 내일에 대한 벅찬 희망이 눈물에 녹아 흘러내렸다. 연이는 부러진 권총을 꽉 움켜쥐고 피투성이가 된 두 다리에 힘을 줘 천천히 일어섰다. 온몸이 부서질 듯 아팠지만, 다시 걸을 수 있었다.\n\n'이제... 우리의 진짜 고향, 연꽃이 피는 곳으로 돌아갈 시간이야.'\n\n그녀는 타워 밖의 생존자들을 향해 첫 번째 발걸음을 내디뎠다. 죽음의 폐허를 벗어나, 다시 생명이 움트는 삶의 땅을 향하여.\n\n전설은 여기서 끝이 아니다. 살아남은 꽃돼지 연이의 위대한 재건의 이야기는 이제 막 시작되었을 뿐이다.\n\n■■■■ THE END ■■■■\n\n하지만 네온 시티의 깊은 지하 하수구 어딘가. 빛이 닿지 않는 어두운 심연 속에서, 아직 박동을 멈추지 않은 기괴한 푸른 털 뭉치들이 미세하게 꿈틀거리고 있었다. 완전한 승리까지는 아직 먼 이야기. 꽃돼지 연이의 끝나지 않은 사투와 다음 모험이 그녀를 기다리고 있다.\n\nTO BE CONTINUED..." }
+    10: { goal: 150, enemySpeed: 5.0, spawnRate: 800, homing: true, homingSpeed: 2.0, enemyShoot: true, sky: '#000000', city: '#000000', fog: '#450a0a', storyText: "■■■■ EPISODE 10: THE LAST CROWN ■■■■\n\n피와 살점이 비처럼 쏟아지던 광란의 전투는 마침내 끝이 났다.\n\n스튜디오의 바닥은 완전히 초토화되었다. 신인류의 창조주를 자처하며 광기에 차 웃어대던 연구원은 연이의 샷건 슬러그탄을 정통으로 맞고 상반신이 형체도 없이 날아간 채 고기 육편이 되어 바닥에 나뒹굴고 있었다. 5배나 거대했던 변이체의 왕 역시, 연이가 마지막 남은 수류탄을 놈의 벌어진 아가리 속으로 쑤셔 넣고 영거리에서 소총탄을 폭발시킨 일격에 두개골이 산산조각 나며 쓰러졌다. 거대한 괴수가 쿵- 소리와 함께 바닥에 처박히자 50층 타워 전체가 거대한 지진이 난 것처럼 격렬하게 요동쳤다.\n\n하지만 승리한 연이의 상태도 처참했다. 주무기였던 산탄총은 놈의 턱에 짓눌려 완전히 두 동강이 났고, 양팔과 허벅지는 날카로운 발톱에 찢겨 뼈가 보일 정도로 깊은 상처를 입었다. 군데군데 찢어진 유니폼 사이로 검붉은 피가 폭포수처럼 쏟아져 내렸다. 그녀는 남은 권총 한 자루를 지팡이 삼아 부들거리는 다리로 간신히 버티고 서 있었다. 호흡할 때마다 찢어진 폐부에서 피 끓는 소리가 났고, 시야는 이미 흑백으로 점멸하며 한계에 달해 있었다.\n\n'끝났어... 드디어... 복수는 끝났다...'\n\n무너져 내리는 몸을 가누지 못하고 차가운 타일 바닥으로 쓰러지려는 찰나, 허리춤에 매달려 있던 피 묻은 무전기에서 투박한 기계음과 함께 노이즈가 흘러나왔다.\n\n치지직... '...연이... 꽃돼지 생존자 연이... 내 말 들리나...'\n\n망막이 흐려지는 와중에 들려온, 분명한 인간의 목소리.\n\n'여기... 당신이 싸우는 걸... 타워 밖에서 저격 스코프로 지켜보고 있었어. 그 거대한 괴물을 쓰러뜨리는 걸... 우리 모두가 봤다고.'\n\n'누구... 쿨럭... 누구세요...?'\n\n연이가 피 섞인 기침을 토내며 쉰 목소리로 물었다. 무전기 너머의 목소리는 미세하게 떨리고 있었다. 슬픔이 아닌, 환희와 벅찬 감동의 떨림.\n\n'난 다른 구역의 생존자 캠프 리더다. 당신의 그 처절한 싸움이, 숨어서 벌벌 떨기만 하던 우리에게 희망의 불씨를 당겼어. 연구소 메인 서버가 파괴되면서 놈들의 하이브 마인드도 붕괴하고 있다! 이제 우리도 숨지 않고 무기를 들고 일어날 거야. 당신의 그 위대한 용기를 본받아서 말이야.'\n\n그 말을 듣는 순간, 연이의 굳게 다문 입술 사이로 실성한 듯한 웃음과 함께 뜨거운 눈물이 흘러내렸다.\n\n'그래... 다들... 어딘가에 숨어서... 살아있었구나...'\n\n깨진 통유리창 너머로, 영원히 걷히지 않을 것 같았던 칠흑 같은 암흑과 핏빛 구름이 천천히 갈라지기 시작했다. 세상의 종말을 고하던 하늘 틈새로 눈부신 황금빛 아침 햇살이 쏟아져 내리며 폐허가 된 네온 시티를 따뜻하게 어루만졌다. 생화학 무기의 중심지이자 괴물들의 통제탑이 파괴되었으니, 구심점을 잃은 청토끼 변이체들은 뿔뿔이 흩어져 자멸의 길을 걷게 될 것이다. 인류를 덮친 끔찍한 재앙의 밤이 끝나고, 기적 같은 새벽이 밝아오고 있었다.\n\n연이는 고통을 억누르며 창가 쪽으로 한 걸음씩 기어갔다. 쏟아지는 아침 햇살이 그녀의 흙먼지 묻은 분홍빛 털과 연꽃 머리핀을 영롱하게 비췄다.\n\n'엄마... 언니... 나 해냈어... 살아남았어.'\n\n가슴을 짓누르던 복수의 무게. 처절했던 생존의 고통. 그리고 마침내 되찾은 새로운 내일에 대한 벅찬 희망이 눈물에 녹아 흘러내렸다. 연이는 부러진 권총을 꽉 움켜쥐고 피투성이가 된 두 다리에 힘을 줘 천천히 일어섰다. 온몸이 부서질 듯 아팠지만, 다시 걸을 수 있었다.\n\n'이제... 우리의 진짜 고향, 연꽃이 피는 곳으로 돌아갈 시간이야.'\n\n그녀는 타워 밖의 생존자들을 향해 첫 번째 발걸음을 내디뎠다. 죽음의 폐허를 벗어나, 다시 생명이 움트는 삶의 땅을 향하여.\n\n전설은 여기서 끝이 아니다. 살아남은 꽃돼지 연이의 위대한 재건의 이야기는 이제 막 시작되었을 뿐이다.\n\n■■■■ THE END ■■■■\n\n하지만 네온 시티의 깊은 지하 하수구 어딘가. 빛이 닿지 않는 어두운 심연 속에서, 아직 박동을 멈추지 않은 기괴한 푸른 털 뭉치들이 미세하게 꿈틀거리고 있었다. 완전한 승리까지는 아직 먼 이야기. 꽃돼지 연이의 끝나지 않은 사투와 다음 모험이 그녀를 기다리고 있다.\n\nTO BE CONTINUED..." }
 };
 
 let currentStage = 1;
@@ -807,11 +807,37 @@ if (retryButton) {
 }
 
 if (quitButton) {
+    let quitClickCount = 0;
+    let quitClickTimer = null;
     quitButton.addEventListener('click', (e) => {
         e.stopPropagation();
         AudioManager.playSFX('buttonclick');
-        console.log('[GameOver] Quit clicked - Returning to main menu');
-        resetGameToMain();
+        
+        quitClickCount++;
+        
+        if (quitClickCount === 1) {
+            // 첫 번째 클릭: 경고 메시지 표시
+            console.log('[GameOver] Quit clicked once - Press again to exit');
+            
+            // 버튼 텍스트 변경
+            quitButton.textContent = '한 번 더 눌러 종료';
+            quitButton.style.background = '#e74c3c';
+            
+            // 3초 후 초기화
+            if (quitClickTimer) clearTimeout(quitClickTimer);
+            quitClickTimer = setTimeout(() => {
+                quitClickCount = 0;
+                quitButton.textContent = '전선에서 후퇴';
+                quitButton.style.background = '';
+            }, 3000);
+            
+        } else if (quitClickCount >= 2) {
+            // 두 번째 클릭: 실제로 종료
+            console.log('[GameOver] Quit clicked twice - Exiting game');
+            quitClickCount = 0;
+            if (quitClickTimer) clearTimeout(quitClickTimer);
+            resetGameToMain();
+        }
     });
 }
 
@@ -2864,11 +2890,10 @@ function drawStageClearScreen() {
         ctx.drawImage(img, canvas.width / 2 - imgSize / 2, canvas.height / 2 - imgSize * 0.9 + bounce * scale, imgSize, imgSize);
         ctx.restore();
     }
-
 }
 
 function drawGameOverScreen() {
-    ctx.fillStyle = 'rgba(10, 0, 0, 0.95)'; // 더 짙은 검붉은 어둠
+    ctx.fillStyle = 'rgba(10, 0, 0, 0.95)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     const time = Date.now();
     if (!gameOverStartTime) gameOverStartTime = time;
@@ -2878,14 +2903,19 @@ function drawGameOverScreen() {
     // 절망적인 핏빛 스파크 (아래에서 위로)
     if (time % 100 < 40) {
         const p = new Particle(Math.random() * canvas.width, canvas.height + 10, '#c0392b');
-        p.speedY = -1 - Math.random() * 2; p.speedX = (Math.random() - 0.5);
+        p.speedY = -1 - Math.random() * 2; 
+        p.speedX = (Math.random() - 0.5);
         particles.push(p);
     }
 
+    // 화면 크기 계산
+    const minDim = Math.min(canvas.width, canvas.height);
+    const screenScale = Math.min(1, minDim / 600);
+    
+    // 게임오버 이미지
     const img = ImageLoader.get('gameover');
     if (img) {
         ctx.save();
-        // 게임오버 스프라이트 시트를 순차 재생하고 프레임 블렌딩으로 자연스럽게 연결
         const frameHeight = img.height;
         const frameCount = Math.max(1, Math.floor(img.width / frameHeight));
         const frameStride = img.width / frameCount;
@@ -2898,26 +2928,90 @@ function drawGameOverScreen() {
         const shake = elapsed < 900 ? (1 - introProgress) * Math.sin(time / 20) * 5 : 0;
         const animScale = 0.9 + introProgress * 0.1;
         const alpha = Math.min(1, elapsed / 450);
-        const minDim = Math.min(canvas.width, canvas.height);
-        const screenScale = Math.min(1, minDim / 600);
         const finalScale = animScale * screenScale;
-        const baseW = 520 * screenScale;
+        const baseW = 400 * screenScale;
         const w = baseW * animScale;
         const h = (baseW / frameStride) * frameHeight * animScale;
         const drawX = canvas.width / 2 - w / 2 + shake * screenScale;
-        const drawY = canvas.height / 2 - h / 2 - 90 * screenScale;
+        const drawY = canvas.height / 2 - h / 2 - 60 * screenScale;
 
         ctx.shadowBlur = 40 + Math.sin(time / 200) * 20;
         ctx.shadowColor = '#c0392b';
-
         ctx.globalAlpha = alpha * (1 - blend);
         ctx.drawImage(img, frameIndex * frameStride, 0, frameStride, frameHeight, drawX, drawY, w, h);
-
-        // 다음 프레임을 살짝 섞어 끊김을 줄임
         ctx.globalAlpha = alpha * blend;
         ctx.drawImage(img, nextFrameIndex * frameStride, 0, frameStride, frameHeight, drawX, drawY, w, h);
         ctx.restore();
     }
+    
+    // === 텍스트 정보 패널 (가독성 개선) ===
+    const panelY = canvas.height / 2 + 80 * screenScale;
+    const panelW = 500 * screenScale;
+    const panelH = 140 * screenScale;
+    const panelX = canvas.width / 2 - panelW / 2;
+    
+    // 패널 배경
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.strokeStyle = '#e74c3c';
+    ctx.lineWidth = 3;
+    ctx.fillRect(panelX, panelY, panelW, panelH);
+    ctx.strokeRect(panelX, panelY, panelW, panelH);
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#e74c3c';
+    ctx.font = `bold ${Math.max(14, 18 * screenScale)}px "Press Start 2P"`;
+    ctx.fillText('GAME OVER', panelX + 15 * screenScale, panelY + 25 * screenScale);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = `${Math.max(10, 12 * screenScale)}px "Press Start 2P"`;
+    ctx.fillText('PRESS RETRY TO CONTINUE', panelX + 15 * screenScale, panelY + 60 * screenScale);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = `${Math.max(8, 10 * screenScale)}px "Press Start 2P"`;
+    ctx.fillText('SCORE:', panelX + 15 * screenScale, panelY + 90 * screenScale);
+    ctx.fillStyle = '#f1c40f';
+    ctx.fillText(`${score.toString().padStart(6, '0')}`, panelX + 15 * screenScale, panelY + 110 * screenScale);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = `${Math.max(8, 10 * screenScale)}px "Press Start 2P"`;
+    ctx.fillText('STAGE:', panelX + 15 * screenScale, panelY + 130 * screenScale);
+    ctx.fillStyle = '#f1c40f';
+    ctx.fillText(`${currentStage}`, panelX + 15 * screenScale, panelY + 150 * screenScale);
+
+    ctx.restore();
+
+    // === 후퇴 버튼 ===
+    let quitButtonX, quitButtonY, quitButtonW, quitButtonH;
+    if (isMobile && !isPortrait) {
+        quitButtonX = canvas.width / 2 - 100 * screenScale;
+        quitButtonY = canvas.height - 120 * screenScale;
+        quitButtonW = 200 * screenScale;
+        quitButtonH = 40 * screenScale;
+    } else if (isMobile) {
+        quitButtonX = canvas.width / 2 - 100 * screenScale;
+        quitButtonY = canvas.height - 150 * screenScale;
+        quitButtonW = 200 * screenScale;
+        quitButtonH = 40 * screenScale;
+    } else {
+        quitButtonX = canvas.width / 2 - 100 * screenScale;
+        quitButtonY = canvas.height - 120 * screenScale;
+        quitButtonW = 200 * screenScale;
+        quitButtonH = 40 * screenScale;
+    }
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.strokeStyle = '#e74c3c';
+    ctx.lineWidth = 3;
+    ctx.fillRect(quitButtonX, quitButtonY, quitButtonW, quitButtonH);
+    ctx.strokeRect(quitButtonX, quitButtonY, quitButtonW, quitButtonH);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.max(10, 12 * screenScale)}px "Press Start 2P"`;
+    ctx.textAlign = 'center';
+    ctx.fillText('전선에서 후퇴', quitButtonX + quitButtonW / 2, quitButtonY + quitButtonH / 2 + 5 * screenScale);
+    ctx.restore();
 }
 
 // --- 스토리 텍스트 연출 시스템 ---
