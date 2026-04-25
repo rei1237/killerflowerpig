@@ -2434,6 +2434,111 @@ function useBomb() {
     }
 }
 
+// 폭탄 버튼 영역 (클릭 감지용)
+let bombButtonRect = null;
+
+// 2D 픽셀 도트 스타일 폭탄 버튼 그리기
+function drawBombButton(ctx) {
+    const btnSize = 80;
+    const btnX = canvas.width - btnSize - 30;
+    const btnY = canvas.height - btnSize - 30;
+
+    // 버튼 영역 저장 (클릭 감지용)
+    bombButtonRect = { x: btnX, y: btnY, width: btnSize, height: btnSize };
+
+    const time = Date.now();
+    const pulse = Math.sin(time / 200) * 0.1 + 1;
+
+    ctx.save();
+
+    // 버튼 배경 (둥근 사각형)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.strokeStyle = Player.bombCount > 0 ? '#f1c40f' : '#7f8c8d';
+    ctx.lineWidth = 4;
+
+    // 외곽 글로우 효과
+    if (Player.bombCount > 0) {
+        ctx.shadowBlur = 20 * pulse;
+        ctx.shadowColor = '#f1c40f';
+    }
+
+    // 버튼 배경 그리기
+    ctx.beginPath();
+    ctx.roundRect(btnX, btnY, btnSize, btnSize, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    // 폭탄 아이콘 (2D 픽셀 도트 스타일)
+    const centerX = btnX + btnSize / 2;
+    const centerY = btnY + btnSize / 2 + 5;
+    const scale = btnSize / 80;
+
+    if (Player.bombCount > 0) {
+        // 폭탄 본체 (검은색 원)
+        ctx.fillStyle = '#2c3e50';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 22 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 폭탄 내부 (어두운 회색)
+        ctx.fillStyle = '#34495e';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 18 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 폭탄 심지 (노란색 직사각형)
+        ctx.fillStyle = '#f1c40f';
+        ctx.fillRect(centerX - 3 * scale, centerY - 30 * scale, 6 * scale, 12 * scale);
+
+        // 심지 불꽃 (주황색)
+        ctx.fillStyle = '#e67e22';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY - 32 * scale, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 폭탄 표면 하이라이트
+        ctx.fillStyle = '#95a5a6';
+        ctx.fillRect(centerX - 8 * scale, centerY - 5 * scale, 6 * scale, 6 * scale);
+
+        // 폭탄 개수 표시
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#fff';
+        ctx.font = `bold ${Math.floor(20 * scale)}px "Press Start 2P"`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(Player.bombCount.toString(), centerX + 20 * scale, centerY + 20 * scale);
+    } else {
+        // 폭탄 없음 (회색으로 표시)
+        ctx.fillStyle = '#7f8c8d';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 22 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 심지 (회색)
+        ctx.fillStyle = '#95a5a6';
+        ctx.fillRect(centerX - 3 * scale, centerY - 30 * scale, 6 * scale, 12 * scale);
+
+        // X 표시
+        ctx.strokeStyle = '#e74c3c';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(centerX - 10 * scale, centerY - 10 * scale);
+        ctx.lineTo(centerX + 10 * scale, centerY + 10 * scale);
+        ctx.moveTo(centerX + 10 * scale, centerY - 10 * scale);
+        ctx.lineTo(centerX - 10 * scale, centerY + 10 * scale);
+        ctx.stroke();
+    }
+
+    // 레이블 텍스트
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = Player.bombCount > 0 ? '#f1c40f' : '#7f8c8d';
+    ctx.font = `${Math.floor(10 * scale)}px "Press Start 2P"`;
+    ctx.textAlign = 'center';
+    ctx.fillText('BOMB', centerX, btnY + btnSize - 8);
+
+    ctx.restore();
+}
+
 // 폭탄 버튼 클릭 감지 함수
 function isPointInBombButton(x, y) {
     if (!bombButtonRect) return false;
