@@ -170,6 +170,7 @@ const ASSETS = {
     bossKing: 'asset/청토끼 킹.png',
     win: 'asset/꽃돼지 승리.png',
     gameover: 'asset/게임오버.png',
+    gameClear: 'asset/게임 클리어.png',
     title: 'asset/꽃돼지 the killer of zombie.png',
     bgm: 'asset/freepik-silent-ops.mp3',
     bg1: 'asset/bg_stage1_1776859252407.png',
@@ -3047,34 +3048,75 @@ function drawStartScreen() {
     ctx.font = `${Math.max(8, 10 * scaleFactor)}px "Press Start 2P"`;
     const lines = isMobile && isPortrait ? ['▶ DRAG to Move', '▶ AUTO FIRE', '▶ BOMB: D-TAP'] : ['▶ MOVE: MOUSE / DRAG', '▶ ATTACK: AUTO FIRE', '▶ BOMB: DOUBLE TAP / SPACE'];
     lines.forEach((line, i) => {
+        ctx.fillText(line, panelX + 15 * scaleFactor, panelY + 50 * scaleFactor + i * (18 * scaleFactor));
     });
     ctx.restore();
 }
 
 // 게임 클리어 엔딩 에필로그 텍스트
-const EPILOGUE_TEXT = `[구호 주파수 103.5MHz - 긴급 방송]
+const EPILOGUE_TEXT = `■■■■ [새벽의 연꽃] 엔딩 ■■■■
 
-살아있는 모든 생명체에게 알립니다.
-네온 시티 중앙 방송국 타워의 위협이 제거되었습니다.
+블랙홀처럼 빛을 잃었던 태양이 
+핏빛 안개 너머로 첫 광선을 토하기 시작했다.
 
-[새벽의 연꽃]
+50층, 청토끼의 심장부.
+연이의 발굽 아래서 융합된 괴물의 잔해가 
+더 이상 맥동하지 않는 살점으로 썩어가고 있었다.
 
-50층의 심연에서 살아올라온 한 생명체의 투쟁.
-그녀의 이름은 연이 - 분홍빛 꽃돼지의 마지막 전사.
+수만 개의 신경삭이 타워 전체에서 
+힘없이 늘어지며 생명을 잃어갔다.
+그와 동시에 도시 곳곳에서 울부짖던 
+괴물들의 포효가 하나둘 잦아들었다.
 
-연꽃 마을의 영웅,
-그녀의 발굽이 내딛은 자리에 새벽이 찾아옵니다.
+'...끝났군.'
 
-[연꽃 약속]
+연이는 반쯤 부서진 산탄총을 바닥에 떨어뜨렸다.
+검붉게 물든 분홍빛 털. 
+메마른 피가 굳은 상처들.
+끝없는 전투가 남긴 상처의 증거들.
 
-이 방송을 듣는 당신에게:
-아직 포기하지 마십시오.
-끝까지 살아남아 우리와 함께하십시오.
-연이가 보여주었듯, 희망은 끝에서 피어납니다.
+창밖으로 보이는 네온 시티의 폐허.
+한때 번영하던 도시는 이제 잿더미가 되었지만,
+어둠 속에서 희미하게나마 
+새벽빛이 스며들기 시작했다.
 
-- 구호 주파수 103.5MHz, 생존자들의 목소리 -
+그녀의 포켓에서 떨어진 낡은 사진.
+연꽃 마을의 햇살 가득한 들판 위에서
+웃고 있는 가족들의 얼굴.
 
-■■■■ GAME CLEAR: REQUIEM FOR THE PINK DAWN ■■■■`;
+'엄마, 아빠... 언니...
+내가... 살아남았어.'
+
+찢어진 네온 사인들 사이로 
+새벽 바람이 스치며 핏냄새를 쓸어갔다.
+살아남은 자들에게 보내는 
+마지막 메시지를 적을 시간.
+
+[긴급 방송 - 생존자 구호망 103.5MHz]
+
+'여기는 네온 시티 중앙 방송국.
+타워의 지배자가 사라졌다.
+괴물들의 왕관은 부서졌다.
+
+살아있는 모든 생명에게 전한다.
+절망의 밤은 끝났다.
+
+마지막 전사 꽃돼지 연이가
+우리에게 새벽을 가져왔다.
+
+아직 포기하지 마라.
+희망은 끝에서 피어난다.
+분홍빛 새벽이 여러분을 기다리고 있다.'
+
+방송국 타워 꼭대기에서 
+새벽의 빛이 퍼져나갔다.
+
+한 생명체의 투쟁이 
+지옥을 새벽으로 바꾸기 시작했다.
+
+■■■■ REQUIEM FOR THE PINK DAWN ■■■■
+
+GAME CLEAR`;
 
 function drawWinScreen() {
     ctx.fillStyle = 'rgba(0,0,0,0.95)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -3159,6 +3201,83 @@ function drawWinScreen() {
         }
     });
     ctx.restore();
+
+    // === 게임 클리어 이미지 렌더링 (고급스러운 UI 프레임) ===
+    const gameClearImg = ImageLoader.get('gameClear');
+    if (gameClearImg) {
+        const time = Date.now();
+        const pulse = Math.sin(time / 400) * 0.05 + 1.0;
+        
+        // 이미지 크기 계산 (화면 중앙, 적절한 크기)
+        const imgSize = Math.min(canvas.width * 0.35, 280) * pulse;
+        const imgX = canvas.width / 2 - imgSize / 2;
+        const imgY = canvas.height - imgSize - 80;
+        
+        ctx.save();
+        
+        // 황금빛 글로우 효과
+        ctx.shadowBlur = 50 * pulse;
+        ctx.shadowColor = '#f1c40f';
+        
+        // 고급스러운 프레임 배경 (그라데이션)
+        const framePadding = 15;
+        const frameX = imgX - framePadding;
+        const frameY = imgY - framePadding;
+        const frameW = imgSize + framePadding * 2;
+        const frameH = imgSize + framePadding * 2;
+        
+        // 프레임 그라데이션
+        const frameGrad = ctx.createLinearGradient(frameX, frameY, frameX + frameW, frameY + frameH);
+        frameGrad.addColorStop(0, '#2c1810');
+        frameGrad.addColorStop(0.5, '#1a0f0a');
+        frameGrad.addColorStop(1, '#2c1810');
+        
+        ctx.fillStyle = frameGrad;
+        ctx.fillRect(frameX, frameY, frameW, frameH);
+        
+        // 황금 테두리
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(frameX, frameY, frameW, frameH);
+        
+        // 내부 장식 라인
+        ctx.strokeStyle = 'rgba(241, 196, 15, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(frameX + 5, frameY + 5, frameW - 10, frameH - 10);
+        
+        // 모서리 장식 (픽셀 아트 스타일)
+        const cornerSize = 10;
+        ctx.fillStyle = '#f1c40f';
+        // 좌상
+        ctx.fillRect(frameX - 2, frameY - 2, cornerSize, 3);
+        ctx.fillRect(frameX - 2, frameY - 2, 3, cornerSize);
+        // 우상
+        ctx.fillRect(frameX + frameW - cornerSize + 2, frameY - 2, cornerSize, 3);
+        ctx.fillRect(frameX + frameW - 3, frameY - 2, 3, cornerSize);
+        // 좌하
+        ctx.fillRect(frameX - 2, frameY + frameH - 3, cornerSize, 3);
+        ctx.fillRect(frameX - 2, frameY + frameH - cornerSize + 2, 3, cornerSize);
+        // 우하
+        ctx.fillRect(frameX + frameW - cornerSize + 2, frameY + frameH - 3, cornerSize, 3);
+        ctx.fillRect(frameX + frameW - 3, frameY + frameH - cornerSize + 2, 3, cornerSize);
+        
+        // 이미지 그리기
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = 'rgba(241, 196, 15, 0.8)';
+        ctx.drawImage(gameClearImg, imgX, imgY, imgSize, imgSize);
+        
+        ctx.restore();
+        
+        // "THANK YOU FOR PLAYING" 텍스트
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#f1c40f';
+        ctx.font = 'bold 12px "Press Start 2P"';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#e67e22';
+        ctx.fillText('THANK YOU FOR PLAYING', canvas.width / 2, imgY + imgSize + 40);
+        ctx.restore();
+    }
 
     // 하단 안내 문구
     ctx.save();
