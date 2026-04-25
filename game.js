@@ -1956,7 +1956,13 @@ function drawHUD(ctx) {
         ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(bx + 5, by + 5, 6, 0, Math.PI * 2); ctx.fill();
     }
 
-    // 4. 스킬 알림 UI (화면 중앙 하단)
+    // 4. 폭탄 버튼 (데스크탑 & 가로 모드용)
+    const isMobile = isMobileTouchDevice();
+    if (!isMobile || window.innerWidth > window.innerHeight) {
+        drawBombButton(ctx);
+    }
+
+    // 5. 스킬 알림 UI (화면 중앙 하단)
     ctx.textAlign = 'center';
     Player.skillNotifications.forEach((n, idx) => {
         const isEnding = n.timeLeft < 3000;
@@ -1983,7 +1989,7 @@ function addSkillNotification(text, duration) {
 
 function checkCollision(r1, r2) {
     if (!r1 || !r2) return false;
-    return r1.x < r2.x + r2.width && r1.x + r1.width > r2.x && r1.y < r2.y + r2.height && r1.y + r1.height > r2.y;
+    return r1.x < r2.x + r2.width && r1.x + r2.width > r2.x && r1.y < r2.y + r2.height && r1.y + r1.height > r2.y;
 }
 
 // 기존 보스 (청토끼 보스.png) 스프라이트 매핑
@@ -2428,13 +2434,30 @@ function useBomb() {
     }
 }
 
+// 폭탄 버튼 클릭 감지 함수
+function isPointInBombButton(x, y) {
+    if (!bombButtonRect) return false;
+    return x >= bombButtonRect.x && 
+           x <= bombButtonRect.x + bombButtonRect.width && 
+           y >= bombButtonRect.y && 
+           y <= bombButtonRect.y + bombButtonRect.height;
+}
+
 window.addEventListener('mousemove', (e) => Player.targetY = e.clientY - Player.height / 2);
 // 데스크톱 클릭 처리 (START 상태에서는 버튼만 작동)
-window.addEventListener('mousedown', () => {
+window.addEventListener('mousedown', (e) => {
     if (currentState === GAME_STATE.START) {
         // START 상태에서는 버튼 클릭만 처리 (자동 시작 안함)
         return;
     }
+    
+    // 폭탄 버튼 클릭 감지 (데스크탑 & 가로 모드)
+    if ((currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT) && 
+        isPointInBombButton(e.clientX, e.clientY)) {
+        useBomb();
+        return;
+    }
+    
     enterMobileFullscreen();
     AudioManager.init(); AudioManager.startBGM();
     if (currentState === GAME_STATE.GAME_OVER || currentState === GAME_STATE.WIN) resetGame();
@@ -2456,6 +2479,17 @@ window.addEventListener('touchstart', (e) => {
     if (currentState === GAME_STATE.START) {
         // START 상태에서는 버튼 클릭만 처리 (자동 시작 안함)
         return;
+    }
+
+    // 폭탄 버튼 터치 감지 (가로 모드에서만 표시됨)
+    if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        if ((currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT) && 
+            isPointInBombButton(touch.clientX, touch.clientY)) {
+            useBomb();
+            e.preventDefault();
+            return;
+        }
     }
 
     enterMobileFullscreen();
