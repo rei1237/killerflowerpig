@@ -2085,11 +2085,11 @@ class Boss {
         // 기본 체력 계산
         const baseHp = 2500 * level + (level === 10 ? 15000 : 0);
         
-        // 보스킹: 80% 더 많은 체력, 보스2: 40% 더 많은 체력
+        // 보스킹: 20% 더 많은 체력, 보스2: 10% 더 많은 체력
         if (this.isBossKing) {
-            this.hp = Math.floor(baseHp * 1.8);
+            this.hp = Math.floor(baseHp * 1.2);
         } else if (this.isBoss2) {
-            this.hp = Math.floor(baseHp * 1.4);
+            this.hp = Math.floor(baseHp * 1.1);
         } else {
             this.hp = baseHp;
         }
@@ -2098,12 +2098,12 @@ class Boss {
         const bossMoveMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossMoveScaleMultiplier : 1; // EASY MODE
         const gameSpeed = getMobileGameSpeedMultiplier();
         
-        // 이동 속도: 보스킹 50% 증가, 보스2 30% 증가
+        // 이동 속도: 보스킹 20% 증가, 보스2 10% 증가
         const baseSpeed = 3 + (level * 0.5);
         if (this.isBossKing) {
-            this.speedY = baseSpeed * 1.5 * bossMoveMultiplier * gameSpeed;
+            this.speedY = baseSpeed * 1.2 * bossMoveMultiplier * gameSpeed;
         } else if (this.isBoss2) {
-            this.speedY = baseSpeed * 1.3 * bossMoveMultiplier * gameSpeed;
+            this.speedY = baseSpeed * 1.1 * bossMoveMultiplier * gameSpeed;
         } else {
             this.speedY = baseSpeed * bossMoveMultiplier * gameSpeed;
         }
@@ -2151,13 +2151,13 @@ class Boss {
         // 모바일에서는 보스 공격 속도 감소 (적정 수준)
         const bossAttackIntervalMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossAttackIntervalMultiplier : 1; // EASY MODE
         
-        // 공격 간격: 보스킹 50% 더 빠름, 보스2 30% 더 빠름
+        // 공격 간격: 보스킹 30% 더 빠름, 보스2 15% 더 빠름
         const baseInterval = this.hp < 3000 ? 1000 : 1800;
         let interval;
         if (this.isBossKing) {
-            interval = baseInterval * 0.5; // 보스킹: 50% 더 빠른 공격
+            interval = baseInterval * 0.7; // 보스킹: 30% 더 빠른 공격
         } else if (this.isBoss2) {
-            interval = baseInterval * 0.7; // 보스2: 30% 더 빠른 공격
+            interval = baseInterval * 0.85; // 보스2: 15% 더 빠른 공격
         } else {
             interval = baseInterval;
         }
