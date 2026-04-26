@@ -1563,45 +1563,39 @@ class Enemy {
 
         const img = ImageLoader.get(enemyAssetKey);
         if (img) {
-            const frameW = img.width / cols;
-            const frameH = img.height / rows;
-
-            // 애니메이션 행 매핑 (3x7 그리드 기준):
-            // Row 0 (y=0):    WALK - 걷기/대기 모션 (6프레임: 1~6열)
-            // Row 1 (y=213):  ATTACK - 공격 모션 (6프레임: 1~6열)
-            // Row 2 (y=426):  DEAD - 죽음 모션 (청토끼2: 5프레임, 청토끼3: 4프레임)
-            let rowIdx = this.state === 'ATTACK' ? 1 : (this.state === 'DEAD' ? 2 : 0);
+            let sx, sy, sWidth, sHeight;
             
-            // 청토끼 2, 3: 상태별 정확한 프레임 수 계산
-            let stateFrameCount = this.totalFrames; // 기본 6프레임 (WALK, ATTACK)
-            if (this.state === 'DEAD') {
-                if (enemyAssetKey === 'enemy3') {
-                    stateFrameCount = 4; // 청토끼 3 죽음: 4프레임 (1~4열)
-                } else if (enemyAssetKey === 'enemy2') {
-                    stateFrameCount = 5; // 청토끼 2 죽음: 5프레임 (1~5열)
+            // 청토끼 2: 스프라이트 맵을 사용하여 정확한 프레임 좌표 적용
+            if (enemyAssetKey === 'enemy2' && typeof ENEMY2_SPRITE_MAP !== 'undefined') {
+                const spriteMap = ENEMY2_SPRITE_MAP;
+                const stateMap = spriteMap[this.state] || spriteMap['WALK'];
+                const frameIdx = this.aniFrame % stateMap.frames.length;
+                const frame = stateMap.frames[frameIdx];
+                
+                sx = frame.x;
+                sy = stateMap.y;
+                sWidth = frame.w;
+                sHeight = stateMap.h;
+            } else {
+                // 기존 방식: 그리드 기반 계산 (청토끼 3 및 기본 적)
+                const frameW = img.width / cols;
+                const frameH = img.height / rows;
+                
+                let rowIdx = this.state === 'ATTACK' ? 1 : (this.state === 'DEAD' ? 2 : 0);
+                let stateFrameCount = this.totalFrames;
+                if (this.state === 'DEAD' && enemyAssetKey === 'enemy3') {
+                    stateFrameCount = 4;
                 }
+                const frameIdx = this.aniFrame % stateFrameCount;
+                
+                // 청토끼 3 SX 오프셋 조정
+                let offsetX = (enemyAssetKey === 'enemy3') ? -15 : 0;
+                
+                sx = (frameIdx + 1) * frameW + offsetX;
+                sy = rowIdx * frameH;
+                sWidth = frameW - frameW * 0.1; // 10% 여백
+                sHeight = frameH;
             }
-            const frameIdx = this.aniFrame % stateFrameCount;
-            
-            // SX 오프셋 조정 (왼쪽 이미지 침범 방지):
-            // 청토끼 3: -15px (왼쪽 텍스트 레이블 회피)
-            // 청토끼 2: 죽음 장면에서 마지막 프레임 오른쪽 더미 제거를 위해 조정
-            let offsetX = 0;
-            if (enemyAssetKey === 'enemy3') {
-                offsetX = -15;
-            } else if (enemyAssetKey === 'enemy2') {
-                // 죽음 장면: 마지막 프레임에서 오른쪽 더미 제거를 위해 추가 조정
-                offsetX = (this.state === 'DEAD' && frameIdx >= 3) ? -35 : -20;
-            }
-            const sx = (frameIdx + 1) * frameW + offsetX;
-            const sy = rowIdx * frameH;
-
-            // 이미지 보정: 픽셀 아트 가독성을 위해 소수점 좌표 제거 및 여백 최적화
-            // 청토끼 2 죽음: 마지막 프레임에서 오른쪽 더미 제거를 위해 추가 여백
-            const baseMargin = frameW * 0.05; // 5% 기본 여백
-            const margin = (enemyAssetKey === 'enemy2' && this.state === 'DEAD' && frameIdx >= 3) 
-                ? frameW * 0.15  // 죽음 마지막 프레임: 15% 여백으로 오른쪽 더미 제거
-                : baseMargin;
 
             ctx.save();
             // 선명한 해상도를 위해 이미지 스무딩 비활성화 고려 (픽셀 아트인 경우)
@@ -1611,16 +1605,16 @@ class Enemy {
             ctx.scale(-1, 1);
 
             // 원본 비율 유지하며 그리기
-            const aspect = (frameH - margin * 2) / (frameW - margin * 2);
+            const aspect = sHeight / sWidth;
             const drawW = this.width;
             const drawH = drawW * aspect;
 
             ctx.drawImage(
                 img,
-                Math.floor(sx + margin),
-                Math.floor(sy + margin),
-                Math.floor(frameW - margin * 2),
-                Math.floor(frameH - margin * 2),
+                Math.floor(sx),
+                Math.floor(sy),
+                Math.floor(sWidth),
+                Math.floor(sHeight),
                 Math.round(-drawW / 2),
                 Math.round(-drawH / 2),
                 Math.round(drawW),
@@ -2236,11 +2230,10 @@ const BOSS_SPRITE_MAP = {
     }
 };
 
-// 보스2 (청토끼 보스2.png) - 3x7 그리드, 텍스트 완전 제외
-// 그리드: 7열(140px each) x 3행(140px each) = 980x420px
-// 텍스트 열: Column 0 (0-140px) - 완전 제외
-// 스프라이트: Columns 1-6 (140-980px), 여백 고려해 135px 사용
-const BOSS2_SPRITE_MAP = {
+// 청토끼 2 (enemy2.png) - 3x7 그리드, 개별 프레임 좌표 조정 가능
+// 그리드: 7열 x 3행, 각 셀 140px
+// 텍스트 열: Column 0 제외, Columns 1-6 사용
+const ENEMY2_SPRITE_MAP = {
     WALK: {
         y: 0, h: 213,
         frames: [
