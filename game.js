@@ -1504,7 +1504,18 @@ class Enemy {
                 bullet.isEnemyBullet = true; bullet.width = 16; bullet.height = 16;
                 projectiles.push(bullet);
             }
-            if (checkCollision(this, Player) && Player.shield <= 0) {
+            const isEnemy2or3 = currentStage >= 4;
+            const hitboxMargin = isEnemy2or3 ? 15 : 0; // 청토끼 2,3는 15px 여백으로 피격 범위 축소
+            
+            // hitbox margin이 적용된 임시 hitbox 객체 생성
+            const hitbox = {
+                x: this.x + hitboxMargin,
+                y: this.y + hitboxMargin,
+                width: this.width - hitboxMargin * 2,
+                height: this.height - hitboxMargin * 2
+            };
+            
+            if (checkCollision(hitbox, Player) && Player.shield <= 0) {
                 this.state = 'ATTACK'; this.aniFrame = 0; this.lastFrameTime = timestamp;
                 if (!isGodMode) {
                     Player.hp--; Player.shield = getPlayerInvincibleDuration(); AudioManager.playSFX('hit');
@@ -1520,8 +1531,12 @@ class Enemy {
             this.aniFrame++; this.lastFrameTime = timestamp;
             // 적 타입별/상태별 프레임 수 최적화 (죽는 모션이 부정확하다는 피드백 반영)
             let maxFrames = this.totalFrames;
-            if (this.state === 'DEAD' && (currentStage >= 4)) {
-                maxFrames = 4; // Enemy2, 3의 죽는 모션은 4프레임으로 제한하여 정확도 높임
+            if (this.state === 'DEAD') {
+                if (currentStage >= 8) {
+                    maxFrames = 4; // 청토끼 3: 4프레임
+                } else if (currentStage >= 4) {
+                    maxFrames = 5; // 청토끼 2: 5프레임 (더 정확한 죽음 애니메이션)
+                }
             }
             if (this.aniFrame >= maxFrames) {
                 if (this.state === 'DEAD') this.active = false;
@@ -1542,15 +1557,27 @@ class Enemy {
             enemyAssetKey = 'enemy2';
         }
 
+        // 청토끼 2, 3: 정확한 피격 판정을 위한 hitbox margin
+        const isEnemy2or3 = enemyAssetKey === 'enemy2' || enemyAssetKey === 'enemy3';
+        const hitboxMargin = isEnemy2or3 ? 15 : 0; // 청토끼 2,3는 15px 여백으로 피격 범위 축소
+
         const img = ImageLoader.get(enemyAssetKey);
         if (img) {
             const frameW = img.width / cols;
             const frameH = img.height / rows;
 
             let rowIdx = this.state === 'ATTACK' ? 1 : (this.state === 'DEAD' ? 2 : 0);
-            const frameIdx = this.aniFrame % this.totalFrames;
-            // 청토끼 3: 이미지 정렬 조정 (이전 기준 -10px)
-            const offsetX = (enemyAssetKey === 'enemy3') ? -10 : 0;
+            // 청토끼 2, 3: 상태별 정확한 프레임 수 계산
+            let stateFrameCount = this.totalFrames;
+            if (this.state === 'DEAD') {
+                if (enemyAssetKey === 'enemy3') stateFrameCount = 4;
+                else if (enemyAssetKey === 'enemy2') stateFrameCount = 5; // 청토끼 2는 5프레임
+            }
+            const frameIdx = this.aniFrame % stateFrameCount;
+            // 청토끼 3: 이미지 정렬 조정 (이전 기준 -15px), 청토끼 2는 -5px
+            let offsetX = 0;
+            if (enemyAssetKey === 'enemy3') offsetX = -15;
+            else if (enemyAssetKey === 'enemy2') offsetX = -5; // 청토끼 2: 약간의 조정
             const sx = (frameIdx + 1) * frameW + offsetX;
             const sy = rowIdx * frameH;
 
@@ -2210,8 +2237,8 @@ const BOSS2_SPRITE_MAP = {
             { x: 300, w: 232 }, // [0] 준비 자세
             { x: 532, w: 232 }, // [1] 뒤로 빼기
             { x: 744, w: 232 }, // [2] 힘 모으기
-            { x: 990, w: 232 }, // [3] ★ 공격 순간 (hitFrame)
-            { x: 1232, w: 232 }, // [4] 뒤로 물러나기
+            { x: 1100, w: 232 }, // [3] ★ 공격 순간 (hitFrame)
+            { x: 1212, w: 232 }, // [4] 뒤로 물러나기
             { x: 1464, w: 232 }  // [5] 원위치 복귀
         ]
     },
@@ -2242,7 +2269,7 @@ const BOSS_KING_SPRITE_MAP = {
             { x: 764, w: 232 }, // [2] 힘 모으기
             { x: 1010, w: 232 }, // [3] 낮추기/정조준
             { x: 1252, w: 232 }, // [4] ★ 공격 순간 (hitFrame)
-            { x: 1464, w: 232 }  // [5] 원위치 복귀
+            { x: 1484, w: 232 }  // [5] 원위치 복귀
         ]
     },
     DEAD: {
