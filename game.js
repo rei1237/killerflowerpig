@@ -2576,17 +2576,16 @@ class Boss {
             let scale = 1.25;
             if (this.isBossKing) {
                 spriteMap = BOSS_KING_SPRITE_MAP;
-                scale = 1.5;
+                scale = 2;
             } else if (this.isBoss2) {
                 spriteMap = BOSS2_SPRITE_MAP;
-                scale = 1.35;
+                scale = 2;
             }
 
             // 스프라이트 애니메이션 좌표 계산
             const animSet = spriteMap[this.state] || spriteMap.WALK;
             const frame = animSet.frames[this.aniFrame % animSet.frames.length];
             let frameW = frame.w;
-            let frameH = animSet.h;
             let sx = frame.x;
             let sy = animSet.y;
 
@@ -2595,6 +2594,11 @@ class Boss {
             const baseAspectRatio = 116 / 200; // 보스 기본 프레임 비율
             const drawW = this.width * scale;
             const drawH = drawW * baseAspectRatio; // 고정 비율 사용
+
+            // 소스 이미지도 고정된 비율로 크롭 (프레임마다 다른 h값 보정)
+            const sourceH = frameW * baseAspectRatio;
+            const sourceY = sy + (animSet.h - sourceH) / 2; // 중앙 정렬하여 크롭
+
             const anchorY = this.y + this.height;
             const drawCenterX = this.x + this.width / 2;
 
@@ -2620,7 +2624,7 @@ class Boss {
                 }
             }
 
-            ctx.drawImage(img, sx, sy, frameW, frameH, -drawW / 2, -drawH / 2, drawW, drawH);
+            ctx.drawImage(img, sx, sourceY, frameW, sourceH, -drawW / 2, -drawH / 2, drawW, drawH);
             ctx.restore();
         }
         // 보스 체력 바 (정교한 픽셀 프레임)
