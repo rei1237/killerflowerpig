@@ -4156,6 +4156,9 @@ function addFloatingText(text, x, y, color) {
 }
 
 async function init() {
+    // 캔버스 크기 초기화
+    resizeCanvas();
+
     await ImageLoader.loadAllAssets();
     Player.init();
     updateMainMenuVisibility();
