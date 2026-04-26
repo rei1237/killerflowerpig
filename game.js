@@ -3076,6 +3076,15 @@ function gameLoop(timestamp) {
         for (let i = enemies.length - 1; i >= 0; i--) { enemies[i].update(timestamp); if (!enemies[i].active) enemies.splice(i, 1); }
         for (let i = particles.length - 1; i >= 0; i--) { particles[i].update(); if (particles[i].life <= 0) particles.splice(i, 1); }
     }
+
+    // START 상태: 시작 화면만 렌더링
+    if (currentState === GAME_STATE.START) {
+        drawStartScreen();
+        animationId = requestAnimationFrame(gameLoop);
+        return;
+    }
+
+    // 게임 플레이 상태: 게임 오브젝트 렌더링
     Background.draw(ctx);
     if (boss) boss.draw(ctx);
     for (const g of gates) g.draw(ctx);
@@ -3105,7 +3114,6 @@ function gameLoop(timestamp) {
 
     drawStoryText(ctx, timestamp); // 스토리 연출 레이어 추가
 
-    if (currentState === GAME_STATE.START) drawStartScreen();
     if (currentState === GAME_STATE.GAME_OVER) drawGameOverScreen();
     if (currentState === GAME_STATE.GAME_CLEAR_IMAGE) {
         drawGameClearImageScreen();
