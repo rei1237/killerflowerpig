@@ -1585,15 +1585,23 @@ class Enemy {
             
             // SX 오프셋 조정 (왼쪽 이미지 침범 방지):
             // 청토끼 3: -15px (왼쪽 텍스트 레이블 회피)
-            // 청토끼 2: -20px (죽음 장면 오른쪽 잔여물 제거용)
+            // 청토끼 2: 죽음 장면에서 마지막 프레임 오른쪽 더미 제거를 위해 조정
             let offsetX = 0;
-            if (enemyAssetKey === 'enemy3') offsetX = -15;
-            else if (enemyAssetKey === 'enemy2') offsetX = -20; // 죽음 장면 오른쪽 이상 요소 제거
+            if (enemyAssetKey === 'enemy3') {
+                offsetX = -15;
+            } else if (enemyAssetKey === 'enemy2') {
+                // 죽음 장면: 마지막 프레임에서 오른쪽 더미 제거를 위해 추가 조정
+                offsetX = (this.state === 'DEAD' && frameIdx >= 3) ? -35 : -20;
+            }
             const sx = (frameIdx + 1) * frameW + offsetX;
             const sy = rowIdx * frameH;
 
             // 이미지 보정: 픽셀 아트 가독성을 위해 소수점 좌표 제거 및 여백 최적화
-            const margin = frameW * 0.05; // 5% 여백
+            // 청토끼 2 죽음: 마지막 프레임에서 오른쪽 더미 제거를 위해 추가 여백
+            const baseMargin = frameW * 0.05; // 5% 기본 여백
+            const margin = (enemyAssetKey === 'enemy2' && this.state === 'DEAD' && frameIdx >= 3) 
+                ? frameW * 0.15  // 죽음 마지막 프레임: 15% 여백으로 오른쪽 더미 제거
+                : baseMargin;
 
             ctx.save();
             // 선명한 해상도를 위해 이미지 스무딩 비활성화 고려 (픽셀 아트인 경우)
