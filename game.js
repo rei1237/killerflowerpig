@@ -766,20 +766,8 @@ if (installButton) {
 // 스토리 화면 클릭/탭으로 계속
 function handleStoryClick(e) {
     if (currentState === GAME_STATE.STORY) {
-        // 더블 탭 감지 - 터치 이벤트와 통합
-        const currentTime = Date.now();
-        const tapLength = currentTime - lastTapTime;
-        lastTapTime = currentTime;
-        
-        // 더블 탭이면 스킵
-        if (tapLength > 0 && tapLength < 300) {
-            console.log('[Story] Double tap detected - skipping');
-            skipStory();
-            e.preventDefault();
-            return;
-        }
-        
         e.preventDefault();
+        e.stopPropagation();
 
         // 스토리 상태 진입 후 300ms 이내 클릭은 무시 (디바운스)
         const timeSinceEnter = Date.now() - storyStateEnterTime;
@@ -798,22 +786,8 @@ function handleStoryClick(e) {
             storyDisplayTime = Date.now() - (999999); // 즉시 완료
         }
     } else if (currentState === GAME_STATE.EPILOGUE) {
-        // 더블 탭 감지
-        const currentTime = Date.now();
-        const tapLength = currentTime - lastTapTime;
-        lastTapTime = currentTime;
-        
-        // 더블 탭이면 에필로그 완전 스킵
-        if (tapLength > 0 && tapLength < 300) {
-            console.log('[Epilogue] Double tap detected - skipping to end');
-            currentState = GAME_STATE.GAME_CLEAR_IMAGE;
-            gameClearImageStartTime = Date.now();
-            AudioManager.stopEpilogueBGM();
-            e.preventDefault();
-            return;
-        }
-        
         e.preventDefault();
+        e.stopPropagation();
 
         // 에필로그 상태 진입 후 300ms 이내 클릭은 무시 (디바운스)
         const timeSinceEnter = Date.now() - storyStateEnterTime;
@@ -2353,22 +2327,12 @@ const BOSS_KING_SPRITE_MAP = {
 
 class Boss {
     constructor(level = 1) {
+        this.x = canvas.width - 250; this.y = canvas.height / 2 - 100;
+        this.width = 200; this.height = 200; this.level = level;
+
         // 스테이지별 보스 타입 확인 (인스턴스 속성으로 저장)
         this.isBoss2 = currentStage >= 6 && currentStage < 9;
         this.isBossKing = currentStage >= 9; // 스테이지 9-10: 보스킹
-
-        // 보스 사이즈 최적화 (비주얼과 콜리전 박스 일치)
-        let visualScale = 1.6;
-        if (this.isBossKing) visualScale = 3.2;
-        else if (this.isBoss2) visualScale = 2.6;
-
-        this.visualScale = visualScale;
-        this.width = 180 * visualScale;
-        this.height = 180 * visualScale;
-
-        this.x = canvas.width - this.width - 50;
-        this.y = canvas.height / 2 - this.height / 2;
-        this.level = level;
 
         // 기본 체력 계산
         const baseHp = 2500 * level + (level === 10 ? 15000 : 0);
@@ -2583,31 +2547,32 @@ class Boss {
         if (img) {
             // 보스 타입별 스프라이트 매핑 선택 (인스턴스 속성 사용)
             let spriteMap = BOSS_SPRITE_MAP;
-            if (this.isBossKing) spriteMap = BOSS_KING_SPRITE_MAP;
-            else if (this.isBoss2) spriteMap = BOSS2_SPRITE_MAP;
+            let scale = 1.25;
+            if (this.isBossKing) {
+                spriteMap = BOSS_KING_SPRITE_MAP;
+                scale = 1.5;
+            } else if (this.isBoss2) {
+                spriteMap = BOSS2_SPRITE_MAP;
+                scale = 1.35;
+            }
 
             // 스프라이트 애니메이션 좌표 계산
             const animSet = spriteMap[this.state] || spriteMap.WALK;
             const frame = animSet.frames[this.aniFrame % animSet.frames.length];
             let frameW = frame.w;
+            let frameH = animSet.h;
             let sx = frame.x;
             let sy = animSet.y;
 
-            // 보스 크기 고정 - 프레임마다 일정한 크기 유지
-            // 기준 비율(116/200)을 사용하여 모든 프레임에서 동일한 크기 적용
-            const baseAspectRatio = 116 / 200; // 보스 기본 프레임 비율
-            const drawW = this.width * this.visualScale;
-            const drawH = drawW * baseAspectRatio; // 고정 비율 사용
-
-            // 소스 이미지도 고정된 비율로 크롭 (프레임마다 다른 h값 보정)
-            const sourceH = frameW * baseAspectRatio;
-            const sourceY = sy + (animSet.h - sourceH) / 2; // 중앙 정렬하여 크롭
-
+            // === 크기 고정: 모든 프레임에서 동일한 보스 크기 ===
+            // 기준 크기(프레임별 w/h 무시, 항상 동일한 drawW/drawH)
+            const fixedDrawW = 250 * scale; // 원하는 고정 너비(px)
+            const fixedDrawH = 145 * scale; // 원하는 고정 높이(px)
             const anchorY = this.y + this.height;
             const drawCenterX = this.x + this.width / 2;
 
             ctx.save();
-            ctx.translate(drawCenterX, anchorY - drawH / 2);
+            ctx.translate(drawCenterX, anchorY - fixedDrawH / 2);
             ctx.scale(-1, 1);
 
             // 보스2/보스킹 특수 효과
@@ -2628,7 +2593,11 @@ class Boss {
                 }
             }
 
-            ctx.drawImage(img, sx, sourceY, frameW, sourceH, -drawW / 2, -drawH / 2, drawW, drawH);
+            ctx.drawImage(
+                img,
+                sx, sy, frameW, frameH,
+                -fixedDrawW / 2, -fixedDrawH / 2, fixedDrawW, fixedDrawH
+            );
             ctx.restore();
         }
         // 보스 체력 바 (정교한 픽셀 프레임)
@@ -2673,11 +2642,7 @@ function spawnEnemyWave() {
     enemies.push(e);
 }
 
-// 폭발 효과 생성 (성능에 따라 파티클 수 조정)
-function createExplosion(x, y, color = '#e74c3c') { 
-    const particleCount = isMobileTouchDevice() ? 8 : 15; // 모바일에서는 파티클 절반
-    for (let i = 0; i < particleCount; i++) particles.push(new Particle(x, y, color)); 
-}
+function createExplosion(x, y, color = '#e74c3c') { for (let i = 0; i < 15; i++) particles.push(new Particle(x, y, color)); }
 function endGame() {
     if (currentState !== GAME_STATE.GAME_OVER) gameOverStartTime = Date.now();
     currentState = GAME_STATE.GAME_OVER;
@@ -2939,9 +2904,11 @@ window.addEventListener('touchstart', (e) => {
             useBomb();
             e.preventDefault();
         } else if (currentState === GAME_STATE.STORY) {
-            // 스토리 화면: 스킵
-            skipStory();
-            e.preventDefault();
+            // 스토리 화면: 가로 모드에서만 스킵 허용
+            if (isMobileLandscapeOrientation()) {
+                skipStory();
+                e.preventDefault();
+            }
         }
     }
     lastTapTime = currentTime;
@@ -2985,18 +2952,12 @@ function handleResize() {
         enterMobileFullscreen();
     }
 }
+window.addEventListener('resize', handleResize);
+window.addEventListener('orientationchange', handleResize);
+applyMobileOptimizations();
+resizeCanvas();
 
 function gameLoop(timestamp) {
-    // 델타 타임 계산 및 제한 (성능 저하 방지)
-    const deltaTime = Math.min(timestamp - lastFrameTime, MAX_DELTA_TIME);
-    lastFrameTime = timestamp;
-    
-    // 파티클 수 제한 (성능 최적화)
-    const maxParticles = isMobileTouchDevice() ? MAX_PARTICLES_MOBILE : MAX_PARTICLES_DESKTOP;
-    if (particles.length > maxParticles) {
-        particles.splice(0, particles.length - maxParticles);
-    }
-    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // 스토리 화면
@@ -3076,15 +3037,6 @@ function gameLoop(timestamp) {
         for (let i = enemies.length - 1; i >= 0; i--) { enemies[i].update(timestamp); if (!enemies[i].active) enemies.splice(i, 1); }
         for (let i = particles.length - 1; i >= 0; i--) { particles[i].update(); if (particles[i].life <= 0) particles.splice(i, 1); }
     }
-
-    // START 상태: 시작 화면만 렌더링
-    if (currentState === GAME_STATE.START) {
-        drawStartScreen();
-        animationId = requestAnimationFrame(gameLoop);
-        return;
-    }
-
-    // 게임 플레이 상태: 게임 오브젝트 렌더링
     Background.draw(ctx);
     if (boss) boss.draw(ctx);
     for (const g of gates) g.draw(ctx);
@@ -3114,6 +3066,7 @@ function gameLoop(timestamp) {
 
     drawStoryText(ctx, timestamp); // 스토리 연출 레이어 추가
 
+    if (currentState === GAME_STATE.START) drawStartScreen();
     if (currentState === GAME_STATE.GAME_OVER) drawGameOverScreen();
     if (currentState === GAME_STATE.GAME_CLEAR_IMAGE) {
         drawGameClearImageScreen();
@@ -4156,9 +4109,6 @@ function addFloatingText(text, x, y, color) {
 }
 
 async function init() {
-    // 캔버스 크기 초기화
-    resizeCanvas();
-
     await ImageLoader.loadAllAssets();
     Player.init();
     updateMainMenuVisibility();
