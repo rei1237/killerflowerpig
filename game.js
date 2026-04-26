@@ -1549,7 +1549,9 @@ class Enemy {
 
             let rowIdx = this.state === 'ATTACK' ? 1 : (this.state === 'DEAD' ? 2 : 0);
             const frameIdx = this.aniFrame % this.totalFrames;
-            const sx = (frameIdx + 1) * frameW;
+            // 청토끼 3: 이미지 정렬 조정 (이전 기준 -10px)
+            const offsetX = (enemyAssetKey === 'enemy3') ? -10 : 0;
+            const sx = (frameIdx + 1) * frameW + offsetX;
             const sy = rowIdx * frameH;
 
             // 이미지 보정: 픽셀 아트 가독성을 위해 소수점 좌표 제거 및 여백 최적화
@@ -2208,7 +2210,7 @@ const BOSS2_SPRITE_MAP = {
             { x: 300, w: 232 }, // [0] 준비 자세
             { x: 532, w: 232 }, // [1] 뒤로 빼기
             { x: 744, w: 232 }, // [2] 힘 모으기
-            { x: 1000, w: 232 }, // [3] ★ 공격 순간 (hitFrame)
+            { x: 990, w: 232 }, // [3] ★ 공격 순간 (hitFrame)
             { x: 1232, w: 232 }, // [4] 뒤로 물러나기
             { x: 1464, w: 232 }  // [5] 원위치 복귀
         ]
@@ -2236,10 +2238,10 @@ const BOSS_KING_SPRITE_MAP = {
         // 프레임 순서: [0]준비 → [1]뒤로 → [2]모으기 → [3]낮추기 → [4]★공격★ → [5]복귀
         frames: [
             { x: 300, w: 232 }, // [0] 준비 자세
-            { x: 532, w: 232 }, // [1] 뒤로 빼기
-            { x: 744, w: 232 }, // [2] 힘 모으기
-            { x: 1000, w: 232 }, // [3] 낮추기/정조준
-            { x: 1232, w: 232 }, // [4] ★ 공격 순간 (hitFrame)
+            { x: 552, w: 232 }, // [1] 뒤로 빼기
+            { x: 764, w: 232 }, // [2] 힘 모으기
+            { x: 1010, w: 232 }, // [3] 낮추기/정조준
+            { x: 1252, w: 232 }, // [4] ★ 공격 순간 (hitFrame)
             { x: 1464, w: 232 }  // [5] 원위치 복귀
         ]
     },
