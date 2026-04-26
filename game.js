@@ -2353,12 +2353,22 @@ const BOSS_KING_SPRITE_MAP = {
 
 class Boss {
     constructor(level = 1) {
-        this.x = canvas.width - 250; this.y = canvas.height / 2 - 100;
-        this.width = 200; this.height = 200; this.level = level;
-
         // 스테이지별 보스 타입 확인 (인스턴스 속성으로 저장)
         this.isBoss2 = currentStage >= 6 && currentStage < 9;
         this.isBossKing = currentStage >= 9; // 스테이지 9-10: 보스킹
+
+        // 보스 사이즈 최적화 (비주얼과 콜리전 박스 일치)
+        let visualScale = 1.6;
+        if (this.isBossKing) visualScale = 3.2;
+        else if (this.isBoss2) visualScale = 2.6;
+
+        this.visualScale = visualScale;
+        this.width = 180 * visualScale;
+        this.height = 180 * visualScale;
+
+        this.x = canvas.width - this.width - 50;
+        this.y = canvas.height / 2 - this.height / 2;
+        this.level = level;
 
         // 기본 체력 계산
         const baseHp = 2500 * level + (level === 10 ? 15000 : 0);
@@ -2573,14 +2583,8 @@ class Boss {
         if (img) {
             // 보스 타입별 스프라이트 매핑 선택 (인스턴스 속성 사용)
             let spriteMap = BOSS_SPRITE_MAP;
-            let scale = 1.25;
-            if (this.isBossKing) {
-                spriteMap = BOSS_KING_SPRITE_MAP;
-                scale = 2;
-            } else if (this.isBoss2) {
-                spriteMap = BOSS2_SPRITE_MAP;
-                scale = 2;
-            }
+            if (this.isBossKing) spriteMap = BOSS_KING_SPRITE_MAP;
+            else if (this.isBoss2) spriteMap = BOSS2_SPRITE_MAP;
 
             // 스프라이트 애니메이션 좌표 계산
             const animSet = spriteMap[this.state] || spriteMap.WALK;
@@ -2592,7 +2596,7 @@ class Boss {
             // 보스 크기 고정 - 프레임마다 일정한 크기 유지
             // 기준 비율(116/200)을 사용하여 모든 프레임에서 동일한 크기 적용
             const baseAspectRatio = 116 / 200; // 보스 기본 프레임 비율
-            const drawW = this.width * scale;
+            const drawW = this.width * this.visualScale;
             const drawH = drawW * baseAspectRatio; // 고정 비율 사용
 
             // 소스 이미지도 고정된 비율로 크롭 (프레임마다 다른 h값 보정)
