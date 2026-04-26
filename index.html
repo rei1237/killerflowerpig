@@ -155,8 +155,9 @@
             <div class="victory-neon-frame">
                 <img src="asset/꽃돼지 승리.png" alt="Victory" class="victory-img">
             </div>
-            <h1 class="overlay-title gold">STAGE CLEAR!</h1>
-            <p class="overlay-desc">좀비 무리를 물리쳤습니다.</p>
+            <h1 class="overlay-title gold" id="stage-clear-title">STAGE CLEAR!</h1>
+            <p class="overlay-desc" id="stage-clear-desc">좀비 무리를 물리쳤습니다.</p>
+            <button id="stage-clear-epilogue-btn" type="button" class="pixel-btn primary win-btn" style="display:none; margin-top:24px;">에필로그 보기</button>
         </div>
 
         <!-- 전체화면 오버레이: 게임 올 클리어 (Win) -->
@@ -169,7 +170,10 @@
             <div class="win-score-box">
                 FINAL SCORE: <span id="win-score-text">0</span>
             </div>
-            <button id="win-restart-btn" type="button" class="pixel-btn primary win-btn">RESTART JOURNEY</button>
+            <div class="win-actions" style="display: flex; gap: 15px; margin-top: 20px;">
+                <button id="win-retry-btn" type="button" class="pixel-btn primary win-btn">다시 게임하기</button>
+                <button id="win-quit-btn" type="button" class="pixel-btn secondary win-btn">게임 종료</button>
+            </div>
         </div>
 
         <!-- 인게임 DOM UI (HUD 및 컨트롤러) -->
