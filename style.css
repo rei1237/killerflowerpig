@@ -65,13 +65,20 @@ html {
     display: block;
     cursor: crosshair;
     touch-action: none;
+    /* 성능 최적화: GPU 가속 및 렌더링 최적화 */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 #gameCanvas.mobile-optimized {
     cursor: default;
     /* MOBILE LANDSCAPE */
     image-rendering: pixelated;
-    /* MOBILE LANDSCAPE */
+    image-rendering: -webkit-optimize-contrast;
+    /* 성능 최적화 */
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 #install-btn {
@@ -179,10 +186,10 @@ html {
    모바일 가로 모드 - 2D 도트 콘솔 느낌
    ========================================== */
 @media screen and (max-width: 1024px) and (orientation: landscape) {
-    /* START 버튼 - 우측 여백에 완전히 밀착 (조이패드) */
+    /* START 버튼 - 브라우저 UI에 가리지 않도록 안전 영역 고려 */
     .start-container {
         right: 20px;
-        bottom: 20px;
+        bottom: max(80px, env(safe-area-inset-bottom, 80px));
         left: auto;
         transform: none;
     }
@@ -195,7 +202,7 @@ html {
 
     .install-container {
         right: 20px;
-        bottom: 100px; /* 스타트 버튼(20px) 보다 위로 배치 */
+        bottom: max(160px, calc(env(safe-area-inset-bottom, 80px) + 80px)); /* 스타트 버튼보다 위로 배치 + 안전영역 */
         top: auto;
         left: auto;
         transform: none;

@@ -766,8 +766,20 @@ if (installButton) {
 // 스토리 화면 클릭/탭으로 계속
 function handleStoryClick(e) {
     if (currentState === GAME_STATE.STORY) {
+        // 더블 탭 감지 - 터치 이벤트와 통합
+        const currentTime = Date.now();
+        const tapLength = currentTime - lastTapTime;
+        lastTapTime = currentTime;
+        
+        // 더블 탭이면 스킵
+        if (tapLength > 0 && tapLength < 300) {
+            console.log('[Story] Double tap detected - skipping');
+            skipStory();
+            e.preventDefault();
+            return;
+        }
+        
         e.preventDefault();
-        e.stopPropagation();
 
         // 스토리 상태 진입 후 300ms 이내 클릭은 무시 (디바운스)
         const timeSinceEnter = Date.now() - storyStateEnterTime;
@@ -786,8 +798,22 @@ function handleStoryClick(e) {
             storyDisplayTime = Date.now() - (999999); // 즉시 완료
         }
     } else if (currentState === GAME_STATE.EPILOGUE) {
+        // 더블 탭 감지
+        const currentTime = Date.now();
+        const tapLength = currentTime - lastTapTime;
+        lastTapTime = currentTime;
+        
+        // 더블 탭이면 에필로그 완전 스킵
+        if (tapLength > 0 && tapLength < 300) {
+            console.log('[Epilogue] Double tap detected - skipping to end');
+            currentState = GAME_STATE.GAME_CLEAR_IMAGE;
+            gameClearImageStartTime = Date.now();
+            AudioManager.stopEpilogueBGM();
+            e.preventDefault();
+            return;
+        }
+        
         e.preventDefault();
-        e.stopPropagation();
 
         // 에필로그 상태 진입 후 300ms 이내 클릭은 무시 (디바운스)
         const timeSinceEnter = Date.now() - storyStateEnterTime;
@@ -2639,7 +2665,11 @@ function spawnEnemyWave() {
     enemies.push(e);
 }
 
-function createExplosion(x, y, color = '#e74c3c') { for (let i = 0; i < 15; i++) particles.push(new Particle(x, y, color)); }
+// 폭발 효과 생성 (성능에 따라 파티클 수 조정)
+function createExplosion(x, y, color = '#e74c3c') { 
+    const particleCount = isMobileTouchDevice() ? 8 : 15; // 모바일에서는 파티클 절반
+    for (let i = 0; i < particleCount; i++) particles.push(new Particle(x, y, color)); 
+}
 function endGame() {
     if (currentState !== GAME_STATE.GAME_OVER) gameOverStartTime = Date.now();
     currentState = GAME_STATE.GAME_OVER;
@@ -2947,12 +2977,18 @@ function handleResize() {
         enterMobileFullscreen();
     }
 }
-window.addEventListener('resize', handleResize);
-window.addEventListener('orientationchange', handleResize);
-applyMobileOptimizations();
-resizeCanvas();
 
 function gameLoop(timestamp) {
+    // 델타 타임 계산 및 제한 (성능 저하 방지)
+    const deltaTime = Math.min(timestamp - lastFrameTime, MAX_DELTA_TIME);
+    lastFrameTime = timestamp;
+    
+    // 파티클 수 제한 (성능 최적화)
+    const maxParticles = isMobileTouchDevice() ? MAX_PARTICLES_MOBILE : MAX_PARTICLES_DESKTOP;
+    if (particles.length > maxParticles) {
+        particles.splice(0, particles.length - maxParticles);
+    }
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // 스토리 화면
