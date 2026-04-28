@@ -98,84 +98,286 @@ function updateInGameUIVisibility() {
 // --- 캔버스 기반 HUD 렌더링 (닌텐도 클래식 2D 스타일) ---
 function drawHUD(ctx) {
     const time = Date.now();
+    const pulse = 0.7 + 0.3 * Math.sin(time / 400);
     const isMobile = isMobileTouchDevice();
     const isLandscape = window.innerWidth > window.innerHeight;
-    const scale = isMobile ? (isLandscape ? 0.8 : 0.7) : 1.0;
+    const scale = isMobile ? (isLandscape ? 0.7 : 0.6) : 0.85;
 
-    // 1. 좌상단 체력 & 점수 영역
     ctx.save();
-    const hudX = 20 * scale;
-    const hudY = 20 * scale;
+    ctx.scale(scale, scale);
 
-    // HUD 닌텐도 그레이 프레임
-    ctx.fillStyle = '#bdc3c7';
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 4 * scale;
-    ctx.fillRect(hudX, hudY, 200 * scale, 65 * scale);
-    ctx.strokeRect(hudX, hudY, 200 * scale, 65 * scale);
+    // === COMPACT UI ===
+    const startX = 15;
+    const startY = 12;
+    const panelW = 200;
+    const panelH = 70;
 
-    // 내부 그림자 (2D 스타일)
-    ctx.fillStyle = 'rgba(0,0,0,0.1)';
-    ctx.fillRect(hudX + 195 * scale, hudY, 5 * scale, 65 * scale);
-    ctx.fillRect(hudX, hudY + 60 * scale, 200 * scale, 5 * scale);
+    // 1. Shadow/Background
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(startX + 2, startY + 2, panelW, panelH);
 
-    // 체력 바 배경
+    // 2. Frame (brass border)
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#bfa76f';
+    ctx.strokeRect(startX, startY, panelW, panelH);
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(startX + 2, startY + 2, panelW - 4, panelH - 4);
+
+    // 3. HP Bar (compact)
+    const hpBarW = panelW - 20;
+    const hpBarH = 8;
+    const hpBarX = startX + 10;
+    const hpBarY = startY + 20;
+
     ctx.fillStyle = '#000';
-    ctx.fillRect(hudX + 10 * scale, hudY + 10 * scale, 180 * scale, 18 * scale);
+    ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
 
-    // 체력 바 채우기 (클래식 닌텐도 레드)
-    const hpPercent = Math.max(0, Player.hp / Player.maxHp);
-    if (hpPercent > 0) {
-        ctx.fillStyle = '#e74c3c';
-        ctx.fillRect(hudX + 10 * scale, hudY + 10 * scale, 180 * scale * hpPercent, 18 * scale);
+    const hpRatio = Player.hp / Player.maxHp;
+    const hpColor = hpRatio > 0.5 ? '#00ff66' : (hpRatio > 0.2 ? '#ffcc00' : '#ff4444');
+    ctx.fillStyle = hpColor;
+    ctx.fillRect(hpBarX, hpBarY, hpBarW * hpRatio, hpBarH);
 
-        // 상단 하이라이트 (플랫 2D)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.fillRect(hudX + 10 * scale, hudY + 10 * scale, 180 * scale * hpPercent, 6 * scale);
+    // Glow
+    ctx.save();
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = hpColor;
+    ctx.fillRect(hpBarX, hpBarY, hpBarW * hpRatio, hpBarH);
+    ctx.restore();
+
+    // Highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillRect(hpBarX, hpBarY, hpBarW * hpRatio, hpBarH * 0.4);
+
+    // 4. Text - Yeon's hp
+    ctx.fillStyle = '#aaa';
+    ctx.font = '9px "Press Start 2P"';
+    ctx.textAlign = 'left';
+    ctx.fillText("Yeon's hp", hpBarX, hpBarY - 4);
+
+    // HP Value
+    const displayHp = Math.floor(Player.hp * 20);
+    const displayMaxHp = Math.floor(Player.maxHp * 20);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = hpColor;
+    ctx.fillText(`${displayHp}/${displayMaxHp}`, hpBarX + hpBarW, hpBarY - 4);
+
+    // === [COMPACT LEVEL UI - FITS IN MAIN PANEL] ===
+    const statsY = startY + 46;
+    const levelPanelW = 56;
+    const levelPanelH = 18;
+    
+    // Helper: Draw advanced mini panel with 3D metallic effect
+    function drawMiniPanel(x, y, w, h, borderColor, bgColor, glowColor) {
+        // Drop shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(x + 2, y + 2, w, h);
+        
+        // Outer border with glow
+        if (glowColor) {
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = glowColor;
+        }
+        ctx.fillStyle = borderColor;
+        ctx.fillRect(x, y, w, h);
+        ctx.shadowBlur = 0;
+        
+        // Inner background with gradient
+        const grad = ctx.createLinearGradient(x, y, x, y + h);
+        grad.addColorStop(0, bgColor);
+        grad.addColorStop(0.5, adjustColor(bgColor, 10));
+        grad.addColorStop(1, adjustColor(bgColor, -10));
+        ctx.fillStyle = grad;
+        ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+        
+        // Top highlight line
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.fillRect(x + 2, y + 2, w - 4, 1);
+    }
+    
+    // Helper: Adjust color brightness
+    function adjustColor(hex, amount) {
+        const num = parseInt(hex.replace('#', ''), 16);
+        const r = Math.min(255, Math.max(0, (num >> 16) + amount));
+        const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount));
+        const b = Math.min(255, Math.max(0, (num & 0x00FF) + amount));
+        return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    }
+    
+    // Helper: Draw compact skull icon (smaller)
+    function drawPixelSkull(cx, cy, color) {
+        ctx.fillStyle = color;
+        // Compact skull (6x8 pixels)
+        const skullPixels = [
+            [0,-3],[-1,-3],[1,-3],
+            [-2,-2],[2,-2],
+            [-2,-1],[2,-1],
+            [0,0],
+            [-1,1],[1,1]
+        ];
+        skullPixels.forEach(([px, py]) => {
+            ctx.fillRect(cx + px, cy + py, 2, 2);
+        });
+        
+        // Eye glow (smaller)
+        ctx.fillStyle = '#00ff00';
+        ctx.fillRect(cx - 2, cy - 2, 1, 1);
+        ctx.fillRect(cx + 2, cy - 2, 1, 1);
+    }
+    
+    // Helper: Draw compact bullet/ammo icon
+    function drawPixelBullet(cx, cy, color) {
+        ctx.fillStyle = color;
+        // Compact bullet (3x6)
+        ctx.fillRect(cx - 1, cy - 3, 3, 6);
+        // Rim
+        ctx.fillRect(cx - 1, cy + 2, 3, 1);
+        // Tip
+        ctx.fillStyle = adjustColor(color, -30);
+        ctx.fillRect(cx - 1, cy - 3, 3, 2);
+    }
+    
+    // Helper: Draw compact lightning bolt
+    function drawPixelLightning(cx, cy, color) {
+        ctx.fillStyle = color;
+        const bolt = [
+            [0,-4],[0,-3],[-1,-2],[0,-2],[0,-1],[0,0],[1,1]
+        ];
+        bolt.forEach(([px, py]) => {
+            ctx.fillRect(cx + px, cy + py, 2, 2);
+        });
+    }
+    
+    // Helper: Draw premium progress bar with segments
+    function drawMiniBar(x, y, w, h, fillPercent, color, glowColor) {
+        // Background
+        ctx.fillStyle = '#0a0a0a';
+        ctx.fillRect(x, y, w, h);
+        
+        // Border
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, w, h);
+        
+        // Fill with glow
+        const fillW = (w - 2) * fillPercent;
+        if (fillW > 0) {
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = glowColor || color;
+            ctx.fillStyle = color;
+            ctx.fillRect(x + 1, y + 1, fillW, h - 2);
+            ctx.shadowBlur = 0;
+            
+            // Highlight
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.fillRect(x + 1, y + 1, fillW, (h - 2) * 0.35);
+            
+            // Segment lines (every 20%)
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            for (let i = 1; i < 5; i++) {
+                const segX = x + (w - 2) * (i / 5);
+                if (segX < x + 1 + fillW) {
+                    ctx.fillRect(segX, y + 1, 1, h - 2);
+                }
+            }
+        }
+    }
+    
+    // Helper: Draw compact level badge
+    function drawLevelBadge(x, y, level, color) {
+        ctx.fillStyle = color;
+        ctx.font = '7px "Press Start 2P"';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${level}`, x, y);
     }
 
-    // 점수 표시 (클래식 옐로우)
-    ctx.fillStyle = '#f1c40f';
-    ctx.font = `${Math.floor(14 * scale)}px "Press Start 2P"`;
-    ctx.textAlign = 'left';
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2 * scale;
-    ctx.strokeText(String(score).padStart(7, '0'), hudX + 12 * scale, hudY + 52 * scale);
-    ctx.fillText(String(score).padStart(7, '0'), hudX + 12 * scale, hudY + 52 * scale);
-    ctx.restore();
+    // Helper: Draw stat value text
+    function drawStatValue(x, y, value, unit, color) {
+        ctx.fillStyle = color;
+        ctx.font = '5px "Press Start 2P"';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${Math.round(value)}${unit}`, x, y);
+    }
 
-    // 2. 우상단 폭탄 잔량 표시 (닌텐도 아이템 슬롯 스타일)
-    ctx.save();
-    const bombAreaW = 90 * scale;
-    const bombAreaX = canvas.width - bombAreaW - 20 * scale;
-    const bombAreaY = 20 * scale;
+    // === PLAYER LEVEL PANEL (RANK) - Compact ===
+    const playerGlow = LevelSystem.playerLevel > 1 ? '#00ff88' : null;
+    drawMiniPanel(startX + 10, statsY - 12, levelPanelW, levelPanelH, '#4a4a2a', '#1a1a0a', playerGlow);
+    drawPixelSkull(startX + 18, statsY - 3, '#e0d0a0');
+    drawLevelBadge(startX + 28, statsY - 6, LevelSystem.playerLevel, '#FFD700');
+    // EXP Bar (compact 30px)
+    const expPercent = Math.min(1, LevelSystem.playerExp / LevelSystem.playerExpToNext);
+    drawMiniBar(startX + 28, statsY + 2, 30, 4, expPercent, '#2ecc71', '#00ff88');
 
-    // 폭탄 슬롯 배경
-    ctx.fillStyle = '#bdc3c7';
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 4 * scale;
-    ctx.fillRect(bombAreaX, bombAreaY, bombAreaW, 50 * scale);
-    ctx.strokeRect(bombAreaX, bombAreaY, bombAreaW, 50 * scale);
+    // === ATTACK LEVEL PANEL (DAMAGE) - Compact ===
+    const dmgItem = LevelSystem.items.DAMAGE;
+    const dmgGlow = dmgItem.level > 1 ? '#ff4444' : null;
+    drawMiniPanel(startX + 72, statsY - 12, levelPanelW, levelPanelH, '#4a1a1a', '#1a0a0a', dmgGlow);
+    drawPixelBullet(startX + 80, statsY - 3, '#c0c0c0');
+    drawLevelBadge(startX + 90, statsY - 6, dmgItem.level, '#FF6666');
+    // Show actual attack stat value
+    drawStatValue(startX + 90, statsY + 3, Player.damage, '', '#ff9999');
+    // Attack EXP Bar
+    const dmgExpPercent = Math.min(1, dmgItem.exp / dmgItem.expToNext);
+    drawMiniBar(startX + 90, statsY + 6, 30, 3, dmgExpPercent, '#e74c3c', '#ff6666');
 
-    // 폭탄 아이콘 (2D 플랫 도트)
-    const bx = bombAreaX + 25 * scale;
-    const by = bombAreaY + 25 * scale;
+    // === SPEED LEVEL PANEL (FIRE RATE) - Compact ===
+    const fireItem = LevelSystem.items.FIRE_RATE;
+    const speedGlow = fireItem.level > 1 ? '#4488ff' : null;
+    drawMiniPanel(startX + 134, statsY - 12, levelPanelW, levelPanelH, '#1a2a4a', '#0a0a1a', speedGlow);
+    drawPixelLightning(startX + 142, statsY - 3, '#66ccff');
+    drawLevelBadge(startX + 152, statsY - 6, fireItem.level, '#66aaff');
+    // Show actual fire rate stat value
+    drawStatValue(startX + 152, statsY + 3, Player.fireRate, 'ms', '#99ccff');
+    // Speed EXP Bar
+    const fireExpPercent = Math.min(1, fireItem.exp / fireItem.expToNext);
+    drawMiniBar(startX + 152, statsY + 6, 30, 3, fireExpPercent, '#3498db', '#66aaff');
 
-    ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.arc(bx, by, 12 * scale, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#f1c40f';
-    ctx.fillRect(bx - 2 * scale, by - 18 * scale, 4 * scale, 8 * scale); // 심지
-
-    // 하이라이트
+    // 8. Score (right top, outside main panel)
+    ctx.textAlign = 'right';
     ctx.fillStyle = '#fff';
-    ctx.fillRect(bx - 6 * scale, by - 6 * scale, 4 * scale, 4 * scale);
+    ctx.font = '10px "Press Start 2P"';
+    ctx.fillText(`SCORE:${score.toString().padStart(6, '0')}`, canvas.width/scale - 15, 20);
 
-    // 잔량 텍스트
-    ctx.fillStyle = '#000';
-    ctx.font = `${Math.floor(18 * scale)}px "Press Start 2P"`;
-    ctx.textAlign = 'left';
-    ctx.fillText('x' + Player.bombCount, bx + 18 * scale, by + 8 * scale);
+    // 9. Stage info (center top)
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#00ffff';
+    ctx.fillText(`STG${currentStage}`, canvas.width/scale/2, 20);
+    ctx.fillStyle = '#e74c3c';
+    ctx.fillText(`${enemiesKilled}/${getCurrentStageData().goal}`, canvas.width/scale/2, 35);
+
+    // 10. HUD Bombs (top right - pixel art dynamite style)
+    ctx.save();
+    const hudBombStartX = canvas.width/scale - 70;
+    const hudBombY = 45;
+    for (let i = 0; i < Math.min(Player.bombCount, 5); i++) {
+        const bx = hudBombStartX - i * 14;
+        const by = hudBombY;
+        
+        // Dynamite stick (mini)
+        ctx.fillStyle = '#8b0000';
+        ctx.fillRect(bx - 3, by, 6, 12);
+        // Highlight
+        ctx.fillStyle = '#c41e3a';
+        ctx.fillRect(bx - 2, by + 1, 4, 10);
+        // Top highlight
+        ctx.fillStyle = '#ff6b6b';
+        ctx.fillRect(bx - 1, by + 1, 2, 3);
+        // Fuse
+        ctx.fillStyle = '#8b7355';
+        ctx.fillRect(bx - 1, by - 3, 2, 3);
+    }
+    // Show +N if more than 5 bombs
+    if (Player.bombCount > 5) {
+        ctx.fillStyle = '#f1c40f';
+        ctx.font = '8px "Press Start 2P"';
+        ctx.textAlign = 'left';
+        ctx.fillText(`+${Player.bombCount - 5}`, hudBombStartX + 10, hudBombY + 6);
+    }
     ctx.restore();
+
+    ctx.restore();
+
+    // 11. Bomb Button (bottom right - original style)
+    drawBombButton(ctx);
 }
 
 const MOBILE_OPTIMIZED_CLASS = 'mobile-optimized';
@@ -250,32 +452,32 @@ let floatingTexts = []; // "BONUS!" 효과 등을 위한 플로팅 텍스트
 const SPAWN_INTERVAL = 2000;
 const GATE_SPAWN_INTERVAL = 6000;
 const EASY_MODE_CONFIG = {
-    // 적 관련 - 가로 모드에서 30% 쉽게
-    enemySpeedMultiplier: 0.7,        // 적 속도 30% 감소
-    spawnRateMultiplier: 1.3,         // 적 등장 간격 30% 늘림 (더 느리게)
-    goalMultiplier: 0.8,              // 목표 수 20% 감소
-    homingSpeedMultiplier: 0.7,       // 홈링 속도 30% 감소
-    enemyHpMultiplierA: 0.7,          // 적 체력 30% 감소 (기본 체력)
-    enemyHpMultiplierB: 0.7,        // 적 체력 30% 감소 (스테이지 보너스)
-    enemyShootIntervalMultiplier: 1.5, // 적 발사 간격 50% 늘림 (더 느리게)
-    maxActiveEnemies: 8,             // 동시 적 수 20% 감소
+    // 적 관련 - 가로 모드: 원래 모드와 동일하게, 속도만 50% 느리게
+    enemySpeedMultiplier: 0.5,           // 적 이동 속도 50% 느리게
+    spawnRateMultiplier: 1.0,            // 원래 모드와 동일한 등장 간격
+    goalMultiplier: 1.0,                 // 원래 목표 수
+    homingSpeedMultiplier: 0.5,          // 홈링 속도 50% 느리게
+    enemyHpMultiplierA: 1.0,             // 원래 체력
+    enemyHpMultiplierB: 1.0,             // 원래 체력
+    enemyShootIntervalMultiplier: 1.0,  // 원래 발사 간격
+    maxActiveEnemies: 15,                // 더 많은 적 (작은 크기로 인해)
 
-    // 플레이어 관련 - 가로 모드에서 강화
-    playerHpMultiplier: 1.5,          // 플레이어 HP 50% 증가
-    playerDamageMultiplier: 1.3,      // 공격력 30% 증가
-    playerInvincibleMultiplier: 1.5,  // 무적 시간 50% 증가
-    playerSpeedMultiplier: 1.2,       // 이동 속도 20% 증가
-    fireRateMultiplier: 0.8,          // 발사 속도 20% 증가 (쿨다운 20% 감소)
+    // 플레이어 관련 - 가로 모드: 원래 모드와 동일
+    playerHpMultiplier: 1.0,             // 원래 HP
+    playerDamageMultiplier: 1.0,          // 원래 공격력
+    playerInvincibleMultiplier: 1.0,     // 원래 무적 시간
+    playerSpeedMultiplier: 1.0,            // 원래 이동 속도
+    fireRateMultiplier: 1.0,             // 원래 발사 속도
 
-    // 보스 관련 - 가로 모드에서 쉽게
-    bossMoveScaleMultiplier: 0.8,     // 보스 이동 속도 20% 감소
-    bossAttackIntervalMultiplier: 2.0, // 2배 덜 자주 공격
-    bossSummonEnemySpeedMultiplier: 0.7, // 소환된 적 속도 30% 감소
-    bossSummonEnemyHpMultiplier: 0.7, // 소환된 적 체력 30% 감소
-    bossProjectileSpeedMultiplier: 0.7, // 보스 발체 속도 30% 감소
+    // 보스 관련 - 가로 모드: 원래 모드와 동일하게, 속도만 50% 느리게
+    bossMoveScaleMultiplier: 0.5,        // 보스 이동 속도 50% 느리게
+    bossAttackIntervalMultiplier: 1.0,   // 원래 공격 간격
+    bossSummonEnemySpeedMultiplier: 0.5, // 소환된 적 속도 50% 느리게
+    bossSummonEnemyHpMultiplier: 1.0,   // 원래 체력
+    bossProjectileSpeedMultiplier: 0.5,   // 보스 발체 속도 50% 느리게
 
     // 게임 템포
-    gameSpeedMultiplier: 0.9          // 전체 게임 속도 10% 감소
+    gameSpeedMultiplier: 1.0             // 원래 게임 속도
 };
 
 function isMobileTouchDevice() {
@@ -1191,17 +1393,53 @@ const Player = {
     x: 50, y: 0, width: 64, height: 64,
     speed: 0.15,
     fireRate: 200,
-    minFireRate: 50,
+    minFireRate: 20,
     lastFireTime: 0,
     damage: 10,
+    defense: 0, // 방어력 (레벨업으로 증가, 받는 데미지 감소)
     targetY: 0,
     init: function () {
+        // 가로모드에서 크기 75% 축소 (더 많은 적을 위한 공간 확보)
+        if (isMobileLandscapePlayMode()) {
+            this.width = 48;
+            this.height = 48;
+        } else {
+            this.width = 64;
+            this.height = 64;
+        }
+        
         this.y = canvas.height / 2 - this.height / 2;
         this.targetY = this.y;
-        this.fireRate = 200;
-        this.damage = isMobileEasyModeActive() ? Math.round(10 * EASY_MODE_CONFIG.playerDamageMultiplier) : 10; // EASY MODE
-        this.hp = isMobileEasyModeActive() ? Math.round(5 * EASY_MODE_CONFIG.playerHpMultiplier) : 5; // EASY MODE
-        this.maxHp = this.hp; // EASY MODE
+        
+        // 레벨 기반 기본 스탯 계산
+        const baseDamage = 10;
+        const baseHp = 5;
+        const baseFireRate = 200;
+        
+        // 플레이어 레벨 보너스 (공격력 제외 - 무기 레벨만 영향)
+        const levelBonusHp = (LevelSystem.playerLevel - 1) * LevelSystem.stats.playerHpPerLevel;
+        const levelBonusDef = (LevelSystem.playerLevel - 1) * LevelSystem.stats.playerDefensePerLevel;
+        
+        // 아이템 레벨 보너스 - 무기 레벨만 공격력에 영향
+        const itemDamageBonus = (LevelSystem.items.DAMAGE.level - 1) * LevelSystem.stats.itemDamagePerLevel;
+        const itemFireRateBonus = (LevelSystem.items.FIRE_RATE.level - 1) * LevelSystem.stats.itemFireRatePerLevel;
+        
+        // 최종 스탯 계산 - 무기 레벨만 공격력에 영향
+        this.damage = isMobileEasyModeActive() 
+            ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier) 
+            : baseDamage + itemDamageBonus;
+            
+        // 공격속도: 아이템 레벨로 감소 (최소 minFireRate까지)
+        this.fireRate = Math.max(baseFireRate - itemFireRateBonus, this.minFireRate);
+        
+        this.hp = isMobileEasyModeActive() 
+            ? Math.round((baseHp + levelBonusHp) * EASY_MODE_CONFIG.playerHpMultiplier) 
+            : baseHp + levelBonusHp;
+        this.maxHp = this.hp;
+        
+        // 방어력: 플레이어 레벨로 증가 (캐릭터 레벨업 보너스)
+        this.defense = levelBonusDef;
+        
         this.shield = 0;
         this.bombCount = 3;
         this.aniFrame = 0;
@@ -1251,39 +1489,33 @@ const Player = {
 
         this.aniFrame = Math.floor((time % aniCycleTime) / (frameDuration || 1)) % totalAniFrames;
         if (time - this.lastFireTime >= fire) {
-            this.shoot();
             this.lastFireTime = time;
-        }
-    },
-    shoot: function () {
-        // 총알 생성 및 공격력에 따라 크기/속도 조정
-        const baseDamage = 10; // 기본 데미지 기준값
-        const baseSpeed = 10; // 기본 총알 속도
-        const damageRatio = this.damage / baseDamage;
-        const bulletWidth = Math.max(12, Math.round(16 * damageRatio)); // 최소 12px, 더 크게 증가
-        const bulletHeight = Math.max(8, Math.round(12 * damageRatio)); // 더 크게 증가
-        // 속도는 공격력업당 15%씩만 증가 (예: 데미지 50이면 기본속도 + 60%)
-        const speedMultiplier = 1 + ((this.damage - baseDamage) / 10) * 0.15;
-        const bulletSpeed = baseSpeed * speedMultiplier;
-        const projectile = new Projectile(this.x + this.width - 5, this.y + this.height * 0.65, bulletSpeed, 0, this.damage);
-        // 크기 조정 반영
-        projectile.width = bulletWidth;
-        projectile.height = bulletHeight;
-        projectiles.push(projectile);
+            
+            // 무기 레벨당 15% 크기 증가 (DAMAGE 레벨 기준, 최대 10레벨까지)
+            const weaponLevel = LevelSystem.items.DAMAGE.level;
+            const cappedWeaponLevel = Math.min(weaponLevel, 10); // 10레벨 이후 크기 증가 없음
+            const sizeScale = 1 + (cappedWeaponLevel - 1) * 0.15; // 레벨 1 = 100%, 레벨 10 = 235%
+            const bulletWidth = Math.max(16, Math.round(20 * sizeScale));
+            const bulletHeight = Math.max(8, Math.round(10 * sizeScale));
+            // 속도도 무기 레벨당 10%씩 증가
+            const speedScale = 1 + (weaponLevel - 1) * 0.1;
+            const bulletSpeed = 10 * speedScale;
+            
+            // 주 총알 발사 - Projectile 생성자에서 공격력 기반으로 크기 자동 계산
+            console.log(`[SHOOT] Player.damage: ${this.damage}, bulletSpeed: ${bulletSpeed}, weaponLevel: ${weaponLevel}`);
+            const projectile = new Projectile(this.x + this.width - 5, this.y + this.height * 0.65, bulletSpeed, 0, this.damage);
+            projectiles.push(projectile);
 
-        // 지원군 사격 (위, 아래 추가 지원)
-        if (this.supportTimer > 0) {
-            const projTop = new Projectile(this.x + this.width - 5, this.y + this.height * 0.65 - 80, bulletSpeed, 0, this.damage);
-            projTop.width = bulletWidth;
-            projTop.height = bulletHeight;
-            const projBottom = new Projectile(this.x + this.width - 5, this.y + this.height * 0.65 + 80, bulletSpeed, 0, this.damage);
-            projBottom.width = bulletWidth;
-            projBottom.height = bulletHeight;
-            projectiles.push(projTop);
-            projectiles.push(projBottom);
-        }
+            // 지원군 사격 (위, 아래 추가 지원)
+            if (this.supportTimer > 0) {
+                const projTop = new Projectile(this.x + this.width - 5, this.y + this.height * 0.65 - 80, bulletSpeed, 0, this.damage);
+                const projBottom = new Projectile(this.x + this.width - 5, this.y + this.height * 0.65 + 80, bulletSpeed, 0, this.damage);
+                projectiles.push(projTop);
+                projectiles.push(projBottom);
+            }
 
-        AudioManager.playSFX('shoot');
+            AudioManager.playSFX('shoot');
+        }
     },
     draw: function (ctx) {
         // 승리 모션 처리
@@ -1356,10 +1588,219 @@ const Player = {
     }
 };
 
+// ============================================================================
+// [Level System - 레벨 및 경험치 시스템]
+// 플레이어 레벨과 각 아이템별 레벨/경험치 관리
+// ============================================================================
+const LevelSystem = {
+    // 플레이어 기본 레벨 (레벨업 매우 어렵게)
+    playerLevel: 1,
+    playerExp: 0,
+    playerExpToNext: 50, // 첫 레벨업: 50마리 (1단계 청토끼 기준)
+    
+    // 아이템별 레벨과 경험치 (10개 게이트 = 1레벨)
+    items: {
+        DAMAGE: { level: 1, exp: 0, expToNext: 100, name: '공격력', icon: '⚔️' },
+        FIRE_RATE: { level: 1, exp: 0, expToNext: 100, name: '공격속도', icon: '🔥' },
+        SHIELD: { level: 1, exp: 0, expToNext: 100, name: '무적', icon: '🛡️' },
+        SUPPORT: { level: 1, exp: 0, expToNext: 100, name: '지원군', icon: '👥' }
+    },
+    
+    // 레벨당 스탯 증가량 (최대 레벨 10 기준으로 조정)
+    maxLevel: 12, // 모든 레벨 최대값 (공격력은 12레벨까지)
+    stats: {
+        playerHpPerLevel: 1.5,      // 플레이어 레벨당 체력 +1.5 (Lv10 = +13.5)
+        playerDamagePerLevel: 0,    // 플레이어 레벨은 공격력에 영향 없음 (무기 레벨만 영향)
+        playerDefensePerLevel: 0.5, // 플레이어 레벨당 방어력 +0.5 (Lv10 = +4.5, 45% 감소)
+        itemDamagePerLevel: 7.45,  // 공격력 아이템 레벨당 +7.45 (Lv12 = +81.95, 총 91.95 ≒ 92)
+        itemFireRatePerLevel: 16.89, // 공격속도 아이템 레벨당 -16.89ms (Lv10 = -152ms, 200→48ms)
+        itemShieldPerLevel: 1500,   // 무적 아이템 레벨당 +1.5초 (Lv10 = +15초, 총 30초)
+        itemSupportPerLevel: 2000   // 지원군 아이템 레벨당 +2초 (Lv10 = +20초, 총 40초)
+    },
+    
+    init: function() {
+        this.playerLevel = 1;
+        this.playerExp = 0;
+        this.playerExpToNext = 100;
+        
+        // 아이템 초기화
+        for (let key in this.items) {
+            this.items[key].level = 1;
+            this.items[key].exp = 0;
+            this.items[key].expToNext = this.getExpToNext(1);
+        }
+    },
+    
+    // 레벨에 따른 필요 경험치 계산 (100: 게이트 10개 = 1레벨)
+    getExpToNext: function(level) {
+        return 100; // 고정값: 100 EXP = 1레벨업
+    },
+    
+    // 플레이어 경험치 획득 (적 처치 시)
+    addPlayerExp: function(amount) {
+        // 최대 레벨 체크
+        if (this.playerLevel >= this.maxLevel) return;
+        
+        this.playerExp += amount;
+        if (this.playerExp >= this.playerExpToNext) {
+            this.levelUpPlayer();
+        }
+    },
+    
+    // 플레이어 레벨업 (최대 레벨 10)
+    levelUpPlayer: function() {
+        // 최대 레벨 체크
+        if (this.playerLevel >= this.maxLevel) {
+            this.playerExp = 0;
+            return;
+        }
+        
+        this.playerLevel++;
+        this.playerExp -= this.playerExpToNext;
+        
+        // 최대 레벨 도달 시 EXP 초과분 버림
+        if (this.playerLevel >= this.maxLevel) {
+            this.playerExp = 0;
+        } else {
+            // 다음 레벨업 필요 경험치 (기하급수적 증가)
+            this.playerExpToNext = Math.floor(50 * Math.pow(2, this.playerLevel - 1));
+        }
+        
+        // 레벨업 효과 - 공격력은 무기 레벨만 영향 (캐릭터 레벨업은 체력/방어력만 증가)
+        const hpBonus = this.stats.playerHpPerLevel;
+        const defBonus = this.stats.playerDefensePerLevel;
+        
+        Player.maxHp += hpBonus;
+        Player.hp += hpBonus;
+        // 공격력은 무기 레벨만 영향 - 캐릭터 레벨업과 무관
+        Player.defense += defBonus;
+        
+        // 레벨업 알림 (공격력 제외)
+        addFloatingText(`★ LEVEL UP! ★`, canvas.width / 2, canvas.height / 2 - 50, '#f1c40f');
+        addFloatingText(`HP +${hpBonus}  DEF +${defBonus.toFixed(1)}`, canvas.width / 2, canvas.height / 2 - 20, '#2ecc71');
+        AudioManager.playSFX('powerup');
+        
+        // 남은 경험치 처리
+        if (this.playerExp >= this.playerExpToNext && this.playerLevel < this.maxLevel) {
+            this.levelUpPlayer();
+        }
+    },
+    
+    // 아이템 경험치 획득 (게이트 통과 시)
+    addItemExp: function(itemType, amount) {
+        if (!this.items[itemType]) return false;
+        
+        const item = this.items[itemType];
+        // 최대 레벨 체크
+        if (item.level >= this.maxLevel) return false;
+        
+        item.exp += amount;
+        
+        let leveledUp = false;
+        while (item.exp >= item.expToNext && item.level < this.maxLevel) {
+            item.exp -= item.expToNext;
+            item.level++;
+            item.expToNext = this.getExpToNext(item.level);
+            this.applyItemLevelUp(itemType, item.level);
+            leveledUp = true;
+            // 최대 레벨 도달 시 EXP 초과분은 버림
+            if (item.level >= this.maxLevel) {
+                item.exp = 0;
+                break;
+            }
+        }
+        
+        return leveledUp;
+    },
+    
+    // 아이템 레벨업 효과 적용 (Player.init()과 동일한 계산 방식 사용)
+    applyItemLevelUp: function(itemType, newLevel) {
+        const item = this.items[itemType];
+        
+        // 아이템 레벨 보너스만 적용 - 무기 레벨만 공격력에 영향 (캐릭터 레벨은 별개)
+        const itemDamageBonus = (LevelSystem.items.DAMAGE.level - 1) * LevelSystem.stats.itemDamagePerLevel;
+        const itemFireRateBonus = (LevelSystem.items.FIRE_RATE.level - 1) * LevelSystem.stats.itemFireRatePerLevel;
+        
+        switch(itemType) {
+            case 'DAMAGE':
+                // 공격력 재계산 - 무기 레벨만 영향
+                const baseDamage = 10;
+                const newDamage = isMobileEasyModeActive() 
+                    ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier)
+                    : baseDamage + itemDamageBonus;
+                Player.damage = newDamage;
+                addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#e74c3c');
+                addFloatingText(`공격력: ${newDamage.toFixed(1)} (+${this.stats.itemDamagePerLevel})`, Player.x, Player.y - 50, '#ff6b6b');
+                break;
+                
+            case 'FIRE_RATE':
+                // 공격속도 재계산 (발사 간격 감소)
+                const baseFireRate = 200;
+                const newFireRate = Math.max(baseFireRate - itemFireRateBonus, Player.minFireRate);
+                Player.fireRate = newFireRate;
+                addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#3498db');
+                addFloatingText(`발사간격: ${newFireRate}ms (-${this.stats.itemFireRatePerLevel}ms)`, Player.x, Player.y - 50, '#74b9ff');
+                break;
+                
+            case 'SHIELD':
+                // 무적 시간 증가
+                addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#9b59b6');
+                addFloatingText(`방어시간 +${(this.stats.itemShieldPerLevel/1000).toFixed(1)}s`, Player.x, Player.y - 50, '#bb8fce');
+                break;
+                
+            case 'SUPPORT':
+                // 지원군 시간 증가
+                addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#e67e22');
+                addFloatingText(`지원시간 +${(this.stats.itemSupportPerLevel/1000).toFixed(1)}s`, Player.x, Player.y - 50, '#f5b041');
+                break;
+        }
+        
+        AudioManager.playSFX('powerup');
+    },
+    
+    // 현재 아이템 효과값 계산
+    getItemEffect: function(itemType) {
+        const item = this.items[itemType];
+        if (!item) return 0;
+        
+        switch(itemType) {
+            case 'DAMAGE':
+                return item.level * this.stats.itemDamagePerLevel;
+            case 'FIRE_RATE':
+                return item.level * this.stats.itemFireRatePerLevel;
+            case 'SHIELD':
+                return item.level * this.stats.itemShieldPerLevel;
+            case 'SUPPORT':
+                return item.level * this.stats.itemSupportPerLevel;
+            default:
+                return 0;
+        }
+    },
+    
+    // 아이템 사용 시 레벨 기반 효과 적용
+    applyShield: function() {
+        const baseShield = 15000; // 15초
+        const bonus = this.getItemEffect('SHIELD');
+        Player.shield = baseShield + bonus;
+        addSkillNotification("SHIELD ACTIVE", baseShield + bonus);
+    },
+    
+    applySupport: function() {
+        const baseSupport = 20000; // 20초
+        const bonus = this.getItemEffect('SUPPORT');
+        Player.supportTimer = baseSupport + bonus;
+        addSkillNotification("SUPPORT CALLED", baseSupport + bonus);
+    }
+};
+
 class Projectile {
     constructor(x, y, vx, vy, damage) {
         this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.damage = damage;
-        this.width = 20; this.height = 10;
+        // 공격력에 따른 총알 크기 설정 (기준 공격력 10, 기본 크기 20x10)
+        // 더 눈에 띄는 크기 증가: 공격력 10당 50% 증가
+        const sizeScale = 1 + Math.max(0, damage - 10) / 10 * 0.15; // 공격력 20이면 1.5배, 30이면 2.0배
+        this.width = 20 * sizeScale;
+        this.height = 10 * sizeScale;
         this.active = true;
     }
     update() {
@@ -1448,8 +1889,10 @@ class Enemy {
         this.x = x; this.y = y;
         // 스테이지 6 이후 적 크기 증가 (30% 키움: 75→98)
         const isStage6Plus = currentStage >= 6;
-        this.width = isStage6Plus ? 98 : 64;
-        this.height = isStage6Plus ? 98 : 64;
+        // 가로모드에서 크기 75% 축소 (더 많은 적을 위한 공간 확보)
+        const sizeScale = isMobileLandscapePlayMode() ? 0.75 : 1.0;
+        this.width = Math.round((isStage6Plus ? 98 : 64) * sizeScale);
+        this.height = Math.round((isStage6Plus ? 98 : 64) * sizeScale);
         // 적 체력 대폭 상향 및 난이도 증가 (스테이지 보너스 50→40으로 감소)
         const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : 1; // EASY MODE
         const hpMultiplierB = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierB : 1; // EASY MODE
@@ -1477,7 +1920,9 @@ class Enemy {
                 this.active = false;
                 // 놓친 적은 무적 상태와 관계없이 1마리당 HP 1 감소 (무적 모드일 때는 감소 안함)
                 if (this.state !== 'DEAD' && !isGodMode) {
-                    Player.hp--; AudioManager.playSFX('miss');
+                    // 방어력 적용: 받는 데미지 = 기본데미지 * (1 - 방어력)
+                    const actualDamage = Math.max(0.2, 1 * (1 - Player.defense));
+                    Player.hp -= actualDamage; AudioManager.playSFX('miss');
                     if (Player.hp <= 0) endGame();
                 } else if (this.state !== 'DEAD' && isGodMode) {
                     // 무적 모드일 때는 효과음만 출력하거나 무시
@@ -1518,7 +1963,9 @@ class Enemy {
             if (checkCollision(hitbox, Player) && Player.shield <= 0) {
                 this.state = 'ATTACK'; this.aniFrame = 0; this.lastFrameTime = timestamp;
                 if (!isGodMode) {
-                    Player.hp--; Player.shield = getPlayerInvincibleDuration(); AudioManager.playSFX('hit');
+                    // 방어력 적용: 받는 데미지 = 기본데미지 * (1 - 방어력)
+                    const actualDamage = Math.max(0.2, 1 * (1 - Player.defense));
+                    Player.hp -= actualDamage; Player.shield = getPlayerInvincibleDuration(); AudioManager.playSFX('hit');
                     if (Player.hp <= 0) endGame();
                 } else {
                     // 무적 모드: 쉴드만 부여하거나 피격 판정만 표시
@@ -1690,33 +2137,85 @@ class GatePair {
     applyBuff(gatePart) {
         let isBonus = false;
         let bonusScore = 1000;
+        const item = LevelSystem.items[gatePart.type];
 
         if (gatePart.type === 'FIRE_RATE') {
-            if (Player.fireRate <= Player.minFireRate) isBonus = true;
-            else { Player.fireRate = Math.max(Player.fireRate - gatePart.value, Player.minFireRate); AudioManager.playSFX('powerup'); }
+              // 공격속도 아이템: EXP 10씩 획득 (10개 = 1레벨)
+              const expGained = 10; // 10씩 오름
+            const leveledUp = LevelSystem.addItemExp('FIRE_RATE', expGained);
+            const newLevel = LevelSystem.items.FIRE_RATE.level;
+            const item = LevelSystem.items.FIRE_RATE;
+            
+            // 스탯 직접 업데이트 - 무기 레벨만 공격력/공격속도에 영향
+            const baseFireRate = 200;
+            const itemFireRateBonus = (newLevel - 1) * LevelSystem.stats.itemFireRatePerLevel;
+            const oldFireRate = Player.fireRate;
+            Player.fireRate = Math.max(baseFireRate - itemFireRateBonus, Player.minFireRate);
+            console.log(`[FIRE RATE UPDATE] Weapon Lv.${newLevel}, Player.fireRate: ${oldFireRate} → ${Player.fireRate}ms, Bonus: -${itemFireRateBonus}ms`);
+            
+            // UI 표시: 레벨업 시에만 스탯 상승, 아니면 EXP만 표시
+            if (leveledUp) {
+                addFloatingText(`🔥 SPD Lv.${newLevel} UP!`, this.x, gatePart.y + gatePart.height / 2 - 10, "#3498db");
+                addFloatingText(`발사간격: ${Player.fireRate}ms`, this.x, gatePart.y + gatePart.height / 2 + 10, "#74b9ff");
+            } else {
+                addFloatingText(`🔥 SPD EXP: ${item.exp}/${item.expToNext}`, this.x, gatePart.y + gatePart.height / 2, "#3498db");
+            }
+            AudioManager.playSFX('powerup');
+            
         } else if (gatePart.type === 'DAMAGE') {
-            if (Player.damage >= 50) isBonus = true;
-            else { Player.damage = Math.min(Player.damage + gatePart.value, 50); AudioManager.playSFX('powerup'); }
+              // 공격력 아이템: EXP 10씩 획득 (10개 = 1레벨)
+              const expGained = 10; // 10씩 오름
+            const leveledUp = LevelSystem.addItemExp('DAMAGE', expGained);
+            const newLevel = LevelSystem.items.DAMAGE.level;
+            const item = LevelSystem.items.DAMAGE;
+            
+            // 스탯 직접 업데이트 - 무기 레벨만 공격력에 영향 (캐릭터 레벨은 무관)
+            const baseDamage = 10;
+            const itemDamageBonus = (newLevel - 1) * LevelSystem.stats.itemDamagePerLevel;
+            const oldDamage = Player.damage;
+            Player.damage = isMobileEasyModeActive() 
+                ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier)
+                : baseDamage + itemDamageBonus;
+            console.log(`[DAMAGE UPDATE] Weapon Lv.${newLevel}, Player.damage: ${oldDamage} → ${Player.damage}, Bonus: +${itemDamageBonus}`);
+            
+            // UI 표시: 레벨업 시에만 스탯 상승, 아니면 EXP만 표시
+            if (leveledUp) {
+                addFloatingText(`⚔️ ATK Lv.${newLevel} UP!`, this.x, gatePart.y + gatePart.height / 2 - 10, "#2ecc71");
+                addFloatingText(`공격력: ${Player.damage.toFixed(1)} (+${LevelSystem.stats.itemDamagePerLevel})`, this.x, gatePart.y + gatePart.height / 2 + 10, "#27ae60");
+            } else {
+                addFloatingText(`⚔️ ATK +${LevelSystem.stats.itemDamagePerLevel} EXP`, this.x, gatePart.y + gatePart.height / 2, "#2ecc71");
+            }
+            AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'HEAL') {
+            // 회복: 즉시 효과
             if (Player.hp >= Player.maxHp) { isBonus = true; bonusScore = 500; }
             else { Player.hp = Math.min(Player.hp + gatePart.value, Player.maxHp); AudioManager.playSFX('heal'); }
         } else if (gatePart.type === 'SHIELD') {
-            if (Player.shield > 0) { isBonus = true; bonusScore = 1500; }
-            else {
-                Player.shield = gatePart.value;
-                addSkillNotification("SHIELD ACTIVE", gatePart.value);
-                AudioManager.playSFX('shield');
+              // 무적 아이템: 경험치 10씩 획득 (10개 = 1레벨)
+              const expGained = 10;
+            const leveledUp = LevelSystem.addItemExp('SHIELD', expGained);
+            // 레벨업 시에만 표시
+            if (leveledUp) {
+                addFloatingText(`🛡️ SHIELD Lv.${LevelSystem.items.SHIELD.level} UP!`, this.x, gatePart.y + gatePart.height / 2, "#9b59b6");
             }
+            // 무적 효과 적용 (레벨에 따른 보너스 포함) - 지속시간은 HUD에서 확인
+            LevelSystem.applyShield();
+            AudioManager.playSFX('shield');
         } else if (gatePart.type === 'ULTIMATE') {
+            // 폭탄: 즉시 효과
             if (Player.bombCount >= 5) { isBonus = true; bonusScore = 2000; }
             else { Player.bombCount++; AudioManager.playSFX('bomb'); }
         } else if (gatePart.type === 'SUPPORT') {
-            if (Player.supportTimer > 0) { isBonus = true; bonusScore = 3000; }
-            else {
-                Player.supportTimer = gatePart.value;
-                addSkillNotification("SUPPORT CALLED", gatePart.value);
-                AudioManager.playSFX('powerup');
+              // 지원군 아이템: 경험치 10씩 획득 (10개 = 1레벨)
+              const expGained = 10;
+            const leveledUp = LevelSystem.addItemExp('SUPPORT', expGained);
+            // 레벨업 시에만 표시
+            if (leveledUp) {
+                addFloatingText(`👥 SUPPORT Lv.${LevelSystem.items.SUPPORT.level} UP!`, this.x, gatePart.y + gatePart.height / 2, "#e67e22");
             }
+            // 지원군 효과 적용 (레벨에 따른 보너스 포함) - 지속시간은 HUD에서 확인
+            LevelSystem.applySupport();
+            AudioManager.playSFX('powerup');
         }
 
         if (isBonus) {
@@ -2087,9 +2586,22 @@ function advanceStage() {
         projectiles = [];
         gates = [];
 
-        Player.fireRate = 200;
-        Player.damage = isMobileEasyModeActive() ? Math.round(10 * EASY_MODE_CONFIG.playerDamageMultiplier) : 10;
+        // 스테이지 진행 시에도 아이템 레벨 기준으로 스탯 유지 (초기화하지 않음)
+        const baseDamage = 10;
+        const itemDamageBonus = (LevelSystem.items.DAMAGE.level - 1) * LevelSystem.stats.itemDamagePerLevel;
+        Player.damage = isMobileEasyModeActive()
+            ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier)
+            : baseDamage + itemDamageBonus;
+
+        const baseFireRate = 200;
+        const itemFireRateBonus = (LevelSystem.items.FIRE_RATE.level - 1) * LevelSystem.stats.itemFireRatePerLevel;
+        Player.fireRate = Math.max(baseFireRate - itemFireRateBonus, Player.minFireRate);
+
+        // 플레이어 상태 완전 초기화 (중요: state를 DEAD에서 ALIVE로 변경)
         Player.hp = Player.maxHp;
+        Player.state = 'ALIVE';
+        Player.aniFrame = 0;
+        Player.shield = 0;
         particles.push(...Array(30).fill(0).map(() => new Particle(canvas.width / 2, canvas.height / 2, '#f1c40f')));
 
         // 오버레이 강제 숨김
@@ -2098,91 +2610,6 @@ function advanceStage() {
 }
 
 function startBossFight() { currentState = GAME_STATE.BOSS_FIGHT; boss = new Boss(currentStage); }
-
-function drawHUD(ctx) {
-    // ...
-    ctx.font = '12px "Press Start 2P"';
-
-    // 1. 플레이어 HP 바 (좀비 서바이벌: 녹슨 금속 & 해저드 라인)
-    const hpx = 20; const hpy = 20; const hpw = 200; const hph = 20;
-
-    // 해저드 테이프(Hazard Tape) 배경무늬
-    ctx.save();
-    ctx.fillStyle = '#f1c40f'; ctx.fillRect(hpx - 6, hpy - 6, hpw + 12, hph + 12);
-    ctx.fillStyle = '#000';
-    for (let i = 0; i < hpw + 12; i += 15) {
-        ctx.beginPath(); ctx.moveTo(hpx - 6 + i, hpy - 6); ctx.lineTo(hpx - 6 + i + 8, hpy - 6);
-        ctx.lineTo(hpx - 6 + i - 4, hpy + hph + 6); ctx.lineTo(hpx - 6 + i - 12, hpy + hph + 6); ctx.fill();
-    }
-    ctx.restore();
-
-    ctx.fillStyle = '#2c3e50'; ctx.fillRect(hpx - 2, hpy - 2, hpw + 4, hph + 4); // 금속 프레임
-
-    // 핏자국 및 녹(Rust) 픽셀 아트 효과
-    ctx.fillStyle = '#8e44ad'; // 어두운 보라/빨강 녹
-    ctx.fillRect(hpx - 2, hpy - 2, 4, 4); ctx.fillRect(hpx + hpw - 4, hpy + hph - 2, 6, 2);
-    ctx.fillStyle = '#c0392b'; // 핏자국
-    ctx.fillRect(hpx + 50, hpy - 2, 8, 3); ctx.fillRect(hpx + 53, hpy + 1, 2, 5);
-
-    ctx.fillStyle = '#000'; ctx.fillRect(hpx, hpy, hpw, hph); // 내부 배경
-
-    const hpRatio = Player.hp / Player.maxHp;
-    const hpColor = hpRatio > 0.5 ? '#2ecc71' : (hpRatio > 0.2 ? '#f1c40f' : '#e74c3c');
-    ctx.fillStyle = hpColor; ctx.fillRect(hpx, hpy, hpw * hpRatio, hph);
-
-    // HUD 텍스트 (피 묻은 듯한 붉은색 포인트 추가)
-    ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
-    ctx.fillText(`SURVIVOR HP`, hpx, hpy + 45);
-    ctx.fillStyle = hpColor;
-    ctx.fillText(`${Player.hp}/${Player.maxHp}`, hpx + 140, hpy + 45); // 간격을 140으로 늘려 겹침 방지
-
-    // 2. 점수 시스템 UI (우측 상단)
-    ctx.textAlign = 'right';
-    ctx.fillStyle = '#fff';
-    ctx.fillText(`SCORE:`, canvas.width - 20, 25);
-    ctx.fillStyle = '#f1c40f';
-    ctx.fillText(`${score.toString().padStart(6, '0')}`, canvas.width - 20, 45);
-
-    // 3. 스테이지 및 목표 텍스트 (중앙 상단)
-    ctx.textAlign = 'center'; ctx.fillStyle = '#00ffff';
-    const isLandscape = window.innerWidth > window.innerHeight;
-    const stageFontSize = isLandscape ? '16px' : '12px';
-    ctx.font = `${stageFontSize} "Press Start 2P"`;
-    ctx.fillText(`STAGE ${currentStage}`, canvas.width / 2, 25);
-    ctx.fillStyle = '#e74c3c';
-    ctx.fillText(`OBJ: ${enemiesKilled}/${getCurrentStageData().goal}`, canvas.width / 2, 45); // EASY MODE
-
-    // 3. 폭탄 카운트 (픽셀 아트 폭탄 아이콘)
-    for (let i = 0; i < Player.bombCount; i++) {
-        const bx = canvas.width - 120 + i * 25; const by = 55;
-        ctx.fillStyle = '#f1c40f'; ctx.fillRect(bx + 4, by - 5, 2, 5); // 심지
-        ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(bx + 5, by + 5, 6, 0, Math.PI * 2); ctx.fill();
-    }
-
-    // 4. 폭탄 버튼 (데스크탑 & 가로 모드용)
-    const isMobile = isMobileTouchDevice();
-    if (!isMobile || window.innerWidth > window.innerHeight) {
-        drawBombButton(ctx);
-    }
-
-    // 5. 스킬 알림 UI (화면 중앙 하단)
-    ctx.textAlign = 'center';
-    Player.skillNotifications.forEach((n, idx) => {
-        const isEnding = n.timeLeft < 3000;
-        const blink = Math.sin(Date.now() / 100) > 0;
-
-        ctx.fillStyle = (isEnding && blink) ? '#e74c3c' : '#fff';
-        ctx.font = '10px "Press Start 2P"';
-        ctx.fillText(`${n.text}: ${(n.timeLeft / 1000).toFixed(1)}s`, canvas.width / 2, canvas.height - 50 - (idx * 20));
-
-        // 경고 메시지
-        if (isEnding) {
-            ctx.fillStyle = blink ? '#ff4757' : 'transparent';
-            ctx.font = '8px "Press Start 2P"';
-            ctx.fillText("WARNING: EFFECT ENDING", canvas.width / 2, canvas.height - 35 - (idx * 20));
-        }
-    });
-}
 
 function addSkillNotification(text, duration) {
     // 중복 알림 제거
@@ -2438,21 +2865,22 @@ class Boss {
 
         if (timestamp - this.lastAttackTime > interval * bossAttackIntervalMultiplier) {
             const p = Math.random();
-            // 소환 가능 여부
-            const canSummonMinions = this.isBossKing || this.isBoss2 || !isMobileEasyModeActive() || currentStage >= 7;
+            // 소환 가능 여부 - 스테이지 4부터 가능
+            const canSummonMinions = currentStage >= 4;
 
             if (p < 0.3 && canSummonMinions) {
                 // 부하 소환 패턴
-                // 보스킹: 3마리, 보스2: 2마리 (숫자 감소 요청 반영), 일반: 3마리
-                const summonCount = this.isBossKing ? 3 : (this.isBoss2 ? 2 : 3);
+                // 보스킹: 3마리, 보스2: 2마리, 일반: 2마리
+                const summonCount = this.isBossKing ? 3 : (this.isBoss2 ? 2 : 2);
                 for (let i = 0; i < summonCount; i++) {
                     const e = new Enemy(this.x, this.y + this.height / 2 + (i - Math.floor(summonCount / 2)) * 50);
-                    const summonEnemySpeedMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossSummonEnemySpeedMultiplier : 1; // EASY MODE
-                    const summonEnemyHpMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossSummonEnemyHpMultiplier : 1; // EASY MODE
-                    // 보스킹 소환몹: 매우 빠르고 튼튼함
+                    const summonEnemySpeedMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossSummonEnemySpeedMultiplier : 1;
+                    const summonEnemyHpMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossSummonEnemyHpMultiplier : 1;
+                    // 소환된 적: 빠르지만 체력은 낮게 (원래 500->150, 350->100, 200->80)
                     e.speed = (this.isBossKing ? 9 : (this.isBoss2 ? 7 : 5)) * summonEnemySpeedMultiplier;
-                    e.hp = Math.round((this.isBossKing ? 500 : (this.isBoss2 ? 350 : 200)) * summonEnemyHpMultiplier);
-                    enemies.push(e); // EASY MODE
+                    e.hp = Math.round((this.isBossKing ? 150 : (this.isBoss2 ? 100 : 80)) * summonEnemyHpMultiplier);
+                    e.maxHp = e.hp;
+                    enemies.push(e);
                 }
             } else if (p < 0.55) {
                 // 보스 에너지 볼
@@ -2652,6 +3080,10 @@ function resetGame(stageToStart = 1) {
     currentStage = stageToStart; // 파라미터로 받은 스테이지로 시작
     enemiesKilled = 0; boss = null;
     currentState = GAME_STATE.PLAYING; gameOverStartTime = 0;
+    // 스테이지 1에서 시작할 때만 레벨 시스템 초기화, 아니면 레벨 유지
+    if (stageToStart === 1) {
+        LevelSystem.init();
+    }
     Player.init(); updateMainMenuVisibility();
 }
 
@@ -2704,106 +3136,219 @@ function useBomb() {
 // 폭탄 버튼 영역 (클릭 감지용)
 let bombButtonRect = null;
 
-// 2D 픽셀 도트 스타일 폭탄 버튼 그리기
+// [ADVANCED 2D PIXEL ART BOMB BUTTON]
+// 고급 2D 도트 스타일 다이너마이트 폭탄 UI
 function drawBombButton(ctx) {
-    const btnSize = 80;
-    const btnX = canvas.width - btnSize - 30;
-    const btnY = canvas.height - btnSize - 30;
+    const btnSize = 84;
+    const btnX = canvas.width - btnSize - 25;
+    const btnY = canvas.height - btnSize - 25;
+    const centerX = btnX + btnSize / 2;
+    const centerY = btnY + btnSize / 2;
 
     // 버튼 영역 저장 (클릭 감지용)
     bombButtonRect = { x: btnX, y: btnY, width: btnSize, height: btnSize };
 
     const time = Date.now();
-    const pulse = Math.sin(time / 200) * 0.1 + 1;
+    const pulse = Math.sin(time / 150) * 0.15 + 1;
+    const flicker = Math.sin(time / 80) > 0;
 
     ctx.save();
 
-    // 버튼 배경 (둥근 사각형)
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.strokeStyle = Player.bombCount > 0 ? '#f1c40f' : '#7f8c8d';
-    ctx.lineWidth = 4;
-
-    // 외곽 글로우 효과
+    // === 1. 외곽 글로우 효과 (폭탄 있을 때만) ===
     if (Player.bombCount > 0) {
-        ctx.shadowBlur = 20 * pulse;
-        ctx.shadowColor = '#f1c40f';
+        const glowIntensity = 20 * pulse;
+        ctx.shadowBlur = glowIntensity;
+        ctx.shadowColor = '#ff4400';
+        
+        // 다중 글로우 레이어
+        ctx.fillStyle = `rgba(255, 68, 0, ${0.3 * pulse})`;
+        ctx.fillRect(btnX - 4, btnY - 4, btnSize + 8, btnSize + 8);
     }
 
-    // 버튼 배경 그리기
-    ctx.beginPath();
-    ctx.roundRect(btnX, btnY, btnSize, btnSize, 12);
-    ctx.fill();
-    ctx.stroke();
+    // === 2. 메탈릭 베젤 프레임 (3D 효과) ===
+    // 외곽 다크 메탈
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(btnX, btnY, btnSize, btnSize);
+    
+    // 상단 하이라이트 (메탈릭 반사)
+    const metalGradient = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnSize);
+    metalGradient.addColorStop(0, '#5a5a5a');
+    metalGradient.addColorStop(0.1, '#4a4a4a');
+    metalGradient.addColorStop(0.5, '#2a2a2a');
+    metalGradient.addColorStop(1, '#1a1a1a');
+    ctx.fillStyle = metalGradient;
+    ctx.fillRect(btnX + 2, btnY + 2, btnSize - 4, btnSize - 4);
 
-    // 폭탄 아이콘 (2D 픽셀 도트 스타일)
-    const centerX = btnX + btnSize / 2;
-    const centerY = btnY + btnSize / 2 + 5;
-    const scale = btnSize / 80;
+    // 황동 액센트 테두리
+    ctx.strokeStyle = Player.bombCount > 0 ? '#d4a84b' : '#666';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(btnX + 4, btnY + 4, btnSize - 8, btnSize - 8);
 
-    if (Player.bombCount > 0) {
-        // 폭탄 본체 (검은색 원)
-        ctx.fillStyle = '#2c3e50';
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 22 * scale, 0, Math.PI * 2);
-        ctx.fill();
+    // === 3. 내부 패널 (스크류 헤드 디테일) ===
+    const innerX = btnX + 8;
+    const innerY = btnY + 8;
+    const innerSize = btnSize - 16;
+    
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(innerX, innerY, innerSize, innerSize);
+    
+    // 스크류 헤드 코너 디테일
+    const screwSize = 4;
+    ctx.fillStyle = '#4a4a4a';
+    // 상좌
+    ctx.fillRect(innerX + 2, innerY + 2, screwSize, 1);
+    ctx.fillRect(innerX + 2, innerY + 2, 1, screwSize);
+    // 상우
+    ctx.fillRect(innerX + innerSize - 6, innerY + 2, screwSize, 1);
+    ctx.fillRect(innerX + innerSize - 3, innerY + 2, 1, screwSize);
+    // 하좌
+    ctx.fillRect(innerX + 2, innerY + innerSize - 3, screwSize, 1);
+    ctx.fillRect(innerX + 2, innerY + innerSize - 6, 1, screwSize);
+    // 하우
+    ctx.fillRect(innerX + innerSize - 6, innerY + innerSize - 3, screwSize, 1);
+    ctx.fillRect(innerX + innerSize - 3, innerY + innerSize - 6, 1, screwSize);
 
-        // 폭탄 내부 (어두운 회색)
-        ctx.fillStyle = '#34495e';
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 18 * scale, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 폭탄 심지 (노란색 직사각형)
-        ctx.fillStyle = '#f1c40f';
-        ctx.fillRect(centerX - 3 * scale, centerY - 30 * scale, 6 * scale, 12 * scale);
-
-        // 심지 불꽃 (주황색)
-        ctx.fillStyle = '#e67e22';
-        ctx.beginPath();
-        ctx.arc(centerX, centerY - 32 * scale, 5 * scale, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 폭탄 표면 하이라이트
-        ctx.fillStyle = '#95a5a6';
-        ctx.fillRect(centerX - 8 * scale, centerY - 5 * scale, 6 * scale, 6 * scale);
-
-        // 폭탄 개수 표시
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#fff';
-        ctx.font = `bold ${Math.floor(20 * scale)}px "Press Start 2P"`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(Player.bombCount.toString(), centerX + 20 * scale, centerY + 20 * scale);
-    } else {
-        // 폭탄 없음 (회색으로 표시)
-        ctx.fillStyle = '#7f8c8d';
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 22 * scale, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 심지 (회색)
-        ctx.fillStyle = '#95a5a6';
-        ctx.fillRect(centerX - 3 * scale, centerY - 30 * scale, 6 * scale, 12 * scale);
-
-        // X 표시
-        ctx.strokeStyle = '#e74c3c';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(centerX - 10 * scale, centerY - 10 * scale);
-        ctx.lineTo(centerX + 10 * scale, centerY + 10 * scale);
-        ctx.moveTo(centerX + 10 * scale, centerY - 10 * scale);
-        ctx.lineTo(centerX - 10 * scale, centerY + 10 * scale);
-        ctx.stroke();
-    }
-
-    // 레이블 텍스트
     ctx.shadowBlur = 0;
-    ctx.fillStyle = Player.bombCount > 0 ? '#f1c40f' : '#7f8c8d';
-    ctx.font = `${Math.floor(10 * scale)}px "Press Start 2P"`;
-    ctx.textAlign = 'center';
-    ctx.fillText('BOMB', centerX, btnY + btnSize - 8);
+
+    // === 4. 다이너마이트 폭탄 (고급 2D 픽셀 아트) ===
+    if (Player.bombCount > 0) {
+        const bombScale = 1.2;
+        const bx = centerX - 14 * bombScale;
+        const by = centerY - 8 * bombScale;
+        
+        // 폭탄 그림자 (투영)
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY + 22, 18, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // === 다이너마이트 본체 (픽셀 아트) ===
+        // 빨간 케이싱 (단면)
+        const stickW = 10 * bombScale;
+        const stickH = 24 * bombScale;
+        const gap = 2 * bombScale;
+        
+        // 왼쪽 다이너마이트
+        drawDynamiteStick(ctx, bx - stickW/2 - gap/2, by, stickW, stickH, '#c41e3a', '#8b0000');
+        // 오른쪽 다이너마이트  
+        drawDynamiteStick(ctx, bx + stickW/2 + gap/2, by, stickW, stickH, '#c41e3a', '#8b0000');
+
+        // === 번개 테이프 (검은색 테이프로 다이너마이트 묶음) ===
+        const tapeY = by + 8 * bombScale;
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(bx - stickW - gap, tapeY, stickW * 2 + gap * 2, 4 * bombScale);
+        // 테이프 텍스처 (픽셀 패턴)
+        ctx.fillStyle = '#2a2a2a';
+        ctx.fillRect(bx - stickW - gap + 2, tapeY + 1, stickW * 2 + gap * 2 - 4, 2 * bombScale);
+
+        // === 심지 (2개 다이너마이트의 심지가 교차) ===
+        const fuseY = by - 6 * bombScale;
+        ctx.fillStyle = '#8b7355'; // 갈색 심지
+        // 왼쪽 심지 (오른쪽으로 기울어짐)
+        ctx.fillRect(bx - 2, fuseY, 2, 6 * bombScale);
+        ctx.fillRect(bx, fuseY - 2, 2, 3 * bombScale);
+        // 오른쪽 심지 (왼쪽으로 기울어짐)
+        ctx.fillRect(bx + 2, fuseY, 2, 6 * bombScale);
+        ctx.fillRect(bx - 2, fuseY - 2, 2, 3 * bombScale);
+        // 교차점
+        ctx.fillRect(bx - 1, fuseY - 4, 3, 3);
+
+        // === 화염 효과 (픽셀 아트 애니메이션) ===
+        const flameBaseY = fuseY - 5;
+        
+        // 불꽃 코어 (노란색)
+        const flameColor1 = flicker ? '#ffff00' : '#ffdd00';
+        ctx.fillStyle = flameColor1;
+        ctx.fillRect(bx - 2, flameBaseY - 4, 5, 4);
+        ctx.fillRect(bx - 1, flameBaseY - 7, 3, 3);
+        
+        // 불꽃 중간 (주황색)
+        const flameColor2 = flicker ? '#ff8800' : '#ff6600';
+        ctx.fillStyle = flameColor2;
+        ctx.fillRect(bx - 3, flameBaseY - 2, 7, 3);
+        ctx.fillRect(bx - 2, flameBaseY - 5, 5, 3);
+        ctx.fillRect(bx - 1, flameBaseY - 9, 3, 3);
+        
+        // 불꽃 외곽 (빨간색)
+        const flameColor3 = flicker ? '#ff4400' : '#cc2200';
+        ctx.fillStyle = flameColor3;
+        ctx.fillRect(bx - 4, flameBaseY, 9, 2);
+        ctx.fillRect(bx - 3, flameBaseY - 3, 7, 2);
+        ctx.fillRect(bx - 2, flameBaseY - 8, 5, 2);
+        
+        // 불꽃 파티클 (작은 점들)
+        const sparkColor = flicker ? '#ffff88' : '#ffaa00';
+        ctx.fillStyle = sparkColor;
+        ctx.fillRect(bx - 4, flameBaseY - 6, 2, 2);
+        ctx.fillRect(bx + 3, flameBaseY - 7, 2, 2);
+        ctx.fillRect(bx - 5, flameBaseY - 3, 1, 1);
+        ctx.fillRect(bx + 5, flameBaseY - 4, 1, 1);
+
+        // === 잔여 폭탄 수 (픽셀 스타일 텍스트) ===
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 9px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        
+        // 텍스트 그림자
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillText(`x${Player.bombCount}`, centerX + 1, centerY + 26);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`x${Player.bombCount}`, centerX, centerY + 25);
+
+        // === 준비 상태 인디케이터 (작은 점) ===
+        ctx.fillStyle = '#00ff00';
+        ctx.fillRect(btnX + 6, btnY + 6, 3, 3);
+
+    } else {
+        // === 폭탄 없음 상태 (회색 다이너마이트) ===
+        ctx.fillStyle = '#3a3a3a';
+        // 왼쪽 다이너마이트
+        ctx.fillRect(centerX - 10, centerY - 8, 8, 18);
+        // 오른쪽 다이너마이트
+        ctx.fillRect(centerX + 2, centerY - 8, 8, 18);
+        // 테이프
+        ctx.fillStyle = '#2a2a2a';
+        ctx.fillRect(centerX - 11, centerY, 22, 4);
+        
+        // EMPTY 텍스트
+        ctx.fillStyle = '#666';
+        ctx.font = '7px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.fillText('EMPTY', centerX, centerY + 22);
+        
+        // 비활성 인디케이터 (회색 점)
+        ctx.fillStyle = '#444';
+        ctx.fillRect(btnX + 6, btnY + 6, 3, 3);
+    }
 
     ctx.restore();
+}
+
+// 다이너마이트 스틱 그리기 (픽셀 아트 스타일)
+function drawDynamiteStick(ctx, cx, cy, w, h, lightColor, darkColor) {
+    const x = cx - w/2;
+    
+    // 어두면 (그림자)
+    ctx.fillStyle = darkColor;
+    ctx.fillRect(x + 2, cy + 2, w - 2, h - 2);
+    
+    // 본체 (밝은 빨강)
+    ctx.fillStyle = lightColor;
+    ctx.fillRect(x, cy, w, h);
+    
+    // 하이라이트 (위쪽)
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fillRect(x + 1, cy + 1, w - 2, 3);
+    
+    // 그림자 (아래쪽)
+    ctx.fillStyle = darkColor;
+    ctx.fillRect(x + 1, cy + h - 3, w - 2, 2);
+    
+    // 측면 하이라이트 (입체감)
+    ctx.fillStyle = '#ff8888';
+    ctx.fillRect(x + 1, cy + 5, 2, h - 7);
 }
 
 // 폭탄 버튼 클릭 감지 함수
@@ -2909,6 +3454,16 @@ window.addEventListener('touchstart', (e) => {
                 skipStory();
                 e.preventDefault();
             }
+        } else if (currentState === GAME_STATE.EPILOGUE) {
+            // 에필로그 화면: 가로 모드에서 더블탭으로 스킵 허용
+            if (isMobileLandscapeOrientation()) {
+                // 에필로그 스킵: 메인 화면으로 돌아감
+                AudioManager.stopEpilogueBGM();
+                currentState = GAME_STATE.START;
+                updateMainMenuVisibility();
+                updateOverlayVisibility();
+                e.preventDefault();
+            }
         }
     }
     lastTapTime = currentTime;
@@ -2997,8 +3552,21 @@ function gameLoop(timestamp) {
                 for (let j = enemies.length - 1; j >= 0; j--) {
                     const e = enemies[j]; if (e.state === 'DEAD') continue;
                     if (checkCollision(p, e)) {
+                        console.log(`[HIT] Bullet damage: ${p.damage}, Enemy HP: ${e.hp} → ${e.hp - p.damage}`);
                         e.hp -= p.damage; p.active = false;
-                        if (e.hp <= 0) { e.state = 'DEAD'; e.aniFrame = 0; enemiesKilled++; score += 100; createExplosion(e.x, e.y); AudioManager.playSFX('explode'); if (enemiesKilled >= stage.goal && !boss) startBossFight(); }
+                        if (e.hp <= 0) { 
+                            e.state = 'DEAD'; e.aniFrame = 0; enemiesKilled++; score += 100; 
+                            createExplosion(e.x, e.y); AudioManager.playSFX('explode'); 
+                            // 적 종류별 경험치 차등 지급 (스테이지별 청토끼 종류에 따라)
+                            let expGained = 1; // 기본 경험치 (1단계: 1 EXP)
+                            if (currentStage >= 4 && currentStage < 8) {
+                                expGained = 2; // 2단계 청토끼: 2 EXP
+                            } else if (currentStage >= 8) {
+                                expGained = 3; // 3단계 청토끼: 3 EXP
+                            }
+                            LevelSystem.addPlayerExp(expGained);
+                            if (enemiesKilled >= stage.goal && !boss) startBossFight(); 
+                        }
                         break;
                     }
                 }
@@ -3009,6 +3577,9 @@ function gameLoop(timestamp) {
                         boss.aniFrame = 0;
                         boss.lastFrameTime = timestamp;
                         score += 5000;
+                        // 보스 처치 시 플레이어 경험치 대량 획득
+                        LevelSystem.addPlayerExp(50);
+                        addFloatingText(`★ BOSS DEFEATED! +50 EXP ★`, canvas.width / 2, canvas.height / 2 - 80, '#f1c40f');
                     }
                 }
             } else {
@@ -3017,7 +3588,10 @@ function gameLoop(timestamp) {
                     p.active = false; createExplosion(p.x, p.y, '#ff4757');
                     if (Player.shield <= 0) {
                         if (!isGodMode) {
-                            Player.hp -= (p.isBossEnergyBall ? 3 : 1);
+                            // 방어력 적용: 받는 데미지 = 기본데미지 * (1 - 방어력)
+                            const baseDamage = p.isBossEnergyBall ? 3 : 1;
+                            const actualDamage = Math.max(0.3, baseDamage * (1 - Player.defense));
+                            Player.hp -= actualDamage;
                             Player.shield = getPlayerInvincibleDuration(); AudioManager.playSFX('hit');
                             if (Player.hp <= 0) {
                                 Player.state = 'DEAD';
@@ -3061,6 +3635,41 @@ function gameLoop(timestamp) {
         ctx.font = 'bold 16px "Press Start 2P"';
         ctx.textAlign = 'center';
         ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+    }
+
+    // 스킬 알림 (무적, 지원군) 화면 중앙에 표시
+    if (Player.skillNotifications && Player.skillNotifications.length > 0) {
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 20px "Press Start 2P"';
+        let notifY = canvas.height / 2 + 80;
+        
+        for (let i = Player.skillNotifications.length - 1; i >= 0; i--) {
+            const notif = Player.skillNotifications[i];
+            const secondsLeft = Math.ceil(notif.timeLeft / 1000);
+            
+            // 배경 패널
+            const textWidth = ctx.measureText(notif.text).width;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(canvas.width / 2 - textWidth / 2 - 10, notifY - 25, textWidth + 20, 30);
+            
+            // 텍스트 색상 설정
+            if (notif.text.includes('SHIELD')) {
+                ctx.fillStyle = '#9b59b6'; // 보라색
+                ctx.shadowColor = '#bb8fce';
+            } else if (notif.text.includes('SUPPORT')) {
+                ctx.fillStyle = '#e67e22'; // 주황색
+                ctx.shadowColor = '#f5b041';
+            }
+            ctx.shadowBlur = 10;
+            
+            // 아이콘 + 텍스트 + 남은 시간
+            const displayText = `${notif.text} ${secondsLeft}s`;
+            ctx.fillText(displayText, canvas.width / 2, notifY);
+            
+            notifY += 35; // 다음 알림을 위해 Y 위치 이동
+        }
         ctx.restore();
     }
 
@@ -3853,6 +4462,14 @@ function drawEpilogueScreen(ctx, timestamp) {
     }
 
     ctx.fillText(promptText, canvas.width / 2, canvas.height - 30);
+    
+    // 가로모드에서 더블탭 스킵 힌트 추가
+    if (isMobileLandscapeOrientation()) {
+        ctx.fillStyle = '#e74c3c';
+        ctx.font = '10px "Press Start 2P"';
+        ctx.fillText('▼ DOUBLE TAP TO SKIP ▼', canvas.width / 2, canvas.height - 12);
+    }
+    
     ctx.restore();
 }
 
@@ -4037,12 +4654,15 @@ function drawStoryScreen(ctx, timestamp) {
 
     ctx.fillText(promptText, canvas.width / 2, canvas.height - 30);
 
-    // 스킵 안내 (ESC 키 또는 화면 하단 클릭)
+    // 스킵 안내 - 가로모드에서만 더블탭 스킵 표시
     ctx.font = '10px "Press Start 2P"';
     ctx.fillStyle = '#666666';
     ctx.shadowBlur = 0;
-    const skipText = isMobileTouchDevice() ? '▼ DOUBLE TAP TO SKIP ▼' : '▼ PRESS ESC TO SKIP ▼';
-    ctx.fillText(skipText, canvas.width / 2, canvas.height - 12);
+    if (isMobileLandscapeOrientation()) {
+        ctx.fillText('▼ DOUBLE TAP TO SKIP ▼', canvas.width / 2, canvas.height - 12);
+    } else if (!isMobileTouchDevice()) {
+        ctx.fillText('▼ PRESS ESC TO SKIP ▼', canvas.width / 2, canvas.height - 12);
+    }
 
     ctx.restore();
 }
@@ -4110,6 +4730,7 @@ function addFloatingText(text, x, y, color) {
 
 async function init() {
     await ImageLoader.loadAllAssets();
+    LevelSystem.init();
     Player.init();
     updateMainMenuVisibility();
     updateInstallButtonVisibility();
@@ -4315,6 +4936,7 @@ function showBackButtonToast(message) {
         animation: fadeInOut 2s ease-in-out;
     `;
     toast.textContent = message;
+
     document.body.appendChild(toast);
 
     // 2초 후 제거
@@ -4333,4 +4955,9 @@ backButtonStyle.textContent = `
         100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
     }
 `;
+
+// Back button style을 head에 추가
 document.head.appendChild(backButtonStyle);
+
+// 게임 초기화
+init();
