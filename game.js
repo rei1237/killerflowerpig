@@ -374,10 +374,47 @@ function drawHUD(ctx) {
     }
     ctx.restore();
 
+    // 10.5. Petal Cannon Charge UI (next to bomb count)
+    const petalX = canvas.width/scale - 70;
+    const petalY = 65;
+    const petalChargePercent = Math.min(1, Player.petalCannonCharge / Player.petalCannonMaxCharge);
+    
+    // Petal icon
+    ctx.fillStyle = Player.petalCannonReady ? '#ff1493' : '#ff69b4';
+    ctx.font = '12px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.fillText('🌸', petalX + 15, petalY + 5);
+    
+    // Charge bar background
+    ctx.fillStyle = '#1a0a0f';
+    ctx.fillRect(petalX, petalY + 10, 30, 4);
+    
+    // Charge bar fill (pink gradient effect)
+    if (petalChargePercent > 0) {
+        const petalGradient = ctx.createLinearGradient(petalX, petalY + 10, petalX + 30 * petalChargePercent, petalY + 10);
+        petalGradient.addColorStop(0, Player.petalCannonReady ? '#ff1493' : '#ffb6c1');
+        petalGradient.addColorStop(1, Player.petalCannonReady ? '#ff69b4' : '#ffc0cb');
+        ctx.fillStyle = petalGradient;
+        ctx.fillRect(petalX, petalY + 10, 30 * petalChargePercent, 4);
+    }
+    
+    // Ready indicator
+    if (Player.petalCannonReady) {
+        ctx.fillStyle = '#ff1493';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ff69b4';
+        ctx.font = '8px "Press Start 2P"';
+        ctx.fillText('F!', petalX + 15, petalY + 22);
+        ctx.shadowBlur = 0;
+    }
+
     ctx.restore();
 
     // 11. Bomb Button (bottom right - original style)
     drawBombButton(ctx);
+    
+    // 12. Petal Cannon Button (bottom right, left of bomb button)
+    drawPetalCannonButton(ctx);
 }
 
 const MOBILE_OPTIMIZED_CLASS = 'mobile-optimized';
@@ -430,6 +467,29 @@ const STAGE_DATA = {
     8: { goal: 80, enemySpeed: 3.6, spawnRate: 1400, homing: true, homingSpeed: 1.0, enemyShoot: true, sky: '#0a0908', city: '#141210', fog: '#1a1816', storyText: "■■■■ EPISODE 8: HALLUCINATION ■■■■\n\n어느덧 25층. 거대한 타워의 중간 지점에 도달했을 무렵, 주변의 공기가 기괴하게 뒤틀리기 시작했다. 물리적인 압박감이 아니라, 뇌수를 직접 쥐어짜는 듯한 기분 나쁜 파동이었다. 안개는 이제 시야를 가리는 것을 넘어 신경계로 침투하고 있었다. 갑자기 연이의 귓가에 익숙하고도 다정한 목소리들이 속삭이기 시작했다.\n\n'연이야... 우리 예쁜 연이. 이제 그 무거운 총은 내려놓고 이리 오렴.'\n'언니! 나 여기서 기다리고 있어. 우리 같이 연꽃 마을로 돌아가자!'\n\n과거 청토끼들의 습격으로 잔혹하게 찢겨 죽은 어머니와 동생의 생생한 목소리. 눈앞의 핏빛 계단은 순간적으로 햇살이 내리쬐는 평화로운 고향의 들판으로 변했고, 그 한가운데서 피투성이가 된 가족들이 환하게 웃으며 그녀에게 손을 짓고 있었다. 환각이다. 능력이 극대화되며 진화한 변이체들이 이제는 물리적 타격을 넘어 사냥감의 트라우마를 자극하는 정신적 공격, 즉 신경계 교란까지 일으키고 있는 것이다.\n\n'거짓말 마... 너희들은 이미 내 눈앞에서...'\n\n연이는 무릎을 꿇고 머리를 감싸 쥐었다. 환각 속의 따뜻함에 몸을 맡기고 싶은 유혹이 꿀처럼 달콤하게 밀려왔다. 이대로 눈을 감으면 고통도, 지옥 같은 현실도 끝날 것 같았다. 하지만 그녀는 이빨이 깨져라 혀를 힘껏 깨물었다. 입안 가득 비릿한 쇠맛과 날카로운 고통이 퍼지자, 고향의 환영이 유리창처럼 산산조각 나며 다시 부패한 계단실이 모습을 드러냈다. 환각에 홀려 무방비 상태가 된 연이를 향해, 천장에 매달려 있던 변이체들이 탐욕스러운 침을 흘리며 낙하하고 있었다.\n\n'내 기억을 더럽히지 마, 이 역겨운 괴물 새끼들아!'\n\n연이는 몸을 뒤로 젖히며 쌍권총을 교차해 위쪽을 향해 미친 듯이 난사했다. 쏟아지는 탄환에 놈들의 몸통이 벌집이 되어 쏟아져 내렸다. 정신을 다잡은 연이는 다시 계단을 오르기 시작했다. 30층, 35층. 위로 올라갈수록 적들의 움직임은 짐승을 넘어 거미나 파충류처럼 변모했다. 벽을 타고 미끄러지듯 이동하고, 어둠 속에 완벽하게 위장하여 등 뒤를 노렸다.\n\n38층. 두꺼운 강철 보안문이 반쯤 뜯겨져 있는 곳. 그 안쪽은 일반적인 사무실이 아닌 거대한 생체 실험실이었다. 백색의 타일 바닥 위로 파괴된 기계 장치들이 널브러져 있었고, 방 한가운데 늘어선 거대한 원통형 유리관 속에는 온몸에 파이프가 꽂힌 채 형체를 알 수 없게 개조된 청토끼와 타 종족들의 표본들이 부유하고 있었다.\n\n'이곳에서... 이 끔찍한 괴물들을 연구하고 만들어냈던 건가?'\n\n연이는 조심스럽게 실험실 내부를 수색했다. 컴퓨터 화면은 전력이 끊겨 까맣게 죽어있었지만, 메인 콘솔에는 외부 서버와 연결된 두꺼운 데이터 케이블이 아직 따뜻하게 온기를 유지하고 있었다. 누군가 최근까지, 혹은 방금 전까지 이곳에서 시스템을 조작했다는 명백한 증거였다. 책상 위로 흩어진 기밀문서 파일 더미 중 가장 위에 놓인 붉은색 폴더를 집어 들었다. 제목은 [프로젝트 블루 래빗 - 1급 기밀]. 연이는 떨리는 손으로 문서를 펼쳤다.\n\n'[연구 일지 402호]... 바이러스의 인공적인 유전자 조작 및 병기화 성공. 목적: 국방부 산하 차세대 생물 병기 개발. \n\n부작용: 통제 불가능한 변이와 감염체의 무리 지능 획득. 폐기 프로토콜 가동 실패... 연구소 밖으로 샘플 누출 확인.'\n\n활자들이 망막을 파고들며 뇌리에 박혔다. 이 모든 멸망은 자연의 분노도, 외계의 침공도 아니었다. 그저 끝없는 인간의 탐욕과 권력욕이 빚어낸, 철저하게 인위적인 '사고'였다. 자신의 가족을 찢어 발긴 괴물들이 국방부의 실험실에서 잉태된 병기였다는 진실 앞에, 연이의 손끝이 파르르 떨렸다. 공포나 슬픔 때문이 아니었다. 활화산처럼 끓어오르는 순도 100%의 살의. 연이는 파일을 찢어 바닥에 팽개치고 샷건을 집어 들었다.\n\n'실수라고? 통제 불능이라고? 그렇다면 내 총알도 통제 불능일 거다.' 분노로 타오르는 연이의 시선은 50층 꼭대기를 향해 고정되었다." },
     9: { goal: 85, enemySpeed: 3.8, spawnRate: 1300, homing: true, homingSpeed: 1.1, enemyShoot: true, sky: '#02040a', city: '#000000', fog: '#0f172a', storyText: "■■■■ EPISODE 9: THRONE OF ROT ■■■■\n\n45층을 돌파하자, 타워 내부의 대気が 물리적인 무게를 띤 것처럼 짓눌러왔다. 심해로 잠수하는 듯한 끔찍한 압력. 숨을 들이마실 때마다 폐가 으스러질 것 같은 흉통이 밀려왔다. 깨진 통유리창 너머로 보이는 바깥세상의 하늘은 칠흑 같은 암흑 속에서 오직 불길한 핏빛 자국들만 엉겨 붙어 있었고, 태양은 검은 디스크처럼 빛을 잃어버렸다. 세상의 종말이 시각화된다면 바로 이런 모습일 것이다.\n\n보스가 지근거리에 있다는 짐승의 직감이 연이의 온몸의 솜털을 곤두서게 했다. 전술 조끼를 뒤져보니 남은 것은 소총 탄창 하나, 권총 탄창 하나, 그리고 산탄총의 마지막 슬러그탄 15발이 전부였다. 압도적인 수적, 질적 열세. 하지만 그녀는 차분하고 정교한 동작으로 총기를 점검하고 약실에 탄환을 밀어 넣었다. 철컥- 하는 차가운 금속음이 지옥의 적막을 갈랐다.\n\n마침내 도달한 47층. 그곳은 한때 네온 시티 전체에 전파를 송출하던 거대한 메인 스튜디오 홀이었다. 하지만 지금은 악마의 내장 속으로 들어온 듯했다. 넓은 홀의 벽과 바닥은 맥박이 뛰듯 고동치는 붉은 살점과 덩굴들로 징그럽게 뒤덮여 있었고, 바닥에는 희생자들의 뼈가 카펫처럼 깔려 있었다.\n\n그리고 홀의 정중앙, 그곳에 '왕'이 있었다.\n\n지금껏 연이가 상대해온 변이체들과는 궤를 달리하는, 일반 청토끼의 5배가 넘는 거대한 괴수. 놈의 몸뚱이는 갑각류처럼 단단한 외골격으로 덮여 있었고, 흉측하게 부풀어 오른 얼굴에는 인간의 눈동자를 닮은 수십 개의 안구가 이리저리 굴러가며 사방을 노려보고 있었다. 귀까지 기괴하게 찢어진 아가리 사이로는 사람 팔뚝만 한 누런 송곳니들이 빽빽하게 돋아나 있었다. 모든 청토끼 변이체들을 조종하는 군체의 중심, 그 끔찍한 하이브 마인드의 우두머리였다.\n\n'마침내 여기까지 기어 올라왔군, 꽃돼지 실험체.'\n\n왕좌처럼 솟아오른 살덩어리 옆, 짙은 그림자 속에서 한 남자가 천천히 걸어 나왔다. 흰색 연구 가운은 피와 오물로 검게 물들어 있었고, 그의 겉모습은 아직 인간의 형태를 유지하고 있었지만, 번뜩이는 두 눈동자는 이미 이성을 잃고 짐승처럼 변이된 상태였다. 광기에 사로잡힌 그의 웃음소리가 스튜디오를 기괴하게 울렸다.\n\n연이는 총구를 남자에게 견누며 낮게 으르렁거렸다. '네놈이냐. 이 지옥을 만든 원흉이.'\n\n'나? 나는 창조주다. 프로젝트 블루 래빗의 수석 연구원. 열등한 너희들의 세상을 허물고, 완벽한 진화의 시대를 연 위대한 선구자 말이다!' 남자는 양팔을 벌리며 거대한 청토끼의 왕을 쓰다듬었다. \n\n'왜 이렇게 만들었냐고 묻고 싶겠지? 보아라, 이 아름다운 생명력을! 연약하고 병드는 인간의 육체를 버리고, \n\n죽음을 극복한 완벽한 포식자로 거듭나는 과정이다. 수억 명의 희생은 그저 진화를 위한 거름일 뿐이야!'\n\n연이의 손가락이 방아쇠 위에서 미세하게 떨렸다. 극도의 공포? 아니, 당장이라도 저 역겨운 주둥이를 찢어버리고 싶은 맹렬한 분노였다.\n\n'그래, 넌 살아남았지. 그 연약한 꽃돼지 종족의 면역 체계가 내 바이러스와 결합해 놀라운 저항력을 보여줬어. \n\n네 몸뚱이는 내 최고의 역작을 완성시킬 마지막 퍼즐 조각이다. 네 유전자 코드를 뽑아내면, 지능까지 완벽하게 통제되는 신인류를 양산할 수 있다!'\n\n거대한 청토끼의 왕이 포효하며 수십 개의 눈알을 일제히 연이에게 고정했다. 엄청난 살기와 위압감이 스튜디오를 덮쳤다. 하지만 연이는 흔들리지 않았다. 그녀는 산탄총의 총구를 들어 남자의 미간을 정확히 겨냥했다.\n\n'신인류 좋아하시네. 내 눈엔 그저 대가리에 총알이 박히면 죽는 징그러운 토끼 고기일 뿐이다.'\n\n그녀의 차가운 선고와 함께, 왕이 바닥을 박차고 도약했다. 타앙-! 마침내 지옥의 꼭대기에서, 인류의 생존과 세상의 운명을 건 최후의 결전이 시작되었다." },
     10: { goal: 100, enemySpeed: 4.0, spawnRate: 1200, homing: true, homingSpeed: 1.2, enemyShoot: true, sky: '#000000', city: '#000000', fog: '#450a0a', storyText: "■■■■ STAGE 10: THE LAST CROWN ■■■■\n\n마침내 도달한 50층, 방송국 최상층 스카이라운지는 더 이상 도시를 조망하는 화려한 공간이 아니었다. 그곳은 거대한 살점과 푸른 털이 뒤엉켜 맥동하는 '청토끼의 심장부'였다.\n\n중앙에는 프로젝트의 주동자였던 미친 과학자가 괴물들의 왕과 하나로 융합된 채 연이를 기다리고 있었다. 놈의 등 뒤로는 수만 마리의 청토끼들을 조종하는 신경삭들이 타워 전체로 뻗어 나가고 있었다.\n\n연이의 손에 남은 것은 반쯤 부서진 산탄총과 단 한 탄창의 권총뿐. 어깨의 상처에서는 끊임없이 피가 흘러나와 분홍빛 털을 검붉게 물들였다. 하지만 그녀의 눈동자에는 공포 대신, 멸족당한 일족의 슬픔과 세상을 지옥으로 만든 자를 향한 차가운 살의만이 서려 있었다.\n\n'네놈이 만든 진화의 끝이 고작 이 구역질 나는 고기 덩어리냐? 내 일족의 영혼을 담아, 그 왕관을 부숴주마." }
+};
+
+// 보스 등장 스토리 텍스트
+const BOSS_STORY_DATA = {
+    1: "■■■■ WARNING: BOSS APPROACHING ■■■■\n\n돌연, 지면이 거대한 고동소리와 함께 울리기 시작했다. 진동은 발끝에서부터 머리끝까지 전해지며 생리적인 공포를 자극했다. 연이는 무기를 견준 채 사방을 경계하며 몸을 낮췄다.\n\n안개 너머에서, 일반 청토끼와는 차원이 다른 존재감이 느껴졌다. 3미터가 넘는 거대한 몸집, 흉측하게 부풀어 오른 근육, 그리고 등을 가로지르는 날카로운 뼈 돌기들. 이것은 단순한 감염자가 아니다. 초기 감염자들 중 가장 강인한 개체가 바이러스와 완전히 융합하여 탄생한 '알파 청토끼'다.\n\n그 눈동자에는 인간성의 잔재조차 보이지 않았고, 오직 정제된 파괴와 살육의 본능만이 서려 있었다. 알파가 발구르는 소리가 쿵쿵 울려 퍼지며, 주변의 잡종 변이체들마저 공포에 질려 뒤로 물러서는 모습을 보였다.\n\n이 구역의 최정상 포식자가 등장했다. 연이는 산탄총의 약실을 확인하며 심호흡했다. '이것이 살아남기 위한 첫 번째 관문이다.'",
+
+    2: "■■■■ WARNING: ELITE DETECTED ■■■■\n\n'이 놈은... 다르다.'\n\n그동안의 변이체들과는 차원이 다른 위압감. 일반 청토끼의 2배는 족히 넘는 거대한 몸집에, 전신을 뒤덮은 짙은 푸른 비늘. 가장 주목할 것은 그 어깨에 매달린 군용 탄띠와 손에 쥐인 개조된 중기관총이었다.\n\n이 놈은 과거 특수부대 출신이었다. 생전의 전투 기억이 바이러스와 융합하여 더욱 흉악한 '엘리트 청토끼'로 거듭난 것이다. 놈의 눈동자에는 지능적인 빛이 서려 있었다. 단순한 맹목적인 공격이 아닌, 전술적 사고가 가능한 존재.\n\n기관총이 윙윙거리며 회전하는 소리가 공기를 갈랐다. 연이는 재빨리 폐차 뒤로 몸을 숨겼다. 다음 순간, 총알 세례가 그녀가 서 있던 위치를 초토화시켰다.\n\n'회피 기동과 화력压制... 이건 그냥 괴물이 아니야. 전투 머신이야.'",
+
+    3: "■■■■ WARNING: HUNTER AWAKES ■■■■\n\n독성 안개가 짙게 드리운 폐호텔 로비. 연이는 조심스럽게 걸음을 옮기며 주변을 경계했다. 그때, 벽면을 타는 소리가 들려왔다. 슈릭- 슈릭- 마치 칼로 금속을 긁는 듯한 불길한 소리.\n\n안개 너머에서 거대한 그림자가 드리워졌다. 4미터가 넘는 신장에, 길고 날카로운 팔다리. 척추에서 뻗어나온 수십 개의 가시 돌기들이 살갗을 스치며 스파크를 일으켰다. 이것은 '헌터 청토끼'. 독성 환경에 적응하여 진화한 특이종이다.\n\n놈의 눈은 완전히 퇴화하여 없어졌지만, 그 대신 두 개의 거대한 후각 수용체가 코 주변에 돌출되어 있었다. 그것은 냄새로 사냥감을 추적하는 괴물이다.\n\n'...냄새를 맡았구나.'\n\n연이가 깨달은 순간, 헌터가 천장에서 뛰어내려 그녀의 머리 위로 덮쳐왔다. 총성이 안개를 갈랐다.",
+
+    4: "■■■■ WARNING: PREDATOR ALPHA ■■■■\n\n구시가지 폐허의 심장부. 연이가 무너진 고층 빌딩 사이로 조심스럽게 진입하자, 주변의 공기가 갑자기 차가워졌다. 바람이 멈추고, 모든 소리가 정적에 흡수되는 듯한 기분 나쁜 침묵이 찾아왔다.\n\n'...여기가 그 자식의 영역인가.'\n\n3시 방향 잔해 위에서 무언가 빛을 반사했다. 연이가 재빨리 몸을 낮춘 순간, 총알이 그녀의 머리카락을 스치며 날아갔다. 저격이다!\n\n어둠 속에서 천천히 모습을 드러낸 것은 3미터가 넘는 거구에 스나이퍼 라이플을 든 기형적인 존재였다. '프레데터 알파'. 사냥 본능이 극대화된 최상위 포식자. 놈의 눈동자에는 지능과 잔혹함이 공존하고 있었다.\n\n저격용 조준경이 달린 라이플이 연이를 향했다. 총구에서 오렌지색 불꽃이 튀었다.",
+
+    5: "■■■■ WARNING: TANK BREACHED ■■■■\n\n상업 지구 한복판. 연이가 분수대 옆을 지나가려는 순간, 지면이 거대하게 울리며 균열이 생겼다. 콩콩콩- 무거운 발걸음 소리가 가까워지며, 건물 하나가 무너져내렸다.\n\n먼지와 잔해 사이로 나타난 것은 4미터가 넘는 거대한 덩치의 괴물이었다. '탱크 청토끼'. 이름처럼 전차 같은 장갑 피부에, 양팔에는 거대한 쇠톱 같은 생체 무기가 자라나 있었다.\n\n놈의 피부는 일반 탄환으로는 뚫을 수 없을 정도로 두껍고 단단해 보였다. 눈동자는 완전히 검게 물들어 있었지만, 그 안에는 끝없는 파괴 충동이 맴돌고 있었다.\n\n'이건... 지능이 없어. 오직 파괴만을 위한 병기야.'\n\n탱크가 쇠톱 팔을 휘두르며 연이를 향해 돌진했다. 지면이 갈라지며, 폐허가 더욱 폐허가 되어갔다.",
+
+    6: "■■■■ WARNING: ABOMINATION ■■■■\n\n절망의 강변. 연이가 오염된 물을 피해 강둑 위로 올라서자, 강물이 거대하게 출렁이며 분출했다. 뭔가 거대한 것이 수면 아래에서 올라오고 있었다.\n\n수십 개의 촉수와 덩굴이 얽혀 만들어진 5미터급 거대 괴수가 물속에서 기어올라왔다. '어보미네이션'. 여러 청토끼가 융합하여 탄생한 집합체 괴물이다. 몸통에서는 계속해서 작은 변이체들이 떨어져 나와 바닥을 기어다녔다.\n\n놈의 중앙에 위치한 거대한 주눈눈가 연이를 향했다. 그 안에는 무수한 소형 안구들이 달라붙어 있었고, 모든 것을 관찰하고 있었다.\n\n'강을 지키는 수문장인가... 아니, 이 강 자체가 이 놈의 몸인가?'\n\n촉수들이 번개처럼 뻗어나와 연이를 덮치려 했다. 산탄총이 요란하게 울려 퍼졌다.",
+
+    7: "■■■■ WARNING: ASSASSIN QUEEN ■■■■\n\n중앙 방송국 1층 로비. 연이가 방화문을 열고 들어서자, 위층에서 무언가 떨어지는 소리가 들렸다. 퍽. 퍽. 퍽. 뭔가 날카로운 것이 금속 바닥에 꽂히는 소리.\n\n어둠 속에서 천천히 모습을 드러낸 것은 3미터가 넘는 여성형 청토끼였다. '어쌔신 퀸'. 극도로 날씬한 몸매에 반대로 길고 날카로운 발톀이 30cm는 족히 넘어 보였다. 양팔에는 생체 칼날이 자라나 있었다.\n\n놈의 눈은 교활하게 빛나고 있었다. 이것은 단순한 맹수가 아니라, 암살 기술을 지닌 지능적 포식자이다. 속도와 은신 능력이 극대화된 존재.\n\n'...뒤에서 온다!'\n\n연이가 뒤를 돌아보는 순간, 이미 퀸은 그녀의 코앞에 있었다. 생체 칼날이 공기를 가르며 스칠 때, 연이는 필사적으로 몸을 날려 피했다. 로비의 대리석 바닥이 깊게 긁혔다.",
+
+    8: "■■■■ WARNING: PSYCHOTIC KING ■■■■\n\n25층. 환각에서 벗어나려던 연이의 머리 위로 거대한 그림자가 드리워졌다. 천장을 뚜렷뚜렷 걷는 소리. 뭔가 거대한 것이 천장을 거닐고 있었다.\n\n천장이 폭발하며 파편이 쏟아졌다. 떨어진 잔해 사이로 나타난 것은 4미터급 거구에 거대한 뇌수가 노출된 기형적인 보스였다. '사이코틱 킹'. 정신 공격 능력이 극대화된 최상위 변이체다.\n\n놈의 거대한 뇌수에서 푸른 빛이 맥박치듯 빛나고 있었다. 그 빛을 본 순간, 연이는 다시 귓가에 환각의 속삭임이 들려오는 것을 느꼈다.\n\n'...또 방해하려는 거냐. 이번엔 안 통해.'\n\n연이는 혀를 깨물어 통증으로 정신을 맑게 하고 총을 겨눴다. 사이코틱 킹의 뇌수가 격렬하게 맥동하며, 정신 충격파를 발산했다.",
+
+    9: "■■■■ WARNING: BOSS KING ■■■■\n\n47층 메인 스튜디오 홀. 연이가 홀에 들어서자, 정중앙의 왕좌에서 거대한 존재가 천천히 일어났다.\n\n'브루투스 킹'. 지금껏 연이가 상대해온 어떤 변이체보다도 거대하고 강력한 존재. 5미터가 넘는 거구에, 전신을 뒤덮은 흑강석 같은 갑각. 등에는 뼈가 돋아난 날개 같은 구조물이 펼쳐져 있었다.\n\n놈의 얼굴에는 인간의 특징이 완전히 사라지고, 오직 흉악한 턱과 수십 개의 눈들만이 뒤덮고 있었다. 그 손에는 과거 연이의 동료들이 사용하던 무기들이 트로피처럼 꽂혀 있었다.\n\n'...네놈이었구나. 내 동료들의 무기를 가지고 있는 것이.'\n\n연이의 눈동자에 차가운 복수심이 맺혔다. 산탄총을 겨누는 손에 힘이 들어갔다.\n\n'오늘, 네놈의 왕좌를 부숴주마.'",
+
+    10: "■■■■ FINAL WARNING: ULTIMATE ONE ■■■■\n\n50층 스카이라운지. 중앙 방송국 최상층.\n\n연이가 문을 열고 들어서자, 그곳은 더 이상 인간의 건물이 아니었다. 거대한 살점과 푸른 털이 뒤엉켜 맥동하는 생체 구조물. 그 중심에 있는 것은...\n\n과거 미친 과학자가 청토끼의 왕과 완전히 융합하여 탄생한 '얼티메이트 원'이었다. 6미터가 넘는 거대한 몸집에, 전신을 뒤덮은 생체 갑옷. 등 뒤로는 수천 개의 신경 삭이 뻗어져 타워 전체와 연결되어 있었다.\n\n놈의 머리에는 과거 과학자의 얼굴이 반쪽만 남아 있었고, 다른 반쪽은 청토끼의 흉측한 면이 드러나 있었다. 그 입에서 기계음과 괴물의 소리가 섞여 나왔다.\n\n'환영한다... 마지막 생존자여. 네 일족의 마지막 피를 받아, 나의 완전한 신이 되리라.'\n\n연이의 손에 든 산탄총이 마지막으로 요란하게 울려 퍼졌다.\n\n'네놈 따위가 신이라고? 재앙의 근원을 끊어주마!'"
 };
 
 let currentStage = 1;
@@ -1007,6 +1067,11 @@ function handleStoryClick(e) {
                 storyStateEnterTime = Date.now();
                 storyTextComplete = false;
                 lastTypedCharIndex = 0;
+            } else if (bossStoryPending) {
+                // 보스 스토리 끝 - 보스전 시작
+                bossStoryPending = false;
+                currentState = GAME_STATE.BOSS_FIGHT;
+                boss = new Boss(currentStage);
             } else {
                 // 마지막 페이지 - 게임 클리어 이미지 화면으로
                 console.log('[Epilogue] Complete, transitioning to GAME_CLEAR_IMAGE state');
@@ -1053,6 +1118,11 @@ document.addEventListener('keydown', (e) => {
                     storyStateEnterTime = Date.now();
                     storyTextComplete = false;
                     lastTypedCharIndex = 0;
+                } else if (bossStoryPending) {
+                    // 보스 스토리 끝 - 보스전 시작
+                    bossStoryPending = false;
+                    currentState = GAME_STATE.BOSS_FIGHT;
+                    boss = new Boss(currentStage);
                 } else {
                     // 마지막 페이지 - 게임 클리어 이미지 화면으로
                     currentState = GAME_STATE.GAME_CLEAR_IMAGE;
@@ -1447,6 +1517,11 @@ const Player = {
         this.lastFrameTime = 0;
         this.supportTimer = 0; // 지원군 지속 시간
         this.skillNotifications = []; // 활성 스킬 알림
+        
+        // 꽃잎 포 (필살기) 시스템
+        this.petalCannonCharge = 0; // 현재 충전량 (발사 횟수)
+        this.petalCannonMaxCharge = 50; // 최대 충전 필요 발사 횟수
+        this.petalCannonReady = false; // 발사 가능 여부
     },
     update: function (currentTime) {
         if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS_FIGHT) return;
@@ -1505,6 +1580,16 @@ const Player = {
             console.log(`[SHOOT] Player.damage: ${this.damage}, bulletSpeed: ${bulletSpeed}, weaponLevel: ${weaponLevel}`);
             const projectile = new Projectile(this.x + this.width - 5, this.y + this.height * 0.65, bulletSpeed, 0, this.damage);
             projectiles.push(projectile);
+            
+            // 꽃잎 포 충전 (총 발사 횟수 기준)
+            if (!this.petalCannonReady) {
+                this.petalCannonCharge++;
+                if (this.petalCannonCharge >= this.petalCannonMaxCharge) {
+                    this.petalCannonReady = true;
+                    addFloatingText("🌸 꽃잎 포 충전 완료! (F키)", this.x, this.y - 60, '#ff69b4');
+                    AudioManager.playSFX('powerup');
+                }
+            }
 
             // 지원군 사격 (위, 아래 추가 지원)
             if (this.supportTimer > 0) {
@@ -1854,6 +1939,53 @@ class Projectile {
             ctx.fillRect(this.x + 15, this.y - 4, 10, 8);
             ctx.fillRect(this.x + 22, this.y - 2, 6, 4);
 
+            ctx.restore();
+        } else if (this.isPetalCannon) {
+            // 꽃잎 포 (필살기) - 화려한 꽃잎 효과
+            const centerX = this.x + this.width / 2;
+            const centerY = this.y + this.height / 2;
+            const time = Date.now() / 100;
+            
+            ctx.save();
+            
+            // 회전하는 꽃잎 효과
+            for (let i = 0; i < 8; i++) {
+                const angle = (i * 45 + time * 2) * Math.PI / 180;
+                const petalDistance = 20 + Math.sin(time + i) * 5;
+                const px = centerX + Math.cos(angle) * petalDistance;
+                const py = centerY + Math.sin(angle) * petalDistance;
+                
+                // 그라데이션 꽃잎
+                const petalGrad = ctx.createRadialGradient(px, py, 0, px, py, 18);
+                petalGrad.addColorStop(0, '#ff1493'); // Deep pink
+                petalGrad.addColorStop(0.5, '#ff69b4'); // Hot pink
+                petalGrad.addColorStop(1, 'rgba(255, 105, 180, 0.3)');
+                
+                ctx.fillStyle = petalGrad;
+                ctx.beginPath();
+                ctx.ellipse(px, py, 18, 10, angle, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // 중심 코어 (노란색)
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = '#ffd700';
+            const coreGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 20);
+            coreGrad.addColorStop(0, '#fff');
+            coreGrad.addColorStop(0.3, '#ffd700');
+            coreGrad.addColorStop(1, '#ff8c00');
+            ctx.fillStyle = coreGrad;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 외곽 링
+            ctx.strokeStyle = 'rgba(255, 20, 147, 0.6)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 35 + Math.sin(time * 3) * 5, 0, Math.PI * 2);
+            ctx.stroke();
+            
             ctx.restore();
         } else {
             const centerX = this.x + this.width / 2;
@@ -2636,7 +2768,30 @@ function advanceStage() {
     }
 }
 
-function startBossFight() { currentState = GAME_STATE.BOSS_FIGHT; boss = new Boss(currentStage); }
+function startBossFight() {
+    // 보스 스토리 텍스트 표시 (있는 경우)
+    const bossStory = BOSS_STORY_DATA[currentStage];
+    if (bossStory) {
+        // 스토리 상태로 전환하여 보스 등장 텍스트 표시
+        currentState = GAME_STATE.STORY;
+        storyPages = [];
+        storyCurrentPage = 0;
+        storyTotalPages = 0;
+        storyTypingIndex = 0;
+        storyDisplayTime = Date.now();
+        storyStateEnterTime = Date.now();
+        storyTextComplete = false;
+        lastTypedCharIndex = 0;
+        storyPages = splitStoryIntoPages(bossStory, Math.min(canvas.width * 0.85, 800), canvas.height * 0.6, 22, 14);
+        storyTotalPages = storyPages.length;
+        // 스토리가 끝나면 보스전 시작하도록 플래그 설정
+        bossStoryPending = true;
+    } else {
+        // 스토리 없으면 바로 보스전 시작
+        currentState = GAME_STATE.BOSS_FIGHT;
+        boss = new Boss(currentStage);
+    }
+}
 
 function addSkillNotification(text, duration) {
     // 중복 알림 제거
@@ -3115,6 +3270,58 @@ function spawnEnemyWave() {
 }
 
 function createExplosion(x, y, color = '#e74c3c') { for (let i = 0; i < 15; i++) particles.push(new Particle(x, y, color)); }
+function usePetalCannon() {
+    if (!Player.petalCannonReady) {
+        // 아직 충전 안됨
+        const remaining = Player.petalCannonMaxCharge - Player.petalCannonCharge;
+        addFloatingText(`🌸 충전중... (${remaining}발 남음)`, Player.x, Player.y - 40, '#ff69b4');
+        return;
+    }
+    
+    // 꽃잎 포 발사!
+    Player.petalCannonReady = false;
+    Player.petalCannonCharge = 0;
+    
+    // 캐릭터 레벨에 비례한 데미지 계산 (초기 약함, 후반 매우 강함)
+    const playerLevel = LevelSystem.playerLevel;
+    const basePetalDamage = 50; // 기본 데미지
+    const levelMultiplier = 1 + (playerLevel - 1) * 0.3; // 레벨당 30% 증가
+    const petalDamage = Math.round(basePetalDamage * levelMultiplier);
+    
+    // 화면 전체 관통하는 거대 꽃잎 포 발사
+    const petalCount = 5 + Math.min(playerLevel, 5); // 레벨에 따라 꽃잎 개수 증가 (최대 10개)
+    
+    for (let i = 0; i < petalCount; i++) {
+        const angle = (Math.PI * 2 / petalCount) * i; // 원형으로 퍼지는 각도
+        const speed = 15;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+        
+        const petal = new Projectile(Player.x + Player.width / 2, Player.y + Player.height / 2, vx, vy, petalDamage);
+        petal.isPetalCannon = true; // 꽃잎 포 식별용
+        petal.width = 40; // 거대한 크기
+        petal.height = 40;
+        petal.active = true;
+        projectiles.push(petal);
+    }
+    
+    // 화면 전체 화이트 아웃 효과
+    const flash = document.createElement('div');
+    flash.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(255, 182, 193, 0.5); pointer-events: none; z-index: 9999;
+        transition: opacity 0.5s; opacity: 1;
+    `;
+    document.body.appendChild(flash);
+    setTimeout(() => flash.style.opacity = '0', 50);
+    setTimeout(() => flash.remove(), 550);
+    
+    addFloatingText(`🌸 꽃잎 포 발사! (데미지: ${petalDamage})`, Player.x, Player.y - 50, '#ff1493');
+    AudioManager.playSFX('explode');
+    
+    console.log(`[PETAL CANNON] Lv.${playerLevel}, Damage: ${petalDamage}, Petals: ${petalCount}`);
+}
+
 function endGame() {
     if (currentState !== GAME_STATE.GAME_OVER) gameOverStartTime = Date.now();
     currentState = GAME_STATE.GAME_OVER;
@@ -3370,6 +3577,156 @@ function drawBombButton(ctx) {
     ctx.restore();
 }
 
+// 꽃잎 포 버튼 영역 (클릭 감지용)
+let petalCannonButtonRect = null;
+
+// [ADVANCED 2D PIXEL ART PETAL CANNON BUTTON]
+// 고급 2D 도트 스타일 꽃잎 포 버튼 UI
+function drawPetalCannonButton(ctx) {
+    const btnSize = 70; // 폭탄보다 약간 작게
+    const btnX = canvas.width - btnSize - 120; // 폭탄 버튼 왼쪽에 배치
+    const btnY = canvas.height - btnSize - 25;
+    const centerX = btnX + btnSize / 2;
+    const centerY = btnY + btnSize / 2;
+    
+    // 버튼 영역 저장 (클릭 감지용)
+    petalCannonButtonRect = { x: btnX, y: btnY, width: btnSize, height: btnSize };
+    
+    const time = Date.now();
+    const pulse = Player.petalCannonReady ? Math.sin(time / 150) * 0.3 + 1 : 1;
+    const chargePercent = Player.petalCannonCharge / Player.petalCannonMaxCharge;
+    
+    ctx.save();
+    
+    // === 1. 외곽 글로우 효과 (충전 완료시만) ===
+    if (Player.petalCannonReady) {
+        const glowIntensity = 25 * pulse;
+        ctx.shadowBlur = glowIntensity;
+        ctx.shadowColor = '#ff1493';
+        
+        ctx.fillStyle = `rgba(255, 20, 147, ${0.4 * pulse})`;
+        ctx.fillRect(btnX - 4, btnY - 4, btnSize + 8, btnSize + 8);
+    }
+    
+    // === 2. 메탈릭 베젤 프레임 (3D 효과) ===
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(btnX, btnY, btnSize, btnSize);
+    
+    // 상단 하이라이트 (메탈릭 반사)
+    const metalGradient = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnSize);
+    metalGradient.addColorStop(0, '#5a5a5a');
+    metalGradient.addColorStop(0.1, '#4a4a4a');
+    metalGradient.addColorStop(0.5, '#2a2a2a');
+    metalGradient.addColorStop(1, '#1a1a1a');
+    ctx.fillStyle = metalGradient;
+    ctx.fillRect(btnX + 2, btnY + 2, btnSize - 4, btnSize - 4);
+    
+    // 핑크 액센트 테두리 (충전 상태에 따라 색상 변화)
+    const borderColor = Player.petalCannonReady ? '#ff1493' : (chargePercent > 0.5 ? '#ff69b4' : '#666');
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(btnX + 4, btnY + 4, btnSize - 8, btnSize - 8);
+    
+    // === 3. 내부 패널 ===
+    const innerX = btnX + 8;
+    const innerY = btnY + 8;
+    const innerSize = btnSize - 16;
+    
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(innerX, innerY, innerSize, innerSize);
+    
+    // === 4. 꽃잎 포 아이콘 (핑크 꽃) ===
+    if (chargePercent > 0 || Player.petalCannonReady) {
+        // 꽃잎 그리기
+        const petalSize = Player.petalCannonReady ? 14 : 10;
+        ctx.fillStyle = Player.petalCannonReady ? '#ff1493' : '#ff69b4';
+        
+        for (let i = 0; i < 5; i++) {
+            const angle = (i * 72 + time / 20) * Math.PI / 180;
+            const px = centerX + Math.cos(angle) * 8;
+            const py = centerY + Math.sin(angle) * 8;
+            ctx.beginPath();
+            ctx.arc(px, py, petalSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // 중심
+        ctx.fillStyle = Player.petalCannonReady ? '#ffd700' : '#ffcc00';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, Player.petalCannonReady ? 8 : 5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 글로우 효과 (충전 완료시)
+        if (Player.petalCannonReady) {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ff69b4';
+            ctx.strokeStyle = '#ff1493';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+    } else {
+        // 충전 안됨 (회색 꽃)
+        ctx.fillStyle = '#444';
+        for (let i = 0; i < 5; i++) {
+            const angle = (i * 72) * Math.PI / 180;
+            const px = centerX + Math.cos(angle) * 6;
+            const py = centerY + Math.sin(angle) * 6;
+            ctx.beginPath();
+            ctx.arc(px, py, 8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.fillStyle = '#666';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    // === 5. 충전량 바 ===
+    const barWidth = innerSize - 8;
+    const barHeight = 4;
+    const barX = innerX + 4;
+    const barY = innerY + innerSize - 10;
+    
+    // 배경
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(barX, barY, barWidth, barHeight);
+    
+    // 충전량
+    if (chargePercent > 0) {
+        const barGradient = ctx.createLinearGradient(barX, barY, barX + barWidth * chargePercent, barY);
+        barGradient.addColorStop(0, '#ff1493');
+        barGradient.addColorStop(1, '#ff69b4');
+        ctx.fillStyle = barGradient;
+        ctx.fillRect(barX, barY, barWidth * chargePercent, barHeight);
+    }
+    
+    // === 6. 준비 상태 인디케이터 ===
+    if (Player.petalCannonReady) {
+        ctx.fillStyle = '#00ff00';
+        ctx.fillRect(btnX + 6, btnY + 6, 4, 4);
+    } else if (chargePercent > 0) {
+        ctx.fillStyle = '#ff69b4';
+        ctx.fillRect(btnX + 6, btnY + 6, 3, 3);
+    } else {
+        ctx.fillStyle = '#444';
+        ctx.fillRect(btnX + 6, btnY + 6, 3, 3);
+    }
+    
+    ctx.restore();
+}
+
+// 꽃잎 포 버튼 클릭 감지 함수
+function isPointInPetalCannonButton(x, y) {
+    if (!petalCannonButtonRect) return false;
+    return x >= petalCannonButtonRect.x &&
+        x <= petalCannonButtonRect.x + petalCannonButtonRect.width &&
+        y >= petalCannonButtonRect.y &&
+        y <= petalCannonButtonRect.y + petalCannonButtonRect.height;
+}
+
 // 다이너마이트 스틱 그리기 (픽셀 아트 스타일)
 function drawDynamiteStick(ctx, cx, cy, w, h, lightColor, darkColor) {
     const x = cx - w/2;
@@ -3409,6 +3766,13 @@ window.addEventListener('mousemove', (e) => Player.targetY = e.clientY - Player.
 window.addEventListener('mousedown', (e) => {
     if (currentState === GAME_STATE.START) {
         // START 상태에서는 버튼 클릭만 처리 (자동 시작 안함)
+        return;
+    }
+
+    // 꽃잎 포 버튼 클릭 감지 (데스크탑 & 가로 모드) - 폭탄 버튼보다 먼저 체크
+    if ((currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT) &&
+        isPointInPetalCannonButton(e.clientX, e.clientY)) {
+        usePetalCannon();
         return;
     }
 
@@ -3457,6 +3821,14 @@ window.addEventListener('touchstart', (e) => {
     // 폭탄 버튼 터치 감지 (가로 모드에서만 표시됨)
     if (e.touches.length > 0) {
         const touch = e.touches[0];
+        // 꽃잎 포 버튼 클릭 감지
+        if ((currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT) &&
+            isPointInPetalCannonButton(touch.clientX, touch.clientY)) {
+            usePetalCannon();
+            e.preventDefault();
+            return;
+        }
+        // 폭탄 버튼 클릭 감지
         if ((currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT) &&
             isPointInBombButton(touch.clientX, touch.clientY)) {
             useBomb();
@@ -3529,7 +3901,10 @@ window.addEventListener('touchmove', (e) => {
     e.preventDefault(); // 모바일 브라우저 화면 스크롤 방지
 }, { passive: false });
 
-window.addEventListener('keydown', (e) => { if (e.code === 'Space' && (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT)) useBomb(); });
+window.addEventListener('keydown', (e) => { 
+    if (e.code === 'Space' && (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT)) useBomb(); 
+    if (e.code === 'KeyF' && (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT)) usePetalCannon();
+});
 
 function resizeCanvas() {
     const viewport = getViewportSize(); // MOBILE LANDSCAPE
@@ -4244,6 +4619,7 @@ let storyCurrentPage = 0; // 현재 페이지
 let storyTotalPages = 0; // 전체 페이지 수
 let lastTypedCharIndex = 0; // 마지막으로 소리낸 문자 인덱스
 let storyStateEnterTime = 0; // 스토리 상태 진입 시간 (클릭 디바운스용)
+let bossStoryPending = false; // 보스 스토리 대기 중 플래그
 
 // 타자기 효과음 (Web Audio API)
 let typewriterAudioContext = null;
