@@ -1633,7 +1633,7 @@ const LevelSystem = {
     
     // 레벨에 따른 필요 경험치 계산 (100: 게이트 10개 = 1레벨)
     getExpToNext: function(level) {
-        return 100; // 고정값: 100 EXP = 1레벨업
+        return 50; // 고정값: 50 EXP = 1레벨업 (무기 레벨업 2배 쉬워짐)
     },
     
     // 플레이어 경험치 획득 (적 처치 시)
@@ -3065,8 +3065,13 @@ class Boss {
 function spawnEnemyWave() {
     if (isMobileEasyModeActive() && enemies.filter(e => e.active && e.state !== 'DEAD').length >= EASY_MODE_CONFIG.maxActiveEnemies) return; // EASY MODE
     const stage = getCurrentStageData(); // EASY MODE
-    const e = new Enemy(canvas.width + 50, Math.random() * (canvas.height - 100) + 50);
-    e.speed = stage.enemySpeed;
+    // 가로 모드에서 적들이 더 오른쪽에서 생성되고 더 느리게 이동
+    const isLandscape = window.innerWidth > window.innerHeight;
+    const spawnOffset = isLandscape ? 150 : 50; // 가로 모드: 더 오른쪽에서 생성
+    const e = new Enemy(canvas.width + spawnOffset, Math.random() * (canvas.height - 100) + 50);
+    // 가로 모드에서 적 속도 50% 감소
+    const landscapeSpeedMultiplier = isLandscape ? 0.5 : 1;
+    e.speed = stage.enemySpeed * landscapeSpeedMultiplier;
     enemies.push(e);
 }
 
