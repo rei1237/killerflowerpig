@@ -2094,13 +2094,12 @@ class Enemy {
         const sizeScale = isMobileLandscapePlayMode() ? 0.75 : 1.0;
         this.width = Math.round((isStage6Plus ? 98 : 64) * sizeScale);
         this.height = Math.round((isStage6Plus ? 98 : 64) * sizeScale);
-        // 적 체력 - 단계별로 점진적으로 강해지도록 조정 (초반 쉬움, 후반 어려움)
+        // 적 체력 - 단계별로 점진적으로 강해지도록 조정 (초반 이전과 동일, 후반 강함)
         const isHardMode = !isMobileLandscapePlayMode(); // 가로모드가 아닌 일반 모드 = 하드모드
         const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : (isHardMode ? 1.5 : 1); // 하드모드: 체력 1.5배
-        const hpMultiplierB = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierB : (isHardMode ? 1.3 : 1); // 하드모드: 스테이지 보너스 1.3배
-        // 체력 공식: 기본 15 + 스테이지당 8씩 증가 (초반 약함, 후반 강함)
-        const baseHp = 15;
-        const stageBonus = currentStage * 8;
+        // 체력 공식: 기본 52 + 스테이지당 5씩 증가 (스테이지1: ~60, 스테이지10: ~100)
+        const baseHp = 52;
+        const stageBonus = currentStage * 5;
         this.hp = Math.round((baseHp + stageBonus) * hpMultiplierA); 
         this.maxHp = this.hp;
         const gameSpeed = getMobileGameSpeedMultiplier();
