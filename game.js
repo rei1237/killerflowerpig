@@ -303,12 +303,8 @@ function drawHUD(ctx) {
     drawMiniPanel(startX + 10, statsY - 12, levelPanelW, levelPanelH, '#4a4a2a', '#1a1a0a', playerGlow);
     drawPixelSkull(startX + 18, statsY - 3, '#e0d0a0');
     drawLevelBadge(startX + 28, statsY - 6, LevelSystem.playerLevel, '#FFD700');
-    // Score Progress Bar (compact 30px) - 점수 기반 레벨업 진행도
-    const scoreForCurrentLevel = LevelSystem.getScoreForLevel(LevelSystem.playerLevel);
-    const scoreForNextLevel = LevelSystem.getScoreForLevel(LevelSystem.playerLevel + 1);
-    const scoreProgress = LevelSystem.playerExp - scoreForCurrentLevel;
-    const scoreNeeded = scoreForNextLevel - scoreForCurrentLevel;
-    const expPercent = LevelSystem.playerLevel >= LevelSystem.maxLevel ? 1 : Math.min(1, scoreProgress / scoreNeeded);
+    // LV EXP Progress Bar (compact 30px) - 플레이어 레벨 EXP 진행도
+    const expPercent = LevelSystem.playerLevel >= LevelSystem.maxLevel ? 1 : Math.min(1, LevelSystem.playerExp / LevelSystem.playerExpToNext);
     drawMiniBar(startX + 28, statsY + 2, 30, 4, expPercent, '#2ecc71', '#00ff88');
 
     // === ATTACK LEVEL PANEL (DAMAGE) - Compact ===
@@ -1660,97 +1656,83 @@ const Player = {
 
 // ============================================================================
 // [Level System - 레벨 및 경험치 시스템]
-// 플레이어 레벨과 각 아이템별 레벨/경험치 관리
+// 플레이어 레벨(EXP 기반)과 각 아이템별 레벨/경험치 관리
 // ============================================================================
 const LevelSystem = {
-    // 플레이어 기본 레벨 (점수 기반으로 레벨업)
+    // 플레이어 기본 레벨 (EXP 기반으로 레벨업)
     playerLevel: 1,
-    playerExp: 0, // 현재 누적 점수
-    playerExpToNext: 2000, // 첫 레벨업 필요 점수
+    playerExp: 0, // 현재 누적 EXP (점수와 별개)
+    playerExpToNext: 100, // 첫 레벨업 필요 EXP
     
-    // 아이템별 레벨과 경험치 (10개 게이트 = 1레벨)
+    // 아이템별 레벨과 경험치
     items: {
-        DAMAGE: { level: 1, exp: 0, expToNext: 100, name: '공격력', icon: '⚔️' },
-        FIRE_RATE: { level: 1, exp: 0, expToNext: 100, name: '공격속도', icon: '🔥' },
-        SHIELD: { level: 1, exp: 0, expToNext: 100, name: '무적', icon: '🛡️' },
-        SUPPORT: { level: 1, exp: 0, expToNext: 100, name: '지원군', icon: '👥' }
+        DAMAGE: { level: 1, exp: 0, expToNext: 50, name: '공격력', icon: '⚔️' },
+        FIRE_RATE: { level: 1, exp: 0, expToNext: 50, name: '공격속도', icon: '🔥' },
+        SHIELD: { level: 1, exp: 0, expToNext: 50, name: '무적', icon: '🛡️' },
+        SUPPORT: { level: 1, exp: 0, expToNext: 50, name: '지원군', icon: '👥' }
     },
     
-    // 레벨당 스탯 증가량 (최대 레벨 10 기준으로 조정)
-    maxLevel: 12, // 모든 레벨 최대값 (공격력은 12레벨까지)
+    // 레벨당 스탯 증가량
+    maxLevel: 15, // 플레이어 최대 레벨
+    itemMaxLevel: 12, // 아이템 최대 레벨
     stats: {
-        playerHpPerLevel: 1.5,      // 플레이어 레벨당 체력 +1.5 (Lv10 = +13.5)
-        playerDamagePerLevel: 0,    // 플레이어 레벨은 공격력에 영향 없음 (무기 레벨만 영향)
-        playerDefensePerLevel: 0.5, // 플레이어 레벨당 방어력 +0.5 (Lv10 = +4.5, 45% 감소)
-        itemDamagePerLevel: 7.45,  // 공격력 아이템 레벨당 +7.45 (Lv12 = +81.95, 총 91.95 ≒ 92)
-        itemFireRatePerLevel: 16.89, // 공격속도 아이템 레벨당 -16.89ms (Lv10 = -152ms, 200→48ms)
-        itemShieldPerLevel: 1500,   // 무적 아이템 레벨당 +1.5초 (Lv10 = +15초, 총 30초)
-        itemSupportPerLevel: 2000   // 지원군 아이템 레벨당 +2초 (Lv10 = +20초, 총 40초)
+        playerHpPerLevel: 2,        // 플레이어 레벨당 체력 +2
+        playerDefensePerLevel: 0.5, // 플레이어 레벨당 방어력 +0.5
+        itemDamagePerLevel: 7.5,    // 공격력 아이템 레벨당 +7.5
+        itemFireRatePerLevel: 16,   // 공격속도 아이템 레벨당 -16ms
+        itemShieldPerLevel: 1500,   // 무적 아이템 레벨당 +1.5초
+        itemSupportPerLevel: 2000   // 지원군 아이템 레벨당 +2초
     },
     
     init: function() {
         this.playerLevel = 1;
-        this.playerExp = 0; // 누적 점수
-        this.playerExpToNext = 2000; // 레벨 1→2: 2000점 필요
+        this.playerExp = 0;
+        this.playerExpToNext = this.getPlayerExpToNext(1);
         
         // 아이템 초기화
         for (let key in this.items) {
             this.items[key].level = 1;
             this.items[key].exp = 0;
-            this.items[key].expToNext = this.getExpToNext(1);
+            this.items[key].expToNext = 50; // 아이템: 50 EXP = 1레벨
         }
     },
     
-    // 레벨에 따른 필요 점수 계산 (점수 기반 레벨업)
-    getExpToNext: function(level) {
-        return 50; // 아이템용: 고정값 50 EXP = 1레벨업
+    // 플레이어 레벨업에 필요한 EXP 계산
+    getPlayerExpToNext: function(level) {
+        // 레벨 1→2: 100, 2→3: 150, 3→4: 200... (점진적 증가)
+        return 50 + level * 50;
     },
     
-    // 레벨업에 필요한 총 점수 계산
-    getScoreForLevel: function(targetLevel) {
-        // 레벨 1: 0점부터 시작
-        // 레벨 2: 2000점
-        // 레벨 3: 5000점 (추가 3000)
-        // 레벨 4: 9000점 (추가 4000)
-        // ... 점진적 증가
-        if (targetLevel <= 1) return 0;
-        let total = 0;
-        for (let i = 2; i <= targetLevel; i++) {
-            total += 1000 + (i - 1) * 1000; // 레벨 2: 2000, 레벨 3: 3000, 레벨 4: 4000...
-        }
-        return total;
+    // 아이템 레벨업에 필요한 EXP
+    getItemExpToNext: function(level) {
+        return 50; // 고정 50 EXP
     },
     
-    // 현재 레벨에서 다음 레벨까지 필요한 추가 점수
-    getScoreToNextLevel: function() {
-        const nextLevel = this.playerLevel + 1;
-        return 1000 + nextLevel * 1000; // 레벨 1→2: 2000, 2→3: 3000, 3→4: 4000...
-    },
-    
-    // 점수 업데이트 및 레벨업 체크 (점수가 오를 때마다 호출)
-    updateScore: function(currentScore) {
-        // 최대 레벨 체크
+    // 플레이어 EXP 획득 (코인, 보상 등)
+    addPlayerExp: function(amount) {
         if (this.playerLevel >= this.maxLevel) return;
         
-        // 현재 점수 저장
-        this.playerExp = currentScore;
+        this.playerExp += amount;
         
-        // 다음 레벨에 필요한 총 점수 계산
-        const scoreForNextLevel = this.getScoreForLevel(this.playerLevel + 1);
-        
-        // 레벨업 가능 여부 체크
-        if (this.playerExp >= scoreForNextLevel) {
+        // 레벨업 체크 (연속 레벨업 가능)
+        while (this.playerExp >= this.playerExpToNext && this.playerLevel < this.maxLevel) {
+            this.playerExp -= this.playerExpToNext;
             this.levelUpPlayer();
+        }
+        
+        // 최대 레벨 시 EXP 초과분 버림
+        if (this.playerLevel >= this.maxLevel) {
+            this.playerExp = 0;
         }
     },
     
-    // 플레이어 경험치 획득 (적 처치 시 - 이제 점수와 연동)
-    addPlayerExp: function(amount) {
-        // 이 함수는 이제 사용되지 않지만 하위 호환성 유지
-        // 실제로는 score가 업데이트될 때 updateScore()가 호출됨
+    // 점수 업데이트 (점수는 이제 레벨업과 무관 - EXP 기반으로 변경)
+    updateScore: function(currentScore) {
+        // 점수는 이제 레벨업에 영향 없음 - EXP 기반 시스템으로 변경
+        // 이 함수는 하위 호환성을 위해 유지
     },
     
-    // 플레이어 레벨업 (점수 기반 - 최대 레벨 12)
+    // 플레이어 레벨업 (EXP 기반 - 최대 레벨 15)
     levelUpPlayer: function() {
         // 최대 레벨 체크
         if (this.playerLevel >= this.maxLevel) {
@@ -1759,30 +1741,23 @@ const LevelSystem = {
         
         this.playerLevel++;
         
-        // 다음 레벨까지 필요한 점수 업데이트
+        // 다음 레벨까지 필요한 EXP 업데이트
         if (this.playerLevel < this.maxLevel) {
-            this.playerExpToNext = this.getScoreToNextLevel();
+            this.playerExpToNext = this.getPlayerExpToNext(this.playerLevel);
         }
         
-        // 레벨업 효과 - 공격력은 무기 레벨만 영향 (캐릭터 레벨업은 체력/방어력만 증가)
+        // 레벨업 효과 - 캐릭터 레벨업은 체력/방어력 증가
         const hpBonus = this.stats.playerHpPerLevel;
         const defBonus = this.stats.playerDefensePerLevel;
         
         Player.maxHp += hpBonus;
         Player.hp += hpBonus;
-        // 공격력은 무기 레벨만 영향 - 캐릭터 레벨업과 무관
         Player.defense += defBonus;
         
-        // 레벨업 알림 (점수 표시 포함)
+        // 레벨업 알림
         addFloatingText(`★ LEVEL UP! ★`, canvas.width / 2, canvas.height / 2 - 60, '#f1c40f');
         addFloatingText(`Lv.${this.playerLevel}  HP +${hpBonus}  DEF +${defBonus.toFixed(1)}`, canvas.width / 2, canvas.height / 2 - 30, '#2ecc71');
         AudioManager.playSFX('powerup');
-        
-        // 연속 레벨업 체크 (여러 레벨 한번에 오를 경우)
-        const scoreForNextLevel = this.getScoreForLevel(this.playerLevel + 1);
-        if (this.playerExp >= scoreForNextLevel && this.playerLevel < this.maxLevel) {
-            this.levelUpPlayer();
-        }
     },
     
     // 아이템 경험치 획득 (게이트 통과 시)
@@ -1791,15 +1766,15 @@ const LevelSystem = {
         
         const item = this.items[itemType];
         // 최대 레벨 체크
-        if (item.level >= this.maxLevel) return false;
+        if (item.level >= this.itemMaxLevel) return false;
         
         item.exp += amount;
         
         let leveledUp = false;
-        while (item.exp >= item.expToNext && item.level < this.maxLevel) {
+        while (item.exp >= item.expToNext && item.level < this.itemMaxLevel) {
             item.exp -= item.expToNext;
             item.level++;
-            item.expToNext = this.getExpToNext(item.level);
+            item.expToNext = this.getItemExpToNext(item.level);
             this.applyItemLevelUp(itemType, item.level);
             leveledUp = true;
             // 최대 레벨 도달 시 EXP 초과분은 버림
@@ -2382,71 +2357,57 @@ class GatePair {
         return Player.x < this.x + this.width && Player.x + Player.width > this.x &&
             Player.y < gatePart.y + gatePart.height && Player.y + Player.height > gatePart.y;
     }
+
     applyBuff(gatePart) {
         let isBonus = false;
         let bonusScore = 1000;
-        const item = LevelSystem.items[gatePart.type];
 
         if (gatePart.type === 'FIRE_RATE') {
-              // 공격속도 아이템: EXP 10씩 획득 (10개 = 1레벨)
-              const expGained = 10; // 10씩 오름
+            // 공격속도 아이템: 경험치 15씩 획득 (50 EXP = 1레벨)
+            const expGained = 15;
             const leveledUp = LevelSystem.addItemExp('FIRE_RATE', expGained);
             const newLevel = LevelSystem.items.FIRE_RATE.level;
             const item = LevelSystem.items.FIRE_RATE;
-            
-            // 스탯 직접 업데이트 - 무기 레벨만 공격력/공격속도에 영향
+
+            // 스탯 직접 업데이트
             const baseFireRate = 200;
             const itemFireRateBonus = (newLevel - 1) * LevelSystem.stats.itemFireRatePerLevel;
-            const oldFireRate = Player.fireRate;
             Player.fireRate = Math.max(baseFireRate - itemFireRateBonus, Player.minFireRate);
-            console.log(`[FIRE RATE UPDATE] Weapon Lv.${newLevel}, Player.fireRate: ${oldFireRate} → ${Player.fireRate}ms, Bonus: -${itemFireRateBonus}ms`);
-            
-            // UI 표시: 레벨업 시에만 스탯 상승, 아니면 EXP만 표시
+
+            // 레벨업 시에만 표시
             if (leveledUp) {
                 addFloatingText(`🔥 SPD Lv.${newLevel} UP!`, this.x, gatePart.y + gatePart.height / 2 - 10, "#3498db");
-                addFloatingText(`발사간격: ${Player.fireRate}ms`, this.x, gatePart.y + gatePart.height / 2 + 10, "#74b9ff");
-            } else {
-                addFloatingText(`🔥 SPD EXP: ${item.exp}/${item.expToNext}`, this.x, gatePart.y + gatePart.height / 2, "#3498db");
             }
             AudioManager.playSFX('powerup');
-            
         } else if (gatePart.type === 'DAMAGE') {
-              // 공격력 아이템: EXP 10씩 획득 (10개 = 1레벨)
-              const expGained = 10; // 10씩 오름
+            // 공격력 아이템: EXP 15씩 획득 (50 EXP = 1레벨)
+            const expGained = 15;
             const leveledUp = LevelSystem.addItemExp('DAMAGE', expGained);
             const newLevel = LevelSystem.items.DAMAGE.level;
             const item = LevelSystem.items.DAMAGE;
-            
-            // 스탯 직접 업데이트 - 무기 레벨만 공격력에 영향 (캐릭터 레벨은 무관)
+
+            // 스탯 직접 업데이트
             const baseDamage = 10;
             const itemDamageBonus = (newLevel - 1) * LevelSystem.stats.itemDamagePerLevel;
-            const oldDamage = Player.damage;
-            Player.damage = isMobileEasyModeActive() 
-                ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier)
-                : baseDamage + itemDamageBonus;
-            console.log(`[DAMAGE UPDATE] Weapon Lv.${newLevel}, Player.damage: ${oldDamage} → ${Player.damage}, Bonus: +${itemDamageBonus}`);
-            
-            // UI 표시: 레벨업 시에만 스탯 상승, 아니면 EXP만 표시
+            Player.damage = Math.round(baseDamage + itemDamageBonus);
+
             if (leveledUp) {
                 addFloatingText(`⚔️ ATK Lv.${newLevel} UP!`, this.x, gatePart.y + gatePart.height / 2 - 10, "#2ecc71");
-                addFloatingText(`공격력: ${Player.damage.toFixed(1)} (+${LevelSystem.stats.itemDamagePerLevel})`, this.x, gatePart.y + gatePart.height / 2 + 10, "#27ae60");
-            } else {
-                addFloatingText(`⚔️ ATK +${LevelSystem.stats.itemDamagePerLevel} EXP`, this.x, gatePart.y + gatePart.height / 2, "#2ecc71");
             }
             AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'HEAL') {
-            // 회복: 즉시 효과
-            if (Player.hp >= Player.maxHp) { isBonus = true; bonusScore = 500; }
-            else { Player.hp = Math.min(Player.hp + gatePart.value, Player.maxHp); AudioManager.playSFX('heal'); }
+            // 회복: 즉시 체력 회복
+            const healAmount = 2;
+            Player.hp = Math.min(Player.hp + healAmount, Player.maxHp);
+            addFloatingText(`❤️ +${healAmount}`, this.x, gatePart.y + gatePart.height / 2, '#e74c3c');
+            AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'SHIELD') {
-              // 무적 아이템: 경험치 10씩 획득 (10개 = 1레벨)
-              const expGained = 10;
+            // 무적 아이템: 경험치 15씩 획득 (50 EXP = 1레벨)
+            const expGained = 15;
             const leveledUp = LevelSystem.addItemExp('SHIELD', expGained);
-            // 레벨업 시에만 표시
             if (leveledUp) {
                 addFloatingText(`🛡️ SHIELD Lv.${LevelSystem.items.SHIELD.level} UP!`, this.x, gatePart.y + gatePart.height / 2, "#9b59b6");
             }
-            // 무적 효과 적용 (레벨에 따른 보너스 포함) - 지속시간은 HUD에서 확인
             LevelSystem.applyShield();
             AudioManager.playSFX('shield');
         } else if (gatePart.type === 'ULTIMATE') {
@@ -2454,29 +2415,35 @@ class GatePair {
             if (Player.bombCount >= 5) { isBonus = true; bonusScore = 2000; }
             else { Player.bombCount++; AudioManager.playSFX('bomb'); }
         } else if (gatePart.type === 'COIN') {
-            // 코인 아이템: 즉시 점수 추가
-            score += gatePart.value;
-            LevelSystem.updateScore(score); // 점수 기반 레벨업 체크
-            addFloatingText(`💰 +${gatePart.value}`, this.x, gatePart.y + gatePart.height / 2, '#ffd700');
+            // 코인 아이템: 플레이어 EXP 즉시 획득 (25 EXP)
+            const expGained = 25;
+            const prevLevel = LevelSystem.playerLevel;
+            LevelSystem.addPlayerExp(expGained);
+            const newLevel = LevelSystem.playerLevel;
+
+            if (newLevel > prevLevel) {
+                addFloatingText(`★ LV UP! Lv.${newLevel} ★`, this.x, gatePart.y + gatePart.height / 2 - 20, '#f1c40f');
+            } else {
+                addFloatingText(`⭐ EXP +${expGained} (${LevelSystem.playerExp}/${LevelSystem.playerExpToNext})`, this.x, gatePart.y + gatePart.height / 2, '#ffd700');
+            }
             AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'SUPPORT') {
-              // 지원군 아이템: 경험치 10씩 획득 (10개 = 1레벨)
-              const expGained = 10;
+            // 지원군 아이템: 경험치 15씩 획득 (50 EXP = 1레벨)
+            const expGained = 15;
             const leveledUp = LevelSystem.addItemExp('SUPPORT', expGained);
-            // 레벨업 시에만 표시
             if (leveledUp) {
                 addFloatingText(`👥 SUPPORT Lv.${LevelSystem.items.SUPPORT.level} UP!`, this.x, gatePart.y + gatePart.height / 2, "#e67e22");
             }
-            // 지원군 효과 적용 (레벨에 따른 보너스 포함) - 지속시간은 HUD에서 확인
             LevelSystem.applySupport();
             AudioManager.playSFX('powerup');
         }
 
         if (isBonus) {
             score += bonusScore;
-            LevelSystem.updateScore(score); // 점수 기반 레벨업 체크
-            addFloatingText(`BONUS! +${bonusScore}`, this.x, gatePart.y + gatePart.height / 2, "#f1c40f");
-            AudioManager.playSFX('powerup'); // 보너스 시에도 효과음
+            // 보너스도 EXP로 변환 (10 EXP)
+            LevelSystem.addPlayerExp(10);
+            addFloatingText(`BONUS! +${bonusScore} (+10 EXP)`, this.x, gatePart.y + gatePart.height / 2, "#f1c40f");
+            AudioManager.playSFX('powerup');
         }
 
         createExplosion(this.x + this.width / 2, gatePart.y + gatePart.height / 2, gatePart.color);
@@ -3523,7 +3490,8 @@ function useBomb() {
                 e.aniFrame = 0;
                 bombKills++;
                 score += 100;
-                LevelSystem.updateScore(score); // 점수 기반 레벨업 체크
+                // 폭탄 킬도 EXP 제공 (5 EXP)
+                LevelSystem.addPlayerExp(5);
                 createExplosion(e.x, e.y);
             }
         }
@@ -4138,7 +4106,8 @@ function gameLoop(timestamp) {
                         e.hp -= p.damage; p.active = false;
                         if (e.hp <= 0) { 
                             e.state = 'DEAD'; e.aniFrame = 0; enemiesKilled++; score += 100; 
-                            LevelSystem.updateScore(score); // 점수 기반 레벨업 체크
+                            // 적 처치 시 EXP 획득 (10 EXP)
+                            LevelSystem.addPlayerExp(10);
                             createExplosion(e.x, e.y); AudioManager.playSFX('explode'); 
                             if (enemiesKilled >= stage.goal && !boss) startBossFight(); 
                         }
@@ -4158,8 +4127,9 @@ function gameLoop(timestamp) {
                         boss.aniFrame = 0;
                         boss.lastFrameTime = timestamp;
                         score += 5000;
-                        LevelSystem.updateScore(score); // 점수 기반 레벨업 체크
-                        addFloatingText(`★ BOSS DEFEATED! +5000 SCORE ★`, canvas.width / 2, canvas.height / 2 - 80, '#f1c40f');
+                        // 보스 처치 시 대량 EXP 획득 (100 EXP)
+                        LevelSystem.addPlayerExp(100);
+                        addFloatingText(`★ BOSS DEFEATED! +100 EXP ★`, canvas.width / 2, canvas.height / 2 - 80, '#f1c40f');
                     }
                 }
             } else {
