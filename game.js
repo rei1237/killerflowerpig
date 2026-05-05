@@ -1491,10 +1491,10 @@ const Player = {
         if (time - this.lastFireTime >= fire) {
             this.lastFireTime = time;
             
-            // 무기 레벨당 15% 크기 증가 (DAMAGE 레벨 기준, 최대 10레벨까지)
+            // 무기 레벨당 10% 크기 증가 (DAMAGE 레벨 기준, 최대 10레벨까지)
             const weaponLevel = LevelSystem.items.DAMAGE.level;
             const cappedWeaponLevel = Math.min(weaponLevel, 10); // 10레벨 이후 크기 증가 없음
-            const sizeScale = 1 + (cappedWeaponLevel - 1) * 0.15; // 레벨 1 = 100%, 레벨 10 = 235%
+            const sizeScale = 1 + (cappedWeaponLevel - 1) * 0.10; // 레벨 1 = 100%, 레벨 10 = 190%
             const bulletWidth = Math.max(16, Math.round(20 * sizeScale));
             const bulletHeight = Math.max(8, Math.round(10 * sizeScale));
             // 속도도 무기 레벨당 10%씩 증가
@@ -3643,37 +3643,79 @@ function gameLoop(timestamp) {
         ctx.restore();
     }
 
-    // 스킬 알림 (무적, 지원군) 화면 중앙에 표시
+    // 스킬 알림 (무적, 지원군) 화면 중앙에 표시 - 고급 UI 디자인
     if (Player.skillNotifications && Player.skillNotifications.length > 0) {
         ctx.save();
         ctx.textAlign = 'center';
-        ctx.font = 'bold 20px "Press Start 2P"';
         let notifY = canvas.height / 2 + 80;
         
         for (let i = Player.skillNotifications.length - 1; i >= 0; i--) {
             const notif = Player.skillNotifications[i];
             const secondsLeft = Math.ceil(notif.timeLeft / 1000);
             
-            // 배경 패널
-            const textWidth = ctx.measureText(notif.text).width;
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(canvas.width / 2 - textWidth / 2 - 10, notifY - 25, textWidth + 20, 30);
-            
-            // 텍스트 색상 설정
+            // 스킬 타입 및 색상 설정
+            let skillColor, skillGlow, skillIcon, maxDuration;
             if (notif.text.includes('SHIELD')) {
-                ctx.fillStyle = '#9b59b6'; // 보라색
-                ctx.shadowColor = '#bb8fce';
-            } else if (notif.text.includes('SUPPORT')) {
-                ctx.fillStyle = '#e67e22'; // 주황색
-                ctx.shadowColor = '#f5b041';
+                skillColor = '#9b59b6'; // 보라색
+                skillGlow = '#bb8fce';
+                skillIcon = '🛡️';
+                maxDuration = 15000 + LevelSystem.getItemEffect('SHIELD');
+            } else {
+                skillColor = '#e67e22'; // 주황색
+                skillGlow = '#f5b041';
+                skillIcon = '👥';
+                maxDuration = 20000 + LevelSystem.getItemEffect('SUPPORT');
             }
+            
+            // 진행률 계산
+            const progress = Math.min(1, notif.timeLeft / maxDuration);
+            const barWidth = 180;
+            const barHeight = 28;
+            const centerX = canvas.width / 2;
+            
+            // 글로우 효과
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = skillGlow;
+            
+            // 배경 패널 (그라데이션)
+            const bgGrad = ctx.createLinearGradient(centerX - barWidth/2, notifY - 14, centerX - barWidth/2, notifY + 14);
+            bgGrad.addColorStop(0, 'rgba(0, 0, 0, 0.85)');
+            bgGrad.addColorStop(1, 'rgba(20, 20, 30, 0.9)');
+            ctx.fillStyle = bgGrad;
+            ctx.beginPath();
+            ctx.roundRect(centerX - barWidth/2, notifY - 14, barWidth, barHeight, 14);
+            ctx.fill();
+            
+            // 테두리
+            ctx.strokeStyle = skillColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 진행률 바 배경
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.beginPath();
+            ctx.roundRect(centerX - barWidth/2 + 4, notifY + 2, barWidth - 8, 8, 4);
+            ctx.fill();
+            
+            // 진행률 바 채움 (그라데이션)
+            const barGrad = ctx.createLinearGradient(centerX - barWidth/2 + 4, notifY + 2, centerX - barWidth/2 + 4 + (barWidth - 8) * progress, notifY + 2);
+            barGrad.addColorStop(0, skillColor);
+            barGrad.addColorStop(1, skillGlow);
+            ctx.fillStyle = barGrad;
             ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.roundRect(centerX - barWidth/2 + 4, notifY + 2, (barWidth - 8) * progress, 8, 4);
+            ctx.fill();
             
-            // 아이콘 + 텍스트 + 남은 시간
-            const displayText = `${notif.text} ${secondsLeft}s`;
-            ctx.fillText(displayText, canvas.width / 2, notifY);
+            // 아이콘 및 텍스트
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = skillGlow;
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 16px "Press Start 2P"';
+            const displayText = `${skillIcon} ${secondsLeft}s`;
+            ctx.fillText(displayText, centerX, notifY - 2);
             
-            notifY += 35; // 다음 알림을 위해 Y 위치 이동
+            notifY += 45; // 다음 알림을 위해 Y 위치 이동
         }
         ctx.restore();
     }
