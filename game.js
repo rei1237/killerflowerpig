@@ -1941,50 +1941,138 @@ class Projectile {
 
             ctx.restore();
         } else if (this.isPetalCannon) {
-            // 꽃잎 포 (필살기) - 화려한 꽃잎 효과
+            // 🌸 화려한 꽃잎 포 (필살기) - 다층 꽃 효과
             const centerX = this.x + this.width / 2;
             const centerY = this.y + this.height / 2;
-            const time = Date.now() / 100;
+            const time = Date.now() / 80;
+            const isMain = this.isMainPetal;
+            const isSpiral = this.isSpiral;
             
             ctx.save();
             
-            // 회전하는 꽃잎 효과
-            for (let i = 0; i < 8; i++) {
-                const angle = (i * 45 + time * 2) * Math.PI / 180;
-                const petalDistance = 20 + Math.sin(time + i) * 5;
+            // 글로우 효과 (메인 꽃잎은 더 강하게)
+            ctx.shadowBlur = isMain ? 40 : 25;
+            ctx.shadowColor = isMain ? '#ff00ff' : '#ff69b4';
+            
+            // === 바깥쪽 꽃잎 레이어 (큰 꽃잎) ===
+            const outerPetals = isMain ? 12 : 8;
+            for (let i = 0; i < outerPetals; i++) {
+                const rotationOffset = time * (isSpiral ? 3 : 2);
+                const angle = (i * (360 / outerPetals) + rotationOffset) * Math.PI / 180;
+                const petalDistance = isMain ? 28 : 22;
                 const px = centerX + Math.cos(angle) * petalDistance;
                 const py = centerY + Math.sin(angle) * petalDistance;
                 
-                // 그라데이션 꽃잎
-                const petalGrad = ctx.createRadialGradient(px, py, 0, px, py, 18);
-                petalGrad.addColorStop(0, '#ff1493'); // Deep pink
-                petalGrad.addColorStop(0.5, '#ff69b4'); // Hot pink
-                petalGrad.addColorStop(1, 'rgba(255, 105, 180, 0.3)');
+                // 그라데이션 꽃잎 (바깥)
+                const petalGrad = ctx.createRadialGradient(px, py, 0, px, py, isMain ? 25 : 20);
+                if (isMain) {
+                    petalGrad.addColorStop(0, '#ff00ff'); // 마젠타
+                    petalGrad.addColorStop(0.4, '#ff1493'); // 딥핑크
+                    petalGrad.addColorStop(1, 'rgba(255, 20, 147, 0.2)');
+                } else if (isSpiral) {
+                    petalGrad.addColorStop(0, '#ff69b4'); // 핫핑크
+                    petalGrad.addColorStop(0.5, '#ffb6c1'); // 라이트핑크
+                    petalGrad.addColorStop(1, 'rgba(255, 182, 193, 0.3)');
+                } else {
+                    petalGrad.addColorStop(0, '#ff1493'); // 딥핑크
+                    petalGrad.addColorStop(0.5, '#ff69b4'); // 핫핑크
+                    petalGrad.addColorStop(1, 'rgba(255, 105, 180, 0.3)');
+                }
                 
                 ctx.fillStyle = petalGrad;
                 ctx.beginPath();
-                ctx.ellipse(px, py, 18, 10, angle, 0, Math.PI * 2);
+                // 하트 모양 꽃잎
+                const petalLen = isMain ? 28 : 22;
+                const petalWid = isMain ? 16 : 12;
+                ctx.ellipse(px, py, petalLen, petalWid, angle, 0, Math.PI * 2);
                 ctx.fill();
             }
             
-            // 중심 코어 (노란색)
-            ctx.shadowBlur = 30;
+            // === 중간 꽃잎 레이어 ===
+            const midPetals = 6;
+            for (let i = 0; i < midPetals; i++) {
+                const rotationOffset = -time * 1.5;
+                const angle = (i * (360 / midPetals) + rotationOffset) * Math.PI / 180;
+                const petalDistance = isMain ? 18 : 14;
+                const px = centerX + Math.cos(angle) * petalDistance;
+                const py = centerY + Math.sin(angle) * petalDistance;
+                
+                const petalGrad = ctx.createRadialGradient(px, py, 0, px, py, 15);
+                petalGrad.addColorStop(0, '#ffb6c1'); // 라이트핑크
+                petalGrad.addColorStop(0.5, '#ffc0cb'); // 핑크
+                petalGrad.addColorStop(1, 'rgba(255, 192, 203, 0.2)');
+                
+                ctx.fillStyle = petalGrad;
+                ctx.beginPath();
+                ctx.ellipse(px, py, 14, 8, angle, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // === 안쪽 꽃잎 레이어 (작은 꽃잎) ===
+            const innerPetals = 5;
+            for (let i = 0; i < innerPetals; i++) {
+                const rotationOffset = time;
+                const angle = (i * (360 / innerPetals) + rotationOffset) * Math.PI / 180;
+                const px = centerX + Math.cos(angle) * 10;
+                const py = centerY + Math.sin(angle) * 10;
+                
+                ctx.fillStyle = '#ff69b4';
+                ctx.beginPath();
+                ctx.ellipse(px, py, 10, 6, angle, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // === 중심 코어 (황금 꽃술) ===
+            ctx.shadowBlur = isMain ? 50 : 30;
             ctx.shadowColor = '#ffd700';
-            const coreGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 20);
+            
+            // 코어 외곽
+            const coreGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, isMain ? 18 : 12);
             coreGrad.addColorStop(0, '#fff');
-            coreGrad.addColorStop(0.3, '#ffd700');
-            coreGrad.addColorStop(1, '#ff8c00');
+            coreGrad.addColorStop(0.2, '#fffacd'); // 레몬쉬폰
+            coreGrad.addColorStop(0.5, '#ffd700'); // 골드
+            coreGrad.addColorStop(1, '#ff8c00'); // 다크오렌지
             ctx.fillStyle = coreGrad;
             ctx.beginPath();
-            ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+            ctx.arc(centerX, centerY, isMain ? 16 : 10, 0, Math.PI * 2);
             ctx.fill();
             
-            // 외곽 링
-            ctx.strokeStyle = 'rgba(255, 20, 147, 0.6)';
+            // 코어 내부 빛
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, isMain ? 8 : 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // === 장식용 링들 ===
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = isMain ? '#ff00ff' : '#ff1493';
+            
+            // 회전하는 링 1
+            ctx.strokeStyle = `rgba(255, 20, 147, ${0.4 + Math.sin(time) * 0.2})`;
             ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(centerX, centerY, 35 + Math.sin(time * 3) * 5, 0, Math.PI * 2);
+            ctx.arc(centerX, centerY, (isMain ? 40 : 30) + Math.sin(time * 2) * 3, 0, Math.PI * 2);
             ctx.stroke();
+            
+            // 회전하는 링 2
+            ctx.strokeStyle = `rgba(255, 105, 180, ${0.3 + Math.cos(time * 1.5) * 0.15})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, (isMain ? 50 : 38) + Math.cos(time * 1.5) * 4, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 파티클 효과 (작은 꽃잎 조각)
+            for (let i = 0; i < 4; i++) {
+                const pAngle = (time * 2 + i * 90) * Math.PI / 180;
+                const pDist = (isMain ? 35 : 28) + Math.sin(time * 3 + i) * 5;
+                const px = centerX + Math.cos(pAngle) * pDist;
+                const py = centerY + Math.sin(pAngle) * pDist;
+                
+                ctx.fillStyle = `rgba(255, 182, 193, ${0.6 + Math.sin(time * 4 + i) * 0.4})`;
+                ctx.beginPath();
+                ctx.arc(px, py, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
             
             ctx.restore();
         } else {
@@ -3282,44 +3370,80 @@ function usePetalCannon() {
     Player.petalCannonReady = false;
     Player.petalCannonCharge = 0;
     
-    // 캐릭터 레벨에 비례한 데미지 계산 (초기 약함, 후반 매우 강함)
+    // 캐릭터 레벨에 비례한 데미지 계산 (훨씬 강하게!)
     const playerLevel = LevelSystem.playerLevel;
-    const basePetalDamage = 50; // 기본 데미지
-    const levelMultiplier = 1 + (playerLevel - 1) * 0.3; // 레벨당 30% 증가
+    const basePetalDamage = 200; // 기본 데미지 대폭 상향 (50 -> 200)
+    const levelMultiplier = 1 + (playerLevel - 1) * 0.5; // 레벨당 50% 증가 (더 빠른 성장)
     const petalDamage = Math.round(basePetalDamage * levelMultiplier);
     
-    // 화면 전체 관통하는 거대 꽃잎 포 발사
-    const petalCount = 5 + Math.min(playerLevel, 5); // 레벨에 따라 꽃잎 개수 증가 (최대 10개)
+    // 앞으로만 발사하는 꽃잎 포
+    const petalCount = 7 + Math.min(playerLevel, 8); // 레벨에 따라 꽃잎 개수 증가 (최대 15개)
+    const spreadAngle = Math.PI / 4; // 45도 퍼짐 각도
     
+    // 중앙에서 앞으로 나가는 메인 꽃잎
+    const mainPetal = new Projectile(Player.x + Player.width, Player.y + Player.height / 2, 20, 0, petalDamage * 2);
+    mainPetal.isPetalCannon = true;
+    mainPetal.isMainPetal = true; // 주 꽃잎 표시
+    mainPetal.width = 60;
+    mainPetal.height = 60;
+    mainPetal.active = true;
+    projectiles.push(mainPetal);
+    
+    // 주변 꽃잎들 (앞으로 퍼지며 발사)
     for (let i = 0; i < petalCount; i++) {
-        const angle = (Math.PI * 2 / petalCount) * i; // 원형으로 퍼지는 각도
-        const speed = 15;
-        const vx = Math.cos(angle) * speed;
-        const vy = Math.sin(angle) * speed;
+        const angleOffset = (i / (petalCount - 1) - 0.5) * spreadAngle;
+        const speed = 18;
+        const vx = Math.cos(angleOffset) * speed;
+        const vy = Math.sin(angleOffset) * speed;
         
-        const petal = new Projectile(Player.x + Player.width / 2, Player.y + Player.height / 2, vx, vy, petalDamage);
-        petal.isPetalCannon = true; // 꽃잎 포 식별용
-        petal.width = 40; // 거대한 크기
-        petal.height = 40;
+        const petal = new Projectile(Player.x + Player.width, Player.y + Player.height / 2, vx, vy, petalDamage);
+        petal.isPetalCannon = true;
+        petal.width = 45;
+        petal.height = 45;
         petal.active = true;
+        petal.petalIndex = i; // 꽃잎 인덱스
         projectiles.push(petal);
     }
     
-    // 화면 전체 화이트 아웃 효과
+    // 추가: 2차 포물선 꽃잎 (위아래로 나선형)
+    for (let i = 0; i < 4; i++) {
+        const angle = (i % 2 === 0 ? 1 : -1) * (Math.PI / 6 + i * 0.2);
+        const speed = 16;
+        const vx = Math.cos(angle) * speed * 0.8; // 앞으로도 나가게
+        const vy = Math.sin(angle) * speed;
+        
+        const spiralPetal = new Projectile(Player.x + Player.width, Player.y + Player.height / 2, vx, vy, petalDamage * 1.5);
+        spiralPetal.isPetalCannon = true;
+        spiralPetal.isSpiral = true;
+        spiralPetal.width = 50;
+        spiralPetal.height = 50;
+        spiralPetal.active = true;
+        projectiles.push(spiralPetal);
+    }
+    
+    // 화면 전체 핑크 화이트 아웃 효과
     const flash = document.createElement('div');
     flash.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(255, 182, 193, 0.5); pointer-events: none; z-index: 9999;
-        transition: opacity 0.5s; opacity: 1;
+        background: radial-gradient(circle at ${Player.x + Player.width/2}px ${Player.y + Player.height/2}px, 
+            rgba(255, 105, 180, 0.8) 0%, 
+            rgba(255, 20, 147, 0.5) 30%,
+            rgba(255, 182, 193, 0.3) 70%,
+            transparent 100%); 
+        pointer-events: none; z-index: 9999;
+        transition: opacity 0.6s; opacity: 1;
     `;
     document.body.appendChild(flash);
-    setTimeout(() => flash.style.opacity = '0', 50);
-    setTimeout(() => flash.remove(), 550);
+    setTimeout(() => flash.style.opacity = '0', 100);
+    setTimeout(() => flash.remove(), 700);
     
-    addFloatingText(`🌸 꽃잎 포 발사! (데미지: ${petalDamage})`, Player.x, Player.y - 50, '#ff1493');
+    // 총 데미지 표시
+    const totalDamage = petalDamage * (petalCount + 5); // 대략적인 총 데미지
+    addFloatingText(`🌸🌸🌸 꽃잎 포 발사! 🌸🌸🌸`, Player.x, Player.y - 70, '#ff1493');
+    addFloatingText(`💥 총 데미지: ${totalDamage.toLocaleString()} 💥`, Player.x, Player.y - 50, '#ffd700');
     AudioManager.playSFX('explode');
     
-    console.log(`[PETAL CANNON] Lv.${playerLevel}, Damage: ${petalDamage}, Petals: ${petalCount}`);
+    console.log(`[PETAL CANNON] Lv.${playerLevel}, Damage per petal: ${petalDamage}, Total petals: ${petalCount + 5}, Main damage: ${petalDamage * 2}`);
 }
 
 function endGame() {
