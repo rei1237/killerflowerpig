@@ -3370,10 +3370,10 @@ function usePetalCannon() {
     Player.petalCannonReady = false;
     Player.petalCannonCharge = 0;
     
-    // 캐릭터 레벨에 비례한 데미지 계산 (훨씬 강하게!)
+    // 캐릭터 레벨에 비례한 데미지 계산 (적정 수준으로 조정)
     const playerLevel = LevelSystem.playerLevel;
-    const basePetalDamage = 200; // 기본 데미지 대폭 상향 (50 -> 200)
-    const levelMultiplier = 1 + (playerLevel - 1) * 0.5; // 레벨당 50% 증가 (더 빠른 성장)
+    const basePetalDamage = 100; // 기본 데미지 조정 (200 -> 100)
+    const levelMultiplier = 1 + (playerLevel - 1) * 0.25; // 레벨당 25% 증가 (안정적인 성장)
     const petalDamage = Math.round(basePetalDamage * levelMultiplier);
     
     // 앞으로만 발사하는 꽃잎 포
