@@ -2094,13 +2094,19 @@ class Enemy {
         const sizeScale = isMobileLandscapePlayMode() ? 0.75 : 1.0;
         this.width = Math.round((isStage6Plus ? 98 : 64) * sizeScale);
         this.height = Math.round((isStage6Plus ? 98 : 64) * sizeScale);
-        // 적 체력 대폭 상향 및 난이도 증가
+        // 적 체력 - 단계별로 점진적으로 강해지도록 조정 (초반 쉬움, 후반 어려움)
         const isHardMode = !isMobileLandscapePlayMode(); // 가로모드가 아닌 일반 모드 = 하드모드
-        const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : (isHardMode ? 2.0 : 1); // 하드모드: 체력 2배
-        const hpMultiplierB = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierB : (isHardMode ? 1.5 : 1); // 하드모드: 스테이지 보너스 1.5배
-        this.hp = Math.round((60 * hpMultiplierA) + (currentStage * 40 * hpMultiplierB)); this.maxHp = this.hp;
+        const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : (isHardMode ? 1.5 : 1); // 하드모드: 체력 1.5배
+        const hpMultiplierB = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierB : (isHardMode ? 1.3 : 1); // 하드모드: 스테이지 보너스 1.3배
+        // 체력 공식: 기본 15 + 스테이지당 8씩 증가 (초반 약함, 후반 강함)
+        const baseHp = 15;
+        const stageBonus = currentStage * 8;
+        this.hp = Math.round((baseHp + stageBonus) * hpMultiplierA); 
+        this.maxHp = this.hp;
         const gameSpeed = getMobileGameSpeedMultiplier();
-        this.speed = isMobileEasyModeActive() ? 3 * EASY_MODE_CONFIG.enemySpeedMultiplier * gameSpeed : (isHardMode ? 4 : 3); // 하드모드: 속도 증가
+        // 속도도 단계별로 증가 (스테이지 1: 2.0, 스테이지 10: 3.5)
+        const baseSpeed = 2.0 + (currentStage * 0.15);
+        this.speed = isMobileEasyModeActive() ? baseSpeed * EASY_MODE_CONFIG.enemySpeedMultiplier * gameSpeed : (isHardMode ? baseSpeed * 1.2 : baseSpeed);
         this.active = true;
         this.state = 'WALK';
         this.aniFrame = 0; this.lastFrameTime = 0; this.frameRate = 120;
@@ -4099,7 +4105,13 @@ function gameLoop(timestamp) {
                     }
                 }
                 if (boss && boss.active && boss.state !== 'DEAD' && checkCollision(p, boss)) {
-                    boss.hp -= p.damage; p.active = false; createExplosion(p.x, p.y, '#ff4757');
+                    // 꽃잎 포는 보스에게 2배 데미지
+                    const damageToBoss = p.isPetalCannon ? p.damage * 2 : p.damage;
+                    boss.hp -= damageToBoss; p.active = false; createExplosion(p.x, p.y, '#ff4757');
+                    // 꽃잎 포 보스 타격 시 추가 플로팅 텍스트
+                    if (p.isPetalCannon) {
+                        addFloatingText(`💥 CRITICAL! -${damageToBoss}`, p.x, p.y - 20, '#ff00ff');
+                    }
                     if (boss.hp <= 0 && boss.state !== 'DEAD') {
                         boss.state = 'DEAD';
                         boss.aniFrame = 0;
