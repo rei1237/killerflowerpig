@@ -2487,6 +2487,25 @@ class GatePair {
             ctx.beginPath(); ctx.arc(16, 20, 14, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#f1c40f'; ctx.fillRect(14, 0, 4, 10);
             ctx.fillStyle = '#fff'; ctx.fillRect(10, 15, 6, 6);
+        } else if (type === 'coin') {
+            // 코인 (금화)
+            ctx.fillStyle = '#ffd700'; // 골드 색상
+            ctx.beginPath();
+            ctx.arc(16, 18, 14, 0, Math.PI * 2); // 외곽 원
+            ctx.fill();
+            ctx.strokeStyle = '#ffa500'; // 주황색 테두리
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            // 코인 내부 하이라이트
+            ctx.fillStyle = '#ffeb3b'; // 밝은 노랑
+            ctx.beginPath();
+            ctx.arc(16, 18, 10, 0, Math.PI * 2);
+            ctx.fill();
+            // $ 기호
+            ctx.fillStyle = '#b8860b'; // 어두운 골드
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('$', 16, 24);
         }
         ctx.restore();
     }
