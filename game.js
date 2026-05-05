@@ -2113,8 +2113,14 @@ class Enemy {
 
         this.totalFrames = 6; // Revert to 6 frames for all enemies
 
-        const enemyShootIntervalMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyShootIntervalMultiplier : (isHardMode ? 0.6 : 1); // 하드모드: 40% 더 자주 발사
-        this.lastShootTime = 0; this.shootInterval = (2000 + Math.random() * 2000) * enemyShootIntervalMultiplier;
+        // 총알 발사 간격 - 단계별로 점진적으로 짧아짐 (초반 느림, 후반 빠름)
+        const enemyShootIntervalMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyShootIntervalMultiplier : (isHardMode ? 0.7 : 1); // 하드모드: 30% 더 자주 발사
+        // 기본 간격: 3500ms → 스테이지당 200ms씩 감소 (최소 1500ms)
+        const baseInterval = Math.max(1500, 3500 - (currentStage * 200));
+        // 랜덤 추가 간격: 2000ms → 스테이지당 150ms씩 감소 (최소 500ms)
+        const randomInterval = Math.max(500, 2000 - (currentStage * 150));
+        this.lastShootTime = 0; 
+        this.shootInterval = (baseInterval + Math.random() * randomInterval) * enemyShootIntervalMultiplier;
     }
     update(timestamp) {
         if (!this.active) return;
