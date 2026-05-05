@@ -303,8 +303,12 @@ function drawHUD(ctx) {
     drawMiniPanel(startX + 10, statsY - 12, levelPanelW, levelPanelH, '#4a4a2a', '#1a1a0a', playerGlow);
     drawPixelSkull(startX + 18, statsY - 3, '#e0d0a0');
     drawLevelBadge(startX + 28, statsY - 6, LevelSystem.playerLevel, '#FFD700');
-    // EXP Bar (compact 30px)
-    const expPercent = Math.min(1, LevelSystem.playerExp / LevelSystem.playerExpToNext);
+    // Score Progress Bar (compact 30px) - 점수 기반 레벨업 진행도
+    const scoreForCurrentLevel = LevelSystem.getScoreForLevel(LevelSystem.playerLevel);
+    const scoreForNextLevel = LevelSystem.getScoreForLevel(LevelSystem.playerLevel + 1);
+    const scoreProgress = LevelSystem.playerExp - scoreForCurrentLevel;
+    const scoreNeeded = scoreForNextLevel - scoreForCurrentLevel;
+    const expPercent = LevelSystem.playerLevel >= LevelSystem.maxLevel ? 1 : Math.min(1, scoreProgress / scoreNeeded);
     drawMiniBar(startX + 28, statsY + 2, 30, 4, expPercent, '#2ecc71', '#00ff88');
 
     // === ATTACK LEVEL PANEL (DAMAGE) - Compact ===
@@ -1659,10 +1663,10 @@ const Player = {
 // 플레이어 레벨과 각 아이템별 레벨/경험치 관리
 // ============================================================================
 const LevelSystem = {
-    // 플레이어 기본 레벨 (레벨업 매우 어렵게)
+    // 플레이어 기본 레벨 (점수 기반으로 레벨업)
     playerLevel: 1,
-    playerExp: 0,
-    playerExpToNext: 50, // 첫 레벨업: 50마리 (1단계 청토끼 기준)
+    playerExp: 0, // 현재 누적 점수
+    playerExpToNext: 2000, // 첫 레벨업 필요 점수
     
     // 아이템별 레벨과 경험치 (10개 게이트 = 1레벨)
     items: {
@@ -1686,8 +1690,8 @@ const LevelSystem = {
     
     init: function() {
         this.playerLevel = 1;
-        this.playerExp = 0;
-        this.playerExpToNext = 100;
+        this.playerExp = 0; // 누적 점수
+        this.playerExpToNext = 2000; // 레벨 1→2: 2000점 필요
         
         // 아이템 초기화
         for (let key in this.items) {
@@ -1697,39 +1701,67 @@ const LevelSystem = {
         }
     },
     
-    // 레벨에 따른 필요 경험치 계산 (100: 게이트 10개 = 1레벨)
+    // 레벨에 따른 필요 점수 계산 (점수 기반 레벨업)
     getExpToNext: function(level) {
-        return 50; // 고정값: 50 EXP = 1레벨업 (무기 레벨업 2배 쉬워짐)
+        return 50; // 아이템용: 고정값 50 EXP = 1레벨업
     },
     
-    // 플레이어 경험치 획득 (적 처치 시)
-    addPlayerExp: function(amount) {
+    // 레벨업에 필요한 총 점수 계산
+    getScoreForLevel: function(targetLevel) {
+        // 레벨 1: 0점부터 시작
+        // 레벨 2: 2000점
+        // 레벨 3: 5000점 (추가 3000)
+        // 레벨 4: 9000점 (추가 4000)
+        // ... 점진적 증가
+        if (targetLevel <= 1) return 0;
+        let total = 0;
+        for (let i = 2; i <= targetLevel; i++) {
+            total += 1000 + (i - 1) * 1000; // 레벨 2: 2000, 레벨 3: 3000, 레벨 4: 4000...
+        }
+        return total;
+    },
+    
+    // 현재 레벨에서 다음 레벨까지 필요한 추가 점수
+    getScoreToNextLevel: function() {
+        const nextLevel = this.playerLevel + 1;
+        return 1000 + nextLevel * 1000; // 레벨 1→2: 2000, 2→3: 3000, 3→4: 4000...
+    },
+    
+    // 점수 업데이트 및 레벨업 체크 (점수가 오를 때마다 호출)
+    updateScore: function(currentScore) {
         // 최대 레벨 체크
         if (this.playerLevel >= this.maxLevel) return;
         
-        this.playerExp += amount;
-        if (this.playerExp >= this.playerExpToNext) {
+        // 현재 점수 저장
+        this.playerExp = currentScore;
+        
+        // 다음 레벨에 필요한 총 점수 계산
+        const scoreForNextLevel = this.getScoreForLevel(this.playerLevel + 1);
+        
+        // 레벨업 가능 여부 체크
+        if (this.playerExp >= scoreForNextLevel) {
             this.levelUpPlayer();
         }
     },
     
-    // 플레이어 레벨업 (최대 레벨 10)
+    // 플레이어 경험치 획득 (적 처치 시 - 이제 점수와 연동)
+    addPlayerExp: function(amount) {
+        // 이 함수는 이제 사용되지 않지만 하위 호환성 유지
+        // 실제로는 score가 업데이트될 때 updateScore()가 호출됨
+    },
+    
+    // 플레이어 레벨업 (점수 기반 - 최대 레벨 12)
     levelUpPlayer: function() {
         // 최대 레벨 체크
         if (this.playerLevel >= this.maxLevel) {
-            this.playerExp = 0;
             return;
         }
         
         this.playerLevel++;
-        this.playerExp -= this.playerExpToNext;
         
-        // 최대 레벨 도달 시 EXP 초과분 버림
-        if (this.playerLevel >= this.maxLevel) {
-            this.playerExp = 0;
-        } else {
-            // 다음 레벨업 필요 경험치 (기하급수적 증가)
-            this.playerExpToNext = Math.floor(50 * Math.pow(2, this.playerLevel - 1));
+        // 다음 레벨까지 필요한 점수 업데이트
+        if (this.playerLevel < this.maxLevel) {
+            this.playerExpToNext = this.getScoreToNextLevel();
         }
         
         // 레벨업 효과 - 공격력은 무기 레벨만 영향 (캐릭터 레벨업은 체력/방어력만 증가)
@@ -1741,13 +1773,14 @@ const LevelSystem = {
         // 공격력은 무기 레벨만 영향 - 캐릭터 레벨업과 무관
         Player.defense += defBonus;
         
-        // 레벨업 알림 (공격력 제외)
-        addFloatingText(`★ LEVEL UP! ★`, canvas.width / 2, canvas.height / 2 - 50, '#f1c40f');
-        addFloatingText(`HP +${hpBonus}  DEF +${defBonus.toFixed(1)}`, canvas.width / 2, canvas.height / 2 - 20, '#2ecc71');
+        // 레벨업 알림 (점수 표시 포함)
+        addFloatingText(`★ LEVEL UP! ★`, canvas.width / 2, canvas.height / 2 - 60, '#f1c40f');
+        addFloatingText(`Lv.${this.playerLevel}  HP +${hpBonus}  DEF +${defBonus.toFixed(1)}`, canvas.width / 2, canvas.height / 2 - 30, '#2ecc71');
         AudioManager.playSFX('powerup');
         
-        // 남은 경험치 처리
-        if (this.playerExp >= this.playerExpToNext && this.playerLevel < this.maxLevel) {
+        // 연속 레벨업 체크 (여러 레벨 한번에 오를 경우)
+        const scoreForNextLevel = this.getScoreForLevel(this.playerLevel + 1);
+        if (this.playerExp >= scoreForNextLevel && this.playerLevel < this.maxLevel) {
             this.levelUpPlayer();
         }
     },
@@ -2421,8 +2454,9 @@ class GatePair {
             if (Player.bombCount >= 5) { isBonus = true; bonusScore = 2000; }
             else { Player.bombCount++; AudioManager.playSFX('bomb'); }
         } else if (gatePart.type === 'COIN') {
-            // 코인 아이템: 즉시 1000점 추가
+            // 코인 아이템: 즉시 점수 추가
             score += gatePart.value;
+            LevelSystem.updateScore(score); // 점수 기반 레벨업 체크
             addFloatingText(`💰 +${gatePart.value}`, this.x, gatePart.y + gatePart.height / 2, '#ffd700');
             AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'SUPPORT') {
@@ -2440,6 +2474,7 @@ class GatePair {
 
         if (isBonus) {
             score += bonusScore;
+            LevelSystem.updateScore(score); // 점수 기반 레벨업 체크
             addFloatingText(`BONUS! +${bonusScore}`, this.x, gatePart.y + gatePart.height / 2, "#f1c40f");
             AudioManager.playSFX('powerup'); // 보너스 시에도 효과음
         }
@@ -3481,6 +3516,7 @@ function useBomb() {
                 e.aniFrame = 0;
                 bombKills++;
                 score += 100;
+                LevelSystem.updateScore(score); // 점수 기반 레벨업 체크
                 createExplosion(e.x, e.y);
             }
         }
@@ -4095,15 +4131,8 @@ function gameLoop(timestamp) {
                         e.hp -= p.damage; p.active = false;
                         if (e.hp <= 0) { 
                             e.state = 'DEAD'; e.aniFrame = 0; enemiesKilled++; score += 100; 
+                            LevelSystem.updateScore(score); // 점수 기반 레벨업 체크
                             createExplosion(e.x, e.y); AudioManager.playSFX('explode'); 
-                            // 적 종류별 경험치 차등 지급 (스테이지별 청토끼 종류에 따라)
-                            let expGained = 1; // 기본 경험치 (1단계: 1 EXP)
-                            if (currentStage >= 4 && currentStage < 8) {
-                                expGained = 2; // 2단계 청토끼: 2 EXP
-                            } else if (currentStage >= 8) {
-                                expGained = 3; // 3단계 청토끼: 3 EXP
-                            }
-                            LevelSystem.addPlayerExp(expGained);
                             if (enemiesKilled >= stage.goal && !boss) startBossFight(); 
                         }
                         break;
@@ -4122,9 +4151,8 @@ function gameLoop(timestamp) {
                         boss.aniFrame = 0;
                         boss.lastFrameTime = timestamp;
                         score += 5000;
-                        // 보스 처치 시 플레이어 경험치 대량 획득
-                        LevelSystem.addPlayerExp(50);
-                        addFloatingText(`★ BOSS DEFEATED! +50 EXP ★`, canvas.width / 2, canvas.height / 2 - 80, '#f1c40f');
+                        LevelSystem.updateScore(score); // 점수 기반 레벨업 체크
+                        addFloatingText(`★ BOSS DEFEATED! +5000 SCORE ★`, canvas.width / 2, canvas.height / 2 - 80, '#f1c40f');
                     }
                 }
             } else {
