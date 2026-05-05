@@ -2889,26 +2889,33 @@ function startBossFight() {
     boss = new Boss(currentStage);
     
     // 보스 대사 표시 (있는 경우)
-    const bossQuote = BOSS_QUOTES[currentStage];
+    const stageKey = Number(currentStage);
+    const bossQuote = BOSS_QUOTES[stageKey];
+    console.log(`[BOSS] Stage key: ${stageKey}, Quote: ${bossQuote ? 'FOUND' : 'NOT FOUND'}`);
     if (bossQuote) {
-        // 화면 중앙에 보스 등장 알림
+        // 화면 중앙에 보스 등장 알림 (더 길게 표시, 4초)
         addFloatingText(bossQuote, canvas.width / 2, canvas.height / 3, '#ff0000');
-        addFloatingText("💀 BOSS FIGHT START! 💀", canvas.width / 2, canvas.height / 3 + 30, '#ff4444');
+        addFloatingText("💀 BOSS FIGHT START! 💀", canvas.width / 2, canvas.height / 3 + 40, '#ff4444');
+        
+        // 보스 등장 텍스트 콘솔 출력 (디버깅용)
+        console.log(`[BOSS APPEAR] Stage ${currentStage}: ${bossQuote}`);
         
         // 화면 플래시 효과
         const flash = document.createElement('div');
         flash.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, rgba(255,0,0,0.3) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255,0,0,0.4) 0%, transparent 60%);
             pointer-events: none; z-index: 9998;
             transition: opacity 0.8s; opacity: 1;
         `;
         document.body.appendChild(flash);
-        setTimeout(() => flash.style.opacity = '0', 100);
-        setTimeout(() => flash.remove(), 900);
+        setTimeout(() => flash.style.opacity = '0', 150);
+        setTimeout(() => flash.remove(), 1000);
         
         // 보스 등장 사운드
         AudioManager.playSFX('powerup');
+    } else {
+        console.warn(`[BOSS APPEAR] No quote found for stage ${currentStage}`);
     }
 }
 
