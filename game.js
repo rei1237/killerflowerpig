@@ -1893,19 +1893,21 @@ class Enemy {
         const sizeScale = isMobileLandscapePlayMode() ? 0.75 : 1.0;
         this.width = Math.round((isStage6Plus ? 98 : 64) * sizeScale);
         this.height = Math.round((isStage6Plus ? 98 : 64) * sizeScale);
-        // 적 체력 대폭 상향 및 난이도 증가 (스테이지 보너스 50→40으로 감소)
-        const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : 1; // EASY MODE
-        const hpMultiplierB = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierB : 1; // EASY MODE
-        this.hp = Math.round((60 * hpMultiplierA) + (currentStage * 40 * hpMultiplierB)); this.maxHp = this.hp; // EASY MODE
+        // 적 체력 대폭 상향 및 난이도 증가
+        const isHardMode = !isMobileLandscapePlayMode(); // 가로모드가 아닌 일반 모드 = 하드모드
+        const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : (isHardMode ? 2.0 : 1); // 하드모드: 체력 2배
+        const hpMultiplierB = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierB : (isHardMode ? 1.5 : 1); // 하드모드: 스테이지 보너스 1.5배
+        this.hp = Math.round((60 * hpMultiplierA) + (currentStage * 40 * hpMultiplierB)); this.maxHp = this.hp;
         const gameSpeed = getMobileGameSpeedMultiplier();
-        this.speed = isMobileEasyModeActive() ? 3 * EASY_MODE_CONFIG.enemySpeedMultiplier * gameSpeed : 3; this.active = true; // EASY MODE
+        this.speed = isMobileEasyModeActive() ? 3 * EASY_MODE_CONFIG.enemySpeedMultiplier * gameSpeed : (isHardMode ? 4 : 3); // 하드모드: 속도 증가
+        this.active = true;
         this.state = 'WALK';
         this.aniFrame = 0; this.lastFrameTime = 0; this.frameRate = 120;
 
         this.totalFrames = 6; // Revert to 6 frames for all enemies
 
-        const enemyShootIntervalMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyShootIntervalMultiplier : 1; // EASY MODE
-        this.lastShootTime = 0; this.shootInterval = (2000 + Math.random() * 2000) * enemyShootIntervalMultiplier; // EASY MODE
+        const enemyShootIntervalMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyShootIntervalMultiplier : (isHardMode ? 0.6 : 1); // 하드모드: 40% 더 자주 발사
+        this.lastShootTime = 0; this.shootInterval = (2000 + Math.random() * 2000) * enemyShootIntervalMultiplier;
     }
     update(timestamp) {
         if (!this.active) return;
@@ -2107,7 +2109,8 @@ class GatePair {
             { type: 'DAMAGE', value: 10, text: 'POWER UP', color: '#2ecc71', icon: 'sword' },
             { type: 'HEAL', value: 2, text: 'REPAIR', color: '#e74c3c', icon: 'heart' },
             { type: 'SHIELD', value: 15000, text: 'SHIELD', color: '#9b59b6', icon: 'shield' },
-            { type: 'ULTIMATE', value: 1, text: 'BOMB', color: '#f1c40f', icon: 'bomb' }
+            { type: 'ULTIMATE', value: 1, text: 'BOMB', color: '#f1c40f', icon: 'bomb' },
+            { type: 'COIN', value: 1000, text: '+1000', color: '#ffd700', icon: 'coin' }
         ];
 
         // 스테이지 5부터 지원군 스킬 게이트 등장
@@ -2205,6 +2208,11 @@ class GatePair {
             // 폭탄: 즉시 효과
             if (Player.bombCount >= 5) { isBonus = true; bonusScore = 2000; }
             else { Player.bombCount++; AudioManager.playSFX('bomb'); }
+        } else if (gatePart.type === 'COIN') {
+            // 코인 아이템: 즉시 1000점 추가
+            score += gatePart.value;
+            addFloatingText(`💰 +${gatePart.value}`, this.x, gatePart.y + gatePart.height / 2, '#ffd700');
+            AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'SUPPORT') {
               // 지원군 아이템: 경험치 10씩 획득 (10개 = 1레벨)
               const expGained = 10;
@@ -2762,15 +2770,17 @@ class Boss {
         this.isBossKing = currentStage >= 9; // 스테이지 9-10: 보스킹
 
         // 기본 체력 계산
+        const isHardMode = !isMobileLandscapePlayMode();
         const baseHp = 2500 * level + (level === 10 ? 15000 : 0);
+        const hardModeHpMultiplier = isHardMode ? 1.5 : 1; // 하드모드: 보스 체력 50% 증가
 
-        // 보스킹: 20% 더 많은 체력, 보스2: 10% 더 많은 체력
+        // 보스킹: 20% 더 많은 체력, 보스2: 10% 더 많은 체력, 하드모드: 추가 50%
         if (this.isBossKing) {
-            this.hp = Math.floor(baseHp * 1.2);
+            this.hp = Math.floor(baseHp * 1.2 * hardModeHpMultiplier);
         } else if (this.isBoss2) {
-            this.hp = Math.floor(baseHp * 1.1);
+            this.hp = Math.floor(baseHp * 1.1 * hardModeHpMultiplier);
         } else {
-            this.hp = baseHp;
+            this.hp = Math.floor(baseHp * hardModeHpMultiplier);
         }
         this.maxHp = this.hp;
 
@@ -2849,6 +2859,8 @@ class Boss {
 
         // 공격 간격: 보스킹 30% 더 빠름, 보스2 15% 더 빠름
         // 분노 모드: 공격 간격 추가 30% 감소 (더 빈번한 공격)
+        // 하드모드: 공격 간격 추가 20% 감소
+        const isHardMode = !isMobileLandscapePlayMode();
         const baseInterval = this.hp < 3000 ? 1000 : 1800;
         let interval;
         if (this.isBossKing) {
@@ -2857,6 +2869,10 @@ class Boss {
             interval = baseInterval * 0.85; // 보스2: 15% 더 빠른 공격
         } else {
             interval = baseInterval;
+        }
+        // 하드모드: 공격 속도 20% 증가
+        if (isHardMode) {
+            interval *= 0.8;
         }
         // 분노 모드: 공격 속도 추가 25% 증가
         if (this.rageMode) {
@@ -2868,10 +2884,14 @@ class Boss {
             // 소환 가능 여부 - 스테이지 4부터 가능
             const canSummonMinions = currentStage >= 4;
 
-            if (p < 0.3 && canSummonMinions) {
+            // 하드모드: 소환 확률 증가 (30% -> 40%)
+            const isHardMode = !isMobileLandscapePlayMode();
+            const summonThreshold = isHardMode ? 0.4 : 0.3;
+            if (p < summonThreshold && canSummonMinions) {
                 // 부하 소환 패턴
-                // 보스킹: 3마리, 보스2: 2마리, 일반: 2마리
-                const summonCount = this.isBossKing ? 3 : (this.isBoss2 ? 2 : 2);
+                // 보스킹: 3마리, 보스2: 2마리, 일반: 2마리, 하드모드: +1마리 추가
+                let summonCount = this.isBossKing ? 3 : (this.isBoss2 ? 2 : 2);
+                if (isHardMode) summonCount += 1; // 하드모드: 1마리 추가 소환
                 for (let i = 0; i < summonCount; i++) {
                     const e = new Enemy(this.x, this.y + this.height / 2 + (i - Math.floor(summonCount / 2)) * 50);
                     const summonEnemySpeedMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossSummonEnemySpeedMultiplier : 1;
@@ -3544,7 +3564,7 @@ function gameLoop(timestamp) {
         if (currentState !== GAME_STATE.STAGE_CLEAR) {
             Background.update(); Player.update(timestamp);
         }
-        if (timestamp - gateSpawnTimer > GATE_SPAWN_INTERVAL && currentState !== GAME_STATE.STAGE_CLEAR) { gates.push(new GatePair(canvas.width + 50)); gateSpawnTimer = timestamp; }
+        if (timestamp - gateSpawnTimer > GATE_SPAWN_INTERVAL && currentState !== GAME_STATE.STAGE_CLEAR && !boss) { gates.push(new GatePair(canvas.width + 50)); gateSpawnTimer = timestamp; }
         const stage = getCurrentStageData(); // EASY MODE
         if (timestamp - spawnTimer > stage.spawnRate && currentState === GAME_STATE.PLAYING && !boss) { spawnEnemyWave(); spawnTimer = timestamp; }
         if (boss) boss.update(timestamp);
