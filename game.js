@@ -2157,19 +2157,19 @@ class Enemy {
         this.aniFrame = 0; this.lastFrameTime = 0; this.frameRate = 120;
         this.totalFrames = 6;
 
-        // ── 공격 간격: 스테이지별 공격적으로 단축 ──
+        // ── 공격 간격: 스테이지별 (완화됨) ──
         const enemyShootIntervalMultiplier = isMobileEasyModeActive()
             ? EASY_MODE_CONFIG.enemyShootIntervalMultiplier
-            : (isHardMode ? 0.65 : 1);
-        // STG1:3500ms, STG5:2000ms, STG8:1200ms, STG10:1000ms
-        const baseInterval = Math.max(1200, 3500 - currentStage * 220);
-        const randomInterval = Math.max(400, 1800 - currentStage * 120);
+            : (isHardMode ? 0.75 : 1);
+        // STG1:4000ms, STG5:2800ms, STG8:2000ms, STG10:1600ms
+        const baseInterval = Math.max(1600, 4000 - currentStage * 200);
+        const randomInterval = Math.max(600, 2000 - currentStage * 100);
         this.lastShootTime = 0;
         this.shootInterval = (baseInterval + Math.random() * randomInterval) * enemyShootIntervalMultiplier;
 
         // ── 스테이지별 공격 패턴 등급 ──
-        // 0:단발, 1:산탄(STG5+), 2:3연사(STG7+), 3:포위사격(STG9+)
-        this.attackGrade = currentStage >= 10 ? 3 : currentStage >= 8 ? 2 : currentStage >= 6 ? 1 : 0;
+        // 0:단발, 1:산탄(STG10 최종장만)
+        this.attackGrade = currentStage >= 10 ? 1 : 0;
         this.burstCount = 0; // 연사 남은 횟수
         this.burstTimer = 0; // 연사 타이머
     }
@@ -3129,9 +3129,9 @@ class Boss {
         this.isBoss2 = currentStage >= 6 && currentStage < 9;
         this.isBossKing = currentStage >= 9; // 스테이지 9-10: 보스킹
 
-        // 기본 체력 계산 (스테이지별 체력 50% 감소 적용)
+        // 기본 체력 계산 (보스는 적보다 강하게 - 상향)
         const isHardMode = !isMobileLandscapePlayMode();
-        const baseHp = 1100 * level + (level === 10 ? 6000 : 0);
+        const baseHp = 1800 * level + (level === 10 ? 8000 : 0);
         const hardModeHpMultiplier = isHardMode ? 1.5 : 1; // 하드모드: 보스 체력 50% 증가
 
         // 보스킹: 20% 더 많은 체력, 보스2: 10% 더 많은 체력, 하드모드: 추가 50%
@@ -3217,26 +3217,27 @@ class Boss {
         // 모바일에서는 보스 공격 속도 감소 (적정 수준)
         const bossAttackIntervalMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossAttackIntervalMultiplier : 1; // EASY MODE
 
-        // 공격 간격: 보스킹 30% 더 빠름, 보스2 15% 더 빠름
-        // 분노 모드: 공격 간격 추가 30% 감소 (더 빈번한 공격)
-        // 하드모드: 공격 간격 추가 20% 감소
+        // 공격 간격: 보스는 더 공격적으로 (단축)
+        // 보스킹 40% 더 빠름, 보스2 25% 더 빠름
+        // 분노 모드: 공격 간격 추가 35% 감소
+        // 하드모드: 공격 간격 추가 25% 감소
         const isHardMode = !isMobileLandscapePlayMode();
-        const baseInterval = this.hp < 3000 ? 1000 : 1800;
+        const baseInterval = this.hp < 3000 ? 800 : 1400;
         let interval;
         if (this.isBossKing) {
-            interval = baseInterval * 0.7; // 보스킹: 30% 더 빠른 공격
+            interval = baseInterval * 0.6; // 보스킹: 40% 더 빠른 공격
         } else if (this.isBoss2) {
-            interval = baseInterval * 0.85; // 보스2: 15% 더 빠른 공격
+            interval = baseInterval * 0.75; // 보스2: 25% 더 빠른 공격
         } else {
             interval = baseInterval;
         }
-        // 하드모드: 공격 속도 20% 증가
+        // 하드모드: 공격 속도 25% 증가
         if (isHardMode) {
-            interval *= 0.8;
-        }
-        // 분노 모드: 공격 속도 추가 25% 증가
-        if (this.rageMode) {
             interval *= 0.75;
+        }
+        // 분노 모드: 공격 속도 추가 35% 증가
+        if (this.rageMode) {
+            interval *= 0.65;
         }
 
         if (timestamp - this.lastAttackTime > interval * bossAttackIntervalMultiplier) {
