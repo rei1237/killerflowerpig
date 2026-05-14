@@ -1,3 +1,6 @@
+let GAME_WIDTH=window.innerWidth;
+let GAME_HEIGHT=window.innerHeight;
+let GAME_DPR=1;
 /**
  * ============================================================================
  * [Game Engine Core - Final Master]
@@ -338,18 +341,18 @@ function drawHUD(ctx) {
     ctx.textAlign = 'right';
     ctx.fillStyle = '#fff';
     ctx.font = '10px "Press Start 2P"';
-    ctx.fillText(`SCORE:${score.toString().padStart(6, '0')}`, canvas.width/scale - 15, 20);
+    ctx.fillText(`SCORE:${score.toString().padStart(6, '0')}`, GAME_WIDTH/scale - 15, 20);
 
     // 9. Stage info (center top)
     ctx.textAlign = 'center';
     ctx.fillStyle = '#00ffff';
-    ctx.fillText(`STG${currentStage}`, canvas.width/scale/2, 20);
+    ctx.fillText(`STG${currentStage}`, GAME_WIDTH/scale/2, 20);
     ctx.fillStyle = '#e74c3c';
-    ctx.fillText(`${enemiesKilled}/${getCurrentStageData().goal}`, canvas.width/scale/2, 35);
+    ctx.fillText(`${enemiesKilled}/${getCurrentStageData().goal}`, GAME_WIDTH/scale/2, 35);
 
     // 10. HUD Bombs (top right - pixel art dynamite style)
     ctx.save();
-    const hudBombStartX = canvas.width/scale - 70;
+    const hudBombStartX = GAME_WIDTH/scale - 70;
     const hudBombY = 45;
     for (let i = 0; i < Math.min(Player.bombCount, 5); i++) {
         const bx = hudBombStartX - i * 14;
@@ -378,7 +381,7 @@ function drawHUD(ctx) {
     ctx.restore();
 
     // 10.5. Petal Cannon Charge UI (next to bomb count)
-    const petalX = canvas.width/scale - 70;
+    const petalX = GAME_WIDTH/scale - 70;
     const petalY = 65;
     const petalChargePercent = Math.min(1, Player.petalCannonCharge / Player.petalCannonMaxCharge);
     
@@ -740,7 +743,7 @@ async function installPWA() {
     // 이미 설치된 경우 알림만 표시
     if (isPWAInstalled()) {
         console.log('[Install] Already installed');
-        addFloatingText('✅ Already Installed!', canvas.width / 2, canvas.height / 2 - 50, '#2ecc71');
+        addFloatingText('✅ Already Installed!', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, '#2ecc71');
         return;
     }
 
@@ -755,17 +758,17 @@ async function installPWA() {
             if (outcome === 'accepted') {
                 console.log('PWA installed successfully');
                 deferredInstallPrompt = null;
-                addFloatingText('✅ Installing...', canvas.width / 2, canvas.height / 2 - 50, '#2ecc71');
+                addFloatingText('✅ Installing...', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, '#2ecc71');
 
                 // 버튼 숨기기
                 if (installButton) installButton.hidden = true;
                 if (installBtnContainer) installBtnContainer.hidden = true;
             } else {
-                addFloatingText('❌ Install Cancelled', canvas.width / 2, canvas.height / 2 - 50, '#e74c3c');
+                addFloatingText('❌ Install Cancelled', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, '#e74c3c');
             }
         } catch (error) {
             console.error('[Install] Failed:', error);
-            addFloatingText('❌ Install Failed', canvas.width / 2, canvas.height / 2 - 50, '#e74c3c');
+            addFloatingText('❌ Install Failed', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, '#e74c3c');
         }
     }
     // iOS Safari나 설치 프롬프트가 없는 경우 - 설치 가이드 모달 표시
@@ -1271,14 +1274,14 @@ window.addEventListener('beforeinstallprompt', (event) => {
     // PWA 설치 가능할 때 INSTALL 버튼 표시
     if (installButton) installButton.hidden = false;
     // 설치 완료 알림
-    addFloatingText('📲 Ready to Install!', canvas.width / 2, canvas.height / 2 - 100, '#2ecc71');
+    addFloatingText('📲 Ready to Install!', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 100, '#2ecc71');
 });
 
 window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
     updateInstallButtonVisibility();
     // 설치 완료 축하 메시지
-    addFloatingText('✅ Game Installed!', canvas.width / 2, canvas.height / 2 - 100, '#2ecc71');
+    addFloatingText('✅ Game Installed!', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 100, '#2ecc71');
 });
 
 // 이미 설치된 상태 확인 및 버튼 업데이트
@@ -1461,7 +1464,7 @@ const Player = {
             this.height = 64;
         }
         
-        this.y = canvas.height / 2 - this.height / 2;
+        this.y = GAME_HEIGHT / 2 - this.height / 2;
         this.targetY = this.y;
         
         // 스탯 계산
@@ -1526,7 +1529,7 @@ const Player = {
         let dy = this.targetY - this.y;
         this.y += dy * moveSpeed;
         if (this.y < 0) this.y = 0;
-        if (this.y + this.height > canvas.height) this.y = canvas.height - this.height;
+        if (this.y + this.height > GAME_HEIGHT) this.y = GAME_HEIGHT - this.height;
         const totalAniFrames = 8;
         // 모바일에서 더 빠른 발사 속도 적용
         const fireRateMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.fireRateMultiplier : 1.0;
@@ -1766,8 +1769,8 @@ const LevelSystem = {
         // 레벨업 효과 - HP는 5 고정이므로 보너스 없음
         // (EXP 기반 레벨업은 유지, 고정 HP 정장으로 취소)
 
-        addFloatingText(`★ LEVEL UP! Lv.${this.playerLevel} ★`, canvas.width / 2, canvas.height / 2 - 60, '#f1c40f');
-        addFloatingText(`스테이지 난이도 상승!`, canvas.width / 2, canvas.height / 2 - 30, '#2ecc71');
+        addFloatingText(`★ LEVEL UP! Lv.${this.playerLevel} ★`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 60, '#f1c40f');
+        addFloatingText(`스테이지 난이도 상승!`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, '#2ecc71');
         AudioManager.playSFX('powerup');
     },
     
@@ -1891,7 +1894,7 @@ class Projectile {
     update() {
         this.x += this.vx;
         this.y += this.vy;
-        if (this.x > canvas.width || this.x < -100 || this.y < -100 || this.y > canvas.height + 100) this.active = false;
+        if (this.x > GAME_WIDTH || this.x < -100 || this.y < -100 || this.y > GAME_HEIGHT + 100) this.active = false;
     }
     draw(ctx) {
         if (this.isBossEnergyBall) {
@@ -2122,7 +2125,7 @@ class Enemy {
         // STG6:1930, STG7:2760, STG8:3850, STG9:5130, STG10:6850
         // (지수 2.5→2.375, 약 5% 증가폭 완화)
         const baseHp = 120;
-        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.375) * 120);
+        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.25) * 110);
         this.hp = Math.round((baseHp + stageBonus) * hpMultiplierA);
         this.maxHp = this.hp;
 
@@ -2142,14 +2145,14 @@ class Enemy {
             ? EASY_MODE_CONFIG.enemyShootIntervalMultiplier
             : (isHardMode ? 0.65 : 1);
         // STG1:3500ms, STG5:2000ms, STG8:1200ms, STG10:1000ms
-        const baseInterval = Math.max(1000, 3500 - currentStage * 260);
-        const randomInterval = Math.max(300, 1800 - currentStage * 140);
+        const baseInterval = Math.max(1200, 3500 - currentStage * 220);
+        const randomInterval = Math.max(400, 1800 - currentStage * 120);
         this.lastShootTime = 0;
         this.shootInterval = (baseInterval + Math.random() * randomInterval) * enemyShootIntervalMultiplier;
 
         // ── 스테이지별 공격 패턴 등급 ──
         // 0:단발, 1:산탄(STG5+), 2:3연사(STG7+), 3:포위사격(STG9+)
-        this.attackGrade = currentStage >= 9 ? 3 : currentStage >= 7 ? 2 : currentStage >= 5 ? 1 : 0;
+        this.attackGrade = currentStage >= 10 ? 3 : currentStage >= 8 ? 2 : currentStage >= 6 ? 1 : 0;
         this.burstCount = 0; // 연사 남은 횟수
         this.burstTimer = 0; // 연사 타이머
     }
@@ -2181,7 +2184,7 @@ class Enemy {
             }
 
             // ── 공격 트리거 ────────────────────────────────
-            if (stage.enemyShoot && timestamp - this.lastShootTime > this.shootInterval && this.x < canvas.width - 100) {
+            if (stage.enemyShoot && timestamp - this.lastShootTime > this.shootInterval && this.x < GAME_WIDTH - 100) {
                 this.state = 'ATTACK'; this.aniFrame = 0; this.lastFrameTime = timestamp; this.lastShootTime = timestamp;
 
                 const enemyProjSpeedMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.gameSpeedMultiplier : 1.0;
@@ -2390,7 +2393,7 @@ class Enemy {
 class GatePair {
     constructor(x) {
         this.x = x; this.width = 60; this.speed = 3.5; this.active = true;
-        const halfHeight = canvas.height / 2;
+        const halfHeight = GAME_HEIGHT / 2;
         // 공격력/사격속도 비중 대폭 상향 (프롬프트 반영)
         const types = [
             { type: 'FIRE_RATE', value: 30, text: 'SPEED UP', color: '#3498db', icon: 'gun' },
@@ -2823,16 +2826,16 @@ const Background = {
 
         if (bgImg) {
             // "Seamless Mirror Looping" 기술 적용 - 화면 전체를 채우도록 루프 추가
-            const scale = canvas.height / bgImg.height;
+            const scale = GAME_HEIGHT / bgImg.height;
             const w = bgImg.width * scale;
-            const h = canvas.height;
+            const h = GAME_HEIGHT;
 
             // 전체 가로 이동 거리 (0 ~ 2w 범위로 루프)
             const totalOffset = Math.abs(this.roadLineOffset * 0.3) % (w * 2);
 
             // 화면 왼쪽 끝에서부터 오른쪽 끝까지 이미지를 채움
             let startX = -totalOffset;
-            while (startX < canvas.width) {
+            while (startX < GAME_WIDTH) {
                 // 현재 그릴 이미지의 인덱스 (0, 1, 2...)
                 // 짝수 인덱스는 정방향, 홀수 인덱스는 반전(거울) 방향
                 const segmentIndex = Math.floor((startX + totalOffset + 0.1) / w);
@@ -2851,18 +2854,18 @@ const Background = {
             }
         } else {
             ctx.fillStyle = '#0a0a0a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
         }
 
         // 요청사항: 하단 도로선 제거 및 배경 확장
         // 배경 이미지가 화면 전체를 채우도록 처리되었으므로 별도의 도로선은 그리지 않습니다.
 
         // 분위기 조성을 위한 하단 그라데이션 (배경과 자연스럽게 섞임)
-        const roadGrad = ctx.createLinearGradient(0, canvas.height * 0.7, 0, canvas.height);
+        const roadGrad = ctx.createLinearGradient(0, GAME_HEIGHT * 0.7, 0, GAME_HEIGHT);
         roadGrad.addColorStop(0, 'rgba(0,0,0,0)');
         roadGrad.addColorStop(1, 'rgba(0,0,0,0.5)');
         ctx.fillStyle = roadGrad;
-        ctx.fillRect(0, canvas.height * 0.7, canvas.width, canvas.height * 0.3);
+        ctx.fillRect(0, GAME_HEIGHT * 0.7, GAME_WIDTH, GAME_HEIGHT * 0.3);
 
         const stage = getCurrentStageData(); // EASY MODE
         const fogColor = isAbyss ? '#450a0a' : stage.fog;
@@ -2870,11 +2873,11 @@ const Background = {
     },
     drawFogLayer: function (ctx, color) {
         ctx.save();
-        const grad = ctx.createLinearGradient(0, canvas.height * 0.5, 0, canvas.height * 0.9);
+        const grad = ctx.createLinearGradient(0, GAME_HEIGHT * 0.5, 0, GAME_HEIGHT * 0.9);
         grad.addColorStop(0, 'transparent');
         grad.addColorStop(1, color + '44');
         ctx.fillStyle = grad;
-        ctx.fillRect(0, canvas.height * 0.5, canvas.width, canvas.height * 0.4);
+        ctx.fillRect(0, GAME_HEIGHT * 0.5, GAME_WIDTH, GAME_HEIGHT * 0.4);
         ctx.restore();
     }
 };
@@ -2913,7 +2916,7 @@ function advanceStage() {
         Player.state = 'ALIVE';
         Player.aniFrame = 0;
         Player.shield = 0;
-        particles.push(...Array(30).fill(0).map(() => new Particle(canvas.width / 2, canvas.height / 2, '#f1c40f')));
+        particles.push(...Array(30).fill(0).map(() => new Particle(GAME_WIDTH / 2, GAME_HEIGHT / 2, '#f1c40f')));
 
         // 오버레이 강제 숨김
         if (overlayStageClear) overlayStageClear.hidden = true;
@@ -2931,8 +2934,8 @@ function startBossFight() {
     console.log(`[BOSS] Stage key: ${stageKey}, Quote: ${bossQuote ? 'FOUND' : 'NOT FOUND'}`);
     if (bossQuote) {
         // 화면 중앙에 보스 등장 알림 (더 길게 표시, 4초)
-        addFloatingText(bossQuote, canvas.width / 2, canvas.height / 3, '#ff0000');
-        addFloatingText("💀 BOSS FIGHT START! 💀", canvas.width / 2, canvas.height / 3 + 40, '#ff4444');
+        addFloatingText(bossQuote, GAME_WIDTH / 2, GAME_HEIGHT / 3, '#ff0000');
+        addFloatingText("💀 BOSS FIGHT START! 💀", GAME_WIDTH / 2, GAME_HEIGHT / 3 + 40, '#ff4444');
         
         // 보스 등장 텍스트 콘솔 출력 (디버깅용)
         console.log(`[BOSS APPEAR] Stage ${currentStage}: ${bossQuote}`);
@@ -3099,7 +3102,7 @@ const BOSS_KING_SPRITE_MAP = {
 
 class Boss {
     constructor(level = 1) {
-        this.x = canvas.width - 250; this.y = canvas.height / 2 - 100;
+        this.x = GAME_WIDTH - 250; this.y = GAME_HEIGHT / 2 - 100;
         this.width = 200; this.height = 200; this.level = level;
 
         // 스테이지별 보스 타입 확인 (인스턴스 속성으로 저장)
@@ -3108,7 +3111,7 @@ class Boss {
 
         // 기본 체력 계산 (레벨당 2500→2375, 약 5% 감소)
         const isHardMode = !isMobileLandscapePlayMode();
-        const baseHp = 2375 * level + (level === 10 ? 15000 : 0);
+        const baseHp = 2200 * level + (level === 10 ? 12000 : 0);
         const hardModeHpMultiplier = isHardMode ? 1.5 : 1; // 하드모드: 보스 체력 50% 증가
 
         // 보스킹: 20% 더 많은 체력, 보스2: 10% 더 많은 체력, 하드모드: 추가 50%
@@ -3190,7 +3193,7 @@ class Boss {
             addFloatingText('★ RAGE MODE ★', this.x + this.width / 2, this.y - 30, '#ff0000');
         }
 
-        this.y += this.speedY; if (this.y < 50 || this.y + this.height > canvas.height - 50) this.speedY *= -1;
+        this.y += this.speedY; if (this.y < 50 || this.y + this.height > GAME_HEIGHT - 50) this.speedY *= -1;
         // 모바일에서는 보스 공격 속도 감소 (적정 수준)
         const bossAttackIntervalMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossAttackIntervalMultiplier : 1; // EASY MODE
 
@@ -3386,7 +3389,7 @@ class Boss {
             ctx.restore();
         }
         // 보스 체력 바 (정교한 픽셀 프레임)
-        const bx = canvas.width / 2 - 200; const by = 70; const bw = 400; const bh = 20;
+        const bx = GAME_WIDTH / 2 - 200; const by = 70; const bw = 400; const bh = 20;
         const bossHpClamped = Math.max(0, Math.min(this.hp, this.maxHp));
         ctx.fillStyle = '#2c3e50'; ctx.fillRect(bx - 4, by - 4, bw + 8, bh + 8);
         ctx.fillStyle = '#000'; ctx.fillRect(bx, by, bw, bh);
@@ -3415,7 +3418,7 @@ class Boss {
         } else {
             bossName = 'BOSS: BLUE RABBIT';
         }
-        // ctx.fillText(bossName, canvas.width / 2, by + 15);
+        // ctx.fillText(bossName, GAME_WIDTH / 2, by + 15);
     }
 }
 
@@ -3425,7 +3428,7 @@ function spawnEnemyWave() {
     // 가로 모드에서 적들이 더 오른쪽에서 생성되고 더 느리게 이동
     const isLandscape = window.innerWidth > window.innerHeight;
     const spawnOffset = isLandscape ? 150 : 50; // 가로 모드: 더 오른쪽에서 생성
-    const e = new Enemy(canvas.width + spawnOffset, Math.random() * (canvas.height - 100) + 50);
+    const e = new Enemy(GAME_WIDTH + spawnOffset, Math.random() * (GAME_HEIGHT - 100) + 50);
     // 가로 모드에서 적 속도 50% 감소
     const landscapeSpeedMultiplier = isLandscape ? 0.5 : 1;
     e.speed = stage.enemySpeed * landscapeSpeedMultiplier;
@@ -3543,7 +3546,7 @@ function resetGame(stageToStart = 1) {
 }
 
 function createBombExplosion() {
-    const cx = canvas.width / 2; const cy = canvas.height / 2;
+    const cx = GAME_WIDTH / 2; const cy = GAME_HEIGHT / 2;
     for (let ring = 0; ring < 5; ring++) {
         for (let i = 0; i < 30 + ring * 10; i++) {
             const angle = (i / (30 + ring * 10)) * Math.PI * 2;
@@ -3597,8 +3600,8 @@ let bombButtonRect = null;
 // 고급 2D 도트 스타일 다이너마이트 폭탄 UI
 function drawBombButton(ctx) {
     const btnSize = 84;
-    const btnX = canvas.width - btnSize - 25;
-    const btnY = canvas.height - btnSize - 25;
+    const btnX = GAME_WIDTH - btnSize - 25;
+    const btnY = GAME_HEIGHT - btnSize - 25;
     const centerX = btnX + btnSize / 2;
     const centerY = btnY + btnSize / 2;
 
@@ -3795,8 +3798,8 @@ let petalCannonButtonRect = null;
 // 고급 2D 도트 스타일 꽃잎 포 버튼 UI
 function drawPetalCannonButton(ctx) {
     const btnSize = 70; // 폭탄보다 약간 작게
-    const btnX = canvas.width - btnSize - 120; // 폭탄 버튼 왼쪽에 배치
-    const btnY = canvas.height - btnSize - 25;
+    const btnX = GAME_WIDTH - btnSize - 120; // 폭탄 버튼 왼쪽에 배치
+    const btnY = GAME_HEIGHT - btnSize - 25;
     const centerX = btnX + btnSize / 2;
     const centerY = btnY + btnSize / 2;
     
@@ -4128,15 +4131,17 @@ window.addEventListener('keydown', (e) => {
 });
 
 function resizeCanvas() {
-    const viewport = getViewportSize(); // MOBILE LANDSCAPE
+    const viewport = getViewportSize();
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    // DPR 적용: 물리 픽셀 기준으로 캔버스 크기 설정 → 모바일 고화질
-    canvas.width = viewport.width * dpr;
-    canvas.height = viewport.height * dpr;
-    canvas.style.width = viewport.width + 'px';
-    canvas.style.height = viewport.height + 'px';
+    GAME_WIDTH = viewport.width;
+    GAME_HEIGHT = viewport.height;
+    GAME_DPR = dpr;
+    canvas.width = GAME_WIDTH * dpr;
+    canvas.height = GAME_HEIGHT * dpr;
+    canvas.style.width = GAME_WIDTH + 'px';
+    canvas.style.height = GAME_HEIGHT + 'px';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
-    // 리사이즈 후 이미지 품질 재설정
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     Player.init();
@@ -4161,7 +4166,7 @@ applyMobileOptimizations();
 resizeCanvas();
 
 function gameLoop(timestamp) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
     // 스토리 화면
     if (currentState === GAME_STATE.STORY) {
@@ -4187,7 +4192,7 @@ function gameLoop(timestamp) {
         if (currentState !== GAME_STATE.STAGE_CLEAR) {
             Background.update(); Player.update(timestamp);
         }
-        if (timestamp - gateSpawnTimer > GATE_SPAWN_INTERVAL && currentState !== GAME_STATE.STAGE_CLEAR && !boss) { gates.push(new GatePair(canvas.width + 50)); gateSpawnTimer = timestamp; }
+        if (timestamp - gateSpawnTimer > GATE_SPAWN_INTERVAL && currentState !== GAME_STATE.STAGE_CLEAR && !boss) { gates.push(new GatePair(GAME_WIDTH + 50)); gateSpawnTimer = timestamp; }
         const stage = getCurrentStageData(); // EASY MODE
         if (timestamp - spawnTimer > stage.spawnRate && currentState === GAME_STATE.PLAYING && !boss) { spawnEnemyWave(); spawnTimer = timestamp; }
         if (boss) boss.update(timestamp);
@@ -4227,7 +4232,7 @@ function gameLoop(timestamp) {
                         score += 5000;
                         // 보스 처치 시 대량 EXP 획득 (100 EXP)
                         LevelSystem.addPlayerExp(100);
-                        addFloatingText(`★ BOSS DEFEATED! +100 EXP ★`, canvas.width / 2, canvas.height / 2 - 80, '#f1c40f');
+                        addFloatingText(`★ BOSS DEFEATED! +100 EXP ★`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 80, '#f1c40f');
                     }
                 }
             } else {
@@ -4290,8 +4295,8 @@ function gameLoop(timestamp) {
     if (Player.skillNotifications && Player.skillNotifications.length > 0) {
         ctx.save();
         const time = Date.now();
-        const cw = canvas.width / (window.devicePixelRatio || 1);
-        const ch = canvas.height / (window.devicePixelRatio || 1);
+        const cw = GAME_WIDTH / (window.devicePixelRatio || 1);
+        const ch = GAME_HEIGHT / (window.devicePixelRatio || 1);
         const cx = cw / 2;
         const cy = ch / 2;
 
@@ -4489,7 +4494,7 @@ function gameLoop(timestamp) {
 
 function drawStageClearScreen() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
     const time = Date.now();
     const pulse = Math.sin(time / 300) * 0.1 + 1.0;
@@ -4498,13 +4503,13 @@ function drawStageClearScreen() {
     const winImg = ImageLoader.get('win');
     if (winImg) {
         ctx.save();
-        const winSize = Math.min(canvas.width * 0.25, 180) * pulse;
+        const winSize = Math.min(GAME_WIDTH * 0.25, 180) * pulse;
         ctx.shadowBlur = 30;
         ctx.shadowColor = '#f1c40f';
         // 가로 모드에서 상단이 짤리지 않도록 Y 위치 계산 (최소 20px 여백 확보)
-        const baseY = canvas.height / 2 - winSize / 2 - 50;
+        const baseY = GAME_HEIGHT / 2 - winSize / 2 - 50;
         const winY = Math.max(20, baseY); // 최소 20px from top
-        ctx.drawImage(winImg, canvas.width / 2 - winSize / 2, winY, winSize, winSize);
+        ctx.drawImage(winImg, GAME_WIDTH / 2 - winSize / 2, winY, winSize, winSize);
         ctx.restore();
     }
 
@@ -4515,26 +4520,26 @@ function drawStageClearScreen() {
     ctx.font = 'bold 24px "Press Start 2P"';
     ctx.shadowBlur = 20;
     ctx.shadowColor = '#e67e22';
-    ctx.fillText(`STAGE ${currentStage} CLEAR!`, canvas.width / 2, canvas.height / 2 + 80);
+    ctx.fillText(`STAGE ${currentStage} CLEAR!`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 80);
 
     // 3초 후 자동 진행 안내
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.font = '10px "Press Start 2P"';
     ctx.shadowBlur = 0;
-    ctx.fillText('Click to continue...', canvas.width / 2, canvas.height / 2 + 120);
+    ctx.fillText('Click to continue...', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 120);
     ctx.restore();
 
     // 축하 파티클 효과
     if (Math.random() < 0.3) {
         const colors = ['#f1c40f', '#e67e22', '#ff6b9d', '#4ecdc4'];
         const color = colors[Math.floor(Math.random() * colors.length)];
-        particles.push(new Particle(Math.random() * canvas.width, canvas.height + 10, color));
+        particles.push(new Particle(Math.random() * GAME_WIDTH, GAME_HEIGHT + 10, color));
     }
 }
 
 function drawStartScreen() {
     ctx.fillStyle = '#0a0505'; // 좀비물 특유의 핏빛 섞인 어둠
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
     const titleImg = ImageLoader.get('title');
     const time = Date.now();
@@ -4542,7 +4547,7 @@ function drawStartScreen() {
 
     // 좀비 분위기의 피 흘러내리는 픽셀 효과 (위에서 아래로)
     ctx.fillStyle = '#450a0a';
-    for (let i = 0; i < canvas.width; i += 40) {
+    for (let i = 0; i < GAME_WIDTH; i += 40) {
         const dripLength = Math.abs(Math.sin((i + time / 500) * 0.1)) * 100 + 20;
         ctx.fillRect(i, 0, 10, dripLength);
         ctx.fillRect(i + 2, dripLength, 6, 5); // 핏방울
@@ -4550,13 +4555,13 @@ function drawStartScreen() {
 
     // 배경 입자 효과 (독성 포자 느낌)
     if (time % 100 < 5) {
-        particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, 'rgba(46, 204, 113, 0.3)'));
+        particles.push(new Particle(Math.random() * GAME_WIDTH, Math.random() * GAME_HEIGHT, 'rgba(46, 204, 113, 0.3)'));
     }
 
     // 화면 크기에 따른 스케일 계산 (모바일 대응 개선)
     const isMobile = isMobileTouchDevice();
-    const minDim = Math.min(canvas.width, canvas.height);
-    const maxDim = Math.max(canvas.width, canvas.height);
+    const minDim = Math.min(GAME_WIDTH, GAME_HEIGHT);
+    const maxDim = Math.max(GAME_WIDTH, GAME_HEIGHT);
     const isPortrait = window.innerHeight > window.innerWidth;
 
     // 모바일/데스크톱 스케일 계산
@@ -4598,9 +4603,9 @@ function drawStartScreen() {
 
         let maxTitleW;
         if (isMobile && !isPortrait) {
-            maxTitleW = Math.min(canvas.height * 0.45, canvas.width * 0.28) * pulse;
+            maxTitleW = Math.min(GAME_HEIGHT * 0.45, GAME_WIDTH * 0.28) * pulse;
         } else if (isMobile) {
-            maxTitleW = Math.min(350 * scaleFactor, canvas.width * 0.8);
+            maxTitleW = Math.min(350 * scaleFactor, GAME_WIDTH * 0.8);
         } else {
             maxTitleW = 500 * pulse * scaleFactor;
         }
@@ -4614,10 +4619,10 @@ function drawStartScreen() {
         } else if (isMobile) {
             titleY = marginTop;
         } else {
-            titleY = canvas.height / 2 - h / 2 - 120 * scaleFactor;
+            titleY = GAME_HEIGHT / 2 - h / 2 - 120 * scaleFactor;
         }
 
-        let titleX = canvas.width / 2 - w / 2 + glitchX;
+        let titleX = GAME_WIDTH / 2 - w / 2 + glitchX;
 
         ctx.globalAlpha = glitchAlpha;
         ctx.drawImage(titleImg, titleX, titleY, w, h);
@@ -4635,15 +4640,15 @@ function drawStartScreen() {
     ctx.textBaseline = 'middle';
 
     // 텍스트 위치 계산
-    let textX = canvas.width / 2 + glitchX;
+    let textX = GAME_WIDTH / 2 + glitchX;
     let textY;
     if (isMobile && !isPortrait) {
-        const titleImgH = titleImg ? (Math.min(canvas.height * 0.5, canvas.width * 0.3) / titleImg.width) * titleImg.height : 100;
+        const titleImgH = titleImg ? (Math.min(GAME_HEIGHT * 0.5, GAME_WIDTH * 0.3) / titleImg.width) * titleImg.height : 100;
         textY = 15 * scaleFactor + titleImgH + 25 * scaleFactor;
     } else if (isMobile) {
         textY = marginTop + (350 * scaleFactor) + 25 * scaleFactor;
     } else {
-        textY = canvas.height / 2 + 50 * scaleFactor;
+        textY = GAME_HEIGHT / 2 + 50 * scaleFactor;
     }
 
     // 네온 광채 (Back Glow)
@@ -4675,23 +4680,23 @@ function drawStartScreen() {
     let panelW, panelH, panelX, panelY;
     if (isMobile && !isPortrait) {
         // 가로 모드: 좌측 하단 (비밀번호 UI 위 또는 옆)
-        panelW = Math.min(320 * scaleFactor, canvas.width * 0.35);
-        panelH = Math.min(120 * scaleFactor, canvas.height * 0.3);
+        panelW = Math.min(320 * scaleFactor, GAME_WIDTH * 0.35);
+        panelH = Math.min(120 * scaleFactor, GAME_HEIGHT * 0.3);
         panelX = 30 * scaleFactor;
-        panelY = canvas.height - panelH - 120 * scaleFactor; // 90px 위로 이동
+        panelY = GAME_HEIGHT - panelH - 120 * scaleFactor; // 90px 위로 이동
 
         // 비밀번호 UI가 좌측에 있으므로, 가이드는 약간 위로 올리거나 비밀번호 UI와 간격 조정 필요
         // CSS에서 비밀번호 UI 위치를 확인하고 조정할 예정
     } else if (isMobile) {
-        panelW = canvas.width * 0.9;
-        panelH = Math.min(160 * scaleFactor, canvas.height * 0.3);
-        panelX = canvas.width / 2 - panelW / 2;
-        panelY = canvas.height / 2 + 100 * scaleFactor;
+        panelW = GAME_WIDTH * 0.9;
+        panelH = Math.min(160 * scaleFactor, GAME_HEIGHT * 0.3);
+        panelX = GAME_WIDTH / 2 - panelW / 2;
+        panelY = GAME_HEIGHT / 2 + 100 * scaleFactor;
     } else {
         panelW = 700 * scaleFactor;
         panelH = 150 * scaleFactor;
-        panelX = canvas.width / 2 - panelW / 2;
-        panelY = canvas.height - panelH - 50 * scaleFactor;
+        panelX = GAME_WIDTH / 2 - panelW / 2;
+        panelY = GAME_HEIGHT - panelH - 50 * scaleFactor;
     }
 
     ctx.save();
@@ -4790,7 +4795,7 @@ const EPILOGUE_TEXT = `■■■■ [새벽의 연꽃] 엔딩 ■■■■
 
 function drawGameClearImageScreen() {
     ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
     if (!gameClearImageStartTime) gameClearImageStartTime = Date.now();
     const elapsed = Date.now() - gameClearImageStartTime;
@@ -4803,11 +4808,11 @@ function drawGameClearImageScreen() {
         ctx.globalAlpha = alpha;
 
         // 화면 크기에 맞게 이미지 비율 유지하며 중앙에 렌더링
-        const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+        const scale = Math.min(GAME_WIDTH / img.width, GAME_HEIGHT / img.height);
         const w = img.width * scale * 0.9; // 여백 10%
         const h = img.height * scale * 0.9;
-        const x = (canvas.width - w) / 2;
-        const y = (canvas.height - h) / 2 - 20; // 살짝 위로
+        const x = (GAME_WIDTH - w) / 2;
+        const y = (GAME_HEIGHT - h) / 2 - 20; // 살짝 위로
 
         ctx.shadowBlur = 30;
         ctx.shadowColor = 'rgba(241, 196, 15, 0.5)';
@@ -4823,7 +4828,7 @@ function drawGameClearImageScreen() {
 }
 
 function drawWinScreen() {
-    ctx.fillStyle = 'rgba(0,0,0,0.95)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(0,0,0,0.95)'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     const time = Date.now();
 
     if (currentState !== GAME_STATE.ALL_CLEAR) {
@@ -4833,14 +4838,14 @@ function drawWinScreen() {
     // 골든 스파크
     if (time % 100 < 40) {
         for (let i = 0; i < 3; i++) {
-            const p = new Particle(Math.random() * canvas.width, canvas.height + 20, Math.random() > 0.5 ? '#f1c40f' : '#e67e22');
+            const p = new Particle(Math.random() * GAME_WIDTH, GAME_HEIGHT + 20, Math.random() > 0.5 ? '#f1c40f' : '#e67e22');
             p.speedY = -1 - Math.random() * 3; p.speedX = (Math.random() - 0.5) * 2;
             p.decay = 0.005;
             particles.push(p);
         }
     }
 
-    const scrollY = canvas.height - winScreenAnimationTime * 0.8; // 천천히 스크롤
+    const scrollY = GAME_HEIGHT - winScreenAnimationTime * 0.8; // 천천히 스크롤
 
     ctx.save();
     ctx.textAlign = 'center';
@@ -4851,13 +4856,13 @@ function drawWinScreen() {
     ctx.fillStyle = '#f1c40f';
     ctx.font = 'bold 24px "Press Start 2P"';
     ctx.shadowBlur = 20; ctx.shadowColor = '#f39c12';
-    ctx.fillText('FLOWER PIG', canvas.width / 2, currentY);
+    ctx.fillText('FLOWER PIG', GAME_WIDTH / 2, currentY);
     currentY += 30;
 
     ctx.fillStyle = '#e74c3c';
     ctx.font = '12px "Press Start 2P"';
     ctx.shadowBlur = 10; ctx.shadowColor = '#e74c3c';
-    ctx.fillText('THE KILLER OF ZOMBIE', canvas.width / 2, currentY);
+    ctx.fillText('THE KILLER OF ZOMBIE', GAME_WIDTH / 2, currentY);
     currentY += 120; // 넉넉한 여백
 
     // 크레딧 출력
@@ -4866,14 +4871,14 @@ function drawWinScreen() {
         ctx.fillStyle = '#00ffff';
         ctx.font = '10px "Press Start 2P"';
         ctx.shadowBlur = 5; ctx.shadowColor = '#00ffff';
-        ctx.fillText(credit.title, canvas.width / 2, currentY);
+        ctx.fillText(credit.title, GAME_WIDTH / 2, currentY);
         currentY += 25;
 
         // 이름
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 16px "Press Start 2P"';
         ctx.shadowBlur = 10; ctx.shadowColor = '#ffffff';
-        ctx.fillText(credit.name, canvas.width / 2, currentY);
+        ctx.fillText(credit.name, GAME_WIDTH / 2, currentY);
         currentY += 70; // 다음 크레딧과의 간격
     }
 
@@ -4883,10 +4888,10 @@ function drawWinScreen() {
     ctx.fillStyle = '#f1c40f';
     ctx.font = 'bold 16px "Press Start 2P"';
     ctx.shadowBlur = 15; ctx.shadowColor = '#f39c12';
-    ctx.fillText('THANK YOU FOR PLAYING', canvas.width / 2, currentY);
+    ctx.fillText('THANK YOU FOR PLAYING', GAME_WIDTH / 2, currentY);
 
     // 스크롤이 충분히 진행된 후에 ALL CLEAR 오버레이 표시
-    if (currentY < canvas.height / 2) {
+    if (currentY < GAME_HEIGHT / 2) {
         currentState = GAME_STATE.ALL_CLEAR;
         updateOverlayVisibility();
     }
@@ -4895,7 +4900,7 @@ function drawWinScreen() {
 
 function drawGameOverScreen() {
     ctx.fillStyle = 'rgba(10, 0, 0, 0.95)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     const time = Date.now();
     const isMobile = isMobileTouchDevice();
     const isPortrait = window.innerHeight > window.innerWidth;
@@ -4905,14 +4910,14 @@ function drawGameOverScreen() {
 
     // 절망적인 핏빛 스파크 (아래에서 위로)
     if (time % 100 < 40) {
-        const p = new Particle(Math.random() * canvas.width, canvas.height + 10, '#c0392b');
+        const p = new Particle(Math.random() * GAME_WIDTH, GAME_HEIGHT + 10, '#c0392b');
         p.speedY = -1 - Math.random() * 2;
         p.speedX = (Math.random() - 0.5);
         particles.push(p);
     }
 
     // 화면 크기 계산
-    const minDim = Math.min(canvas.width, canvas.height);
+    const minDim = Math.min(GAME_WIDTH, GAME_HEIGHT);
     const screenScale = Math.min(1, minDim / 600);
 
     // 게임오버 이미지
@@ -4935,8 +4940,8 @@ function drawGameOverScreen() {
         const baseW = 400 * screenScale;
         const w = baseW * animScale;
         const h = (baseW / frameStride) * frameHeight * animScale;
-        const drawX = canvas.width / 2 - w / 2 + shake * screenScale;
-        const drawY = Math.max(20, canvas.height * 0.28 - h / 2); // Position in upper area, ensure not off-screen
+        const drawX = GAME_WIDTH / 2 - w / 2 + shake * screenScale;
+        const drawY = Math.max(20, GAME_HEIGHT * 0.28 - h / 2); // Position in upper area, ensure not off-screen
 
         ctx.shadowBlur = 40 + Math.sin(time / 200) * 20;
         ctx.shadowColor = '#c0392b';
@@ -5120,7 +5125,7 @@ function drawEpilogueScreen(ctx, timestamp) {
 
     // 페이지 분할 (처음 한 번만)
     if (storyPages.length === 0) {
-        const maxWidth = Math.min(canvas.width * 0.85, 800);
+        const maxWidth = Math.min(GAME_WIDTH * 0.85, 800);
 
         const isMobile = isMobileTouchDevice();
         const isPortrait = window.innerHeight > window.innerWidth;
@@ -5131,7 +5136,7 @@ function drawEpilogueScreen(ctx, timestamp) {
         const topMargin = isMobileLandscape ? 120 : 170;
         const bottomMargin = isMobileLandscape ? 60 : 80;
 
-        const maxHeight = canvas.height - topMargin - bottomMargin;
+        const maxHeight = GAME_HEIGHT - topMargin - bottomMargin;
         const lineHeight = storyLineHeight;
         storyPages = splitStoryIntoPages(EPILOGUE_TEXT, maxWidth, maxHeight, lineHeight, storyFontSize);
         storyTotalPages = storyPages.length;
@@ -5148,7 +5153,7 @@ function drawEpilogueScreen(ctx, timestamp) {
     }
 
     ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
     const isMobileLandscape = isMobileTouchDevice() && window.innerHeight <= window.innerWidth;
 
@@ -5164,14 +5169,14 @@ function drawEpilogueScreen(ctx, timestamp) {
     ctx.fillStyle = '#e74c3c';
     ctx.shadowBlur = 20;
     ctx.shadowColor = '#e74c3c';
-    ctx.fillText(`EPILOGUE`, canvas.width / 2, episodeY);
+    ctx.fillText(`EPILOGUE`, GAME_WIDTH / 2, episodeY);
 
     if (storyTotalPages > 1) {
         ctx.font = `${isMobileLandscape ? 10 : 12}px "Press Start 2P"`;
         ctx.fillStyle = '#00ffff';
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#00ffff';
-        ctx.fillText(`PAGE ${storyCurrentPage + 1} / ${storyTotalPages}`, canvas.width / 2, pageY);
+        ctx.fillText(`PAGE ${storyCurrentPage + 1} / ${storyTotalPages}`, GAME_WIDTH / 2, pageY);
     }
     ctx.restore();
 
@@ -5205,8 +5210,8 @@ function drawEpilogueScreen(ctx, timestamp) {
     ctx.shadowBlur = 4;
     ctx.shadowColor = 'rgba(0,0,0,0.8)';
 
-    const maxWidth = Math.min(canvas.width * 0.85, 800);
-    const startX = (canvas.width - maxWidth) / 2;
+    const maxWidth = Math.min(GAME_WIDTH * 0.85, 800);
+    const startX = (GAME_WIDTH - maxWidth) / 2;
     const startY = storyStartY;
     const lineHeight = storyLineHeight;
 
@@ -5225,7 +5230,7 @@ function drawEpilogueScreen(ctx, timestamp) {
             ctx.fillStyle = paragraph.startsWith('■') ? '#f1c40f' : (paragraph.startsWith('\'') ? '#00ffff' : '#ffffff');
             ctx.shadowBlur = 10;
             ctx.shadowColor = ctx.fillStyle;
-            ctx.fillText(paragraph, canvas.width / 2, currentY);
+            ctx.fillText(paragraph, GAME_WIDTH / 2, currentY);
             ctx.shadowBlur = 0;
             currentY += lineHeight + paragraphSpacing;
             ctx.textAlign = 'left';
@@ -5261,13 +5266,13 @@ function drawEpilogueScreen(ctx, timestamp) {
         promptText = isMobileTouchDevice() ? '...TYPING...' : '...TYPING...';
     }
 
-    ctx.fillText(promptText, canvas.width / 2, canvas.height - 30);
+    ctx.fillText(promptText, GAME_WIDTH / 2, GAME_HEIGHT - 30);
     
     // 가로모드에서 더블탭 스킵 힌트 추가
     if (isMobileLandscapeOrientation()) {
         ctx.fillStyle = '#e74c3c';
         ctx.font = '10px "Press Start 2P"';
-        ctx.fillText('▼ DOUBLE TAP TO SKIP ▼', canvas.width / 2, canvas.height - 12);
+        ctx.fillText('▼ DOUBLE TAP TO SKIP ▼', GAME_WIDTH / 2, GAME_HEIGHT - 12);
     }
     
     ctx.restore();
@@ -5282,7 +5287,7 @@ function drawStoryScreen(ctx, timestamp) {
 
     // 페이지 분할 (처음 한 번만)
     if (storyPages.length === 0) {
-        const maxWidth = Math.min(canvas.width * 0.85, 800);
+        const maxWidth = Math.min(GAME_WIDTH * 0.85, 800);
 
         // 모바일 가로 모드 감지
         const isMobile = isMobileTouchDevice();
@@ -5295,7 +5300,7 @@ function drawStoryScreen(ctx, timestamp) {
         const topMargin = isMobileLandscape ? 120 : 170; // 상단 여백 줄임
         const bottomMargin = isMobileLandscape ? 60 : 80; // 하단 여백
 
-        const maxHeight = canvas.height - topMargin - bottomMargin; // 효과적인 텍스트 영역 높이
+        const maxHeight = GAME_HEIGHT - topMargin - bottomMargin; // 효과적인 텍스트 영역 높이
         const lineHeight = storyLineHeight;
         // 폰트 크기 전달하여 정확한 페이지 분할
         storyPages = splitStoryIntoPages(stage.storyText, maxWidth, maxHeight, lineHeight, storyFontSize);
@@ -5317,7 +5322,7 @@ function drawStoryScreen(ctx, timestamp) {
 
     // 검은 배경
     ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
     // 모바일 가로 모드 감지 (이미 위에서 정의된 값 사용)
     const isMobileLandscape = isMobileTouchDevice() && window.innerHeight <= window.innerWidth;
@@ -5336,7 +5341,7 @@ function drawStoryScreen(ctx, timestamp) {
     ctx.fillStyle = '#e74c3c';
     ctx.shadowBlur = 20;
     ctx.shadowColor = '#e74c3c';
-    ctx.fillText(`EPISODE ${currentStage}`, canvas.width / 2, episodeY);
+    ctx.fillText(`EPISODE ${currentStage}`, GAME_WIDTH / 2, episodeY);
 
     // 페이지 인디케이터
     if (storyTotalPages > 1) {
@@ -5344,7 +5349,7 @@ function drawStoryScreen(ctx, timestamp) {
         ctx.fillStyle = '#00ffff';
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#00ffff';
-        ctx.fillText(`PAGE ${storyCurrentPage + 1} / ${storyTotalPages}`, canvas.width / 2, pageY);
+        ctx.fillText(`PAGE ${storyCurrentPage + 1} / ${storyTotalPages}`, GAME_WIDTH / 2, pageY);
     }
     ctx.restore();
 
@@ -5387,8 +5392,8 @@ function drawStoryScreen(ctx, timestamp) {
     ctx.shadowBlur = 4;
     ctx.shadowColor = 'rgba(0,0,0,0.8)';
 
-    const maxWidth = Math.min(canvas.width * 0.85, 800);
-    const startX = (canvas.width - maxWidth) / 2;
+    const maxWidth = Math.min(GAME_WIDTH * 0.85, 800);
+    const startX = (GAME_WIDTH - maxWidth) / 2;
     const startY = storyStartY;
     const lineHeight = storyLineHeight;
 
@@ -5410,7 +5415,7 @@ function drawStoryScreen(ctx, timestamp) {
             ctx.fillStyle = paragraph.startsWith('■') ? '#f1c40f' : (paragraph.startsWith('\'') ? '#00ffff' : '#ffffff');
             ctx.shadowBlur = 10;
             ctx.shadowColor = ctx.fillStyle;
-            ctx.fillText(paragraph, canvas.width / 2, currentY);
+            ctx.fillText(paragraph, GAME_WIDTH / 2, currentY);
             ctx.shadowBlur = 0;
             currentY += lineHeight + paragraphSpacing;
             ctx.textAlign = 'left';
@@ -5452,16 +5457,16 @@ function drawStoryScreen(ctx, timestamp) {
         promptText = isMobileTouchDevice() ? '...TYPING...' : '...TYPING...';
     }
 
-    ctx.fillText(promptText, canvas.width / 2, canvas.height - 30);
+    ctx.fillText(promptText, GAME_WIDTH / 2, GAME_HEIGHT - 30);
 
     // 스킵 안내 - 가로모드에서만 더블탭 스킵 표시
     ctx.font = '10px "Press Start 2P"';
     ctx.fillStyle = '#666666';
     ctx.shadowBlur = 0;
     if (isMobileLandscapeOrientation()) {
-        ctx.fillText('▼ DOUBLE TAP TO SKIP ▼', canvas.width / 2, canvas.height - 12);
+        ctx.fillText('▼ DOUBLE TAP TO SKIP ▼', GAME_WIDTH / 2, GAME_HEIGHT - 12);
     } else if (!isMobileTouchDevice()) {
-        ctx.fillText('▼ PRESS ESC TO SKIP ▼', canvas.width / 2, canvas.height - 12);
+        ctx.fillText('▼ PRESS ESC TO SKIP ▼', GAME_WIDTH / 2, GAME_HEIGHT - 12);
     }
 
     ctx.restore();
