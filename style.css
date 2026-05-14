@@ -36,7 +36,7 @@ html {
 }
 
 /* 세로 모드일 때 가로 모드 안내 */
-@media screen and (orientation: portrait) and (max-width: 768px) {
+@media screen and (max-width: 0px) {
     #game-container::before {
         content: "📱 가로 모드로 전환해주세요\APlease rotate to landscape";
         white-space: pre;
@@ -178,7 +178,7 @@ html {
 /* ==========================================
    모바일 가로 모드 - 2D 도트 콘솔 느낌
    ========================================== */
-@media screen and (max-width: 1024px) and (orientation: landscape) {
+@media screen and (max-width: 0px) {
     /* START 버튼 - 우측 여백에 완전히 밀착 (조이패드) */
     .start-container {
         right: 20px;
@@ -1428,7 +1428,7 @@ html {
 }
 
 /* 모바일 가로 모드 타이틀 위치 (최적화) */
-@media screen and (max-width: 1024px) and (orientation: landscape) {
+@media screen and (max-width: 0px) {
     .dom-game-title {
         top: 15px;
         left: 50%;
@@ -1491,7 +1491,7 @@ html {
 }
 
 /* 모바일 가로 모드 가이드 위치 (좌측 상단) */
-@media screen and (max-width: 1024px) and (orientation: landscape) {
+@media screen and (max-width: 0px) {
     .dom-mission-guide {
         top: 20px;
         left: 20px;
