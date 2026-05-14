@@ -1612,7 +1612,7 @@ const Player = {
             let colIdx = 0;
 
             if (this.state === 'DEAD') {
-                rowIdx = 1; // 사망 모션
+                rowIdx = 1;
                 colIdx = Math.min(this.aniFrame, cols - 1);
             } else {
                 rowIdx = Math.floor(this.aniFrame / cols) % rows;
@@ -1623,24 +1623,50 @@ const Player = {
             const sy = rowIdx * frameH;
             const cropWidth = frameW - 30;
 
+            // 모바일 고화질: ctx에 imageSmoothingQuality 명시 적용
+            ctx.save();
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            // 불투명한 피크셀 정렬 (sub-pixel 변동 방지)
+            const drawX = Math.round(this.x);
+            const drawY = Math.round(this.y);
+            const drawW = Math.round(this.width);
+            const drawH = Math.round(this.height);
+
             if (this.shield > 0) {
-                ctx.save();
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = '#9b59b6';
-                ctx.drawImage(img, sx, sy, cropWidth, frameH, this.x, this.y, this.width, this.height);
-                ctx.restore();
+                // 쉘드 중: 보라 글로우 + 하이라이트
+                ctx.shadowBlur = 24;
+                ctx.shadowColor = '#a855f7';
+                ctx.drawImage(img, sx, sy, cropWidth, frameH, drawX, drawY, drawW, drawH);
+                // 반투명 불벛 이퍼트
+                ctx.globalAlpha = 0.25 + 0.15 * Math.sin(Date.now() / 200);
+                ctx.shadowBlur = 40;
+                ctx.drawImage(img, sx, sy, cropWidth, frameH, drawX, drawY, drawW, drawH);
+                ctx.globalAlpha = 1;
             } else {
-                ctx.drawImage(img, sx, sy, cropWidth, frameH, this.x, this.y, this.width, this.height);
+                ctx.drawImage(img, sx, sy, cropWidth, frameH, drawX, drawY, drawW, drawH);
             }
 
-            // 지원군 렌더링 (잔상 효과 느낌으로 배치)
+            // 지원군 렌더링 (상/하 위치, 가시성 개선)
             if (this.supportTimer > 0) {
-                ctx.save();
-                ctx.globalAlpha = 0.6;
-                ctx.drawImage(img, sx, sy, cropWidth, frameH, this.x - 20, this.y - 80, this.width, this.height);
-                ctx.drawImage(img, sx, sy, cropWidth, frameH, this.x - 20, this.y + 80, this.width, this.height);
-                ctx.restore();
+                const supportAlpha = 0.55 + 0.1 * Math.sin(Date.now() / 180);
+                ctx.globalAlpha = supportAlpha;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#f97316';
+                // 상단 지원군
+                ctx.drawImage(img, sx, sy, cropWidth, frameH,
+                    Math.round(drawX - 18), Math.round(drawY - Math.min(80, drawH + 10)),
+                    drawW, drawH);
+                // 하단 지원군
+                ctx.drawImage(img, sx, sy, cropWidth, frameH,
+                    Math.round(drawX - 18), Math.round(drawY + Math.min(80, drawH + 10)),
+                    drawW, drawH);
+                ctx.globalAlpha = 1;
+                ctx.shadowBlur = 0;
             }
+
+            ctx.restore();
         }
     }
 };
@@ -1737,17 +1763,11 @@ const LevelSystem = {
             this.playerExpToNext = this.getPlayerExpToNext(this.playerLevel);
         }
         
-        // 레벨업 효과 - 캐릭터 레벨업은 체력/방어력 증가
-        const hpBonus = this.stats.playerHpPerLevel;
-        const defBonus = this.stats.playerDefensePerLevel;
-        
-        Player.maxHp += hpBonus;
-        Player.hp += hpBonus;
-        Player.defense += defBonus;
-        
-        // 레벨업 알림
-        addFloatingText(`★ LEVEL UP! ★`, canvas.width / 2, canvas.height / 2 - 60, '#f1c40f');
-        addFloatingText(`Lv.${this.playerLevel}  HP +${hpBonus}  DEF +${defBonus.toFixed(1)}`, canvas.width / 2, canvas.height / 2 - 30, '#2ecc71');
+        // 레벨업 효과 - HP는 5 고정이므로 보너스 없음
+        // (EXP 기반 레벨업은 유지, 고정 HP 정장으로 취소)
+
+        addFloatingText(`★ LEVEL UP! Lv.${this.playerLevel} ★`, canvas.width / 2, canvas.height / 2 - 60, '#f1c40f');
+        addFloatingText(`스테이지 난이도 상승!`, canvas.width / 2, canvas.height / 2 - 30, '#2ecc71');
         AudioManager.playSFX('powerup');
     },
     
@@ -2097,10 +2117,11 @@ class Enemy {
         const isHardMode = !isMobileLandscapePlayMode();
         const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : (isHardMode ? 1.5 : 1);
 
-        // ── 체력: 지수 곡선 스케일링 (후반부 급격히 증가) ──
-        // STG1:120, STG3:200, STG5:350, STG7:580, STG9:900, STG10:1100
+        // ── 체력: 지수 카브 스케일링 (후반부 매우 급격히 증가) ──
+        // STG1:120, STG2:240, STG3:480, STG4:850, STG5:1400,
+        // STG6:2100, STG7:3000, STG8:4200, STG9:5600, STG10:7500
         const baseHp = 120;
-        const stageBonus = Math.round(Math.pow(currentStage - 1, 1.65) * 50);
+        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.5) * 120);
         this.hp = Math.round((baseHp + stageBonus) * hpMultiplierA);
         this.maxHp = this.hp;
 
