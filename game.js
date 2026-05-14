@@ -2118,10 +2118,11 @@ class Enemy {
         const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : (isHardMode ? 1.5 : 1);
 
         // ── 체력: 지수 카브 스케일링 (후반부 매우 급격히 증가) ──
-        // STG1:120, STG2:240, STG3:480, STG4:850, STG5:1400,
-        // STG6:2100, STG7:3000, STG8:4200, STG9:5600, STG10:7500
+        // STG1:120, STG2:228, STG3:447, STG4:785, STG5:1290,
+        // STG6:1930, STG7:2760, STG8:3850, STG9:5130, STG10:6850
+        // (지수 2.5→2.375, 약 5% 증가폭 완화)
         const baseHp = 120;
-        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.5) * 120);
+        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.375) * 120);
         this.hp = Math.round((baseHp + stageBonus) * hpMultiplierA);
         this.maxHp = this.hp;
 
@@ -3105,9 +3106,9 @@ class Boss {
         this.isBoss2 = currentStage >= 6 && currentStage < 9;
         this.isBossKing = currentStage >= 9; // 스테이지 9-10: 보스킹
 
-        // 기본 체력 계산
+        // 기본 체력 계산 (레벨당 2500→2375, 약 5% 감소)
         const isHardMode = !isMobileLandscapePlayMode();
-        const baseHp = 2500 * level + (level === 10 ? 15000 : 0);
+        const baseHp = 2375 * level + (level === 10 ? 15000 : 0);
         const hardModeHpMultiplier = isHardMode ? 1.5 : 1; // 하드모드: 보스 체력 50% 증가
 
         // 보스킹: 20% 더 많은 체력, 보스2: 10% 더 많은 체력, 하드모드: 추가 50%
