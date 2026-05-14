@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Yeon the killer of blue zombie</title>
+    
+    <!-- 캐시 방지 메타 태그 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- 모바일/앱 설정 -->
+    <meta name="theme-color" content="#0a0a0c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Yeon Zombie">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Yeon Zombie">
+    
+    <!-- 링크 -->
+    <link rel="manifest" href="manifest.webmanifest?v=3">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=3">
+    
+    <!-- PWA 캐시 초기화 스크립트 -->
+    <script>
+        // Service Worker 업데이트 강제
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                registrations.forEach(registration => {
+                    registration.update();
+                });
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <!-- 메인 화면 UI 버튼들 - 개별 위치 조정 -->
+        <div id="main-menu-ui" class="main-menu-ui">
+            <!-- 메인 메뉴 버튼 및 UI 요소들 -->
+
+            <div id="start-btn-container" class="btn-container start-container" hidden>
+                <button id="start-btn" type="button" class="pixel-btn primary">START GAME</button>
+            </div>
+            <div id="install-btn-container" class="btn-container install-container" hidden>
+                <button id="install-btn" type="button" class="pixel-btn install" hidden>
+                    <span class="btn-icon">📲</span> INSTALL GAME
+                </button>
+            </div>
+            <!-- 패스워드 입력 UI - 2D 도트 RPG 스타일 -->
+            <div id="password-container" class="btn-container password-container" hidden>
+                <div id="password-panel" class="password-panel collapsed">
+                    <div class="password-header">
+                        <div class="password-icon">🔐</div>
+                        <div class="password-title">SECRET CODE</div>
+                        <div class="password-subtitle">연이의 생년월일 6자리</div>
+                    </div>
+                    <div class="password-input-wrapper">
+                        <div class="password-dots" id="password-dots">
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                        </div>
+                        <input type="password" id="stage-password" class="password-input-hidden" maxlength="6" autocomplete="off">
+                    </div>
+                    <button id="password-submit" type="button" class="password-unlock-btn">
+                        <span class="btn-icon">⚔️</span> UNLOCK
+                    </button>
+                    <div id="password-error" class="password-error" hidden>
+                        <span class="error-icon">❌</span> 코드가 틀렸습니다
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 스테이지 선택 UI (패스워드 입력 후 표시) -->
+        <div id="stage-select-container" class="btn-container stage-select-container" hidden>
+            <div class="stage-select-label">🎮 STAGE SELECT</div>
+            <div class="stage-buttons">
+                <button class="stage-btn" data-stage="1">1</button>
+                <button class="stage-btn" data-stage="2">2</button>
+                <button class="stage-btn" data-stage="3">3</button>
+                <button class="stage-btn" data-stage="4">4</button>
+                <button class="stage-btn" data-stage="5">5</button>
+                <button class="stage-btn" data-stage="6">6</button>
+                <button class="stage-btn" data-stage="7">7</button>
+                <button class="stage-btn" data-stage="8">8</button>
+                <button class="stage-btn" data-stage="9">9</button>
+                <button class="stage-btn" data-stage="10">10</button>
+            </div>
+            <button id="stage-select-close" type="button" class="pixel-btn secondary close-btn">CLOSE</button>
+        </div>
+        <!-- 게임 오버 버튼들 - 2D 도트 스타일, 화면 가리지 않도록 하단 배치 -->
+        <div id="gameover-buttons" class="btn-container gameover-container" hidden>
+            <div class="gameover-panel">
+                <div class="gameover-title">☠️ GAME OVER ☠️</div>
+                <div class="gameover-stats" id="gameover-stats"></div>
+                <div class="gameover-actions">
+                    <button id="retry-btn" type="button" class="pixel-btn gameover-btn retry-btn">
+                        <span class="btn-icon">⚔️</span> 부활하여 재출격
+                    </button>
+                    <button id="quit-btn" type="button" class="pixel-btn gameover-btn quit-btn">
+                        <span class="btn-icon">👣</span> 전선에서 후퇴
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- 설치 가이드 모달 -->
+        <div id="install-guide" class="modal-overlay" hidden>
+            <div class="modal-content">
+                <h2>📲 INSTALL GAME</h2>
+                <div id="install-mobile-guide" hidden>
+                    <div id="ios-guide">
+                        <p>🍎 <strong>iPhone / iPad</strong></p>
+                        <ol>
+                            <li>Tap <strong>Share</strong> () button in Safari</li>
+                            <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+                            <li>Tap <strong>Add</strong></li>
+                        </ol>
+                    </div>
+                    <div id="android-guide">
+                        <p>🤖 <strong>Android</strong></p>
+                        <ol>
+                            <li>Tap <strong>⋮ Menu</strong> in Chrome</li>
+                            <li>Select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong></li>
+                            <li>Tap <strong>Install</strong></li>
+                        </ol>
+                    </div>
+                </div>
+                <div id="install-desktop-guide" hidden>
+                    <p>💻 <strong>Desktop Chrome/Edge</strong></p>
+                    <ol>
+                        <li>Click <strong>➕</strong> icon in address bar</li>
+                        <li>Or press <strong>Ctrl+Shift+S</strong> (Chrome)</li>
+                        <li>Click <strong>Install</strong></li>
+                    </ol>
+                </div>
+                <div id="install-installed-msg" hidden>
+                    <p>✅ <strong>Already Installed!</strong></p>
+                    <p>Check your home screen or app launcher.</p>
+                </div>
+                <button id="close-install-guide" class="pixel-btn secondary">CLOSE</button>
+            </div>
+        </div>
+
+        <!-- 전체화면 오버레이: 스테이지 클리어 -->
+        <div id="overlay-stage-clear" class="fullscreen-overlay" hidden>
+            <div class="victory-neon-frame">
+                <img src="asset/꽃돼지 승리.png" alt="Victory" class="victory-img">
+            </div>
+            <h1 class="overlay-title gold" id="stage-clear-title">STAGE CLEAR!</h1>
+            <p class="overlay-desc" id="stage-clear-desc">좀비 무리를 물리쳤습니다.</p>
+            <button id="stage-clear-epilogue-btn" type="button" class="pixel-btn primary win-btn" style="display:none; margin-top:24px;">에필로그 보기</button>
+        </div>
+
+        <!-- 전체화면 오버레이: 게임 올 클리어 (Win) -->
+        <div id="overlay-win" class="fullscreen-overlay" hidden>
+            <div class="victory-neon-frame">
+                <img src="asset/꽃돼지 승리.png" alt="All Clear" class="victory-img">
+            </div>
+            <h1 class="overlay-title neon-blue">ALL CLEAR!</h1>
+            <p class="overlay-desc">연이가 모든 좀비를 멸종시켰습니다.</p>
+            <div class="win-score-box">
+                FINAL SCORE: <span id="win-score-text">0</span>
+            </div>
+            <div class="win-actions" style="display: flex; gap: 15px; margin-top: 20px;">
+                <button id="win-retry-btn" type="button" class="pixel-btn primary win-btn">다시 게임하기</button>
+                <button id="win-quit-btn" type="button" class="pixel-btn secondary win-btn">게임 종료</button>
+            </div>
+        </div>
+
+        <!-- 인게임 DOM UI (HUD 및 컨트롤러) -->
+        <div id="in-game-ui" class="in-game-ui" hidden>
+            <!-- 좌상단 HUD -->
+            <div id="hud-container" class="hud-container">
+                <div class="hud-profile">
+                    <img src="asset/꽃돼지 총.png" alt="Profile" class="profile-img">
+                </div>
+                <div class="hud-stats">
+                    <div class="hp-bar-bg">
+                        <div id="dom-hp-bar" class="hp-bar-fill"></div>
+                    </div>
+                    <div id="dom-score" class="score-text">000000</div>
+                </div>
+            </div>
+            
+            <!-- 하단 컨트롤 센터 (가로 모드: 좌우 조이패드 / 세로 모드: 하단 바) -->
+            <div id="control-center" class="control-center">
+                <div id="dpad-container" class="dpad-container">
+                    <div class="dpad-joystick" id="virtual-joystick">
+                        <div class="dpad-knob" id="joystick-knob"></div>
+                    </div>
+                </div>
+                <div id="action-container" class="action-container">
+                    <button id="btn-bomb" class="action-btn bomb-btn">
+                        <span class="btn-icon">💣</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="game.js?v=4"></script>
+</body>
+
+</html>
