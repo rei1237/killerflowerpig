@@ -108,15 +108,16 @@ function drawHUD(ctx) {
     const pulse = 0.7 + 0.3 * Math.sin(time / 400);
     const isMobile = isMobileTouchDevice();
     const isLandscape = window.innerWidth > window.innerHeight;
-    const scale = isMobile ? (isLandscape ? 0.7 : 0.6) : 0.85;
+    // 가로/세로 동일 스케일 (프리미엄 통일 UI)
+    const scale = isMobile ? 0.65 : 0.85;
 
     ctx.save();
     ctx.scale(scale, scale);
 
-    // === COMPACT UI ===
+    // === COMPACT UI (프리미엄 통일) ===
     const startX = 15;
     const startY = 12;
-    const panelW = 200;
+    const panelW = 240;
     const panelH = 70;
 
     // 1. Shadow/Background
@@ -130,13 +131,15 @@ function drawHUD(ctx) {
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(startX + 2, startY + 2, panelW - 4, panelH - 4);
 
-    // 3. HP - 5개 하트 아이콘
+    // 3. HP - 동적 하트 아이콘 (레벨업으로 최대 체력 증가)
     const hpBarX = startX + 10;
     const hpBarY = startY + 12;
-    const heartSize = 16;
-    const heartGap = 4;
-    const totalHearts = 5;
+    const totalHearts = Player.maxHp;
     const currentHp = Math.ceil(Math.max(0, Player.hp));
+    // 하트 크기 동적 조절 (7개 넘으면 축소)
+    const maxDisplayHearts = Math.min(totalHearts, 8);
+    const heartSize = totalHearts > 6 ? 12 : 16;
+    const heartGap = totalHearts > 6 ? 2 : 4;
 
     // 라벨
     ctx.fillStyle = '#aaa';
@@ -144,7 +147,7 @@ function drawHUD(ctx) {
     ctx.textAlign = 'left';
     ctx.fillText("HP", hpBarX, hpBarY + 5);
 
-    for (let h = 0; h < totalHearts; h++) {
+    for (let h = 0; h < maxDisplayHearts; h++) {
         const hx = hpBarX + 22 + h * (heartSize + heartGap);
         const hy = hpBarY - 2;
         const filled = h < currentHp;
@@ -166,6 +169,12 @@ function drawHUD(ctx) {
         ctx.fillText('❤️', hx, hy);
         ctx.restore();
     }
+    // HP 숫자 표시 (항상 표시 - 프리미엄 스타일)
+    ctx.fillStyle = currentHp <= 1 ? '#ff4757' : '#fff';
+    ctx.font = '7px "Press Start 2P"';
+    ctx.textAlign = 'left';
+    const hpTextX = hpBarX + 22 + maxDisplayHearts * (heartSize + heartGap) + 4;
+    ctx.fillText(`${currentHp}/${totalHearts}`, hpTextX, hpBarY + 5);
 
     // === [COMPACT LEVEL UI - FITS IN MAIN PANEL] ===
     const statsY = startY + 46;
@@ -1481,9 +1490,10 @@ const Player = {
             
         this.fireRate = Math.max(baseFireRate - itemFireRateBonus, this.minFireRate);
         
-        // ── 체력: 5 하트 고정 (방어력 없음) ──
-        this.hp = 5;
-        this.maxHp = 5;
+        // ── 체력: 기본 5 하트 + 캐릭터 레벨당 4분의 1씩 증가 ──
+        const levelHpBonus = Math.floor((LevelSystem.playerLevel - 1) / 4);
+        this.maxHp = 5 + levelHpBonus;
+        this.hp = this.maxHp;
         
         this.shield = 0;
         this.bombCount = 3;
@@ -1651,20 +1661,22 @@ const Player = {
                 ctx.drawImage(img, sx, sy, cropWidth, frameH, drawX, drawY, drawW, drawH);
             }
 
-            // 지원군 렌더링 (상/하 위치, 가시성 개선)
+            // 지원군 렌더링 (플레이어 뒤쪽에 축소 배치 - 화면 가림 방지)
             if (this.supportTimer > 0) {
-                const supportAlpha = 0.55 + 0.1 * Math.sin(Date.now() / 180);
+                const supportAlpha = 0.35 + 0.08 * Math.sin(Date.now() / 180);
                 ctx.globalAlpha = supportAlpha;
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = 6;
                 ctx.shadowColor = '#f97316';
-                // 상단 지원군
+                const supportW = Math.round(drawW * 0.55);
+                const supportH = Math.round(drawH * 0.55);
+                // 상단 지원군 (왼쪽 뒤 위)
                 ctx.drawImage(img, sx, sy, cropWidth, frameH,
-                    Math.round(drawX - 18), Math.round(drawY - Math.min(80, drawH + 10)),
-                    drawW, drawH);
-                // 하단 지원군
+                    Math.round(drawX - supportW - 5), Math.round(drawY - 20),
+                    supportW, supportH);
+                // 하단 지원군 (왼쪽 뒤 아래)
                 ctx.drawImage(img, sx, sy, cropWidth, frameH,
-                    Math.round(drawX - 18), Math.round(drawY + Math.min(80, drawH + 10)),
-                    drawW, drawH);
+                    Math.round(drawX - supportW - 5), Math.round(drawY + drawH - supportH + 20),
+                    supportW, supportH);
                 ctx.globalAlpha = 1;
                 ctx.shadowBlur = 0;
             }
@@ -1766,8 +1778,15 @@ const LevelSystem = {
             this.playerExpToNext = this.getPlayerExpToNext(this.playerLevel);
         }
         
-        // 레벨업 효과 - HP는 5 고정이므로 보너스 없음
-        // (EXP 기반 레벨업은 유지, 고정 HP 정장으로 취소)
+        // 레벨업 효과 - 체력 상한 4분의 1씩 증가
+        const oldMaxHp = Player.maxHp;
+        const levelHpBonus = Math.floor((this.playerLevel - 1) / 4);
+        const newMaxHp = 5 + levelHpBonus;
+        if (newMaxHp > oldMaxHp) {
+            Player.maxHp = newMaxHp;
+            Player.hp = Math.min(Player.hp + (newMaxHp - oldMaxHp), newMaxHp);
+            addFloatingText(`❤️ MAX HP UP! ${oldMaxHp} → ${newMaxHp}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 90, '#e74c3c');
+        }
 
         addFloatingText(`★ LEVEL UP! Lv.${this.playerLevel} ★`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 60, '#f1c40f');
         addFloatingText(`스테이지 난이도 상승!`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, '#2ecc71');
@@ -2120,12 +2139,10 @@ class Enemy {
         const isHardMode = !isMobileLandscapePlayMode();
         const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : (isHardMode ? 1.5 : 1);
 
-        // ── 체력: 지수 카브 스케일링 (후반부 매우 급격히 증가) ──
-        // STG1:120, STG2:228, STG3:447, STG4:785, STG5:1290,
-        // STG6:1930, STG7:2760, STG8:3850, STG9:5130, STG10:6850
-        // (지수 2.5→2.375, 약 5% 증가폭 완화)
+        // ── 체력: 지수 카브 스케일링 (50% 감소 적용) ──
+        // 스테이지별 체력 증가폭을 기존 대비 50% 낮춤
         const baseHp = 120;
-        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.1) * 100);
+        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.1) * 50);
         this.hp = Math.round((baseHp + stageBonus) * hpMultiplierA);
         this.maxHp = this.hp;
 
@@ -2912,6 +2929,9 @@ function advanceStage() {
         Player.fireRate = Math.max(baseFireRate - itemFireRateBonus, Player.minFireRate);
 
         // 플레이어 상태 완전 초기화 (중요: state를 DEAD에서 ALIVE로 변경)
+        // 체력 상한 재계산 (레벨업으로 증가한 체력 반영)
+        const levelHpBonus = Math.floor((LevelSystem.playerLevel - 1) / 4);
+        Player.maxHp = 5 + levelHpBonus;
         Player.hp = Player.maxHp;
         Player.state = 'ALIVE';
         Player.aniFrame = 0;
@@ -3109,9 +3129,9 @@ class Boss {
         this.isBoss2 = currentStage >= 6 && currentStage < 9;
         this.isBossKing = currentStage >= 9; // 스테이지 9-10: 보스킹
 
-        // 기본 체력 계산 (레벨당 2500→2375, 약 5% 감소)
+        // 기본 체력 계산 (스테이지별 체력 50% 감소 적용)
         const isHardMode = !isMobileLandscapePlayMode();
-        const baseHp = 2200 * level + (level === 10 ? 12000 : 0);
+        const baseHp = 1100 * level + (level === 10 ? 6000 : 0);
         const hardModeHpMultiplier = isHardMode ? 1.5 : 1; // 하드모드: 보스 체력 50% 증가
 
         // 보스킹: 20% 더 많은 체력, 보스2: 10% 더 많은 체력, 하드모드: 추가 50%
@@ -3599,9 +3619,9 @@ let bombButtonRect = null;
 // [ADVANCED 2D PIXEL ART BOMB BUTTON]
 // 고급 2D 도트 스타일 다이너마이트 폭탄 UI
 function drawBombButton(ctx) {
-    const btnSize = 84;
-    const btnX = GAME_WIDTH - btnSize - 25;
-    const btnY = GAME_HEIGHT - btnSize - 25;
+    const btnSize = 76;
+    const btnX = GAME_WIDTH - btnSize - 20;
+    const btnY = GAME_HEIGHT - btnSize - 20;
     const centerX = btnX + btnSize / 2;
     const centerY = btnY + btnSize / 2;
 
@@ -3755,12 +3775,17 @@ function drawBombButton(ctx) {
         ctx.fillStyle = '#ffffff';
         ctx.fillText(`x${Player.bombCount}`, centerX, centerY + 25);
 
-        // === 단축키 표시 (SPACE) ===
-        ctx.font = '6px "Press Start 2P"';
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillText('SPACE', centerX + 1, btnY + btnSize - 11);
+        // === 단축키 뱃지 (SPACE) - 버튼 상단 ===
+        const badgeW = 42; const badgeH = 14;
+        const badgeX = centerX - badgeW / 2; const badgeY = btnY - badgeH - 14;
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
+        ctx.strokeStyle = '#d4a84b'; ctx.lineWidth = 1;
+        ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
         ctx.fillStyle = '#d4a84b';
-        ctx.fillText('SPACE', centerX, btnY + btnSize - 12);
+        ctx.font = '6px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.fillText('SPACE', centerX, badgeY + 10);
 
         // === 준비 상태 인디케이터 (작은 점) ===
         ctx.fillStyle = '#00ff00';
@@ -3779,10 +3804,17 @@ function drawBombButton(ctx) {
         ctx.textAlign = 'center';
         ctx.fillText('EMPTY', centerX, centerY + 20);
         
-        // === 단축키 표시 (SPACE) ===
-        ctx.font = '6px "Press Start 2P"';
+        // === 단축키 뱃지 (SPACE) - 버튼 상단 ===
+        const badgeW2 = 42; const badgeH2 = 14;
+        const badgeX2 = centerX - badgeW2 / 2; const badgeY2 = btnY - badgeH2 - 14;
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(badgeX2, badgeY2, badgeW2, badgeH2);
+        ctx.strokeStyle = '#555'; ctx.lineWidth = 1;
+        ctx.strokeRect(badgeX2, badgeY2, badgeW2, badgeH2);
         ctx.fillStyle = '#555';
-        ctx.fillText('SPACE', centerX, btnY + btnSize - 12);
+        ctx.font = '6px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.fillText('SPACE', centerX, badgeY2 + 10);
         
         ctx.fillStyle = '#444';
         ctx.fillRect(btnX + 6, btnY + 6, 3, 3);
@@ -3797,9 +3829,9 @@ let petalCannonButtonRect = null;
 // [ADVANCED 2D PIXEL ART PETAL CANNON BUTTON]
 // 고급 2D 도트 스타일 꽃잎 포 버튼 UI
 function drawPetalCannonButton(ctx) {
-    const btnSize = 70; // 폭탄보다 약간 작게
-    const btnX = GAME_WIDTH - btnSize - 120; // 폭탄 버튼 왼쪽에 배치
-    const btnY = GAME_HEIGHT - btnSize - 25;
+    const btnSize = 76; // 폭탄과 동일 크기
+    const btnX = GAME_WIDTH - btnSize - 76 - 20 - 15; // 폭탄 버튼 왼쪽에 15px 간격
+    const btnY = GAME_HEIGHT - btnSize - 20;
     const centerX = btnX + btnSize / 2;
     const centerY = btnY + btnSize / 2;
     
@@ -3929,15 +3961,19 @@ function drawPetalCannonButton(ctx) {
         ctx.fillRect(btnX + 6, btnY + 6, 3, 3);
     }
     
-    // === 7. 단축키 표시 (F키) ===
-    ctx.font = '6px "Press Start 2P"';
+    // === 7. 단축키 뱃지 (F키) - 버튼 상단 ===
+    const shortcutColor = Player.petalCannonReady ? '#ff1493' : (chargePercent > 0 ? '#ff69b4' : '#555');
+    const fBadgeW = 24; const fBadgeH = 14;
+    const fBadgeX = centerX - fBadgeW / 2; const fBadgeY = btnY - fBadgeH - 4;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(fBadgeX, fBadgeY, fBadgeW, fBadgeH);
+    ctx.strokeStyle = shortcutColor; ctx.lineWidth = 1;
+    ctx.strokeRect(fBadgeX, fBadgeY, fBadgeW, fBadgeH);
+    ctx.fillStyle = shortcutColor;
+    ctx.font = '7px "Press Start 2P"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    const shortcutColor = Player.petalCannonReady ? '#ff1493' : (chargePercent > 0 ? '#ff69b4' : '#555');
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillText('[F]', centerX + 1, btnY + btnSize - 6);
-    ctx.fillStyle = shortcutColor;
-    ctx.fillText('[F]', centerX, btnY + btnSize - 7);
+    ctx.fillText('F', centerX, fBadgeY + 11);
     
     ctx.restore();
 }
