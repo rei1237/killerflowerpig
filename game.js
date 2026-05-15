@@ -344,7 +344,7 @@ function drawHUD(ctx) {
     const speedGlow = fireItem.level > 1 ? '#4488ff' : null;
     drawMiniPanel(startX + 134, statsY - 12, levelPanelW, levelPanelH, '#1a2a4a', '#0a0a1a', speedGlow);
     drawPixelLightning(startX + 142, statsY - 3, '#66ccff');
-    drawLevelBadge(startX + 152, statsY - 6, fireItem.level, '#66aaff', fireItem.level >= LevelSystem.itemMaxLevel);
+    drawLevelBadge(startX + 152, statsY - 6, fireItem.level, '#66aaff', fireItem.level >= LevelSystem.itemMaxLevelFireRate);
     // Show actual fire rate stat value
     drawStatValue(startX + 152, statsY + 3, Player.fireRate, 'ms', '#99ccff');
     // Speed EXP Bar
@@ -1527,7 +1527,7 @@ const Player = {
         
         // 꽃잎 포 (필살기) 시스템
         this.petalCannonCharge = 0; // 현재 충전량 (발사 횟수)
-        this.petalCannonMaxCharge = 50; // 최대 충전 필요 발사 횟수 (이전과 동일하게 고정)
+        this.petalCannonMaxCharge = 70; // 최대 충전 필요 발사 횟수 (70발로 상향)
         this.petalCannonReady = false; // 발사 가능 여부
     },
     takeDamage: function (amount) {
@@ -1751,7 +1751,8 @@ const LevelSystem = {
     
     // 레벨당 스탯 증가량
     maxLevel: 20, // 플레이어 최대 레벨 (20으로 상향)
-    itemMaxLevel: 15, // 아이템 최대 레벨 (공격력 포함 15로 상향)
+    itemMaxLevel: 15, // 아이템 최대 레벨 (공격력 포함 15)
+    itemMaxLevelFireRate: 12, // 공격속도 최대 레벨 (12로 제한)
     stats: {
         playerHpPerLevel: 2,        // 플레이어 레벨당 체력 +2
         playerDefensePerLevel: 0.5, // 플레이어 레벨당 방어력 +0.5
@@ -1848,7 +1849,8 @@ const LevelSystem = {
         
         const item = this.items[itemType];
         // 최대 레벨 체크 -> 공격력/속도 아이템인 경우 플레이어 경험치로 전환
-        if (item.level >= this.itemMaxLevel) {
+        const maxLv = (itemType === 'FIRE_RATE') ? this.itemMaxLevelFireRate : this.itemMaxLevel;
+        if (item.level >= maxLv) {
             if (itemType === 'DAMAGE' || itemType === 'FIRE_RATE') {
                 this.addPlayerExp(amount);
                 return "MAX_EXP";
@@ -2469,7 +2471,7 @@ class GatePair {
             { type: 'FIRE_RATE', value: 30, text: 'SPEED UP', color: '#3498db', icon: 'gun' },
             { type: 'DAMAGE', value: 10, text: 'POWER UP', color: '#2ecc71', icon: 'sword' },
             { type: 'DAMAGE', value: 10, text: 'POWER UP', color: '#2ecc71', icon: 'sword' },
-            { type: 'DEFENSE', value: 1, text: 'DEFENSE UP', color: '#95a5a6', icon: 'shield' },
+            { type: 'DEFENSE', value: 1, text: 'DEFENSE UP', color: '#95a5a6', icon: 'defense' },
             { type: 'HEAL', value: 2, text: 'REPAIR', color: '#e74c3c', icon: 'heart' },
             { type: 'SHIELD', value: 15000, text: 'SHIELD', color: '#9b59b6', icon: 'shield' },
             { type: 'ULTIMATE', value: 1, text: 'BOMB', color: '#f1c40f', icon: 'bomb' },
@@ -2821,6 +2823,19 @@ class GatePair {
             ctx.fillStyle = '#fff';
             ctx.fillRect(14, 5, 4, 15);
             ctx.fillRect(8, 10, 16, 4);
+        } else if (type === 'defense') {
+            // 방어력업 (은색 금속 방패 - 각진 형태)
+            ctx.fillStyle = '#bdc3c7'; // 실버/스틸 컬러
+            ctx.fillRect(2, 0, 28, 24);
+            ctx.beginPath();
+            ctx.moveTo(2, 24); ctx.lineTo(16, 36); ctx.lineTo(30, 24); ctx.fill();
+            // 내부 테두리 (금속 느낌)
+            ctx.strokeStyle = '#7f8c8d';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(6, 4, 20, 16);
+            // 중앙 강화 징 (Stud)
+            ctx.fillStyle = '#ecf0f1';
+            ctx.fillRect(14, 12, 4, 4);
         } else if (type === 'support') {
             // 서포트 (3인 지원대 - 삼각형 위상 구조로 명확히 구분)
             ctx.fillStyle = '#e67e22'; // 주황색 (지원/분대 컬러)
