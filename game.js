@@ -117,7 +117,7 @@ function drawHUD(ctx) {
     // === COMPACT UI (프리미엄 통일) ===
     const startX = 15;
     const startY = 12;
-    const panelW = 240;
+    const panelW = 265; // 방어력 패널 추가를 위해 확장 (240 -> 265)
     const panelH = 70;
 
     // 1. Shadow/Background
@@ -136,10 +136,10 @@ function drawHUD(ctx) {
     const hpBarY = startY + 12;
     const totalHearts = Player.maxHp;
     const currentHp = Math.ceil(Math.max(0, Player.hp));
-    // 하트 크기 동적 조절 (7개 넘으면 축소)
-    const maxDisplayHearts = Math.min(totalHearts, 8);
-    const heartSize = totalHearts > 6 ? 12 : 16;
-    const heartGap = totalHearts > 6 ? 2 : 4;
+    // 하트 크기 동적 조절 (더 많은 하트 지원)
+    const maxDisplayHearts = Math.min(totalHearts, 15);
+    const heartSize = totalHearts > 10 ? 10 : (totalHearts > 6 ? 12 : 16);
+    const heartGap = totalHearts > 10 ? 1 : (totalHearts > 6 ? 2 : 4);
 
     // 라벨
     ctx.fillStyle = '#aaa';
@@ -298,11 +298,16 @@ function drawHUD(ctx) {
     }
     
     // Helper: Draw compact level badge
-    function drawLevelBadge(x, y, level, color) {
+    function drawLevelBadge(x, y, level, color, isMax) {
         ctx.fillStyle = color;
         ctx.font = '7px "Press Start 2P"';
         ctx.textAlign = 'left';
-        ctx.fillText(`${level}`, x, y);
+        if (isMax) {
+            ctx.fillStyle = '#ff00ff'; // MAX는 더 화려한 색상
+            ctx.fillText(`MAX`, x, y);
+        } else {
+            ctx.fillText(`${level}`, x, y);
+        }
     }
 
     // Helper: Draw stat value text
@@ -317,7 +322,7 @@ function drawHUD(ctx) {
     const playerGlow = LevelSystem.playerLevel > 1 ? '#00ff88' : null;
     drawMiniPanel(startX + 10, statsY - 12, levelPanelW, levelPanelH, '#4a4a2a', '#1a1a0a', playerGlow);
     drawPixelSkull(startX + 18, statsY - 3, '#e0d0a0');
-    drawLevelBadge(startX + 28, statsY - 6, LevelSystem.playerLevel, '#FFD700');
+    drawLevelBadge(startX + 28, statsY - 6, LevelSystem.playerLevel, '#FFD700', LevelSystem.playerLevel >= LevelSystem.maxLevel);
     // LV EXP Progress Bar (compact 30px) - 플레이어 레벨 EXP 진행도
     const expPercent = LevelSystem.playerLevel >= LevelSystem.maxLevel ? 1 : Math.min(1, LevelSystem.playerExp / LevelSystem.playerExpToNext);
     drawMiniBar(startX + 28, statsY + 2, 30, 4, expPercent, '#2ecc71', '#00ff88');
@@ -327,7 +332,7 @@ function drawHUD(ctx) {
     const dmgGlow = dmgItem.level > 1 ? '#ff4444' : null;
     drawMiniPanel(startX + 72, statsY - 12, levelPanelW, levelPanelH, '#4a1a1a', '#1a0a0a', dmgGlow);
     drawPixelBullet(startX + 80, statsY - 3, '#c0c0c0');
-    drawLevelBadge(startX + 90, statsY - 6, dmgItem.level, '#FF6666');
+    drawLevelBadge(startX + 90, statsY - 6, dmgItem.level, '#FF6666', dmgItem.level >= LevelSystem.itemMaxLevel);
     // Show actual attack stat value
     drawStatValue(startX + 90, statsY + 3, Player.damage, '', '#ff9999');
     // Attack EXP Bar
@@ -339,12 +344,27 @@ function drawHUD(ctx) {
     const speedGlow = fireItem.level > 1 ? '#4488ff' : null;
     drawMiniPanel(startX + 134, statsY - 12, levelPanelW, levelPanelH, '#1a2a4a', '#0a0a1a', speedGlow);
     drawPixelLightning(startX + 142, statsY - 3, '#66ccff');
-    drawLevelBadge(startX + 152, statsY - 6, fireItem.level, '#66aaff');
+    drawLevelBadge(startX + 152, statsY - 6, fireItem.level, '#66aaff', fireItem.level >= LevelSystem.itemMaxLevel);
     // Show actual fire rate stat value
     drawStatValue(startX + 152, statsY + 3, Player.fireRate, 'ms', '#99ccff');
     // Speed EXP Bar
     const fireExpPercent = Math.min(1, fireItem.exp / fireItem.expToNext);
     drawMiniBar(startX + 152, statsY + 6, 30, 3, fireExpPercent, '#3498db', '#66aaff');
+
+    // === DEFENSE LEVEL PANEL (RESISTANCE) - Compact ===
+    const defItem = LevelSystem.items.DEFENSE;
+    const defGlow = defItem.level > 0 ? '#95a5a6' : null;
+    drawMiniPanel(startX + 196, statsY - 12, levelPanelW, levelPanelH, '#2a2a2a', '#0a0a0a', defGlow);
+    // Shield 아이콘 대신 방패 모양 픽셀 아트 (간단히)
+    ctx.fillStyle = '#bdc3c7';
+    ctx.fillRect(startX + 204 - 3, statsY - 3 - 4, 6, 8); // 방패 대략적 모양
+    drawLevelBadge(startX + 214, statsY - 6, defItem.level, '#bdc3c7', defItem.level >= LevelSystem.itemMaxLevel);
+    // 피해 감소율 표시
+    const reductionPercent = (defItem.level / LevelSystem.itemMaxLevel) * 75;
+    drawStatValue(startX + 214, statsY + 3, reductionPercent, '%', '#bdc3c7');
+    // Defense EXP Bar
+    const defExpPercent = Math.min(1, defItem.exp / defItem.expToNext);
+    drawMiniBar(startX + 214, statsY + 6, 30, 3, defExpPercent, '#7f8c8d', '#95a5a6');
 
     // 8. Score (right top, outside main panel)
     ctx.textAlign = 'right';
@@ -1484,19 +1504,21 @@ const Player = {
         const itemDamageBonus = (LevelSystem.items.DAMAGE.level - 1) * LevelSystem.stats.itemDamagePerLevel;
         const itemFireRateBonus = (LevelSystem.items.FIRE_RATE.level - 1) * LevelSystem.stats.itemFireRatePerLevel;
         
-        this.damage = isMobileEasyModeActive() 
+        const levelDamageBonus = (LevelSystem.playerLevel - 1) * 3; // 레벨당 공격력 +3 (상향)
+        this.damage = (isMobileEasyModeActive() 
             ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier) 
-            : baseDamage + itemDamageBonus;
+            : baseDamage + itemDamageBonus) + levelDamageBonus;
             
         this.fireRate = Math.max(baseFireRate - itemFireRateBonus, this.minFireRate);
         
-        // ── 체력: 기본 5 하트 + 캐릭터 레벨당 4분의 1씩 증가 ──
-        const levelHpBonus = Math.floor((LevelSystem.playerLevel - 1) / 4);
+        // ── 체력: 기본 5 하트 + 캐릭터 레벨 2레벨당 1씩 증가 (상향) ──
+        const levelHpBonus = Math.floor((LevelSystem.playerLevel - 1) / 2);
         this.maxHp = 5 + levelHpBonus;
         this.hp = this.maxHp;
         
         this.shield = 0;
         this.bombCount = 3;
+        this.defense = 0; // 방어력 추가
         this.aniFrame = 0;
         this.state = 'ALIVE';
         this.lastFrameTime = 0;
@@ -1505,8 +1527,30 @@ const Player = {
         
         // 꽃잎 포 (필살기) 시스템
         this.petalCannonCharge = 0; // 현재 충전량 (발사 횟수)
-        this.petalCannonMaxCharge = 50; // 최대 충전 필요 발사 횟수
+        this.petalCannonMaxCharge = 50; // 최대 충전 필요 발사 횟수 (이전과 동일하게 고정)
         this.petalCannonReady = false; // 발사 가능 여부
+    },
+    takeDamage: function (amount) {
+        if (this.state === 'DEAD' || this.shield > 0 || isGodMode) return;
+
+        // 방어력 적용: 최고 레벨 시 1/4 (75% 감소)
+        const defItem = LevelSystem.items.DEFENSE;
+        const maxDefLevel = LevelSystem.itemMaxLevel;
+        const reduction = (defItem.level / maxDefLevel) * 0.75;
+        const actualDamage = amount * (1 - reduction);
+
+        this.hp -= actualDamage;
+        this.shield = getPlayerInvincibleDuration();
+        AudioManager.playSFX('hit');
+
+        if (this.hp <= 0) {
+            this.hp = 0;
+            this.state = 'DEAD';
+            this.aniFrame = 0;
+            this.lastFrameTime = Date.now();
+            createExplosion(this.x, this.y, '#c0392b');
+            endGame();
+        }
     },
     update: function (currentTime) {
         if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS_FIGHT) return;
@@ -1700,20 +1744,22 @@ const LevelSystem = {
     items: {
         DAMAGE: { level: 1, exp: 0, expToNext: 50, name: '공격력', icon: '⚔️' },
         FIRE_RATE: { level: 1, exp: 0, expToNext: 50, name: '공격속도', icon: '🔥' },
-        SHIELD: { level: 1, exp: 0, expToNext: 50, name: '무적', icon: '🛡️' },
+        DEFENSE: { level: 0, exp: 0, expToNext: 50, name: '방어력', icon: '🛡️' },
+        SHIELD: { level: 1, exp: 0, expToNext: 50, name: '무적', icon: '✨' },
         SUPPORT: { level: 1, exp: 0, expToNext: 50, name: '지원군', icon: '👥' }
     },
     
     // 레벨당 스탯 증가량
-    maxLevel: 15, // 플레이어 최대 레벨
-    itemMaxLevel: 12, // 아이템 최대 레벨
+    maxLevel: 20, // 플레이어 최대 레벨 (20으로 상향)
+    itemMaxLevel: 15, // 아이템 최대 레벨 (공격력 포함 15로 상향)
     stats: {
         playerHpPerLevel: 2,        // 플레이어 레벨당 체력 +2
         playerDefensePerLevel: 0.5, // 플레이어 레벨당 방어력 +0.5
         itemDamagePerLevel: 7.5,    // 공격력 아이템 레벨당 +7.5
         itemFireRatePerLevel: 16,   // 공격속도 아이템 레벨당 -16ms
         itemShieldPerLevel: 1500,   // 무적 아이템 레벨당 +1.5초
-        itemSupportPerLevel: 2000   // 지원군 아이템 레벨당 +2초
+        itemSupportPerLevel: 2000,  // 지원군 아이템 레벨당 +2초
+        itemDefensePerLevel: 1      // 방어력 아이템 레벨당 +1 (내부용)
     },
     
     init: function() {
@@ -1723,7 +1769,7 @@ const LevelSystem = {
         
         // 아이템 초기화
         for (let key in this.items) {
-            this.items[key].level = 1;
+            this.items[key].level = (key === 'DEFENSE') ? 0 : 1;
             this.items[key].exp = 0;
             this.items[key].expToNext = 50; // 아이템: 50 EXP = 1레벨
         }
@@ -1764,7 +1810,7 @@ const LevelSystem = {
         // 이 함수는 하위 호환성을 위해 유지
     },
     
-    // 플레이어 레벨업 (EXP 기반 - 최대 레벨 15)
+    // 플레이어 레벨업 (EXP 기반 - 최대 레벨 20)
     levelUpPlayer: function() {
         // 최대 레벨 체크
         if (this.playerLevel >= this.maxLevel) {
@@ -1778,9 +1824,9 @@ const LevelSystem = {
             this.playerExpToNext = this.getPlayerExpToNext(this.playerLevel);
         }
         
-        // 레벨업 효과 - 체력 상한 4분의 1씩 증가
+        // 레벨업 효과 - 체력 상한 2레벨당 1씩 증가 (상향)
         const oldMaxHp = Player.maxHp;
-        const levelHpBonus = Math.floor((this.playerLevel - 1) / 4);
+        const levelHpBonus = Math.floor((this.playerLevel - 1) / 2);
         const newMaxHp = 5 + levelHpBonus;
         if (newMaxHp > oldMaxHp) {
             Player.maxHp = newMaxHp;
@@ -1788,8 +1834,11 @@ const LevelSystem = {
             addFloatingText(`❤️ MAX HP UP! ${oldMaxHp} → ${newMaxHp}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 90, '#e74c3c');
         }
 
+        // 기타 스탯 업데이트 (공격력, 필살기 충전량 등)
+        Player.init(); 
+
         addFloatingText(`★ LEVEL UP! Lv.${this.playerLevel} ★`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 60, '#f1c40f');
-        addFloatingText(`스테이지 난이도 상승!`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, '#2ecc71');
+        addFloatingText(`공격력 & 필살기 강화!`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, '#2ecc71');
         AudioManager.playSFX('powerup');
     },
     
@@ -1798,8 +1847,14 @@ const LevelSystem = {
         if (!this.items[itemType]) return false;
         
         const item = this.items[itemType];
-        // 최대 레벨 체크
-        if (item.level >= this.itemMaxLevel) return false;
+        // 최대 레벨 체크 -> 공격력/속도 아이템인 경우 플레이어 경험치로 전환
+        if (item.level >= this.itemMaxLevel) {
+            if (itemType === 'DAMAGE' || itemType === 'FIRE_RATE') {
+                this.addPlayerExp(amount);
+                return "MAX_EXP";
+            }
+            return false;
+        }
         
         item.exp += amount;
         
@@ -1810,8 +1865,8 @@ const LevelSystem = {
             item.expToNext = this.getItemExpToNext(item.level);
             this.applyItemLevelUp(itemType, item.level);
             leveledUp = true;
-            // 최대 레벨 도달 시 EXP 초과분은 버림
-            if (item.level >= this.maxLevel) {
+            // 최대 레벨 도달 시 EXP 초과분은 버림 (단, 공격력/속도는 위에서 처리됨)
+            if (item.level >= this.itemMaxLevel) {
                 item.exp = 0;
                 break;
             }
@@ -1849,6 +1904,13 @@ const LevelSystem = {
                 addFloatingText(`발사간격: ${newFireRate}ms (-${this.stats.itemFireRatePerLevel}ms)`, Player.x, Player.y - 50, '#74b9ff');
                 break;
                 
+            case 'DEFENSE':
+                // 방어력 레벨업
+                addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#95a5a6');
+                const reductionPercent = (newLevel / this.itemMaxLevel) * 75;
+                addFloatingText(`피해 감소: ${reductionPercent.toFixed(1)}%`, Player.x, Player.y - 50, '#bdc3c7');
+                break;
+
             case 'SHIELD':
                 // 무적 시간 증가
                 addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#9b59b6');
@@ -2185,9 +2247,7 @@ class Enemy {
             if (this.x + this.width < 0) {
                 this.active = false;
                 if (this.state !== 'DEAD' && !isGodMode) {
-                    Player.hp -= 1; // 고정 1 데미지 (노얼 시)
-                    AudioManager.playSFX('miss');
-                    if (Player.hp <= 0) endGame();
+                    Player.takeDamage(1); // takeDamage 사용
                 } else if (this.state !== 'DEAD' && isGodMode) {
                     AudioManager.playSFX('powerup');
                 }
@@ -2261,15 +2321,7 @@ class Enemy {
             
             if (checkCollision(hitbox, Player) && Player.shield <= 0) {
                 this.state = 'ATTACK'; this.aniFrame = 0; this.lastFrameTime = timestamp;
-                if (!isGodMode) {
-                    Player.hp -= 1; // 고정 1 데미지 (충돌)
-                    Player.shield = getPlayerInvincibleDuration();
-                    AudioManager.playSFX('hit');
-                    if (Player.hp <= 0) endGame();
-                } else {
-                    Player.shield = 30;
-                    AudioManager.playSFX('powerup');
-                }
+                Player.takeDamage(1); // takeDamage 사용
             }
         }
         if (timestamp - this.lastFrameTime > this.frameRate) {
@@ -2417,6 +2469,7 @@ class GatePair {
             { type: 'FIRE_RATE', value: 30, text: 'SPEED UP', color: '#3498db', icon: 'gun' },
             { type: 'DAMAGE', value: 10, text: 'POWER UP', color: '#2ecc71', icon: 'sword' },
             { type: 'DAMAGE', value: 10, text: 'POWER UP', color: '#2ecc71', icon: 'sword' },
+            { type: 'DEFENSE', value: 1, text: 'DEFENSE UP', color: '#95a5a6', icon: 'shield' },
             { type: 'HEAL', value: 2, text: 'REPAIR', color: '#e74c3c', icon: 'heart' },
             { type: 'SHIELD', value: 15000, text: 'SHIELD', color: '#9b59b6', icon: 'shield' },
             { type: 'ULTIMATE', value: 1, text: 'BOMB', color: '#f1c40f', icon: 'bomb' },
@@ -2455,7 +2508,9 @@ class GatePair {
         if (gatePart.type === 'FIRE_RATE') {
             // 공격속도 아이템: 경험치 15씩 획득 (50 EXP = 1레벨)
             const expGained = 15;
-            const leveledUp = LevelSystem.addItemExp('FIRE_RATE', expGained);
+            const status = LevelSystem.addItemExp('FIRE_RATE', expGained);
+            const leveledUp = status === true;
+            const isMax = status === "MAX_EXP";
             const newLevel = LevelSystem.items.FIRE_RATE.level;
             const item = LevelSystem.items.FIRE_RATE;
 
@@ -2464,15 +2519,19 @@ class GatePair {
             const itemFireRateBonus = (newLevel - 1) * LevelSystem.stats.itemFireRatePerLevel;
             Player.fireRate = Math.max(baseFireRate - itemFireRateBonus, Player.minFireRate);
 
-            // 레벨업 시에만 표시
+            // 레벨업 시 또는 최고 레벨 EXP 획득 시 표시
             if (leveledUp) {
                 addFloatingText(`🔥 SPD Lv.${newLevel} UP!`, this.x, gatePart.y + gatePart.height / 2 - 10, "#3498db");
+            } else if (isMax) {
+                addFloatingText(`🔥 MAX LV EXP +${expGained}`, this.x, gatePart.y + gatePart.height / 2 - 10, "#3498db");
             }
             AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'DAMAGE') {
             // 공격력 아이템: EXP 15씩 획득 (50 EXP = 1레벨)
             const expGained = 15;
-            const leveledUp = LevelSystem.addItemExp('DAMAGE', expGained);
+            const status = LevelSystem.addItemExp('DAMAGE', expGained);
+            const leveledUp = status === true;
+            const isMax = status === "MAX_EXP";
             const newLevel = LevelSystem.items.DAMAGE.level;
             const item = LevelSystem.items.DAMAGE;
 
@@ -2483,6 +2542,18 @@ class GatePair {
 
             if (leveledUp) {
                 addFloatingText(`⚔️ ATK Lv.${newLevel} UP!`, this.x, gatePart.y + gatePart.height / 2 - 10, "#2ecc71");
+            } else if (isMax) {
+                addFloatingText(`⚔️ MAX LV EXP +${expGained}`, this.x, gatePart.y + gatePart.height / 2 - 10, "#2ecc71");
+            }
+            AudioManager.playSFX('powerup');
+        } else if (gatePart.type === 'DEFENSE') {
+            // 방어력 아이템
+            const expGained = 15;
+            const status = LevelSystem.addItemExp('DEFENSE', expGained);
+            const leveledUp = status === true;
+            const newLevel = LevelSystem.items.DEFENSE.level;
+            if (leveledUp) {
+                addFloatingText(`🛡️ DEF Lv.${newLevel} UP!`, this.x, gatePart.y + gatePart.height / 2 - 10, "#95a5a6");
             }
             AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'HEAL') {
@@ -3473,8 +3544,8 @@ function usePetalCannon() {
     
     // 가로 모드에서는 파워를 일반 환경과 동일하게 조정 (데미지 0.5배, 투사체 수 감소로 렉 방지)
     const playerLevel = LevelSystem.playerLevel;
-    const basePetalDamage = isLandscape ? 50 : 100; // 가로 모드: 50%, 일반: 100%
-    const levelMultiplier = 1 + (playerLevel - 1) * 0.25;
+    const basePetalDamage = isLandscape ? 60 : 120; // 기본 데미지 상향 (50/100 -> 60/120)
+    const levelMultiplier = 1 + (playerLevel - 1) * 0.5; // 레벨당 보너스 상향 (0.25 -> 0.5)
     const petalDamage = Math.round(basePetalDamage * levelMultiplier);
     
     // 가로 모드: 투사체 수 절반으로 줄여 렉 방지
@@ -4277,21 +4348,8 @@ function gameLoop(timestamp) {
                 if (Player.state === 'ALIVE' && checkCollision(p, Player)) {
                     p.active = false; createExplosion(p.x, p.y, '#ff4757');
                     if (Player.shield <= 0) {
-                        if (!isGodMode) {
-                            const damage = p.isBossEnergyBall ? 3 : 1;
-                            Player.hp -= damage;
-                            Player.shield = getPlayerInvincibleDuration(); AudioManager.playSFX('hit');
-                            if (Player.hp <= 0) {
-                                Player.state = 'DEAD';
-                                Player.aniFrame = 0;
-                                Player.lastFrameTime = timestamp;
-                                createExplosion(Player.x, Player.y, '#c0392b');
-                            }
-                        } else {
-                            // 무적 모드: 피격 효과만 발생
-                            Player.shield = 30;
-                            AudioManager.playSFX('powerup');
-                        }
+                        const damage = p.isBossEnergyBall ? 3 : 1;
+                        Player.takeDamage(damage); // takeDamage 사용
                     }
                 }
             }
