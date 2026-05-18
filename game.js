@@ -2782,10 +2782,11 @@ class GatePair {
     applyBuff(gatePart) {
         let isBonus = false;
         let bonusScore = 1000;
+        let expMultiplier = (LevelSystem.items.DAMAGE && LevelSystem.items.DAMAGE.level >= LevelSystem.itemMaxLevel) ? 10 : 1;
 
         if (gatePart.type === 'FIRE_RATE') {
             // 공격속도 아이템: 경험치 15씩 획득 (50 EXP = 1레벨)
-            const expGained = 15;
+            const expGained = 15 * expMultiplier;
             const status = LevelSystem.addItemExp('FIRE_RATE', expGained);
             const leveledUp = status === true;
             const isMax = status === "MAX_EXP";
@@ -2806,7 +2807,7 @@ class GatePair {
             AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'DAMAGE') {
             // 공격력 아이템: EXP 15씩 획득 (50 EXP = 1레벨)
-            const expGained = 15;
+            const expGained = 15 * expMultiplier;
             const status = LevelSystem.addItemExp('DAMAGE', expGained);
             const leveledUp = status === true;
             const isMax = status === "MAX_EXP";
@@ -2826,7 +2827,7 @@ class GatePair {
             AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'DEFENSE') {
             // 방어력 아이템
-            const expGained = 15;
+            const expGained = 15 * expMultiplier;
             const status = LevelSystem.addItemExp('DEFENSE', expGained);
             const leveledUp = status === true;
             const newLevel = LevelSystem.items.DEFENSE.level;
@@ -2842,7 +2843,7 @@ class GatePair {
             AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'SHIELD') {
             // 무적 아이템: 경험치 15씩 획득 (50 EXP = 1레벨)
-            const expGained = 15;
+            const expGained = 15 * expMultiplier;
             const leveledUp = LevelSystem.addItemExp('SHIELD', expGained);
             if (leveledUp) {
                 addFloatingText(`🛡️ SHIELD Lv.${LevelSystem.items.SHIELD.level} UP!`, this.x, gatePart.y + gatePart.height / 2, "#9b59b6");
@@ -2854,8 +2855,8 @@ class GatePair {
             if (Player.bombCount >= 5) { isBonus = true; bonusScore = 2000; }
             else { Player.bombCount++; AudioManager.playSFX('bomb'); }
         } else if (gatePart.type === 'COIN') {
-            // 코인 아이템: 플레이어 EXP 즉시 획득 (25 EXP)
-            const expGained = 25;
+            // 코인 아이템: 플레이어 EXP 즉시 획득 (50 EXP)
+            const expGained = 50 * expMultiplier;
             const prevLevel = LevelSystem.playerLevel;
             LevelSystem.addPlayerExp(expGained);
             const newLevel = LevelSystem.playerLevel;
@@ -2868,7 +2869,7 @@ class GatePair {
             AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'SUPPORT') {
             // 지원군 아이템: 경험치 15씩 획득 (50 EXP = 1레벨)
-            const expGained = 15;
+            const expGained = 15 * expMultiplier;
             const leveledUp = LevelSystem.addItemExp('SUPPORT', expGained);
             if (leveledUp) {
                 addFloatingText(`👥 SUPPORT Lv.${LevelSystem.items.SUPPORT.level} UP!`, this.x, gatePart.y + gatePart.height / 2, "#e67e22");
@@ -2880,8 +2881,9 @@ class GatePair {
         if (isBonus) {
             score += bonusScore;
             // 보너스도 EXP로 변환 (10 EXP)
-            LevelSystem.addPlayerExp(10);
-            addFloatingText(`BONUS! +${bonusScore} (+10 EXP)`, this.x, gatePart.y + gatePart.height / 2, "#f1c40f");
+            const bonusExp = 10 * expMultiplier;
+            LevelSystem.addPlayerExp(bonusExp);
+            addFloatingText(`BONUS! +${bonusScore} (+${bonusExp} EXP)`, this.x, gatePart.y + gatePart.height / 2, "#f1c40f");
             AudioManager.playSFX('powerup');
         }
 
