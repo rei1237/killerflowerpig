@@ -386,10 +386,6 @@ function drawHUD(ctx) {
     ctx.fillStyle = '#e74c3c';
     ctx.fillText(`${enemiesKilled}/${getCurrentStageData().goal}`, GAME_WIDTH/scale/2, 35);
 
-    // 10. HUD Bombs (top right - pixel art dynamite style)
-    ctx.save();
-    const hudBombStartX = GAME_WIDTH/scale - 70;
-    const hudBombY = 45;
     // 10. HUD Bombs (top right - premium pixel art dynamite with metallic rack)
     ctx.save();
     const hudBombStartX = GAME_WIDTH/scale - 75;
