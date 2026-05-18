@@ -1,6 +1,6 @@
-let GAME_WIDTH=window.innerWidth;
-let GAME_HEIGHT=window.innerHeight;
-let GAME_DPR=1;
+let GAME_WIDTH = window.innerWidth;
+let GAME_HEIGHT = window.innerHeight;
+let GAME_DPR = 1;
 /**
  * ============================================================================
  * [Game Engine Core - Final Master]
@@ -187,13 +187,13 @@ function drawHUD(ctx) {
     const statsY = startY + 46;
     const levelPanelW = 56;
     const levelPanelH = 18;
-    
+
     // Helper: Draw advanced mini panel with 3D metallic effect
     function drawMiniPanel(x, y, w, h, borderColor, bgColor, glowColor) {
         // Drop shadow
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.fillRect(x + 2, y + 2, w, h);
-        
+
         // Outer border with glow
         if (glowColor) {
             ctx.shadowBlur = 6;
@@ -202,7 +202,7 @@ function drawHUD(ctx) {
         ctx.fillStyle = borderColor;
         ctx.fillRect(x, y, w, h);
         ctx.shadowBlur = 0;
-        
+
         // Inner background with gradient
         const grad = ctx.createLinearGradient(x, y, x, y + h);
         grad.addColorStop(0, bgColor);
@@ -210,12 +210,12 @@ function drawHUD(ctx) {
         grad.addColorStop(1, adjustColor(bgColor, -10));
         ctx.fillStyle = grad;
         ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
-        
+
         // Top highlight line
         ctx.fillStyle = 'rgba(255,255,255,0.15)';
         ctx.fillRect(x + 2, y + 2, w - 4, 1);
     }
-    
+
     // Helper: Adjust color brightness
     function adjustColor(hex, amount) {
         const num = parseInt(hex.replace('#', ''), 16);
@@ -224,28 +224,28 @@ function drawHUD(ctx) {
         const b = Math.min(255, Math.max(0, (num & 0x00FF) + amount));
         return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
     }
-    
+
     // Helper: Draw compact skull icon (smaller)
     function drawPixelSkull(cx, cy, color) {
         ctx.fillStyle = color;
         // Compact skull (6x8 pixels)
         const skullPixels = [
-            [0,-3],[-1,-3],[1,-3],
-            [-2,-2],[2,-2],
-            [-2,-1],[2,-1],
-            [0,0],
-            [-1,1],[1,1]
+            [0, -3], [-1, -3], [1, -3],
+            [-2, -2], [2, -2],
+            [-2, -1], [2, -1],
+            [0, 0],
+            [-1, 1], [1, 1]
         ];
         skullPixels.forEach(([px, py]) => {
             ctx.fillRect(cx + px, cy + py, 2, 2);
         });
-        
+
         // Eye glow (smaller)
         ctx.fillStyle = '#00ff00';
         ctx.fillRect(cx - 2, cy - 2, 1, 1);
         ctx.fillRect(cx + 2, cy - 2, 1, 1);
     }
-    
+
     // Helper: Draw compact bullet/ammo icon
     function drawPixelBullet(cx, cy, color) {
         ctx.fillStyle = color;
@@ -257,29 +257,29 @@ function drawHUD(ctx) {
         ctx.fillStyle = adjustColor(color, -30);
         ctx.fillRect(cx - 1, cy - 3, 3, 2);
     }
-    
+
     // Helper: Draw compact lightning bolt
     function drawPixelLightning(cx, cy, color) {
         ctx.fillStyle = color;
         const bolt = [
-            [0,-4],[0,-3],[-1,-2],[0,-2],[0,-1],[0,0],[1,1]
+            [0, -4], [0, -3], [-1, -2], [0, -2], [0, -1], [0, 0], [1, 1]
         ];
         bolt.forEach(([px, py]) => {
             ctx.fillRect(cx + px, cy + py, 2, 2);
         });
     }
-    
+
     // Helper: Draw premium progress bar with segments
     function drawMiniBar(x, y, w, h, fillPercent, color, glowColor) {
         // Background
         ctx.fillStyle = '#0a0a0a';
         ctx.fillRect(x, y, w, h);
-        
+
         // Border
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 1;
         ctx.strokeRect(x, y, w, h);
-        
+
         // Fill with glow
         const fillW = (w - 2) * fillPercent;
         if (fillW > 0) {
@@ -288,11 +288,11 @@ function drawHUD(ctx) {
             ctx.fillStyle = color;
             ctx.fillRect(x + 1, y + 1, fillW, h - 2);
             ctx.shadowBlur = 0;
-            
+
             // Highlight
             ctx.fillStyle = 'rgba(255,255,255,0.4)';
             ctx.fillRect(x + 1, y + 1, fillW, (h - 2) * 0.35);
-            
+
             // Segment lines (every 20%)
             ctx.fillStyle = 'rgba(0,0,0,0.3)';
             for (let i = 1; i < 5; i++) {
@@ -303,7 +303,7 @@ function drawHUD(ctx) {
             }
         }
     }
-    
+
     // Helper: Draw compact level badge
     function drawLevelBadge(x, y, level, color, isMax) {
         ctx.fillStyle = color;
@@ -377,18 +377,18 @@ function drawHUD(ctx) {
     ctx.textAlign = 'right';
     ctx.fillStyle = '#fff';
     ctx.font = '10px "Press Start 2P"';
-    ctx.fillText(`SCORE:${score.toString().padStart(6, '0')}`, GAME_WIDTH/scale - 15, 20);
+    ctx.fillText(`SCORE:${score.toString().padStart(6, '0')}`, GAME_WIDTH / scale - 15, 20);
 
     // 9. Stage info (center top)
     ctx.textAlign = 'center';
     ctx.fillStyle = '#00ffff';
-    ctx.fillText(`STG${currentStage}`, GAME_WIDTH/scale/2, 20);
+    ctx.fillText(`STG${currentStage}`, GAME_WIDTH / scale / 2, 20);
     ctx.fillStyle = '#e74c3c';
-    ctx.fillText(`${enemiesKilled}/${getCurrentStageData().goal}`, GAME_WIDTH/scale/2, 35);
+    ctx.fillText(`${enemiesKilled}/${getCurrentStageData().goal}`, GAME_WIDTH / scale / 2, 35);
 
     // 10. HUD Bombs (top right - premium pixel art dynamite with metallic rack)
     ctx.save();
-    const hudBombStartX = GAME_WIDTH/scale - 75;
+    const hudBombStartX = GAME_WIDTH / scale - 75;
     const hudBombY = 45;
 
     // 프리미엄 메탈릭 홀더 백그라운드 랙 그리기
@@ -398,7 +398,7 @@ function drawHUD(ctx) {
     // 최대 5개 폭탄이 안착되는 랙 프레임
     ctx.fillRect(hudBombStartX - 4 * 14 - 8, hudBombY - 4, 5 * 14 + 10, 20);
     ctx.strokeRect(hudBombStartX - 4 * 14 - 8, hudBombY - 4, 5 * 14 + 10, 20);
-    
+
     // 랙 내의 고정 징 디테일 (금속 단추)
     ctx.fillStyle = '#6a6a6a';
     for (let i = 0; i < 5; i++) {
@@ -408,7 +408,7 @@ function drawHUD(ctx) {
     for (let i = 0; i < Math.min(Player.bombCount, 5); i++) {
         const bx = hudBombStartX - i * 14;
         const by = hudBombY;
-        
+
         // 폭탄 장착 시의 붉은빛 글로우 효과
         ctx.shadowBlur = 8;
         ctx.shadowColor = '#ff3333';
@@ -416,10 +416,10 @@ function drawHUD(ctx) {
         // Dynamite stick (정교한 픽셀 도트 질감)
         ctx.fillStyle = '#660000'; // 다크 섀도우
         ctx.fillRect(bx - 4, by, 8, 12);
-        
+
         ctx.fillStyle = '#cc1111'; // 메인 레드 바디
         ctx.fillRect(bx - 3, by + 1, 6, 10);
-        
+
         // 황동 고정링 (밴드) 2줄 추가
         ctx.fillStyle = '#1a1a1a';
         ctx.fillRect(bx - 4, by + 3, 8, 1.5);
@@ -428,7 +428,7 @@ function drawHUD(ctx) {
         // 하이라이트 라인
         ctx.fillStyle = '#ffa3a3';
         ctx.fillRect(bx - 2, by + 1, 2, 10);
-        
+
         // 갈색 도트 심지 (정밀 묘사)
         ctx.fillStyle = '#bfa76f';
         ctx.fillRect(bx - 1, by - 3, 2, 3);
@@ -458,13 +458,13 @@ function drawHUD(ctx) {
     ctx.restore();
 
     // 10.5. Petal Cannon Charge UI (고급 크리스탈 네온 튜브 및 핑크빛 꽃가루 파티클 효과)
-    const petalX = GAME_WIDTH/scale - 75;
+    const petalX = GAME_WIDTH / scale - 75;
     const petalY = 71;
     const petalChargePercent = Math.min(1, Player.petalCannonCharge / Player.petalCannonMaxCharge);
-    
+
     // 꽃잎포 충전 완료 시 벚꽃잎 흩날림 동적 파티클 효과 구현
     if (!window.hudPetalParticles) window.hudPetalParticles = [];
-    
+
     if (Player.petalCannonReady) {
         // 매 프레임 일정 확률로 핑크 파티클 스폰 (HUD 우측 영역)
         if (Math.random() < 0.15) {
@@ -481,7 +481,7 @@ function drawHUD(ctx) {
             });
         }
     }
-    
+
     // 꽃가루 파티클 업데이트 및 드로잉
     if (window.hudPetalParticles.length > 0) {
         ctx.save();
@@ -491,17 +491,17 @@ function drawHUD(ctx) {
             p.y += p.vy;
             p.alpha -= p.decay;
             p.rot += p.rotSpd;
-            
+
             if (p.alpha <= 0) {
                 window.hudPetalParticles.splice(pIdx, 1);
                 continue;
             }
-            
+
             ctx.globalAlpha = p.alpha;
             ctx.fillStyle = '#ff69b4';
             ctx.shadowBlur = 4;
             ctx.shadowColor = '#ff1493';
-            
+
             // 회전하는 꽃잎 사각형/마름모 드로잉
             ctx.translate(p.x, p.y);
             ctx.rotate(p.rot);
@@ -511,7 +511,7 @@ function drawHUD(ctx) {
         }
         ctx.restore();
     }
-    
+
     // Petal icon (충전 시 유기적으로 회전하고 펄싱)
     ctx.save();
     ctx.translate(petalX + 15, petalY + 5);
@@ -520,32 +520,32 @@ function drawHUD(ctx) {
     ctx.font = '12px "Press Start 2P"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    
+
     if (Player.petalCannonReady) {
         ctx.shadowBlur = 12;
         ctx.shadowColor = '#ff1493';
     }
     ctx.fillText('🌸', 0, 0);
     ctx.restore();
-    
+
     // 크리스탈 튜브 게이지 백그라운드 (은은한 메탈릭 테두리 관)
     const tubeW = 54;
     const tubeH = 8;
     const tubeX = petalX - 12;
     const tubeY = petalY + 14;
-    
+
     ctx.fillStyle = 'rgba(10, 5, 8, 0.8)';
     ctx.fillRect(tubeX, tubeY, tubeW, tubeH);
-    
+
     // 3D 벚꽃 핑크빛 네온 그라데이션 충전 게이지 바
     if (petalChargePercent > 0) {
         ctx.save();
         const fillW = (tubeW - 2) * petalChargePercent;
-        
+
         // 네온 발광 효과
         ctx.shadowBlur = Player.petalCannonReady ? 12 : 6;
         ctx.shadowColor = Player.petalCannonReady ? '#ff1493' : '#ff69b4';
-        
+
         const petalGradient = ctx.createLinearGradient(tubeX + 1, tubeY + 1, tubeX + fillW, tubeY + 1);
         if (Player.petalCannonReady) {
             // 충전 완료 시: 찬란히 끓어오르는 핫핑크 네온
@@ -558,16 +558,16 @@ function drawHUD(ctx) {
             petalGradient.addColorStop(0.7, '#ff69b4');
             petalGradient.addColorStop(1, '#ffb6c1');
         }
-        
+
         ctx.fillStyle = petalGradient;
         ctx.fillRect(tubeX + 1, tubeY + 1, fillW, tubeH - 2);
-        
+
         // 게이지 물결 하이라이트 (Wave Reflection)
         ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.fillRect(tubeX + 1, tubeY + 1, fillW, 2);
         ctx.restore();
     }
-    
+
     // 크리스탈 튜브 테두리 유리광택 광원 반사
     ctx.strokeStyle = Player.petalCannonReady ? '#ff1493' : '#555';
     ctx.lineWidth = 1.5;
@@ -579,7 +579,7 @@ function drawHUD(ctx) {
     ctx.moveTo(tubeX + 1, tubeY + 1.5);
     ctx.lineTo(tubeX + tubeW - 1, tubeY + 1.5);
     ctx.stroke();
-    
+
     // READY (발사대기) 네온 글리치 텍스트 표시
     if (Player.petalCannonReady) {
         ctx.save();
@@ -588,7 +588,7 @@ function drawHUD(ctx) {
         ctx.shadowColor = '#ff69b4';
         ctx.font = 'bold 6px "Press Start 2P"';
         ctx.textAlign = 'center';
-        
+
         // 플리커링 인디케이터
         const flicker = Math.sin(time / 100) > 0;
         if (flicker) {
@@ -602,7 +602,7 @@ function drawHUD(ctx) {
 
     // 11. Bomb Button (bottom right - original style)
     drawBombButton(ctx);
-    
+
     // 12. Petal Cannon Button (bottom right, left of bomb button)
     drawPetalCannonButton(ctx);
 }
@@ -1665,31 +1665,31 @@ const Player = {
             this.width = 64;
             this.height = 64;
         }
-        
+
         this.y = GAME_HEIGHT / 2 - this.height / 2;
         this.targetY = this.y;
         this.recoilX = 0; // 반동 리셋
-        
+
         // 스탯 계산
         const baseDamage = 10;
         const baseFireRate = 200;
-        
+
         // 아이템 레벨 보너스
         const itemDamageBonus = (LevelSystem.items.DAMAGE.level - 1) * LevelSystem.stats.itemDamagePerLevel;
         const itemFireRateBonus = (LevelSystem.items.FIRE_RATE.level - 1) * LevelSystem.stats.itemFireRatePerLevel;
-        
+
         const levelDamageBonus = (LevelSystem.playerLevel - 1) * 3; // 레벨당 공격력 +3 (상향)
-        this.damage = (isMobileEasyModeActive() 
-            ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier) 
+        this.damage = (isMobileEasyModeActive()
+            ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier)
             : baseDamage + itemDamageBonus) + levelDamageBonus;
-            
+
         this.fireRate = Math.max(baseFireRate - itemFireRateBonus, this.minFireRate);
-        
+
         // ── 체력: 기본 5 하트 + 캐릭터 레벨 2레벨당 1씩 증가 (상향) ──
         const levelHpBonus = Math.floor((LevelSystem.playerLevel - 1) / 2);
         this.maxHp = 5 + levelHpBonus;
         this.hp = this.maxHp;
-        
+
         this.shield = 0;
         this.bombCount = 3;
         this.defense = 0; // 방어력 추가
@@ -1698,7 +1698,7 @@ const Player = {
         this.lastFrameTime = 0;
         this.supportTimer = 0; // 지원군 지속 시간
         this.skillNotifications = []; // 활성 스킬 알림
-        
+
         // 꽃잎 포 (필살기) 시스템
         this.petalCannonCharge = 0; // 현재 충전량 (발사 횟수)
         this.petalCannonMaxCharge = 70; // 최대 충전 필요 발사 횟수 (70발로 상향)
@@ -1763,7 +1763,7 @@ const Player = {
         // =========================================================
         // [프리미엄 2D 스프라이트 정밀 반동 물리 및 연사 연동형 애니메이터]
         // =========================================================
-        
+
         // 1. 반동 복원 스프링-감쇠 물리 모델 (Spring-Damper Recoil Decay)
         // 총을 쏘면 recoilX가 마이너스로 튕겼다가, 프레임마다 탄력적으로 0에 복원됨
         this.recoilX *= 0.82;
@@ -1784,18 +1784,18 @@ const Player = {
         } else if (timeSinceLastFire < fire) {
             this.isShootingAnimation = true;
             const progress = timeSinceLastFire / fire;
-            
+
             // 8개의 프레임을 진척도에 따라 자연스럽게 연결하여 재생
             this.aniFrame = Math.floor(progress * 8);
             if (this.aniFrame > 7) this.aniFrame = 7;
         } else {
             this.isShootingAnimation = false;
-            
+
             // 평소 걷기/대기 하이브리드 연출:
             // 위아래 이동 중(dy 존재)일 때는 이동 속도에 맞춰 발을 자연스럽게 교차 (0, 1, 2, 3 순환)
             // 가만히 대기 중일 때는 0번(기본 대기)과 1번(정조준)이 숨쉬듯 800ms 주기로 은은하게 펄싱
             if (Math.abs(dy) > 0.8) {
-                const walkFrameDuration = 200; 
+                const walkFrameDuration = 200;
                 this.aniFrame = Math.floor(time / walkFrameDuration) % 4;
             } else {
                 const breathCycle = 1000;
@@ -1806,26 +1806,26 @@ const Player = {
         // 2. 발사 로직
         if (time - this.lastFireTime >= fire) {
             this.lastFireTime = time;
-            
+
             // [물리 반동 격발!] 플레이어를 뒤(왼쪽)로 강하게 튕겨냄 (공격력 레벨에 따라 타격감 반동 강도 증가)
             const weaponLevel = LevelSystem.items.DAMAGE.level;
             const cappedWeaponLevel = Math.min(weaponLevel, 10); // 10레벨 이후 크기 증가 없음
-            
+
             // 기본 반동 -6px, 무기 레벨당 -0.4px씩 반동 증가로 묵직한 대포 샷건 연출!
             this.recoilX = -(5.5 + cappedWeaponLevel * 0.45);
-            
+
             const sizeScale = 1 + (cappedWeaponLevel - 1) * 0.10; // 레벨 1 = 100%, 레벨 10 = 190%
             const bulletWidth = Math.max(16, Math.round(20 * sizeScale));
             const bulletHeight = Math.max(8, Math.round(10 * sizeScale));
             // 속도도 무기 레벨당 10%씩 증가
             const speedScale = 1 + (weaponLevel - 1) * 0.1;
             const bulletSpeed = 10 * speedScale;
-            
+
             // 주 총알 격발 - Projectile 생성자에서 공격력 기반으로 크기 자동 계산
             console.log(`[SHOOT] Player.damage: ${this.damage}, bulletSpeed: ${bulletSpeed}, weaponLevel: ${weaponLevel}`);
             const projectile = new Projectile(this.x + this.width - 5, this.y + this.height * 0.65, bulletSpeed, 0, this.damage);
             projectiles.push(projectile);
-            
+
             // [화려한 탄피/스파크 격발 이펙트] 총구에서 뒤쪽(왼쪽)으로 가볍게 날리는 분홍 스파크 뿜음
             const fireX = this.x + this.width - 5;
             const fireY = this.y + this.height * 0.62;
@@ -1838,7 +1838,7 @@ const Player = {
                 p.decay = 0.03;
                 particles.push(p);
             }
-            
+
             // 꽃잎 포 충전 (총 격발 횟수 기준)
             if (!this.petalCannonReady) {
                 this.petalCannonCharge++;
@@ -1937,12 +1937,12 @@ const Player = {
                     ctx.shadowBlur = 50;
                     // 팬텀 색상 교차 발광 (핫핑크 & 시안)
                     ctx.shadowColor = i % 2 === 0 ? '#ff1493' : '#00ffff';
-                    
+
                     const pDrawW = drawW * scale;
                     const pDrawH = drawH * scale;
                     const pDrawX = drawX - (pDrawW - drawW) / 2 + (Math.random() - 0.5) * 20;
                     const pDrawY = drawY - (pDrawH - drawH) / 2 + (Math.random() - 0.5) * 20;
-                    
+
                     // 기존 스프라이트 컷(sx, sy)을 활용해 거대화된 잔상을 그려 화려함 극대화
                     ctx.drawImage(img, sx, sy, cropWidth, frameH, pDrawX, pDrawY, pDrawW, pDrawH);
                     ctx.restore();
@@ -2006,7 +2006,7 @@ const LevelSystem = {
     playerLevel: 1,
     playerExp: 0, // 현재 누적 EXP (점수와 별개)
     playerExpToNext: 100, // 첫 레벨업 필요 EXP
-    
+
     // 아이템별 레벨과 경험치
     items: {
         DAMAGE: { level: 1, exp: 0, expToNext: 50, name: '공격력', icon: '⚔️' },
@@ -2015,7 +2015,7 @@ const LevelSystem = {
         SHIELD: { level: 1, exp: 0, expToNext: 50, name: '무적', icon: '✨' },
         SUPPORT: { level: 1, exp: 0, expToNext: 50, name: '지원군', icon: '👥' }
     },
-    
+
     // 레벨당 스탯 증가량
     maxLevel: 20, // 플레이어 최대 레벨 (20으로 상향)
     itemMaxLevel: 15, // 아이템 최대 레벨 (공격력 포함 15)
@@ -2029,12 +2029,12 @@ const LevelSystem = {
         itemSupportPerLevel: 2000,  // 지원군 아이템 레벨당 +2초
         itemDefensePerLevel: 1      // 방어력 아이템 레벨당 +1 (내부용)
     },
-    
-    init: function() {
+
+    init: function () {
         this.playerLevel = 1;
         this.playerExp = 0;
         this.playerExpToNext = this.getPlayerExpToNext(1);
-        
+
         // 아이템 초기화
         for (let key in this.items) {
             this.items[key].level = (key === 'DEFENSE') ? 0 : 1;
@@ -2042,56 +2042,56 @@ const LevelSystem = {
             this.items[key].expToNext = 50; // 아이템: 50 EXP = 1레벨
         }
     },
-    
+
     // 플레이어 레벨업에 필요한 EXP 계산
-    getPlayerExpToNext: function(level) {
+    getPlayerExpToNext: function (level) {
         // 레벨 1→2: 100, 2→3: 150, 3→4: 200... (점진적 증가)
         return 50 + level * 50;
     },
-    
+
     // 아이템 레벨업에 필요한 EXP
-    getItemExpToNext: function(level) {
+    getItemExpToNext: function (level) {
         return 50; // 고정 50 EXP
     },
-    
+
     // 플레이어 EXP 획득 (코인, 보상 등)
-    addPlayerExp: function(amount) {
+    addPlayerExp: function (amount) {
         if (this.playerLevel >= this.maxLevel) return;
-        
+
         this.playerExp += amount;
-        
+
         // 레벨업 체크 (연속 레벨업 가능)
         while (this.playerExp >= this.playerExpToNext && this.playerLevel < this.maxLevel) {
             this.playerExp -= this.playerExpToNext;
             this.levelUpPlayer();
         }
-        
+
         // 최대 레벨 시 EXP 초과분 버림
         if (this.playerLevel >= this.maxLevel) {
             this.playerExp = 0;
         }
     },
-    
+
     // 점수 업데이트 (점수는 이제 레벨업과 무관 - EXP 기반으로 변경)
-    updateScore: function(currentScore) {
+    updateScore: function (currentScore) {
         // 점수는 이제 레벨업에 영향 없음 - EXP 기반 시스템으로 변경
         // 이 함수는 하위 호환성을 위해 유지
     },
-    
+
     // 플레이어 레벨업 (EXP 기반 - 최대 레벨 20)
-    levelUpPlayer: function() {
+    levelUpPlayer: function () {
         // 최대 레벨 체크
         if (this.playerLevel >= this.maxLevel) {
             return;
         }
-        
+
         this.playerLevel++;
-        
+
         // 다음 레벨까지 필요한 EXP 업데이트
         if (this.playerLevel < this.maxLevel) {
             this.playerExpToNext = this.getPlayerExpToNext(this.playerLevel);
         }
-        
+
         // 레벨업 효과 - 체력 상한 2레벨당 1씩 증가 (상향)
         const oldMaxHp = Player.maxHp;
         const levelHpBonus = Math.floor((this.playerLevel - 1) / 2);
@@ -2106,8 +2106,8 @@ const LevelSystem = {
         const baseDamage = 10;
         const itemDamageBonus = (this.items.DAMAGE.level - 1) * this.stats.itemDamagePerLevel;
         const levelDamageBonus = (this.playerLevel - 1) * 3; // 레벨당 공격력 +3
-        Player.damage = (isMobileEasyModeActive() 
-            ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier) 
+        Player.damage = (isMobileEasyModeActive()
+            ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier)
             : baseDamage + itemDamageBonus) + levelDamageBonus;
 
         const baseFireRate = 200;
@@ -2118,11 +2118,11 @@ const LevelSystem = {
         addFloatingText(`공격력 & 필살기 강화!`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, '#2ecc71');
         AudioManager.playSFX('powerup');
     },
-    
+
     // 아이템 경험치 획득 (게이트 통과 시)
-    addItemExp: function(itemType, amount) {
+    addItemExp: function (itemType, amount) {
         if (!this.items[itemType]) return false;
-        
+
         const item = this.items[itemType];
         // 최대 레벨 체크 -> 공격력/속도 아이템인 경우 플레이어 경험치로 전환
         const maxLv = (itemType === 'FIRE_RATE') ? this.itemMaxLevelFireRate : this.itemMaxLevel;
@@ -2133,46 +2133,46 @@ const LevelSystem = {
             }
             return false;
         }
-        
+
         item.exp += amount;
-        
+
         let leveledUp = false;
-        while (item.exp >= item.expToNext && item.level < this.itemMaxLevel) {
+        while (item.exp >= item.expToNext && item.level < maxLv) {
             item.exp -= item.expToNext;
             item.level++;
             item.expToNext = this.getItemExpToNext(item.level);
             this.applyItemLevelUp(itemType, item.level);
             leveledUp = true;
             // 최대 레벨 도달 시 EXP 초과분은 버림 (단, 공격력/속도는 위에서 처리됨)
-            if (item.level >= this.itemMaxLevel) {
+            if (item.level >= maxLv) {
                 item.exp = 0;
                 break;
             }
         }
-        
+
         return leveledUp;
     },
-    
+
     // 아이템 레벨업 효과 적용 (Player.init()과 동일한 계산 방식 사용)
-    applyItemLevelUp: function(itemType, newLevel) {
+    applyItemLevelUp: function (itemType, newLevel) {
         const item = this.items[itemType];
-        
+
         // 아이템 레벨 보너스만 적용 - 무기 레벨만 공격력에 영향 (캐릭터 레벨은 별개)
         const itemDamageBonus = (LevelSystem.items.DAMAGE.level - 1) * LevelSystem.stats.itemDamagePerLevel;
         const itemFireRateBonus = (LevelSystem.items.FIRE_RATE.level - 1) * LevelSystem.stats.itemFireRatePerLevel;
-        
-        switch(itemType) {
+
+        switch (itemType) {
             case 'DAMAGE':
                 // 공격력 재계산 - 무기 레벨만 영향
                 const baseDamage = 10;
-                const newDamage = isMobileEasyModeActive() 
+                const newDamage = isMobileEasyModeActive()
                     ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier)
                     : baseDamage + itemDamageBonus;
                 Player.damage = newDamage;
                 addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#e74c3c');
                 addFloatingText(`공격력: ${newDamage.toFixed(1)} (+${this.stats.itemDamagePerLevel})`, Player.x, Player.y - 50, '#ff6b6b');
                 break;
-                
+
             case 'FIRE_RATE':
                 // 공격속도 재계산 (발사 간격 감소)
                 const baseFireRate = 200;
@@ -2181,7 +2181,7 @@ const LevelSystem = {
                 addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#3498db');
                 addFloatingText(`발사간격: ${newFireRate}ms (-${this.stats.itemFireRatePerLevel}ms)`, Player.x, Player.y - 50, '#74b9ff');
                 break;
-                
+
             case 'DEFENSE':
                 // 방어력 레벨업
                 addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#95a5a6');
@@ -2192,25 +2192,25 @@ const LevelSystem = {
             case 'SHIELD':
                 // 무적 시간 증가
                 addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#9b59b6');
-                addFloatingText(`방어시간 +${(this.stats.itemShieldPerLevel/1000).toFixed(1)}s`, Player.x, Player.y - 50, '#bb8fce');
+                addFloatingText(`방어시간 +${(this.stats.itemShieldPerLevel / 1000).toFixed(1)}s`, Player.x, Player.y - 50, '#bb8fce');
                 break;
-                
+
             case 'SUPPORT':
                 // 지원군 시간 증가
                 addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#e67e22');
-                addFloatingText(`지원시간 +${(this.stats.itemSupportPerLevel/1000).toFixed(1)}s`, Player.x, Player.y - 50, '#f5b041');
+                addFloatingText(`지원시간 +${(this.stats.itemSupportPerLevel / 1000).toFixed(1)}s`, Player.x, Player.y - 50, '#f5b041');
                 break;
         }
-        
+
         AudioManager.playSFX('powerup');
     },
-    
+
     // 현재 아이템 효과값 계산
-    getItemEffect: function(itemType) {
+    getItemEffect: function (itemType) {
         const item = this.items[itemType];
         if (!item) return 0;
-        
-        switch(itemType) {
+
+        switch (itemType) {
             case 'DAMAGE':
                 return item.level * this.stats.itemDamagePerLevel;
             case 'FIRE_RATE':
@@ -2223,16 +2223,16 @@ const LevelSystem = {
                 return 0;
         }
     },
-    
+
     // 아이템 사용 시 레벨 기반 효과 적용
-    applyShield: function() {
+    applyShield: function () {
         const baseShield = 15000; // 15초
         const bonus = this.getItemEffect('SHIELD');
         Player.shield = baseShield + bonus;
         addSkillNotification("SHIELD ACTIVE", baseShield + bonus);
     },
-    
-    applySupport: function() {
+
+    applySupport: function () {
         const baseSupport = 20000; // 20초
         const bonus = this.getItemEffect('SUPPORT');
         Player.supportTimer = baseSupport + bonus;
@@ -2309,13 +2309,13 @@ class Projectile {
             const time = Date.now() / 80;
             const isMain = this.isMainPetal;
             const isSpiral = this.isSpiral;
-            
+
             ctx.save();
-            
+
             // 글로우 효과 (메인 꽃잎은 더 강하게)
             ctx.shadowBlur = isMain ? 40 : 25;
             ctx.shadowColor = isMain ? '#ff00ff' : '#ff69b4';
-            
+
             // === 바깥쪽 꽃잎 레이어 (큰 꽃잎) ===
             const outerPetals = isMain ? 12 : 8;
             for (let i = 0; i < outerPetals; i++) {
@@ -2324,7 +2324,7 @@ class Projectile {
                 const petalDistance = isMain ? 28 : 22;
                 const px = centerX + Math.cos(angle) * petalDistance;
                 const py = centerY + Math.sin(angle) * petalDistance;
-                
+
                 // 그라데이션 꽃잎 (바깥)
                 const petalGrad = ctx.createRadialGradient(px, py, 0, px, py, isMain ? 25 : 20);
                 if (isMain) {
@@ -2340,7 +2340,7 @@ class Projectile {
                     petalGrad.addColorStop(0.5, '#ff69b4'); // 핫핑크
                     petalGrad.addColorStop(1, 'rgba(255, 105, 180, 0.3)');
                 }
-                
+
                 ctx.fillStyle = petalGrad;
                 ctx.beginPath();
                 // 하트 모양 꽃잎
@@ -2349,7 +2349,7 @@ class Projectile {
                 ctx.ellipse(px, py, petalLen, petalWid, angle, 0, Math.PI * 2);
                 ctx.fill();
             }
-            
+
             // === 중간 꽃잎 레이어 ===
             const midPetals = 6;
             for (let i = 0; i < midPetals; i++) {
@@ -2358,18 +2358,18 @@ class Projectile {
                 const petalDistance = isMain ? 18 : 14;
                 const px = centerX + Math.cos(angle) * petalDistance;
                 const py = centerY + Math.sin(angle) * petalDistance;
-                
+
                 const petalGrad = ctx.createRadialGradient(px, py, 0, px, py, 15);
                 petalGrad.addColorStop(0, '#ffb6c1'); // 라이트핑크
                 petalGrad.addColorStop(0.5, '#ffc0cb'); // 핑크
                 petalGrad.addColorStop(1, 'rgba(255, 192, 203, 0.2)');
-                
+
                 ctx.fillStyle = petalGrad;
                 ctx.beginPath();
                 ctx.ellipse(px, py, 14, 8, angle, 0, Math.PI * 2);
                 ctx.fill();
             }
-            
+
             // === 안쪽 꽃잎 레이어 (작은 꽃잎) ===
             const innerPetals = 5;
             for (let i = 0; i < innerPetals; i++) {
@@ -2377,17 +2377,17 @@ class Projectile {
                 const angle = (i * (360 / innerPetals) + rotationOffset) * Math.PI / 180;
                 const px = centerX + Math.cos(angle) * 10;
                 const py = centerY + Math.sin(angle) * 10;
-                
+
                 ctx.fillStyle = '#ff69b4';
                 ctx.beginPath();
                 ctx.ellipse(px, py, 10, 6, angle, 0, Math.PI * 2);
                 ctx.fill();
             }
-            
+
             // === 중심 코어 (황금 꽃술) ===
             ctx.shadowBlur = isMain ? 50 : 30;
             ctx.shadowColor = '#ffd700';
-            
+
             // 코어 외곽
             const coreGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, isMain ? 18 : 12);
             coreGrad.addColorStop(0, '#fff');
@@ -2398,44 +2398,44 @@ class Projectile {
             ctx.beginPath();
             ctx.arc(centerX, centerY, isMain ? 16 : 10, 0, Math.PI * 2);
             ctx.fill();
-            
+
             // 코어 내부 빛
             ctx.fillStyle = '#fff';
             ctx.beginPath();
             ctx.arc(centerX, centerY, isMain ? 8 : 5, 0, Math.PI * 2);
             ctx.fill();
-            
+
             // === 장식용 링들 ===
             ctx.shadowBlur = 20;
             ctx.shadowColor = isMain ? '#ff00ff' : '#ff1493';
-            
+
             // 회전하는 링 1
             ctx.strokeStyle = `rgba(255, 20, 147, ${0.4 + Math.sin(time) * 0.2})`;
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.arc(centerX, centerY, (isMain ? 40 : 30) + Math.sin(time * 2) * 3, 0, Math.PI * 2);
             ctx.stroke();
-            
+
             // 회전하는 링 2
             ctx.strokeStyle = `rgba(255, 105, 180, ${0.3 + Math.cos(time * 1.5) * 0.15})`;
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(centerX, centerY, (isMain ? 50 : 38) + Math.cos(time * 1.5) * 4, 0, Math.PI * 2);
             ctx.stroke();
-            
+
             // 파티클 효과 (작은 꽃잎 조각)
             for (let i = 0; i < 4; i++) {
                 const pAngle = (time * 2 + i * 90) * Math.PI / 180;
                 const pDist = (isMain ? 35 : 28) + Math.sin(time * 3 + i) * 5;
                 const px = centerX + Math.cos(pAngle) * pDist;
                 const py = centerY + Math.sin(pAngle) * pDist;
-                
+
                 ctx.fillStyle = `rgba(255, 182, 193, ${0.6 + Math.sin(time * 4 + i) * 0.4})`;
                 ctx.beginPath();
                 ctx.arc(px, py, 3, 0, Math.PI * 2);
                 ctx.fill();
             }
-            
+
             ctx.restore();
         } else {
             const centerX = this.x + this.width / 2;
@@ -2481,8 +2481,8 @@ class Enemy {
 
         // ── 체력: 지수 커브 스케일링 (총 쏘는 속도 감소에 비례해 적절히 하향) ──
         // 너무 약해지지 않도록 체력 상향 조정
-        const baseHp = 50;
-        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.1) * 20);
+        const baseHp = 70;
+        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.1) * 50);
         this.hp = Math.round((baseHp + stageBonus) * hpMultiplierA);
         this.maxHp = this.hp;
 
@@ -2588,7 +2588,7 @@ class Enemy {
 
             const isEnemy2or3 = currentStage >= 4;
             const hitboxMargin = isEnemy2or3 ? 15 : 0; // 청토끼 2,3는 15px 여백으로 피격 범위 축소
-            
+
             // hitbox margin이 적용된 임시 hitbox 객체 생성
             const hitbox = {
                 x: this.x + hitboxMargin,
@@ -2596,7 +2596,7 @@ class Enemy {
                 width: this.width - hitboxMargin * 2,
                 height: this.height - hitboxMargin * 2
             };
-            
+
             if (checkCollision(hitbox, Player) && Player.shield <= 0) {
                 this.state = 'ATTACK'; this.aniFrame = 0; this.lastFrameTime = timestamp;
                 Player.takeDamage(1); // takeDamage 사용
@@ -2660,7 +2660,7 @@ class Enemy {
             // Row 1 (y=213):  ATTACK - 공격 모션 (6프레임: 1~6열)
             // Row 2 (y=426):  DEAD - 죽음 모션 (청토끼2: 4프레임, 청토끼3: 4프레임)
             let rowIdx = this.state === 'ATTACK' ? 1 : (this.state === 'DEAD' ? 2 : 0);
-            
+
             // 상태별 정확한 프레임 수 계산
             let stateFrameCount = this.totalFrames; // 기본 6프레임 (WALK, ATTACK)
             if (this.state === 'DEAD') {
@@ -2671,7 +2671,7 @@ class Enemy {
                 }
             }
             const frameIdx = this.aniFrame % stateFrameCount;
-            
+
             // SX 오프셋 조정 (왼쪽 이미지 침범 방지):
             // 청토끼 3: -15px (왼쪽 텍스트 레이블 회피)
             // 청토끼 2: 죽음 시 마지막 프레임에서 오른쪽 더미 제거를 위해 추가 조정
@@ -2686,7 +2686,7 @@ class Enemy {
 
             // 이미지 보정: 픽셀 아트 가독성을 위해 소수점 좌표 제거 및 여백 최적화
             const margin = frameW * 0.05; // 5% 기본 여백 (모든 적 통일)
-            
+
             ctx.save();
 
             // 선명한 해상도를 위해 이미지 스무딩 비활성화
@@ -3294,7 +3294,7 @@ function advanceStage() {
 
         // 플레이어 상태 완전 초기화 (중요: state를 DEAD에서 ALIVE로 변경)
         // 체력 상한 재계산 (레벨업으로 증가한 체력 반영)
-        const levelHpBonus = Math.floor((LevelSystem.playerLevel - 1) / 4);
+        const levelHpBonus = Math.floor((LevelSystem.playerLevel - 1) / 2);
         Player.maxHp = 5 + levelHpBonus;
         Player.hp = Player.maxHp;
         Player.state = 'ALIVE';
@@ -3311,7 +3311,7 @@ function startBossFight() {
     // 바로 보스전 시작
     currentState = GAME_STATE.BOSS_FIGHT;
     boss = new Boss(currentStage);
-    
+
     // 보스 대사 표시 (있는 경우)
     const stageKey = Number(currentStage);
     const bossQuote = BOSS_QUOTES[stageKey];
@@ -3320,10 +3320,10 @@ function startBossFight() {
         // 화면 중앙에 보스 등장 알림 (더 길게 표시, 4초)
         addFloatingText(bossQuote, GAME_WIDTH / 2, GAME_HEIGHT / 3, '#ff0000');
         addFloatingText("💀 BOSS FIGHT START! 💀", GAME_WIDTH / 2, GAME_HEIGHT / 3 + 40, '#ff4444');
-        
+
         // 보스 등장 텍스트 콘솔 출력 (디버깅용)
         console.log(`[BOSS APPEAR] Stage ${currentStage}: ${bossQuote}`);
-        
+
         // 화면 플래시 효과
         const flash = document.createElement('div');
         flash.style.cssText = `
@@ -3335,7 +3335,7 @@ function startBossFight() {
         document.body.appendChild(flash);
         setTimeout(() => flash.style.opacity = '0', 150);
         setTimeout(() => flash.remove(), 1000);
-        
+
         // 보스 등장 사운드
         AudioManager.playSFX('powerup');
     } else {
@@ -3836,30 +3836,30 @@ function usePetalCannon() {
         addFloatingText(`🌸 충전중... (${remaining}발 남음)`, Player.x, Player.y - 40, '#ff69b4');
         return;
     }
-    
+
     // 꽃잎 포 발사!
     Player.petalCannonReady = false;
     Player.petalCannonCharge = 0;
-    
+
     // 꽃잎포 전용 강력한 발사 모션 및 반동 적용 (뒤로 크게 밀려남)
-    Player.recoilX = -15; 
+    Player.recoilX = -15;
     Player.petalFiringTimer = 300; // 300ms 동안 특수 렌더링 상태 유지
     AudioManager.playSFX('shoot'); // 꽃잎포 고유 효과음이나 발사음 재생
-    
+
     const isLandscape = isMobileEasyModeActive(); // 가로(이지) 모드 여부
-    
+
     // 가로 모드에서는 파워를 일반 환경과 동일하게 조정 (데미지 0.5배, 투사체 수 감소로 렉 방지)
     const playerLevel = LevelSystem.playerLevel;
     const basePetalDamage = isLandscape ? 60 : 240; // 렉 개선을 위해 투사체를 줄인 대신 화력 대폭 상향
     const levelMultiplier = 1 + (playerLevel - 1) * 0.5; // 레벨당 보너스 상향 (0.25 -> 0.5)
     const petalDamage = Math.round(basePetalDamage * levelMultiplier);
-    
+
     // 가로 모드: 렉을 유발하지 않도록 꽃잎포 투사체 개수를 대폭 하향 (렉 방지 극대화)
     const petalCount = isLandscape
         ? 3 + Math.min(playerLevel, 2)          // 가로 모드: 최대 5발 (렉 차단)
         : 4 + Math.min(playerLevel, 2);         // 일반 모드: 렉 개선을 위해 최대 6발로 대폭 하향
     const spreadAngle = Math.PI / 4;
-    
+
     // 중앙 메인 꽃잎
     const mainPetal = new Projectile(Player.x + Player.width, Player.y + Player.height / 2, 20, 0, petalDamage * 2);
     mainPetal.isPetalCannon = true;
@@ -3868,14 +3868,14 @@ function usePetalCannon() {
     mainPetal.height = isLandscape ? 45 : 60;
     mainPetal.active = true;
     projectiles.push(mainPetal);
-    
+
     // 주변 꽃잎들
     for (let i = 0; i < petalCount; i++) {
         const angleOffset = (i / (petalCount - 1) - 0.5) * spreadAngle;
         const speed = isLandscape ? 15 : 18;
         const vx = Math.cos(angleOffset) * speed;
         const vy = Math.sin(angleOffset) * speed;
-        
+
         const petal = new Projectile(Player.x + Player.width, Player.y + Player.height / 2, vx, vy, petalDamage);
         petal.isPetalCannon = true;
         petal.width = isLandscape ? 35 : 45;
@@ -3884,7 +3884,7 @@ function usePetalCannon() {
         petal.petalIndex = i;
         projectiles.push(petal);
     }
-    
+
     // 나선형 꽃잎 (가로 모드: 렉을 최소화하기 위해 나선형 투사체 0개로 설정, 일반: 2개로 줄임)
     const spiralCount = isLandscape ? 0 : 2;
     for (let i = 0; i < spiralCount; i++) {
@@ -3892,7 +3892,7 @@ function usePetalCannon() {
         const speed = isLandscape ? 13 : 16;
         const vx = Math.cos(angle) * speed * 0.8;
         const vy = Math.sin(angle) * speed;
-        
+
         const spiralPetal = new Projectile(Player.x + Player.width, Player.y + Player.height / 2, vx, vy, petalDamage * 1.5);
         spiralPetal.isPetalCannon = true;
         spiralPetal.isSpiral = true;
@@ -3901,12 +3901,12 @@ function usePetalCannon() {
         spiralPetal.active = true;
         projectiles.push(spiralPetal);
     }
-    
+
     // 화면 플래시 효과 (가로 모드: 경량화)
     const flash = document.createElement('div');
     flash.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: radial-gradient(circle at ${Player.x + Player.width/2}px ${Player.y + Player.height/2}px, 
+        background: radial-gradient(circle at ${Player.x + Player.width / 2}px ${Player.y + Player.height / 2}px, 
             rgba(255, 105, 180, ${isLandscape ? 0.5 : 0.8}) 0%, 
             rgba(255, 20, 147, 0.4) 30%,
             rgba(255, 182, 193, 0.2) 70%,
@@ -3917,13 +3917,13 @@ function usePetalCannon() {
     document.body.appendChild(flash);
     setTimeout(() => flash.style.opacity = '0', 80);
     setTimeout(() => flash.remove(), 600);
-    
+
     const totalPetals = petalCount + 1 + spiralCount;
     const totalDamage = petalDamage * totalPetals;
     addFloatingText(`🌸 꽃잎 포 발사! 🌸`, Player.x, Player.y - 60, '#ff1493');
     addFloatingText(`💥 DAMAGE: ${totalDamage.toLocaleString()} 💥`, Player.x, Player.y - 40, '#ffd700');
     AudioManager.playSFX('explode');
-    
+
     console.log(`[PETAL CANNON] Landscape:${isLandscape}, Lv.${playerLevel}, dmg:${petalDamage}, petals:${totalPetals}`);
 }
 
@@ -4016,7 +4016,7 @@ function drawBombButton(ctx) {
     if (Player.bombCount > 0) {
         ctx.shadowBlur = 25 * pulse;
         ctx.shadowColor = '#ff3300';
-        
+
         ctx.fillStyle = `rgba(255, 60, 0, ${0.12 * pulse})`;
         ctx.beginPath();
         ctx.arc(centerX, centerY, btnSize / 2 + 5, 0, Math.PI * 2);
@@ -4026,7 +4026,7 @@ function drawBombButton(ctx) {
     // === 2. 프리미엄 메탈릭 섀시 프레임 (골드/블랙 3D 외곽 베젤) ===
     ctx.fillStyle = '#1e1e1e';
     ctx.fillRect(btnX, btnY, btnSize, btnSize);
-    
+
     // 이중 베젤 반사 (골드/브론즈 고급 메탈 그라데이션)
     const goldGradient = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnSize);
     goldGradient.addColorStop(0, '#bfa76f');
@@ -4035,26 +4035,26 @@ function drawBombButton(ctx) {
     goldGradient.addColorStop(1, '#1b160a');
     ctx.fillStyle = goldGradient;
     ctx.fillRect(btnX + 2, btnY + 2, btnSize - 4, btnSize - 4);
-    
+
     // 내측 강렬한 레드/오렌지 액센트 테두리
     ctx.strokeStyle = Player.bombCount > 0 ? (flicker ? '#ff6347' : '#ff4500') : '#444';
     ctx.lineWidth = 2;
     ctx.strokeRect(btnX + 4, btnY + 4, btnSize - 8, btnSize - 8);
-    
+
     // === 3. 내부 카본 플레이트 (유리/화염 반사 코팅판) ===
     const innerX = btnX + 7;
     const innerY = btnY + 7;
     const innerSize = btnSize - 14;
-    
+
     ctx.fillStyle = '#0f0c0b';
     ctx.fillRect(innerX, innerY, innerSize, innerSize);
-    
+
     // 도트 불꽃이 반사되는 미세 플리커 광원 효과
     if (Player.bombCount > 0) {
         ctx.fillStyle = flicker ? 'rgba(255, 69, 0, 0.15)' : 'rgba(255, 140, 0, 0.08)';
         ctx.fillRect(innerX, innerY, innerSize, innerSize);
     }
-    
+
     // 플레이트 모서리 고정 나사(Screw) 4개 묘사로 메탈 디테일 극대화
     ctx.fillStyle = '#3a3a3a';
     ctx.fillRect(innerX + 2, innerY + 2, 2, 2);
@@ -4065,28 +4065,28 @@ function drawBombButton(ctx) {
     // === 4. 중앙 폭탄 아이콘 (3D 도트 다이너마이트 묶음) ===
     if (Player.bombCount > 0) {
         const dW = 10; const dH = 26;
-        
+
         ctx.save();
         ctx.translate(centerX, centerY + 3);
-        
+
         // 1번 대(왼쪽)
-        drawDynamiteStick(ctx, -9, -dH/2, dW, dH, '#d91a1a', '#660000');
+        drawDynamiteStick(ctx, -9, -dH / 2, dW, dH, '#d91a1a', '#660000');
         // 2번 대(오른쪽)
-        drawDynamiteStick(ctx, 9, -dH/2, dW, dH, '#d91a1a', '#660000');
+        drawDynamiteStick(ctx, 9, -dH / 2, dW, dH, '#d91a1a', '#660000');
         // 3번 대(중앙 메인 - 입체적으로 위에 덮임)
-        drawDynamiteStick(ctx, 0, -dH/2 - 2, dW, dH + 2, '#ff3333', '#800000');
-        
+        drawDynamiteStick(ctx, 0, -dH / 2 - 2, dW, dH + 2, '#ff3333', '#800000');
+
         // 중앙 폭탄 고정용 검은 절연테이프 2줄
         ctx.fillStyle = '#111111';
-        ctx.fillRect(-15, -dH/2 + 3, 30, 4);
-        ctx.fillRect(-15, dH/2 - 9, 30, 4);
-        
+        ctx.fillRect(-15, -dH / 2 + 3, 30, 4);
+        ctx.fillRect(-15, dH / 2 - 9, 30, 4);
+
         ctx.restore();
-        
+
         // 도트 타오르는 불꽃 심지 (Flickering Spark)
         ctx.save();
-        ctx.translate(centerX, centerY - dH/2 - 5);
-        
+        ctx.translate(centerX, centerY - dH / 2 - 5);
+
         // 심지 줄 (갈색 도트)
         ctx.strokeStyle = '#8b7355';
         ctx.lineWidth = 1.5;
@@ -4094,22 +4094,22 @@ function drawBombButton(ctx) {
         ctx.moveTo(0, 5);
         ctx.quadraticCurveTo(-4, -2, -1, -8);
         ctx.stroke();
-        
+
         // 타오르는 화약 도트 불꽃 이펙트
         ctx.shadowBlur = 15;
         ctx.shadowColor = '#ffd700';
-        
+
         const sparkScale = flicker ? 1.3 : 0.8;
         ctx.fillStyle = '#ffd700'; // 외부 노랑
         ctx.beginPath();
         ctx.arc(-1, -8, 5 * sparkScale, 0, Math.PI * 2);
         ctx.fill();
-        
+
         ctx.fillStyle = '#ff4500'; // 내부 핵심 빨강
         ctx.beginPath();
         ctx.arc(-1, -8, 2.5 * sparkScale, 0, Math.PI * 2);
         ctx.fill();
-        
+
         ctx.restore();
 
         // === 5. 잔여 폭탄 개수 뱃지 (우측 하단 코너) ===
@@ -4117,14 +4117,14 @@ function drawBombButton(ctx) {
         ctx.shadowBlur = 0; // 뱃지 테두리 정밀도 확보
         const countBoxX = innerX + innerSize - 20;
         const countBoxY = innerY + innerSize - 11;
-        
+
         // 카본 캡슐 프레임
         ctx.fillStyle = 'rgba(0,0,0,0.85)';
         ctx.strokeStyle = '#ff4500';
         ctx.lineWidth = 1;
         ctx.fillRect(countBoxX, countBoxY, 18, 9);
         ctx.strokeRect(countBoxX, countBoxY, 18, 9);
-        
+
         // 개수 글꼴
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 6px "Press Start 2P"';
@@ -4138,21 +4138,21 @@ function drawBombButton(ctx) {
         const shortcutColor = '#ff4500';
         const badgeW = 44; const badgeH = 14;
         const floatOffset = Math.sin(time / 160) * 2.5;
-        const badgeX = centerX - badgeW / 2; 
+        const badgeX = centerX - badgeW / 2;
         const badgeY = btnY - badgeH - 4 + floatOffset;
-        
+
         ctx.fillStyle = 'rgba(10, 10, 15, 0.85)';
         ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
-        ctx.strokeStyle = shortcutColor; 
+        ctx.strokeStyle = shortcutColor;
         ctx.lineWidth = 1.5;
         ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
-        
+
         ctx.fillStyle = shortcutColor;
         ctx.font = '6px "Press Start 2P"';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('SPACE', centerX, badgeY + 7);
-        
+
         // 왼쪽 상단 수명 인디케이터 (폭탄 활성화 시 녹색 미세 핀)
         ctx.fillStyle = '#00ff00';
         ctx.fillRect(btnX + 6, btnY + 6, 4, 4);
@@ -4164,18 +4164,18 @@ function drawBombButton(ctx) {
         ctx.save();
         ctx.translate(centerX, centerY + 3);
         ctx.globalAlpha = 0.22;
-        drawDynamiteStick(ctx, -9, -dH/2, dW, dH, '#333', '#111');
-        drawDynamiteStick(ctx, 9, -dH/2, dW, dH, '#333', '#111');
-        drawDynamiteStick(ctx, 0, -dH/2 - 2, dW, dH + 2, '#444', '#1a1a1a');
+        drawDynamiteStick(ctx, -9, -dH / 2, dW, dH, '#333', '#111');
+        drawDynamiteStick(ctx, 9, -dH / 2, dW, dH, '#333', '#111');
+        drawDynamiteStick(ctx, 0, -dH / 2 - 2, dW, dH + 2, '#444', '#1a1a1a');
         ctx.restore();
-        
+
         // EMPTY 라벨
         ctx.fillStyle = '#666';
         ctx.font = '7px "Press Start 2P"';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('EMPTY', centerX, centerY + 22);
-        
+
         // === 단축키 뱃지 (SPACE) - 비활성 상태 ===
         ctx.save();
         const badgeW2 = 44; const badgeH2 = 14;
@@ -4184,14 +4184,14 @@ function drawBombButton(ctx) {
         ctx.fillRect(badgeX2, badgeY2, badgeW2, badgeH2);
         ctx.strokeStyle = '#444'; ctx.lineWidth = 1.0;
         ctx.strokeRect(badgeX2, badgeY2, badgeW2, badgeH2);
-        
+
         ctx.fillStyle = '#555';
         ctx.font = '6px "Press Start 2P"';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('SPACE', centerX, badgeY2 + 7);
         ctx.restore();
-        
+
         ctx.fillStyle = '#444';
         ctx.fillRect(btnX + 6, btnY + 6, 3, 3);
     }
@@ -4210,31 +4210,31 @@ function drawPetalCannonButton(ctx) {
     const btnY = GAME_HEIGHT - btnSize - 20;
     const centerX = btnX + btnSize / 2;
     const centerY = btnY + btnSize / 2;
-    
+
     // 버튼 영역 저장 (클릭 감지용)
     petalCannonButtonRect = { x: btnX, y: btnY, width: btnSize, height: btnSize };
-    
+
     const time = Date.now();
     const pulse = Player.petalCannonReady ? Math.sin(time / 120) * 0.25 + 1.1 : 1.0;
     const chargePercent = Math.min(1.0, Player.petalCannonCharge / Player.petalCannonMaxCharge);
-    
+
     ctx.save();
-    
+
     // === 1. 외곽 벚꽃 네온 대형 오라 글로우 (충전 완료시만) ===
     if (Player.petalCannonReady) {
         ctx.shadowBlur = 30 * pulse;
         ctx.shadowColor = '#ff1493';
-        
+
         ctx.fillStyle = `rgba(255, 20, 147, ${0.15 * pulse})`;
         ctx.beginPath();
         ctx.arc(centerX, centerY, btnSize / 2 + 6, 0, Math.PI * 2);
         ctx.fill();
     }
-    
+
     // === 2. 프리미엄 메탈 베젤 프레임 (3D 경사 금속 외곽) ===
     ctx.fillStyle = '#222';
     ctx.fillRect(btnX, btnY, btnSize, btnSize);
-    
+
     // 상단 하이라이트 (메탈릭 반사 그라데이션)
     const metalGradient = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnSize);
     metalGradient.addColorStop(0, '#5a5a5a');
@@ -4243,21 +4243,21 @@ function drawPetalCannonButton(ctx) {
     metalGradient.addColorStop(1, '#0e0e0e');
     ctx.fillStyle = metalGradient;
     ctx.fillRect(btnX + 2, btnY + 2, btnSize - 4, btnSize - 4);
-    
+
     // 핑크/마젠타 테두리 액센트 (충전도에 따라 불투명도 및 생기 조절)
     const borderGlowColor = Player.petalCannonReady ? '#ff1493' : `rgba(255, 105, 180, ${0.2 + chargePercent * 0.8})`;
     ctx.strokeStyle = borderGlowColor;
     ctx.lineWidth = Player.petalCannonReady ? 3.0 : 1.5;
     ctx.strokeRect(btnX + 4, btnY + 4, btnSize - 8, btnSize - 8);
-    
+
     // === 3. 내부 글래스 패널 ===
     const innerX = btnX + 7;
     const innerY = btnY + 7;
     const innerSize = btnSize - 14;
-    
+
     ctx.fillStyle = '#0f0f14';
     ctx.fillRect(innerX, innerY, innerSize, innerSize);
-    
+
     // === 4. [특허급 연출] 핑크 네온 2D 유체 액체 채우기 (Circular Fluid Wave Fill) ===
     if (chargePercent > 0 && !Player.petalCannonReady) {
         ctx.save();
@@ -4265,16 +4265,16 @@ function drawPetalCannonButton(ctx) {
         ctx.beginPath();
         ctx.arc(centerX, centerY, innerSize / 2 - 3, 0, Math.PI * 2);
         ctx.clip();
-        
+
         // 물결 모양 수면 높이 계산 (아래서 위로 차오름)
         const fillHeight = innerSize * chargePercent;
         const waterY = (innerY + innerSize) - fillHeight;
-        
+
         // 좌우 출렁이는 Sine 물결 렌더링
         const waveFrequency = 0.08;
         const waveAmplitude = 3.0; // 출렁임 깊이
         const wavePhase = time / 150;
-        
+
         ctx.fillStyle = 'rgba(255, 20, 147, 0.28)'; // 은은한 핑크빛 충전 유체
         ctx.beginPath();
         ctx.moveTo(innerX - 5, innerY + innerSize + 5);
@@ -4285,7 +4285,7 @@ function drawPetalCannonButton(ctx) {
         ctx.lineTo(innerX + innerSize + 5, innerY + innerSize + 5);
         ctx.closePath();
         ctx.fill();
-        
+
         // 물결 상단 하이라이트 (빛 반사)
         ctx.strokeStyle = '#ff69b4';
         ctx.lineWidth = 1.5;
@@ -4297,7 +4297,7 @@ function drawPetalCannonButton(ctx) {
         ctx.beginPath();
         ctx.arc(centerX, centerY, innerSize / 2 - 3, 0, Math.PI * 2);
         ctx.clip();
-        
+
         const radialGrad = ctx.createRadialGradient(centerX, centerY, 5, centerX, centerY, innerSize / 2);
         radialGrad.addColorStop(0, 'rgba(255, 20, 147, 0.45)');
         radialGrad.addColorStop(0.8, 'rgba(255, 105, 180, 0.2)');
@@ -4306,24 +4306,24 @@ function drawPetalCannonButton(ctx) {
         ctx.fillRect(innerX, innerY, innerSize, innerSize);
         ctx.restore();
     }
-    
+
     // === 5. 꽃잎 포 아이콘 (유기적으로 회전하고 두근거리는 화려한 2D 벚꽃잎) ===
     if (chargePercent > 0 || Player.petalCannonReady) {
         ctx.save();
         ctx.translate(centerX, centerY);
-        
+
         // 완충 시 찬란하게 심장처럼 두근거리는 펄싱 & 빠른 회전
         const rotSpeed = Player.petalCannonReady ? time / 6 : time / 15;
         ctx.rotate(rotSpeed * Math.PI / 180);
-        
+
         const petalSize = Player.petalCannonReady ? 14 : 9;
         ctx.fillStyle = Player.petalCannonReady ? '#ff1493' : '#ff69b4';
-        
+
         // 5가닥의 정교한 벚꽃잎 드로잉 (각 잎마다 3D 음영 적용)
         for (let i = 0; i < 5; i++) {
             ctx.save();
             ctx.rotate((i * 72) * Math.PI / 180);
-            
+
             // 벚꽃잎 픽셀 묘사
             ctx.beginPath();
             ctx.moveTo(0, 0);
@@ -4331,7 +4331,7 @@ function drawPetalCannonButton(ctx) {
             ctx.bezierCurveTo(petalSize * 0.5, -petalSize * 2.2, petalSize, -petalSize * 1.5, 0, 0);
             ctx.closePath();
             ctx.fill();
-            
+
             // 잎맥 하이라이트 선
             ctx.strokeStyle = Player.petalCannonReady ? '#ffffff' : '#ffa6c9';
             ctx.lineWidth = 1;
@@ -4339,22 +4339,22 @@ function drawPetalCannonButton(ctx) {
             ctx.moveTo(0, 0);
             ctx.lineTo(0, -petalSize * 1.8);
             ctx.stroke();
-            
+
             ctx.restore();
         }
-        
+
         // 황금빛 중심술 (Gold Core)
         ctx.fillStyle = Player.petalCannonReady ? '#ffd700' : '#ffcc00';
         ctx.beginPath();
         ctx.arc(0, 0, Player.petalCannonReady ? 7 : 4, 0, Math.PI * 2);
         ctx.fill();
-        
+
         // 중심술 디테일 도트 추가
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(-1.5, -1.5, 3, 3);
-        
+
         ctx.restore();
-        
+
         // === 6. 완충 시 외곽 회전 네온 링 (Rotating Arc Halo) ===
         if (Player.petalCannonReady) {
             ctx.save();
@@ -4362,17 +4362,17 @@ function drawPetalCannonButton(ctx) {
             ctx.shadowColor = '#ff1493';
             ctx.strokeStyle = '#ff69b4';
             ctx.lineWidth = 2;
-            
+
             ctx.beginPath();
             // 각 구간별 2가닥의 회전 아크 링 묘사
             const startAng = (time / 8) * Math.PI / 180;
             ctx.arc(centerX, centerY, innerSize / 2 - 5, startAng, startAng + Math.PI * 0.6);
             ctx.stroke();
-            
+
             ctx.beginPath();
             ctx.arc(centerX, centerY, innerSize / 2 - 5, startAng + Math.PI, startAng + Math.PI * 1.6);
             ctx.stroke();
-            
+
             ctx.restore();
         }
     } else {
@@ -4397,16 +4397,16 @@ function drawPetalCannonButton(ctx) {
         ctx.fill();
         ctx.restore();
     }
-    
+
     // === 7. 충전량 미세 바 (패널 하단 안착) ===
     const barWidth = innerSize - 10;
     const barHeight = 4;
     const barX = innerX + 5;
     const barY = innerY + innerSize - 9;
-    
+
     ctx.fillStyle = '#0a0a0c';
     ctx.fillRect(barX, barY, barWidth, barHeight);
-    
+
     if (chargePercent > 0) {
         const barGradient = ctx.createLinearGradient(barX, barY, barX + barWidth * chargePercent, barY);
         barGradient.addColorStop(0, '#9e0050');
@@ -4415,7 +4415,7 @@ function drawPetalCannonButton(ctx) {
         ctx.fillStyle = barGradient;
         ctx.fillRect(barX, barY, barWidth * chargePercent, barHeight);
     }
-    
+
     // === 8. 준비 상태 네온 인디케이터 도트 ===
     if (Player.petalCannonReady) {
         ctx.fillStyle = '#00ff00';
@@ -4430,26 +4430,26 @@ function drawPetalCannonButton(ctx) {
         ctx.fillRect(btnX + 6, btnY + 6, 3, 3);
     }
     ctx.shadowBlur = 0;
-    
+
     // === 9. 단축키 뱃지 (F키) - 버튼 상단에 둥둥 떠있는 플로팅 애니메이션 ===
     const shortcutColor = Player.petalCannonReady ? '#ff1493' : (chargePercent > 0 ? '#ff69b4' : '#666');
     const fBadgeW = 24; const fBadgeH = 14;
     const floatOffset = Player.petalCannonReady ? Math.sin(time / 180) * 2.5 : 0;
     const fBadgeX = centerX - fBadgeW / 2;
     const fBadgeY = btnY - fBadgeH - 4 + floatOffset;
-    
+
     ctx.fillStyle = 'rgba(10, 10, 15, 0.85)';
     ctx.fillRect(fBadgeX, fBadgeY, fBadgeW, fBadgeH);
-    ctx.strokeStyle = shortcutColor; 
+    ctx.strokeStyle = shortcutColor;
     ctx.lineWidth = Player.petalCannonReady ? 1.5 : 1.0;
     ctx.strokeRect(fBadgeX, fBadgeY, fBadgeW, fBadgeH);
-    
+
     ctx.fillStyle = shortcutColor;
     ctx.font = '7px "Press Start 2P"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText('F', centerX, fBadgeY + 11);
-    
+
     ctx.restore();
 }
 
@@ -4464,24 +4464,24 @@ function isPointInPetalCannonButton(x, y) {
 
 // 다이너마이트 스틱 그리기 (픽셀 아트 스타일)
 function drawDynamiteStick(ctx, cx, cy, w, h, lightColor, darkColor) {
-    const x = cx - w/2;
-    
+    const x = cx - w / 2;
+
     // 어두면 (그림자)
     ctx.fillStyle = darkColor;
     ctx.fillRect(x + 2, cy + 2, w - 2, h - 2);
-    
+
     // 본체 (밝은 빨강)
     ctx.fillStyle = lightColor;
     ctx.fillRect(x, cy, w, h);
-    
+
     // 하이라이트 (위쪽)
     ctx.fillStyle = '#ff6b6b';
     ctx.fillRect(x + 1, cy + 1, w - 2, 3);
-    
+
     // 그림자 (아래쪽)
     ctx.fillStyle = darkColor;
     ctx.fillRect(x + 1, cy + h - 3, w - 2, 2);
-    
+
     // 측면 하이라이트 (입체감)
     ctx.fillStyle = '#ff8888';
     ctx.fillRect(x + 1, cy + 5, 2, h - 7);
@@ -4636,8 +4636,8 @@ window.addEventListener('touchmove', (e) => {
     e.preventDefault(); // 모바일 브라우저 화면 스크롤 방지
 }, { passive: false });
 
-window.addEventListener('keydown', (e) => { 
-    if (e.code === 'Space' && (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT)) useBomb(); 
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT)) useBomb();
     if (e.code === 'KeyF' && (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT)) usePetalCannon();
 });
 
@@ -4718,12 +4718,12 @@ function gameLoop(timestamp) {
                     if (checkCollision(p, e)) {
                         console.log(`[HIT] Bullet damage: ${p.damage}, Enemy HP: ${e.hp} → ${e.hp - p.damage}`);
                         e.hp -= p.damage; p.active = false;
-                        if (e.hp <= 0) { 
-                            e.state = 'DEAD'; e.aniFrame = 0; enemiesKilled++; score += 100; 
+                        if (e.hp <= 0) {
+                            e.state = 'DEAD'; e.aniFrame = 0; enemiesKilled++; score += 100;
                             // 적 처치 시 EXP 획득 (10 EXP)
                             LevelSystem.addPlayerExp(10);
-                            createExplosion(e.x, e.y); AudioManager.playSFX('explode'); 
-                            if (enemiesKilled >= stage.goal && !boss) startBossFight(); 
+                            createExplosion(e.x, e.y); AudioManager.playSFX('explode');
+                            if (enemiesKilled >= stage.goal && !boss) startBossFight();
                         }
                         break;
                     }
@@ -4810,26 +4810,26 @@ function gameLoop(timestamp) {
 
         let skillColor, skillColor2, skillGlow, skillIcon, skillTitle, skillSubtitle, maxDuration;
         if (isShield) {
-            skillColor   = '#a855f7';
-            skillColor2  = '#e9d5ff';
-            skillGlow    = '#c084fc';
-            skillIcon    = '🛡️';
-            skillTitle   = 'SHIELD ACTIVE';
+            skillColor = '#a855f7';
+            skillColor2 = '#e9d5ff';
+            skillGlow = '#c084fc';
+            skillIcon = '🛡️';
+            skillTitle = 'SHIELD ACTIVE';
             skillSubtitle = '무적의 분홍 방패';
-            maxDuration  = 15000 + LevelSystem.getItemEffect('SHIELD');
+            maxDuration = 15000 + LevelSystem.getItemEffect('SHIELD');
         } else {
-            skillColor   = '#f97316';
-            skillColor2  = '#fed7aa';
-            skillGlow    = '#fb923c';
-            skillIcon    = '👥';
-            skillTitle   = 'SUPPORT CALLED';
+            skillColor = '#f97316';
+            skillColor2 = '#fed7aa';
+            skillGlow = '#fb923c';
+            skillIcon = '👥';
+            skillTitle = 'SUPPORT CALLED';
             skillSubtitle = '지원군이 도착했습니다';
-            maxDuration  = 20000 + LevelSystem.getItemEffect('SUPPORT');
+            maxDuration = 20000 + LevelSystem.getItemEffect('SUPPORT');
         }
-        const progress   = Math.max(0, Math.min(1, notif.timeLeft / maxDuration));
-        const pulse      = 0.88 + 0.12 * Math.sin(time / 220);
+        const progress = Math.max(0, Math.min(1, notif.timeLeft / maxDuration));
+        const pulse = 0.88 + 0.12 * Math.sin(time / 220);
         const urgentPulse = secondsLeft <= 3 ? 0.55 + 0.45 * Math.abs(Math.sin(time / 110)) : 1;
-        const isNew      = notif.timeLeft > maxDuration - 800; // 처음 0.8초: 입장 연출
+        const isNew = notif.timeLeft > maxDuration - 800; // 처음 0.8초: 입장 연출
 
         // ── 1. 반투명 풀 배경 (입장 시만 강하게) ────────────
         const bgAlpha = isNew ? 0.55 : 0.30;
@@ -4860,96 +4860,96 @@ function gameLoop(timestamp) {
         }
 
         // ── 4. 중앙 대형 링 (카운트다운 링) ─────────────────
-        const ringR   = Math.min(cw, ch) * 0.20;
-        const ringR2  = ringR + 18;
+        const ringR = Math.min(cw, ch) * 0.20;
+        const ringR2 = ringR + 18;
         // 바깥 글로우
-        ctx.shadowBlur  = 50 * urgentPulse * pulse;
+        ctx.shadowBlur = 50 * urgentPulse * pulse;
         ctx.shadowColor = skillColor;
         ctx.strokeStyle = skillColor + '55';
-        ctx.lineWidth   = 4;
+        ctx.lineWidth = 4;
         ctx.beginPath();
         ctx.arc(cx, cy, ringR2, 0, Math.PI * 2);
         ctx.stroke();
 
         // 진행 링
-        ctx.shadowBlur  = 30 * urgentPulse;
+        ctx.shadowBlur = 30 * urgentPulse;
         ctx.shadowColor = skillGlow;
         ctx.strokeStyle = skillColor;
-        ctx.lineWidth   = 7;
-        ctx.lineCap     = 'round';
+        ctx.lineWidth = 7;
+        ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.arc(cx, cy, ringR, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
         ctx.stroke();
         ctx.lineCap = 'butt';
 
         // 배경 링
-        ctx.shadowBlur  = 0;
+        ctx.shadowBlur = 0;
         ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-        ctx.lineWidth   = 7;
+        ctx.lineWidth = 7;
         ctx.beginPath();
         ctx.arc(cx, cy, ringR, -Math.PI / 2 + Math.PI * 2 * progress, -Math.PI / 2 + Math.PI * 2);
         ctx.stroke();
 
         // ── 5. 아이콘 (중앙) ─────────────────────────────────
         const iconSize = ringR * 0.85 * pulse;
-        ctx.shadowBlur  = 25 * pulse;
+        ctx.shadowBlur = 25 * pulse;
         ctx.shadowColor = skillGlow;
-        ctx.font        = `${Math.round(iconSize)}px serif`;
-        ctx.textAlign   = 'center';
+        ctx.font = `${Math.round(iconSize)}px serif`;
+        ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(skillIcon, cx, cy - 4);
 
         // ── 6. 타이틀 텍스트 ─────────────────────────────────
-        ctx.shadowBlur  = 18 * urgentPulse;
+        ctx.shadowBlur = 18 * urgentPulse;
         ctx.shadowColor = skillColor;
-        ctx.fillStyle   = skillColor2;
-        ctx.font        = `bold ${Math.round(14 * urgentPulse)}px "Press Start 2P"`;
+        ctx.fillStyle = skillColor2;
+        ctx.font = `bold ${Math.round(14 * urgentPulse)}px "Press Start 2P"`;
         ctx.textBaseline = 'alphabetic';
         ctx.fillText(skillTitle, cx, cy - ringR - 22);
 
         // 서브타이틀
         ctx.shadowBlur = 0;
-        ctx.fillStyle  = 'rgba(255,255,255,0.65)';
-        ctx.font       = `bold 10px "Press Start 2P"`;
+        ctx.fillStyle = 'rgba(255,255,255,0.65)';
+        ctx.font = `bold 10px "Press Start 2P"`;
         ctx.fillText(skillSubtitle, cx, cy - ringR - 6);
 
         // ── 7. 카운트다운 숫자 (링 아래) ─────────────────────
         const urgentColor = secondsLeft <= 3 ? '#ff4757' : '#ffffff';
-        ctx.shadowBlur  = secondsLeft <= 3 ? 20 : 10;
+        ctx.shadowBlur = secondsLeft <= 3 ? 20 : 10;
         ctx.shadowColor = secondsLeft <= 3 ? '#ff4757' : skillGlow;
-        ctx.fillStyle   = urgentColor;
-        ctx.font        = `bold ${Math.round(28 * urgentPulse)}px "Press Start 2P"`;
+        ctx.fillStyle = urgentColor;
+        ctx.font = `bold ${Math.round(28 * urgentPulse)}px "Press Start 2P"`;
         ctx.fillText(`${secondsLeft}s`, cx, cy + ringR + 38);
-        ctx.shadowBlur  = 0;
+        ctx.shadowBlur = 0;
 
         // ── 8. 하단 세그먼트 게이지 바 ───────────────────────
         const segments = 12;
-        const barW     = ringR * 2.2;
-        const barX0    = cx - barW / 2;
-        const barY0    = cy + ringR + 50;
-        const segH     = 8;
-        const segW2    = (barW - segments + 1) / segments;
+        const barW = ringR * 2.2;
+        const barX0 = cx - barW / 2;
+        const barY0 = cy + ringR + 50;
+        const segH = 8;
+        const segW2 = (barW - segments + 1) / segments;
 
         for (let s = 0; s < segments; s++) {
             const segFrac = (s + 1) / segments;
-            const filled  = segFrac <= progress;
-            const sx      = barX0 + s * (segW2 + 1);
+            const filled = segFrac <= progress;
+            const sx = barX0 + s * (segW2 + 1);
             ctx.globalAlpha = filled ? urgentPulse : 0.12;
             if (filled) {
                 const sg = ctx.createLinearGradient(sx, barY0, sx, barY0 + segH);
                 sg.addColorStop(0, skillColor2);
                 sg.addColorStop(1, skillColor);
-                ctx.shadowBlur  = 6;
+                ctx.shadowBlur = 6;
                 ctx.shadowColor = skillColor;
-                ctx.fillStyle   = sg;
+                ctx.fillStyle = sg;
             } else {
                 ctx.shadowBlur = 0;
-                ctx.fillStyle  = 'rgba(255,255,255,0.15)';
+                ctx.fillStyle = 'rgba(255,255,255,0.15)';
             }
             ctx.beginPath();
             ctx.roundRect(sx, barY0, segW2, segH, 2);
             ctx.fill();
-            ctx.shadowBlur  = 0;
+            ctx.shadowBlur = 0;
         }
         ctx.globalAlpha = 1;
 
@@ -4958,19 +4958,19 @@ function gameLoop(timestamp) {
             for (let i = 1; i < Player.skillNotifications.length; i++) {
                 const sn = Player.skillNotifications[i];
                 const isSh = sn.text.includes('SHIELD');
-                const sc2  = isSh ? '#a855f7' : '#f97316';
+                const sc2 = isSh ? '#a855f7' : '#f97316';
                 const ico2 = isSh ? '🛡️' : '👥';
-                const sx2  = cw - 52;
-                const sy2  = 60 + (i - 1) * 50;
-                const sl2  = Math.ceil(sn.timeLeft / 1000);
+                const sx2 = cw - 52;
+                const sy2 = 60 + (i - 1) * 50;
+                const sl2 = Math.ceil(sn.timeLeft / 1000);
                 ctx.globalAlpha = 0.85;
-                ctx.shadowBlur  = 10;
+                ctx.shadowBlur = 10;
                 ctx.shadowColor = sc2;
                 ctx.font = '22px serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(ico2, sx2, sy2);
-                ctx.font     = '7px "Press Start 2P"';
+                ctx.font = '7px "Press Start 2P"';
                 ctx.fillStyle = sc2;
                 ctx.fillText(`${sl2}s`, sx2, sy2 + 18);
                 ctx.shadowBlur = 0;
@@ -5770,14 +5770,14 @@ function drawEpilogueScreen(ctx, timestamp) {
     }
 
     ctx.fillText(promptText, GAME_WIDTH / 2, GAME_HEIGHT - 30);
-    
+
     // 가로모드에서 더블탭 스킵 힌트 추가
     if (isMobileLandscapeOrientation()) {
         ctx.fillStyle = '#e74c3c';
         ctx.font = '10px "Press Start 2P"';
         ctx.fillText('▼ DOUBLE TAP TO SKIP ▼', GAME_WIDTH / 2, GAME_HEIGHT - 12);
     }
-    
+
     ctx.restore();
 }
 
@@ -6042,140 +6042,140 @@ async function init() {
         console.log("[Yeon-Game] Loading all assets...");
         await ImageLoader.loadAllAssets();
         console.log("[Yeon-Game] All assets loaded successfully!");
-        
+
         console.log("[Yeon-Game] Initializing LevelSystem...");
         LevelSystem.init();
         console.log("[Yeon-Game] Initializing Player...");
         Player.init();
-        
+
         console.log("[Yeon-Game] Updating UI visibility...");
         updateMainMenuVisibility();
         updateInstallButtonVisibility();
         updateGameOverButtonVisibility();
 
-    // 패스워드 및 스테이지 선택 이벤트 리스너 설정
-    if (passwordSubmitBtn) {
-        passwordSubmitBtn.addEventListener('click', checkStagePassword);
-    }
-    if (stagePasswordInput) {
-        // 키 입력 시 dots 업데이트
-        stagePasswordInput.addEventListener('input', (e) => {
-            updatePasswordDots(e.target.value.length);
-        });
-        // 포커스 시 활성화 표시
-        stagePasswordInput.addEventListener('focus', () => {
-            updatePasswordDots(stagePasswordInput.value.length);
-        });
-        stagePasswordInput.addEventListener('blur', () => {
-            updatePasswordDots(stagePasswordInput.value.length);
-        });
-        // Enter 키로 제출
-        stagePasswordInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') checkStagePassword();
-        });
-        // 입력 필드 클릭 이벤트 (디버깅용)
-        stagePasswordInput.addEventListener('click', () => {
-            console.log('[Password] Input clicked/focused');
-        });
-    }
-    // password-dots 영역 클릭 시 입력 필드 포커스
-    if (passwordDots && stagePasswordInput) {
-        passwordDots.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log('[Password] Dots clicked, focusing input');
-            stagePasswordInput.focus();
-        });
-        // 터치 이벤트도 추가 (모바일)
-        passwordDots.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            console.log('[Password] Dots touched, focusing input');
-            stagePasswordInput.focus();
-        });
-    }
-    // password-panel 접기/펴기 토글
-    const passwordPanel = document.getElementById('password-panel');
-    if (passwordPanel) {
-        passwordPanel.addEventListener('click', (e) => {
-            // 입력 필드나 버튼을 클릭한 경우는 무시 (접힌 상태에서 아이콘 클릭시에만 토글)
-            if (passwordPanel.classList.contains('collapsed')) {
-                passwordPanel.classList.remove('collapsed');
-                e.stopPropagation();
-            }
-        });
-
-        // 아이콘(열쇠) 클릭 시에도 토글 지원
-        const passwordIcon = passwordPanel.querySelector('.password-icon');
-        if (passwordIcon) {
-            passwordIcon.addEventListener('click', (e) => {
-                if (!passwordPanel.classList.contains('collapsed')) {
-                    passwordPanel.classList.add('collapsed');
+        // 패스워드 및 스테이지 선택 이벤트 리스너 설정
+        if (passwordSubmitBtn) {
+            passwordSubmitBtn.addEventListener('click', checkStagePassword);
+        }
+        if (stagePasswordInput) {
+            // 키 입력 시 dots 업데이트
+            stagePasswordInput.addEventListener('input', (e) => {
+                updatePasswordDots(e.target.value.length);
+            });
+            // 포커스 시 활성화 표시
+            stagePasswordInput.addEventListener('focus', () => {
+                updatePasswordDots(stagePasswordInput.value.length);
+            });
+            stagePasswordInput.addEventListener('blur', () => {
+                updatePasswordDots(stagePasswordInput.value.length);
+            });
+            // Enter 키로 제출
+            stagePasswordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') checkStagePassword();
+            });
+            // 입력 필드 클릭 이벤트 (디버깅용)
+            stagePasswordInput.addEventListener('click', () => {
+                console.log('[Password] Input clicked/focused');
+            });
+        }
+        // password-dots 영역 클릭 시 입력 필드 포커스
+        if (passwordDots && stagePasswordInput) {
+            passwordDots.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('[Password] Dots clicked, focusing input');
+                stagePasswordInput.focus();
+            });
+            // 터치 이벤트도 추가 (모바일)
+            passwordDots.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                console.log('[Password] Dots touched, focusing input');
+                stagePasswordInput.focus();
+            });
+        }
+        // password-panel 접기/펴기 토글
+        const passwordPanel = document.getElementById('password-panel');
+        if (passwordPanel) {
+            passwordPanel.addEventListener('click', (e) => {
+                // 입력 필드나 버튼을 클릭한 경우는 무시 (접힌 상태에서 아이콘 클릭시에만 토글)
+                if (passwordPanel.classList.contains('collapsed')) {
+                    passwordPanel.classList.remove('collapsed');
                     e.stopPropagation();
                 }
             });
+
+            // 아이콘(열쇠) 클릭 시에도 토글 지원
+            const passwordIcon = passwordPanel.querySelector('.password-icon');
+            if (passwordIcon) {
+                passwordIcon.addEventListener('click', (e) => {
+                    if (!passwordPanel.classList.contains('collapsed')) {
+                        passwordPanel.classList.add('collapsed');
+                        e.stopPropagation();
+                    }
+                });
+            }
         }
-    }
 
-    if (stageSelectCloseBtn) {
-        stageSelectCloseBtn.addEventListener('click', () => {
-            hideStageSelectUI();
-            // 메인 메뉴로 돌아가기
-            isStageUnlocked = false;
-            updateMainMenuVisibility();
-        });
-    }
-    // 스테이지 버튼 이벤트 리스너 - 각 버튼에 명시적으로 설정
-    stageButtons.forEach((btn, index) => {
-        // 클릭 이벤트
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const stageNum = parseInt(btn.dataset.stage);
-            console.log(`[Stage Select] Button ${stageNum} clicked`);
-            startGameAtStage(stageNum);
-        });
-        // 마우스 다운 이벤트 (더 빠른 반응)
-        btn.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const stageNum = parseInt(btn.dataset.stage);
-            console.log(`[Stage Select] Button ${stageNum} mousedown`);
-            startGameAtStage(stageNum);
-        });
-        // 터치 이벤트도 추가 (모바일 대응)
-        btn.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const stageNum = parseInt(btn.dataset.stage);
-            console.log(`[Stage Select] Button ${stageNum} touched`);
-            startGameAtStage(stageNum);
-        });
-    });
-    console.log(`[Init] ${stageButtons.length} stage buttons initialized`);
-
-    // 스테이지 선택 컨테이너에 이벤트 위임 (백업 방법)
-    if (stageSelectContainer) {
-        stageSelectContainer.addEventListener('click', (e) => {
-            const btn = e.target.closest('.stage-btn');
-            if (btn) {
+        if (stageSelectCloseBtn) {
+            stageSelectCloseBtn.addEventListener('click', () => {
+                hideStageSelectUI();
+                // 메인 메뉴로 돌아가기
+                isStageUnlocked = false;
+                updateMainMenuVisibility();
+            });
+        }
+        // 스테이지 버튼 이벤트 리스너 - 각 버튼에 명시적으로 설정
+        stageButtons.forEach((btn, index) => {
+            // 클릭 이벤트
+            btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 const stageNum = parseInt(btn.dataset.stage);
-                console.log(`[Stage Select] Delegated click for stage ${stageNum}`);
+                console.log(`[Stage Select] Button ${stageNum} clicked`);
                 startGameAtStage(stageNum);
-            }
+            });
+            // 마우스 다운 이벤트 (더 빠른 반응)
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const stageNum = parseInt(btn.dataset.stage);
+                console.log(`[Stage Select] Button ${stageNum} mousedown`);
+                startGameAtStage(stageNum);
+            });
+            // 터치 이벤트도 추가 (모바일 대응)
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const stageNum = parseInt(btn.dataset.stage);
+                console.log(`[Stage Select] Button ${stageNum} touched`);
+                startGameAtStage(stageNum);
+            });
         });
-    }
+        console.log(`[Init] ${stageButtons.length} stage buttons initialized`);
 
-    // 모바일 메인 화면 즉시 전체화면
-    if (isMobileTouchDevice()) {
-        requestMobileMainFullscreen();
-        handleMobileOrientation();
-    }
+        // 스테이지 선택 컨테이너에 이벤트 위임 (백업 방법)
+        if (stageSelectContainer) {
+            stageSelectContainer.addEventListener('click', (e) => {
+                const btn = e.target.closest('.stage-btn');
+                if (btn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const stageNum = parseInt(btn.dataset.stage);
+                    console.log(`[Stage Select] Delegated click for stage ${stageNum}`);
+                    startGameAtStage(stageNum);
+                }
+            });
+        }
 
-    // 초기 모바일 상태 체크
-    checkMobileEasyModeStatus();
+        // 모바일 메인 화면 즉시 전체화면
+        if (isMobileTouchDevice()) {
+            requestMobileMainFullscreen();
+            handleMobileOrientation();
+        }
 
-    animationId = requestAnimationFrame(gameLoop);
+        // 초기 모바일 상태 체크
+        checkMobileEasyModeStatus();
+
+        animationId = requestAnimationFrame(gameLoop);
     } catch (err) {
         console.error("[Yeon-Game] Fatal initialization error:", err);
     }
