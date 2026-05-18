@@ -1927,10 +1927,31 @@ const Player = {
 
             // 꽃잎포 격발 시 강력한 시각 효과 (화려한 핑크 오라와 진동)
             if (this.petalFiringTimer > 0) {
-                ctx.shadowBlur = 40 + Math.random() * 20;
-                ctx.shadowColor = '#ff1493'; // 딥 핑크 글로우
-                drawX += (Math.random() - 0.5) * 12; // 강력한 화면 진동 연출
-                drawY += (Math.random() - 0.5) * 12;
+                // 기존 총쏘는 애니메이션(8프레임)을 활용한 초화려한 궁극기 팬텀(잔상) 이펙트 연출
+                const phantomCount = 3;
+                const time = Date.now();
+                for (let i = phantomCount; i > 0; i--) {
+                    ctx.save();
+                    const scale = 1.0 + (i * 0.25) + Math.sin(time / 40) * 0.1;
+                    ctx.globalAlpha = 0.5 / i;
+                    ctx.shadowBlur = 50;
+                    // 팬텀 색상 교차 발광 (핫핑크 & 시안)
+                    ctx.shadowColor = i % 2 === 0 ? '#ff1493' : '#00ffff';
+                    
+                    const pDrawW = drawW * scale;
+                    const pDrawH = drawH * scale;
+                    const pDrawX = drawX - (pDrawW - drawW) / 2 + (Math.random() - 0.5) * 20;
+                    const pDrawY = drawY - (pDrawH - drawH) / 2 + (Math.random() - 0.5) * 20;
+                    
+                    // 기존 스프라이트 컷(sx, sy)을 활용해 거대화된 잔상을 그려 화려함 극대화
+                    ctx.drawImage(img, sx, sy, cropWidth, frameH, pDrawX, pDrawY, pDrawW, pDrawH);
+                    ctx.restore();
+                }
+
+                ctx.shadowBlur = 50 + Math.random() * 30;
+                ctx.shadowColor = '#ff1493'; // 코어 딥 핑크 글로우
+                drawX += (Math.random() - 0.5) * 18; // 더욱 과격한 코어 화면 진동 연출
+                drawY += (Math.random() - 0.5) * 18;
             } else if (this.isShootingAnimation && this.aniFrame === 4) {
                 // 일반 사격 시 총구 화염 글로우 효과 적용
                 ctx.shadowBlur = 18;
