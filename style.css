@@ -1364,30 +1364,53 @@ html {
 .action-btn {
     width: 80px;
     height: 80px;
-    background: #1e272e;
+    background: linear-gradient(135deg, rgba(30, 39, 46, 0.9) 0%, rgba(15, 20, 24, 0.95) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 4px solid #ff4757;
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow: 
-        inset -4px -4px 0px rgba(0,0,0,0.5),
-        4px 4px 0px rgba(0,0,0,0.6),
-        0 0 20px rgba(255, 71, 87, 0.4);
+        inset 0 0 15px rgba(255, 71, 87, 0.4),
+        inset -4px -4px 0px rgba(0, 0, 0, 0.8),
+        inset 4px 4px 0px rgba(255, 255, 255, 0.15),
+        0 8px 25px rgba(0, 0, 0, 0.6),
+        0 0 20px rgba(255, 71, 87, 0.3);
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     image-rendering: pixelated;
-    animation: bomb-button-glow 2s infinite ease-in-out;
-    transition: transform 0.1s;
+    animation: bomb-button-glow 2.5s infinite ease-in-out;
+    transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .action-btn:active {
-    transform: scale(0.9) translateY(4px);
-    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8);
+    transform: scale(0.9) translateY(6px);
+    box-shadow: 
+        inset 4px 4px 0px rgba(0, 0, 0, 0.9),
+        0 2px 5px rgba(0, 0, 0, 0.4),
+        0 0 10px rgba(255, 71, 87, 0.2);
 }
 
 @keyframes bomb-button-glow {
-    0%, 100% { box-shadow: 0 0 15px rgba(255, 71, 87, 0.3); }
-    50% { box-shadow: 0 0 30px rgba(255, 71, 87, 0.6); }
+    0%, 100% { 
+        box-shadow: 
+            inset 0 0 15px rgba(255, 71, 87, 0.4),
+            inset -4px -4px 0px rgba(0, 0, 0, 0.8),
+            inset 4px 4px 0px rgba(255, 255, 255, 0.15),
+            0 8px 25px rgba(0, 0, 0, 0.6),
+            0 0 15px rgba(255, 71, 87, 0.3);
+        border-color: #ff4757;
+    }
+    50% { 
+        box-shadow: 
+            inset 0 0 25px rgba(255, 71, 87, 0.7),
+            inset -4px -4px 0px rgba(0, 0, 0, 0.8),
+            inset 4px 4px 0px rgba(255, 255, 255, 0.3),
+            0 12px 35px rgba(0, 0, 0, 0.8),
+            0 0 35px rgba(255, 71, 87, 0.7);
+        border-color: #ff6b81;
+    }
 }
 
 .btn-icon {

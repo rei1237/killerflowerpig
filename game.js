@@ -390,64 +390,216 @@ function drawHUD(ctx) {
     ctx.save();
     const hudBombStartX = GAME_WIDTH/scale - 70;
     const hudBombY = 45;
+    // 10. HUD Bombs (top right - premium pixel art dynamite with metallic rack)
+    ctx.save();
+    const hudBombStartX = GAME_WIDTH/scale - 75;
+    const hudBombY = 45;
+
+    // 프리미엄 메탈릭 홀더 백그라운드 랙 그리기
+    ctx.fillStyle = 'rgba(20, 20, 20, 0.7)';
+    ctx.strokeStyle = '#4a4a4a';
+    ctx.lineWidth = 1;
+    // 최대 5개 폭탄이 안착되는 랙 프레임
+    ctx.fillRect(hudBombStartX - 4 * 14 - 8, hudBombY - 4, 5 * 14 + 10, 20);
+    ctx.strokeRect(hudBombStartX - 4 * 14 - 8, hudBombY - 4, 5 * 14 + 10, 20);
+    
+    // 랙 내의 고정 징 디테일 (금속 단추)
+    ctx.fillStyle = '#6a6a6a';
+    for (let i = 0; i < 5; i++) {
+        ctx.fillRect(hudBombStartX - i * 14 - 1, hudBombY + 12, 2, 2);
+    }
+
     for (let i = 0; i < Math.min(Player.bombCount, 5); i++) {
         const bx = hudBombStartX - i * 14;
         const by = hudBombY;
         
-        // Dynamite stick (mini)
-        ctx.fillStyle = '#8b0000';
-        ctx.fillRect(bx - 3, by, 6, 12);
-        // Highlight
-        ctx.fillStyle = '#c41e3a';
-        ctx.fillRect(bx - 2, by + 1, 4, 10);
-        // Top highlight
-        ctx.fillStyle = '#ff6b6b';
-        ctx.fillRect(bx - 1, by + 1, 2, 3);
-        // Fuse
-        ctx.fillStyle = '#8b7355';
+        // 폭탄 장착 시의 붉은빛 글로우 효과
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#ff3333';
+
+        // Dynamite stick (정교한 픽셀 도트 질감)
+        ctx.fillStyle = '#660000'; // 다크 섀도우
+        ctx.fillRect(bx - 4, by, 8, 12);
+        
+        ctx.fillStyle = '#cc1111'; // 메인 레드 바디
+        ctx.fillRect(bx - 3, by + 1, 6, 10);
+        
+        // 황동 고정링 (밴드) 2줄 추가
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(bx - 4, by + 3, 8, 1.5);
+        ctx.fillRect(bx - 4, by + 8, 8, 1.5);
+
+        // 하이라이트 라인
+        ctx.fillStyle = '#ffa3a3';
+        ctx.fillRect(bx - 2, by + 1, 2, 10);
+        
+        // 갈색 도트 심지 (정밀 묘사)
+        ctx.fillStyle = '#bfa76f';
         ctx.fillRect(bx - 1, by - 3, 2, 3);
+        ctx.fillStyle = '#ffcc00'; // 심지 끝 불꽃 스파크
+        ctx.fillRect(bx - 1, by - 4, 2, 1);
     }
-    // Show +N if more than 5 bombs
+    ctx.shadowBlur = 0; // 글로우 리셋
+
+    // 5개 초과 시 +N 뱃지 렌더링 (골드 네온 서클)
     if (Player.bombCount > 5) {
-        ctx.fillStyle = '#f1c40f';
-        ctx.font = '8px "Press Start 2P"';
-        ctx.textAlign = 'left';
-        ctx.fillText(`+${Player.bombCount - 5}`, hudBombStartX + 10, hudBombY + 6);
+        const badgeX = hudBombStartX + 12;
+        const badgeY = hudBombY + 6;
+        ctx.fillStyle = '#ffd700';
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(badgeX + 6, badgeY, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 7px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`+${Player.bombCount - 5}`, badgeX + 6, badgeY + 1);
     }
     ctx.restore();
 
-    // 10.5. Petal Cannon Charge UI (next to bomb count)
-    const petalX = GAME_WIDTH/scale - 70;
-    const petalY = 65;
+    // 10.5. Petal Cannon Charge UI (고급 크리스탈 네온 튜브 및 핑크빛 꽃가루 파티클 효과)
+    const petalX = GAME_WIDTH/scale - 75;
+    const petalY = 71;
     const petalChargePercent = Math.min(1, Player.petalCannonCharge / Player.petalCannonMaxCharge);
     
-    // Petal icon
-    ctx.fillStyle = Player.petalCannonReady ? '#ff1493' : '#ff69b4';
-    ctx.font = '12px "Press Start 2P"';
-    ctx.textAlign = 'center';
-    ctx.fillText('🌸', petalX + 15, petalY + 5);
+    // 꽃잎포 충전 완료 시 벚꽃잎 흩날림 동적 파티클 효과 구현
+    if (!window.hudPetalParticles) window.hudPetalParticles = [];
     
-    // Charge bar background
-    ctx.fillStyle = '#1a0a0f';
-    ctx.fillRect(petalX, petalY + 10, 30, 4);
-    
-    // Charge bar fill (pink gradient effect)
-    if (petalChargePercent > 0) {
-        const petalGradient = ctx.createLinearGradient(petalX, petalY + 10, petalX + 30 * petalChargePercent, petalY + 10);
-        petalGradient.addColorStop(0, Player.petalCannonReady ? '#ff1493' : '#ffb6c1');
-        petalGradient.addColorStop(1, Player.petalCannonReady ? '#ff69b4' : '#ffc0cb');
-        ctx.fillStyle = petalGradient;
-        ctx.fillRect(petalX, petalY + 10, 30 * petalChargePercent, 4);
+    if (Player.petalCannonReady) {
+        // 매 프레임 일정 확률로 핑크 파티클 스폰 (HUD 우측 영역)
+        if (Math.random() < 0.15) {
+            window.hudPetalParticles.push({
+                x: petalX + 15 + (Math.random() - 0.5) * 40,
+                y: petalY + 10 + (Math.random() - 0.5) * 15,
+                vx: (Math.random() - 0.5) * 1.5,
+                vy: -Math.random() * 1.2 - 0.5,
+                size: Math.random() * 3 + 2,
+                alpha: 1.0,
+                decay: Math.random() * 0.02 + 0.015,
+                rot: Math.random() * Math.PI,
+                rotSpd: (Math.random() - 0.5) * 0.05
+            });
+        }
     }
     
-    // Ready indicator
+    // 꽃가루 파티클 업데이트 및 드로잉
+    if (window.hudPetalParticles.length > 0) {
+        ctx.save();
+        for (let pIdx = window.hudPetalParticles.length - 1; pIdx >= 0; pIdx--) {
+            const p = window.hudPetalParticles[pIdx];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.alpha -= p.decay;
+            p.rot += p.rotSpd;
+            
+            if (p.alpha <= 0) {
+                window.hudPetalParticles.splice(pIdx, 1);
+                continue;
+            }
+            
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = '#ff69b4';
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = '#ff1493';
+            
+            // 회전하는 꽃잎 사각형/마름모 드로잉
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            ctx.rotate(-p.rot);
+            ctx.translate(-p.x, -p.y);
+        }
+        ctx.restore();
+    }
+    
+    // Petal icon (충전 시 유기적으로 회전하고 펄싱)
+    ctx.save();
+    ctx.translate(petalX + 15, petalY + 5);
+    const petalPulse = Player.petalCannonReady ? 1.0 + Math.sin(time / 150) * 0.15 : 1.0;
+    ctx.scale(petalPulse, petalPulse);
+    ctx.font = '12px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
     if (Player.petalCannonReady) {
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#ff1493';
+    }
+    ctx.fillText('🌸', 0, 0);
+    ctx.restore();
+    
+    // 크리스탈 튜브 게이지 백그라운드 (은은한 메탈릭 테두리 관)
+    const tubeW = 54;
+    const tubeH = 8;
+    const tubeX = petalX - 12;
+    const tubeY = petalY + 14;
+    
+    ctx.fillStyle = 'rgba(10, 5, 8, 0.8)';
+    ctx.fillRect(tubeX, tubeY, tubeW, tubeH);
+    
+    // 3D 벚꽃 핑크빛 네온 그라데이션 충전 게이지 바
+    if (petalChargePercent > 0) {
+        ctx.save();
+        const fillW = (tubeW - 2) * petalChargePercent;
+        
+        // 네온 발광 효과
+        ctx.shadowBlur = Player.petalCannonReady ? 12 : 6;
+        ctx.shadowColor = Player.petalCannonReady ? '#ff1493' : '#ff69b4';
+        
+        const petalGradient = ctx.createLinearGradient(tubeX + 1, tubeY + 1, tubeX + fillW, tubeY + 1);
+        if (Player.petalCannonReady) {
+            // 충전 완료 시: 찬란히 끓어오르는 핫핑크 네온
+            petalGradient.addColorStop(0, '#ff1493');
+            petalGradient.addColorStop(0.5, '#ff69b4');
+            petalGradient.addColorStop(1, '#ffffff');
+        } else {
+            // 충전 중: 핑크 에너지가 서서히 차오름
+            petalGradient.addColorStop(0, '#9b2c2c');
+            petalGradient.addColorStop(0.7, '#ff69b4');
+            petalGradient.addColorStop(1, '#ffb6c1');
+        }
+        
+        ctx.fillStyle = petalGradient;
+        ctx.fillRect(tubeX + 1, tubeY + 1, fillW, tubeH - 2);
+        
+        // 게이지 물결 하이라이트 (Wave Reflection)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fillRect(tubeX + 1, tubeY + 1, fillW, 2);
+        ctx.restore();
+    }
+    
+    // 크리스탈 튜브 테두리 유리광택 광원 반사
+    ctx.strokeStyle = Player.petalCannonReady ? '#ff1493' : '#555';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(tubeX, tubeY, tubeW, tubeH);
+    // 유리관 하이라이트 선
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(tubeX + 1, tubeY + 1.5);
+    ctx.lineTo(tubeX + tubeW - 1, tubeY + 1.5);
+    ctx.stroke();
+    
+    // READY (발사대기) 네온 글리치 텍스트 표시
+    if (Player.petalCannonReady) {
+        ctx.save();
         ctx.fillStyle = '#ff1493';
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#ff69b4';
-        ctx.font = '8px "Press Start 2P"';
-        ctx.fillText('F!', petalX + 15, petalY + 22);
-        ctx.shadowBlur = 0;
+        ctx.font = 'bold 6px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        
+        // 플리커링 인디케이터
+        const flicker = Math.sin(time / 100) > 0;
+        if (flicker) {
+            ctx.fillStyle = '#ffffff';
+        }
+        ctx.fillText('READY', tubeX + tubeW / 2, tubeY + 18);
+        ctx.restore();
     }
 
     ctx.restore();
@@ -1483,6 +1635,7 @@ const Player = {
     lastFireTime: 0,
     damage: 10,
     targetY: 0,
+    recoilX: 0, // 물리적 반동 변위 오프셋 추가 (프리미엄 2D 감동 손맛)
     init: function () {
         // 가로모드에서 크기 75% 축소 (더 많은 적을 위한 공간 확보)
         if (isMobileLandscapePlayMode()) {
@@ -1495,6 +1648,7 @@ const Player = {
         
         this.y = GAME_HEIGHT / 2 - this.height / 2;
         this.targetY = this.y;
+        this.recoilX = 0; // 반동 리셋
         
         // 스탯 계산
         const baseDamage = 10;
@@ -1548,6 +1702,7 @@ const Player = {
             this.state = 'DEAD';
             this.aniFrame = 0;
             this.lastFrameTime = Date.now();
+            this.recoilX = 0; // 사망 시 물리 반동 리셋
             createExplosion(this.x, this.y, '#c0392b');
             endGame();
         }
@@ -1584,20 +1739,74 @@ const Player = {
         this.y += dy * moveSpeed;
         if (this.y < 0) this.y = 0;
         if (this.y + this.height > GAME_HEIGHT) this.y = GAME_HEIGHT - this.height;
-        const totalAniFrames = 8;
-        // 모바일에서 더 빠른 발사 속도 적용
+
+        // =========================================================
+        // [프리미엄 2D 스프라이트 정밀 반동 물리 및 연사 연동형 애니메이터]
+        // =========================================================
+        
+        // 1. 반동 복원 스프링-감쇠 물리 모델 (Spring-Damper Recoil Decay)
+        // 총을 쏘면 recoilX가 마이너스로 튕겼다가, 프레임마다 탄력적으로 0에 복원됨
+        this.recoilX *= 0.82;
+        if (Math.abs(this.recoilX) < 0.1) this.recoilX = 0;
+
+        // 모바일 및 이지 모드용 발사 주기 보정 적용
         const fireRateMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.fireRateMultiplier : 1.0;
         const fire = Math.max(this.fireRate * fireRateMultiplier, 10);
-        const aniCycleTime = fire * 1.5;
-        const frameDuration = aniCycleTime / totalAniFrames;
+        const timeSinceLastFire = time - this.lastFireTime;
 
-        this.aniFrame = Math.floor((time % aniCycleTime) / (frameDuration || 1)) % totalAniFrames;
+        // 사격 중인지 판단 (발사 후 한 주기 이내)
+        if (timeSinceLastFire < fire) {
+            this.isShootingAnimation = true;
+            const progress = timeSinceLastFire / fire;
+            
+            // 극도로 빠른 공격속도(연사)일 때와 일반 속도일 때의 프레임 연출 탄력 보정
+            if (fire < 130) {
+                // 초고속 사격: 눈 피로 방지를 위해 4번(발사화염)과 5번(강한 반동) 위주로 빠르게 교차하여 돌격소총 연사 느낌 극대화
+                if (progress < 0.35) {
+                    this.aniFrame = 4; // 발사 불꽃
+                } else if (progress < 0.80) {
+                    this.aniFrame = 5; // 다리 들림 반동
+                } else {
+                    this.aniFrame = 1; // 정조준 준비
+                }
+            } else {
+                // 일반/저속 사격: 사격, 강한 물리 반동, 숨고르기, 조준 복귀 4단계 시퀀스를 부드럽게 보간
+                if (progress < 0.15) {
+                    this.aniFrame = 4; // 1단계: 분홍 벚꽃 총구 화염 발사 순간
+                } else if (progress < 0.50) {
+                    this.aniFrame = 5; // 2단계: 다리가 들리는 호쾌한 사격 반동
+                } else if (progress < 0.78) {
+                    this.aniFrame = 6; // 3단계: 땀방울을 흘리며 한숨 쉬는 숨고르기/반동 복귀
+                } else {
+                    this.aniFrame = 1; // 4단계: 수평 정조준 복귀
+                }
+            }
+        } else {
+            this.isShootingAnimation = false;
+            
+            // 평소 걷기/대기 하이브리드 연출:
+            // 위아래 이동 중(dy 존재)일 때는 이동 속도에 맞춰 발을 자연스럽게 교차 (0, 1, 2, 3 순환)
+            // 가만히 대기 중일 때는 0번(기본 대기)과 1번(정조준)이 숨쉬듯 800ms 주기로 은은하게 펄싱
+            if (Math.abs(dy) > 0.8) {
+                const walkFrameDuration = 200; 
+                this.aniFrame = Math.floor(time / walkFrameDuration) % 4;
+            } else {
+                const breathCycle = 1000;
+                this.aniFrame = Math.floor((time % breathCycle) / (breathCycle / 2)) === 0 ? 0 : 1;
+            }
+        }
+
+        // 2. 발사 로직
         if (time - this.lastFireTime >= fire) {
             this.lastFireTime = time;
             
-            // 무기 레벨당 10% 크기 증가 (DAMAGE 레벨 기준, 최대 10레벨까지)
+            // [물리 반동 격발!] 플레이어를 뒤(왼쪽)로 강하게 튕겨냄 (공격력 레벨에 따라 타격감 반동 강도 증가)
             const weaponLevel = LevelSystem.items.DAMAGE.level;
             const cappedWeaponLevel = Math.min(weaponLevel, 10); // 10레벨 이후 크기 증가 없음
+            
+            // 기본 반동 -6px, 무기 레벨당 -0.4px씩 반동 증가로 묵직한 대포 샷건 연출!
+            this.recoilX = -(5.5 + cappedWeaponLevel * 0.45);
+            
             const sizeScale = 1 + (cappedWeaponLevel - 1) * 0.10; // 레벨 1 = 100%, 레벨 10 = 190%
             const bulletWidth = Math.max(16, Math.round(20 * sizeScale));
             const bulletHeight = Math.max(8, Math.round(10 * sizeScale));
@@ -1605,12 +1814,25 @@ const Player = {
             const speedScale = 1 + (weaponLevel - 1) * 0.1;
             const bulletSpeed = 10 * speedScale;
             
-            // 주 총알 발사 - Projectile 생성자에서 공격력 기반으로 크기 자동 계산
+            // 주 총알 격발 - Projectile 생성자에서 공격력 기반으로 크기 자동 계산
             console.log(`[SHOOT] Player.damage: ${this.damage}, bulletSpeed: ${bulletSpeed}, weaponLevel: ${weaponLevel}`);
             const projectile = new Projectile(this.x + this.width - 5, this.y + this.height * 0.65, bulletSpeed, 0, this.damage);
             projectiles.push(projectile);
             
-            // 꽃잎 포 충전 (총 발사 횟수 기준)
+            // [화려한 탄피/스파크 격발 이펙트] 총구에서 뒤쪽(왼쪽)으로 가볍게 날리는 분홍 스파크 뿜음
+            const fireX = this.x + this.width - 5;
+            const fireY = this.y + this.height * 0.62;
+            const sparkCount = isMobileEasyModeActive() ? 2 : 4;
+            for (let s = 0; s < sparkCount; s++) {
+                const p = new Particle(fireX, fireY, '#ffb6c1');
+                p.speedX = -Math.random() * 4 - 2; // 격렬하게 뒤로 튕김
+                p.speedY = (Math.random() - 0.5) * 5; // 사방 산란
+                p.size = Math.random() * 3 + 2;
+                p.decay = 0.03;
+                particles.push(p);
+            }
+            
+            // 꽃잎 포 충전 (총 격발 횟수 기준)
             if (!this.petalCannonReady) {
                 this.petalCannonCharge++;
                 if (this.petalCannonCharge >= this.petalCannonMaxCharge) {
@@ -1668,11 +1890,16 @@ const Player = {
             let rowIdx = 0;
             let colIdx = 0;
 
+            // 사망 시 정교한 비주얼 피드백 적용
             if (this.state === 'DEAD') {
-                rowIdx = 1;
-                colIdx = Math.min(this.aniFrame, cols - 1);
+                // 사망 시: 5번 프레임(반동 밀림)에서 서서히 6번 프레임(눈 감고 한숨)으로 연출
+                const timeSinceDeath = Date.now() - this.lastFrameTime;
+                const deathFrame = timeSinceDeath < 400 ? 5 : 6;
+                rowIdx = Math.floor(deathFrame / cols);
+                colIdx = deathFrame % cols;
             } else {
-                rowIdx = Math.floor(this.aniFrame / cols) % rows;
+                // 정교한 전역 프레임 매핑을 위해 rowIdx, colIdx 분할 계산
+                rowIdx = Math.floor(this.aniFrame / cols);
                 colIdx = this.aniFrame % cols;
             }
 
@@ -1685,18 +1912,24 @@ const Player = {
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
 
-            // 불투명한 피크셀 정렬 (sub-pixel 변동 방지)
-            const drawX = Math.round(this.x);
+            // 불투명한 피크셀 정렬 + 물리 반동(recoilX)의 실시간 변위 적용
+            const drawX = Math.round(this.x + this.recoilX);
             const drawY = Math.round(this.y);
             const drawW = Math.round(this.width);
             const drawH = Math.round(this.height);
 
+            // 사격 시 총구 화염 및 총알 격발 글로우 효과 적용
+            if (this.isShootingAnimation && this.aniFrame === 4) {
+                ctx.shadowBlur = 18;
+                ctx.shadowColor = '#ffb6c1'; // 화사한 핑크빛 총구 화염 격렬 격발 발광
+            }
+
             if (this.shield > 0) {
-                // 쉘드 중: 보라 글로우 + 하이라이트
+                // 쉴드 중: 보라 글로우 + 하이라이트
                 ctx.shadowBlur = 24;
                 ctx.shadowColor = '#a855f7';
                 ctx.drawImage(img, sx, sy, cropWidth, frameH, drawX, drawY, drawW, drawH);
-                // 반투명 불벛 이퍼트
+                // 반투명 불빛 이펙트
                 ctx.globalAlpha = 0.25 + 0.15 * Math.sin(Date.now() / 200);
                 ctx.shadowBlur = 40;
                 ctx.drawImage(img, sx, sy, cropWidth, frameH, drawX, drawY, drawW, drawH);
@@ -1713,11 +1946,11 @@ const Player = {
                 ctx.shadowColor = '#f97316';
                 const supportW = Math.round(drawW * 0.55);
                 const supportH = Math.round(drawH * 0.55);
-                // 상단 지원군 (왼쪽 뒤 위)
+                // 상단 지원군 (왼쪽 뒤 위 - 반동 recoilX 동시 반영!)
                 ctx.drawImage(img, sx, sy, cropWidth, frameH,
                     Math.round(drawX - supportW - 5), Math.round(drawY - 20),
                     supportW, supportH);
-                // 하단 지원군 (왼쪽 뒤 아래)
+                // 하단 지원군 (왼쪽 뒤 아래 - 반동 recoilX 동시 반영!)
                 ctx.drawImage(img, sx, sy, cropWidth, frameH,
                     Math.round(drawX - supportW - 5), Math.round(drawY + drawH - supportH + 20),
                     supportW, supportH);
@@ -3732,192 +3965,190 @@ function drawBombButton(ctx) {
     bombButtonRect = { x: btnX, y: btnY, width: btnSize, height: btnSize };
 
     const time = Date.now();
-    const pulse = Math.sin(time / 150) * 0.15 + 1;
-    const flicker = Math.sin(time / 80) > 0;
+    const pulse = Player.bombCount > 0 ? Math.sin(time / 140) * 0.18 + 1.05 : 1.0;
+    const flicker = Math.sin(time / 50) > 0;
 
     ctx.save();
 
-    // === 1. 외곽 글로우 효과 (폭탄 있을 때만) ===
+    // === 1. 외곽 다이너마이트 불꽃 네온 오라 글로우 (폭탄 잔여량 있을 때만) ===
     if (Player.bombCount > 0) {
-        const glowIntensity = 20 * pulse;
-        ctx.shadowBlur = glowIntensity;
-        ctx.shadowColor = '#ff4400';
+        ctx.shadowBlur = 25 * pulse;
+        ctx.shadowColor = '#ff3300';
         
-        // 다중 글로우 레이어
-        ctx.fillStyle = `rgba(255, 68, 0, ${0.3 * pulse})`;
-        ctx.fillRect(btnX - 4, btnY - 4, btnSize + 8, btnSize + 8);
+        ctx.fillStyle = `rgba(255, 60, 0, ${0.12 * pulse})`;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, btnSize / 2 + 5, 0, Math.PI * 2);
+        ctx.fill();
     }
 
-    // === 2. 메탈릭 베젤 프레임 (3D 효과) ===
-    // 외곽 다크 메탈
-    ctx.fillStyle = '#2a2a2a';
+    // === 2. 프리미엄 메탈릭 섀시 프레임 (골드/블랙 3D 외곽 베젤) ===
+    ctx.fillStyle = '#1e1e1e';
     ctx.fillRect(btnX, btnY, btnSize, btnSize);
     
-    // 상단 하이라이트 (메탈릭 반사)
-    const metalGradient = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnSize);
-    metalGradient.addColorStop(0, '#5a5a5a');
-    metalGradient.addColorStop(0.1, '#4a4a4a');
-    metalGradient.addColorStop(0.5, '#2a2a2a');
-    metalGradient.addColorStop(1, '#1a1a1a');
-    ctx.fillStyle = metalGradient;
+    // 이중 베젤 반사 (골드/브론즈 고급 메탈 그라데이션)
+    const goldGradient = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnSize);
+    goldGradient.addColorStop(0, '#bfa76f');
+    goldGradient.addColorStop(0.3, '#8c733f');
+    goldGradient.addColorStop(0.7, '#42371c');
+    goldGradient.addColorStop(1, '#1b160a');
+    ctx.fillStyle = goldGradient;
     ctx.fillRect(btnX + 2, btnY + 2, btnSize - 4, btnSize - 4);
-
-    // 황동 액센트 테두리
-    ctx.strokeStyle = Player.bombCount > 0 ? '#d4a84b' : '#666';
+    
+    // 내측 강렬한 레드/오렌지 액센트 테두리
+    ctx.strokeStyle = Player.bombCount > 0 ? (flicker ? '#ff6347' : '#ff4500') : '#444';
     ctx.lineWidth = 2;
     ctx.strokeRect(btnX + 4, btnY + 4, btnSize - 8, btnSize - 8);
-
-    // === 3. 내부 패널 (스크류 헤드 디테일) ===
-    const innerX = btnX + 8;
-    const innerY = btnY + 8;
-    const innerSize = btnSize - 16;
     
-    ctx.fillStyle = '#1a1a1a';
+    // === 3. 내부 카본 플레이트 (유리/화염 반사 코팅판) ===
+    const innerX = btnX + 7;
+    const innerY = btnY + 7;
+    const innerSize = btnSize - 14;
+    
+    ctx.fillStyle = '#0f0c0b';
     ctx.fillRect(innerX, innerY, innerSize, innerSize);
     
-    // 스크류 헤드 코너 디테일
-    const screwSize = 4;
-    ctx.fillStyle = '#4a4a4a';
-    // 상좌
-    ctx.fillRect(innerX + 2, innerY + 2, screwSize, 1);
-    ctx.fillRect(innerX + 2, innerY + 2, 1, screwSize);
-    // 상우
-    ctx.fillRect(innerX + innerSize - 6, innerY + 2, screwSize, 1);
-    ctx.fillRect(innerX + innerSize - 3, innerY + 2, 1, screwSize);
-    // 하좌
-    ctx.fillRect(innerX + 2, innerY + innerSize - 3, screwSize, 1);
-    ctx.fillRect(innerX + 2, innerY + innerSize - 6, 1, screwSize);
-    // 하우
-    ctx.fillRect(innerX + innerSize - 6, innerY + innerSize - 3, screwSize, 1);
-    ctx.fillRect(innerX + innerSize - 3, innerY + innerSize - 6, 1, screwSize);
-
-    ctx.shadowBlur = 0;
-
-    // === 4. 다이너마이트 폭탄 (고급 2D 픽셀 아트) ===
+    // 도트 불꽃이 반사되는 미세 플리커 광원 효과
     if (Player.bombCount > 0) {
-        const bombScale = 1.2;
-        const bx = centerX - 14 * bombScale;
-        const by = centerY - 8 * bombScale;
+        ctx.fillStyle = flicker ? 'rgba(255, 69, 0, 0.15)' : 'rgba(255, 140, 0, 0.08)';
+        ctx.fillRect(innerX, innerY, innerSize, innerSize);
+    }
+    
+    // 플레이트 모서리 고정 나사(Screw) 4개 묘사로 메탈 디테일 극대화
+    ctx.fillStyle = '#3a3a3a';
+    ctx.fillRect(innerX + 2, innerY + 2, 2, 2);
+    ctx.fillRect(innerX + innerSize - 4, innerY + 2, 2, 2);
+    ctx.fillRect(innerX + 2, innerY + innerSize - 4, 2, 2);
+    ctx.fillRect(innerX + innerSize - 4, innerY + innerSize - 4, 2, 2);
+
+    // === 4. 중앙 폭탄 아이콘 (3D 도트 다이너마이트 묶음) ===
+    if (Player.bombCount > 0) {
+        const dW = 10; const dH = 26;
         
-        // 폭탄 그림자 (투영)
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.save();
+        ctx.translate(centerX, centerY + 3);
+        
+        // 1번 대(왼쪽)
+        drawDynamiteStick(ctx, -9, -dH/2, dW, dH, '#d91a1a', '#660000');
+        // 2번 대(오른쪽)
+        drawDynamiteStick(ctx, 9, -dH/2, dW, dH, '#d91a1a', '#660000');
+        // 3번 대(중앙 메인 - 입체적으로 위에 덮임)
+        drawDynamiteStick(ctx, 0, -dH/2 - 2, dW, dH + 2, '#ff3333', '#800000');
+        
+        // 중앙 폭탄 고정용 검은 절연테이프 2줄
+        ctx.fillStyle = '#111111';
+        ctx.fillRect(-15, -dH/2 + 3, 30, 4);
+        ctx.fillRect(-15, dH/2 - 9, 30, 4);
+        
+        ctx.restore();
+        
+        // 도트 타오르는 불꽃 심지 (Flickering Spark)
+        ctx.save();
+        ctx.translate(centerX, centerY - dH/2 - 5);
+        
+        // 심지 줄 (갈색 도트)
+        ctx.strokeStyle = '#8b7355';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.ellipse(centerX, centerY + 22, 18, 6, 0, 0, Math.PI * 2);
+        ctx.moveTo(0, 5);
+        ctx.quadraticCurveTo(-4, -2, -1, -8);
+        ctx.stroke();
+        
+        // 타오르는 화약 도트 불꽃 이펙트
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ffd700';
+        
+        const sparkScale = flicker ? 1.3 : 0.8;
+        ctx.fillStyle = '#ffd700'; // 외부 노랑
+        ctx.beginPath();
+        ctx.arc(-1, -8, 5 * sparkScale, 0, Math.PI * 2);
         ctx.fill();
-
-        // === 다이너마이트 본체 (픽셀 아트) ===
-        // 빨간 케이싱 (단면)
-        const stickW = 10 * bombScale;
-        const stickH = 24 * bombScale;
-        const gap = 2 * bombScale;
         
-        // 왼쪽 다이너마이트
-        drawDynamiteStick(ctx, bx - stickW/2 - gap/2, by, stickW, stickH, '#c41e3a', '#8b0000');
-        // 오른쪽 다이너마이트  
-        drawDynamiteStick(ctx, bx + stickW/2 + gap/2, by, stickW, stickH, '#c41e3a', '#8b0000');
-
-        // === 번개 테이프 (검은색 테이프로 다이너마이트 묶음) ===
-        const tapeY = by + 8 * bombScale;
-        ctx.fillStyle = '#1a1a1a';
-        ctx.fillRect(bx - stickW - gap, tapeY, stickW * 2 + gap * 2, 4 * bombScale);
-        // 테이프 텍스처 (픽셀 패턴)
-        ctx.fillStyle = '#2a2a2a';
-        ctx.fillRect(bx - stickW - gap + 2, tapeY + 1, stickW * 2 + gap * 2 - 4, 2 * bombScale);
-
-        // === 심지 (2개 다이너마이트의 심지가 교차) ===
-        const fuseY = by - 6 * bombScale;
-        ctx.fillStyle = '#8b7355'; // 갈색 심지
-        // 왼쪽 심지 (오른쪽으로 기울어짐)
-        ctx.fillRect(bx - 2, fuseY, 2, 6 * bombScale);
-        ctx.fillRect(bx, fuseY - 2, 2, 3 * bombScale);
-        // 오른쪽 심지 (왼쪽으로 기울어짐)
-        ctx.fillRect(bx + 2, fuseY, 2, 6 * bombScale);
-        ctx.fillRect(bx - 2, fuseY - 2, 2, 3 * bombScale);
-        // 교차점
-        ctx.fillRect(bx - 1, fuseY - 4, 3, 3);
-
-        // === 화염 효과 (픽셀 아트 애니메이션) ===
-        const flameBaseY = fuseY - 5;
+        ctx.fillStyle = '#ff4500'; // 내부 핵심 빨강
+        ctx.beginPath();
+        ctx.arc(-1, -8, 2.5 * sparkScale, 0, Math.PI * 2);
+        ctx.fill();
         
-        // 불꽃 코어 (노란색)
-        const flameColor1 = flicker ? '#ffff00' : '#ffdd00';
-        ctx.fillStyle = flameColor1;
-        ctx.fillRect(bx - 2, flameBaseY - 4, 5, 4);
-        ctx.fillRect(bx - 1, flameBaseY - 7, 3, 3);
-        
-        // 불꽃 중간 (주황색)
-        const flameColor2 = flicker ? '#ff8800' : '#ff6600';
-        ctx.fillStyle = flameColor2;
-        ctx.fillRect(bx - 3, flameBaseY - 2, 7, 3);
-        ctx.fillRect(bx - 2, flameBaseY - 5, 5, 3);
-        ctx.fillRect(bx - 1, flameBaseY - 9, 3, 3);
-        
-        // 불꽃 외곽 (빨간색)
-        const flameColor3 = flicker ? '#ff4400' : '#cc2200';
-        ctx.fillStyle = flameColor3;
-        ctx.fillRect(bx - 4, flameBaseY, 9, 2);
-        ctx.fillRect(bx - 3, flameBaseY - 3, 7, 2);
-        ctx.fillRect(bx - 2, flameBaseY - 8, 5, 2);
-        
-        // 불꽃 파티클 (작은 점들)
-        const sparkColor = flicker ? '#ffff88' : '#ffaa00';
-        ctx.fillStyle = sparkColor;
-        ctx.fillRect(bx - 4, flameBaseY - 6, 2, 2);
-        ctx.fillRect(bx + 3, flameBaseY - 7, 2, 2);
-        ctx.fillRect(bx - 5, flameBaseY - 3, 1, 1);
-        ctx.fillRect(bx + 5, flameBaseY - 4, 1, 1);
+        ctx.restore();
 
-        // === 잔여 폭탄 수 (픽셀 스타일 텍스트) ===
+        // === 5. 잔여 폭탄 개수 뱃지 (우측 하단 코너) ===
+        ctx.save();
+        ctx.shadowBlur = 0; // 뱃지 테두리 정밀도 확보
+        const countBoxX = innerX + innerSize - 20;
+        const countBoxY = innerY + innerSize - 11;
+        
+        // 카본 캡슐 프레임
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        ctx.strokeStyle = '#ff4500';
+        ctx.lineWidth = 1;
+        ctx.fillRect(countBoxX, countBoxY, 18, 9);
+        ctx.strokeRect(countBoxX, countBoxY, 18, 9);
+        
+        // 개수 글꼴
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 9px "Press Start 2P"';
+        ctx.font = 'bold 6px "Press Start 2P"';
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillText(`x${Player.bombCount}`, centerX + 1, centerY + 26);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(`x${Player.bombCount}`, centerX, centerY + 25);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`x${Player.bombCount}`, countBoxX + 9, countBoxY + 5);
+        ctx.restore();
 
-        // === 단축키 뱃지 (SPACE) - 버튼 상단 ===
-        const badgeW = 42; const badgeH = 14;
-        const badgeX = centerX - badgeW / 2; const badgeY = btnY - badgeH - 14;
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        // === 6. 단축키 뱃지 (SPACE) - 버튼 상단에 둥둥 떠있는 플로팅 애니메이션 ===
+        ctx.save();
+        const shortcutColor = '#ff4500';
+        const badgeW = 44; const badgeH = 14;
+        const floatOffset = Math.sin(time / 160) * 2.5;
+        const badgeX = centerX - badgeW / 2; 
+        const badgeY = btnY - badgeH - 4 + floatOffset;
+        
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.85)';
         ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
-        ctx.strokeStyle = '#d4a84b'; ctx.lineWidth = 1;
+        ctx.strokeStyle = shortcutColor; 
+        ctx.lineWidth = 1.5;
         ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
-        ctx.fillStyle = '#d4a84b';
+        
+        ctx.fillStyle = shortcutColor;
         ctx.font = '6px "Press Start 2P"';
         ctx.textAlign = 'center';
-        ctx.fillText('SPACE', centerX, badgeY + 10);
-
-        // === 준비 상태 인디케이터 (작은 점) ===
+        ctx.textBaseline = 'middle';
+        ctx.fillText('SPACE', centerX, badgeY + 7);
+        
+        // 왼쪽 상단 수명 인디케이터 (폭탄 활성화 시 녹색 미세 핀)
         ctx.fillStyle = '#00ff00';
-        ctx.fillRect(btnX + 6, btnY + 6, 3, 3);
+        ctx.fillRect(btnX + 6, btnY + 6, 4, 4);
+        ctx.restore();
 
     } else {
-        // === 폭탄 없음 상태 (회색 다이너마이트) ===
-        ctx.fillStyle = '#3a3a3a';
-        ctx.fillRect(centerX - 10, centerY - 8, 8, 18);
-        ctx.fillRect(centerX + 2, centerY - 8, 8, 18);
-        ctx.fillStyle = '#2a2a2a';
-        ctx.fillRect(centerX - 11, centerY, 22, 4);
+        // === 폭탄 없음 상태 (그을린 다이너마이트 묶음 실루엣) ===
+        const dW = 10; const dH = 26;
+        ctx.save();
+        ctx.translate(centerX, centerY + 3);
+        ctx.globalAlpha = 0.22;
+        drawDynamiteStick(ctx, -9, -dH/2, dW, dH, '#333', '#111');
+        drawDynamiteStick(ctx, 9, -dH/2, dW, dH, '#333', '#111');
+        drawDynamiteStick(ctx, 0, -dH/2 - 2, dW, dH + 2, '#444', '#1a1a1a');
+        ctx.restore();
         
+        // EMPTY 라벨
         ctx.fillStyle = '#666';
         ctx.font = '7px "Press Start 2P"';
         ctx.textAlign = 'center';
-        ctx.fillText('EMPTY', centerX, centerY + 20);
+        ctx.textBaseline = 'middle';
+        ctx.fillText('EMPTY', centerX, centerY + 22);
         
-        // === 단축키 뱃지 (SPACE) - 버튼 상단 ===
-        const badgeW2 = 42; const badgeH2 = 14;
-        const badgeX2 = centerX - badgeW2 / 2; const badgeY2 = btnY - badgeH2 - 14;
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        // === 단축키 뱃지 (SPACE) - 비활성 상태 ===
+        ctx.save();
+        const badgeW2 = 44; const badgeH2 = 14;
+        const badgeX2 = centerX - badgeW2 / 2; const badgeY2 = btnY - badgeH2 - 4;
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.7)';
         ctx.fillRect(badgeX2, badgeY2, badgeW2, badgeH2);
-        ctx.strokeStyle = '#555'; ctx.lineWidth = 1;
+        ctx.strokeStyle = '#444'; ctx.lineWidth = 1.0;
         ctx.strokeRect(badgeX2, badgeY2, badgeW2, badgeH2);
+        
         ctx.fillStyle = '#555';
         ctx.font = '6px "Press Start 2P"';
         ctx.textAlign = 'center';
-        ctx.fillText('SPACE', centerX, badgeY2 + 10);
+        ctx.textBaseline = 'middle';
+        ctx.fillText('SPACE', centerX, badgeY2 + 7);
+        ctx.restore();
         
         ctx.fillStyle = '#444';
         ctx.fillRect(btnX + 6, btnY + 6, 3, 3);
@@ -3942,136 +4173,235 @@ function drawPetalCannonButton(ctx) {
     petalCannonButtonRect = { x: btnX, y: btnY, width: btnSize, height: btnSize };
     
     const time = Date.now();
-    const pulse = Player.petalCannonReady ? Math.sin(time / 150) * 0.3 + 1 : 1;
-    const chargePercent = Player.petalCannonCharge / Player.petalCannonMaxCharge;
+    const pulse = Player.petalCannonReady ? Math.sin(time / 120) * 0.25 + 1.1 : 1.0;
+    const chargePercent = Math.min(1.0, Player.petalCannonCharge / Player.petalCannonMaxCharge);
     
     ctx.save();
     
-    // === 1. 외곽 글로우 효과 (충전 완료시만) ===
+    // === 1. 외곽 벚꽃 네온 대형 오라 글로우 (충전 완료시만) ===
     if (Player.petalCannonReady) {
-        const glowIntensity = 25 * pulse;
-        ctx.shadowBlur = glowIntensity;
+        ctx.shadowBlur = 30 * pulse;
         ctx.shadowColor = '#ff1493';
         
-        ctx.fillStyle = `rgba(255, 20, 147, ${0.4 * pulse})`;
-        ctx.fillRect(btnX - 4, btnY - 4, btnSize + 8, btnSize + 8);
+        ctx.fillStyle = `rgba(255, 20, 147, ${0.15 * pulse})`;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, btnSize / 2 + 6, 0, Math.PI * 2);
+        ctx.fill();
     }
     
-    // === 2. 메탈릭 베젤 프레임 (3D 효과) ===
-    ctx.fillStyle = '#2a2a2a';
+    // === 2. 프리미엄 메탈 베젤 프레임 (3D 경사 금속 외곽) ===
+    ctx.fillStyle = '#222';
     ctx.fillRect(btnX, btnY, btnSize, btnSize);
     
-    // 상단 하이라이트 (메탈릭 반사)
+    // 상단 하이라이트 (메탈릭 반사 그라데이션)
     const metalGradient = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnSize);
     metalGradient.addColorStop(0, '#5a5a5a');
-    metalGradient.addColorStop(0.1, '#4a4a4a');
-    metalGradient.addColorStop(0.5, '#2a2a2a');
-    metalGradient.addColorStop(1, '#1a1a1a');
+    metalGradient.addColorStop(0.15, '#3c3c3c');
+    metalGradient.addColorStop(0.5, '#222222');
+    metalGradient.addColorStop(1, '#0e0e0e');
     ctx.fillStyle = metalGradient;
     ctx.fillRect(btnX + 2, btnY + 2, btnSize - 4, btnSize - 4);
     
-    // 핑크 액센트 테두리 (충전 상태에 따라 색상 변화)
-    const borderColor = Player.petalCannonReady ? '#ff1493' : (chargePercent > 0.5 ? '#ff69b4' : '#666');
-    ctx.strokeStyle = borderColor;
-    ctx.lineWidth = 2;
+    // 핑크/마젠타 테두리 액센트 (충전도에 따라 불투명도 및 생기 조절)
+    const borderGlowColor = Player.petalCannonReady ? '#ff1493' : `rgba(255, 105, 180, ${0.2 + chargePercent * 0.8})`;
+    ctx.strokeStyle = borderGlowColor;
+    ctx.lineWidth = Player.petalCannonReady ? 3.0 : 1.5;
     ctx.strokeRect(btnX + 4, btnY + 4, btnSize - 8, btnSize - 8);
     
-    // === 3. 내부 패널 ===
-    const innerX = btnX + 8;
-    const innerY = btnY + 8;
-    const innerSize = btnSize - 16;
+    // === 3. 내부 글래스 패널 ===
+    const innerX = btnX + 7;
+    const innerY = btnY + 7;
+    const innerSize = btnSize - 14;
     
-    ctx.fillStyle = '#1a1a1a';
+    ctx.fillStyle = '#0f0f14';
     ctx.fillRect(innerX, innerY, innerSize, innerSize);
     
-    // === 4. 꽃잎 포 아이콘 (핑크 꽃) ===
-    if (chargePercent > 0 || Player.petalCannonReady) {
-        // 꽃잎 그리기
-        const petalSize = Player.petalCannonReady ? 14 : 10;
-        ctx.fillStyle = Player.petalCannonReady ? '#ff1493' : '#ff69b4';
-        
-        for (let i = 0; i < 5; i++) {
-            const angle = (i * 72 + time / 20) * Math.PI / 180;
-            const px = centerX + Math.cos(angle) * 8;
-            const py = centerY + Math.sin(angle) * 8;
-            ctx.beginPath();
-            ctx.arc(px, py, petalSize, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        
-        // 중심
-        ctx.fillStyle = Player.petalCannonReady ? '#ffd700' : '#ffcc00';
+    // === 4. [특허급 연출] 핑크 네온 2D 유체 액체 채우기 (Circular Fluid Wave Fill) ===
+    if (chargePercent > 0 && !Player.petalCannonReady) {
+        ctx.save();
+        // 원형 클리핑 영역 지정 (버튼 내부 관 형상화)
         ctx.beginPath();
-        ctx.arc(centerX, centerY, Player.petalCannonReady ? 8 : 5, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, innerSize / 2 - 3, 0, Math.PI * 2);
+        ctx.clip();
+        
+        // 물결 모양 수면 높이 계산 (아래서 위로 차오름)
+        const fillHeight = innerSize * chargePercent;
+        const waterY = (innerY + innerSize) - fillHeight;
+        
+        // 좌우 출렁이는 Sine 물결 렌더링
+        const waveFrequency = 0.08;
+        const waveAmplitude = 3.0; // 출렁임 깊이
+        const wavePhase = time / 150;
+        
+        ctx.fillStyle = 'rgba(255, 20, 147, 0.28)'; // 은은한 핑크빛 충전 유체
+        ctx.beginPath();
+        ctx.moveTo(innerX - 5, innerY + innerSize + 5);
+        for (let wx = innerX - 5; wx <= innerX + innerSize + 5; wx++) {
+            const wy = waterY + Math.sin(wx * waveFrequency + wavePhase) * waveAmplitude;
+            ctx.lineTo(wx, wy);
+        }
+        ctx.lineTo(innerX + innerSize + 5, innerY + innerSize + 5);
+        ctx.closePath();
         ctx.fill();
         
-        // 글로우 효과 (충전 완료시)
-        if (Player.petalCannonReady) {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#ff69b4';
-            ctx.strokeStyle = '#ff1493';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-        }
-    } else {
-        // 충전 안됨 (회색 꽃)
-        ctx.fillStyle = '#444';
-        for (let i = 0; i < 5; i++) {
-            const angle = (i * 72) * Math.PI / 180;
-            const px = centerX + Math.cos(angle) * 6;
-            const py = centerY + Math.sin(angle) * 6;
-            ctx.beginPath();
-            ctx.arc(px, py, 8, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.fillStyle = '#666';
+        // 물결 상단 하이라이트 (빛 반사)
+        ctx.strokeStyle = '#ff69b4';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+    } else if (Player.petalCannonReady) {
+        // 완충 시 버튼 전체가 끓어오르는 핑크 아크릴로 가득 참
+        ctx.save();
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.arc(centerX, centerY, innerSize / 2 - 3, 0, Math.PI * 2);
+        ctx.clip();
+        
+        const radialGrad = ctx.createRadialGradient(centerX, centerY, 5, centerX, centerY, innerSize / 2);
+        radialGrad.addColorStop(0, 'rgba(255, 20, 147, 0.45)');
+        radialGrad.addColorStop(0.8, 'rgba(255, 105, 180, 0.2)');
+        radialGrad.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+        ctx.fillStyle = radialGrad;
+        ctx.fillRect(innerX, innerY, innerSize, innerSize);
+        ctx.restore();
     }
     
-    // === 5. 충전량 바 ===
-    const barWidth = innerSize - 8;
-    const barHeight = 4;
-    const barX = innerX + 4;
-    const barY = innerY + innerSize - 10;
+    // === 5. 꽃잎 포 아이콘 (유기적으로 회전하고 두근거리는 화려한 2D 벚꽃잎) ===
+    if (chargePercent > 0 || Player.petalCannonReady) {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        
+        // 완충 시 찬란하게 심장처럼 두근거리는 펄싱 & 빠른 회전
+        const rotSpeed = Player.petalCannonReady ? time / 6 : time / 15;
+        ctx.rotate(rotSpeed * Math.PI / 180);
+        
+        const petalSize = Player.petalCannonReady ? 14 : 9;
+        ctx.fillStyle = Player.petalCannonReady ? '#ff1493' : '#ff69b4';
+        
+        // 5가닥의 정교한 벚꽃잎 드로잉 (각 잎마다 3D 음영 적용)
+        for (let i = 0; i < 5; i++) {
+            ctx.save();
+            ctx.rotate((i * 72) * Math.PI / 180);
+            
+            // 벚꽃잎 픽셀 묘사
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(-petalSize, -petalSize * 1.5, -petalSize * 0.5, -petalSize * 2.2, 0, -petalSize * 2.2);
+            ctx.bezierCurveTo(petalSize * 0.5, -petalSize * 2.2, petalSize, -petalSize * 1.5, 0, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 잎맥 하이라이트 선
+            ctx.strokeStyle = Player.petalCannonReady ? '#ffffff' : '#ffa6c9';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -petalSize * 1.8);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+        
+        // 황금빛 중심술 (Gold Core)
+        ctx.fillStyle = Player.petalCannonReady ? '#ffd700' : '#ffcc00';
+        ctx.beginPath();
+        ctx.arc(0, 0, Player.petalCannonReady ? 7 : 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 중심술 디테일 도트 추가
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-1.5, -1.5, 3, 3);
+        
+        ctx.restore();
+        
+        // === 6. 완충 시 외곽 회전 네온 링 (Rotating Arc Halo) ===
+        if (Player.petalCannonReady) {
+            ctx.save();
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ff1493';
+            ctx.strokeStyle = '#ff69b4';
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            // 각 구간별 2가닥의 회전 아크 링 묘사
+            const startAng = (time / 8) * Math.PI / 180;
+            ctx.arc(centerX, centerY, innerSize / 2 - 5, startAng, startAng + Math.PI * 0.6);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, innerSize / 2 - 5, startAng + Math.PI, startAng + Math.PI * 1.6);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+    } else {
+        // 충전 안됨 (회색 실루엣 벚꽃)
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.fillStyle = '#3a3a42';
+        for (let i = 0; i < 5; i++) {
+            ctx.save();
+            ctx.rotate((i * 72) * Math.PI / 180);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(-6, -9, -3, -13, 0, -13);
+            ctx.bezierCurveTo(3, -13, 6, -9, 0, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+        ctx.fillStyle = '#555562';
+        ctx.beginPath();
+        ctx.arc(0, 0, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
     
-    // 배경
-    ctx.fillStyle = '#0a0a0a';
+    // === 7. 충전량 미세 바 (패널 하단 안착) ===
+    const barWidth = innerSize - 10;
+    const barHeight = 4;
+    const barX = innerX + 5;
+    const barY = innerY + innerSize - 9;
+    
+    ctx.fillStyle = '#0a0a0c';
     ctx.fillRect(barX, barY, barWidth, barHeight);
     
-    // 충전량
     if (chargePercent > 0) {
         const barGradient = ctx.createLinearGradient(barX, barY, barX + barWidth * chargePercent, barY);
-        barGradient.addColorStop(0, '#ff1493');
+        barGradient.addColorStop(0, '#9e0050');
+        barGradient.addColorStop(0.7, '#ff1493');
         barGradient.addColorStop(1, '#ff69b4');
         ctx.fillStyle = barGradient;
         ctx.fillRect(barX, barY, barWidth * chargePercent, barHeight);
     }
     
-    // === 6. 준비 상태 인디케이터 ===
+    // === 8. 준비 상태 네온 인디케이터 도트 ===
     if (Player.petalCannonReady) {
         ctx.fillStyle = '#00ff00';
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#00ff00';
         ctx.fillRect(btnX + 6, btnY + 6, 4, 4);
     } else if (chargePercent > 0) {
-        ctx.fillStyle = '#ff69b4';
+        ctx.fillStyle = '#ff1493';
         ctx.fillRect(btnX + 6, btnY + 6, 3, 3);
     } else {
         ctx.fillStyle = '#444';
         ctx.fillRect(btnX + 6, btnY + 6, 3, 3);
     }
+    ctx.shadowBlur = 0;
     
-    // === 7. 단축키 뱃지 (F키) - 버튼 상단 ===
-    const shortcutColor = Player.petalCannonReady ? '#ff1493' : (chargePercent > 0 ? '#ff69b4' : '#555');
+    // === 9. 단축키 뱃지 (F키) - 버튼 상단에 둥둥 떠있는 플로팅 애니메이션 ===
+    const shortcutColor = Player.petalCannonReady ? '#ff1493' : (chargePercent > 0 ? '#ff69b4' : '#666');
     const fBadgeW = 24; const fBadgeH = 14;
-    const fBadgeX = centerX - fBadgeW / 2; const fBadgeY = btnY - fBadgeH - 4;
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    const floatOffset = Player.petalCannonReady ? Math.sin(time / 180) * 2.5 : 0;
+    const fBadgeX = centerX - fBadgeW / 2;
+    const fBadgeY = btnY - fBadgeH - 4 + floatOffset;
+    
+    ctx.fillStyle = 'rgba(10, 10, 15, 0.85)';
     ctx.fillRect(fBadgeX, fBadgeY, fBadgeW, fBadgeH);
-    ctx.strokeStyle = shortcutColor; ctx.lineWidth = 1;
+    ctx.strokeStyle = shortcutColor; 
+    ctx.lineWidth = Player.petalCannonReady ? 1.5 : 1.0;
     ctx.strokeRect(fBadgeX, fBadgeY, fBadgeW, fBadgeH);
+    
     ctx.fillStyle = shortcutColor;
     ctx.font = '7px "Press Start 2P"';
     ctx.textAlign = 'center';
