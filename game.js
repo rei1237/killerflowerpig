@@ -3284,9 +3284,10 @@ function advanceStage() {
         // 스테이지 진행 시에도 아이템 레벨 기준으로 스탯 유지 (초기화하지 않음)
         const baseDamage = 10;
         const itemDamageBonus = (LevelSystem.items.DAMAGE.level - 1) * LevelSystem.stats.itemDamagePerLevel;
-        Player.damage = isMobileEasyModeActive()
+        const levelDamageBonus = (LevelSystem.playerLevel - 1) * 3; // 레벨당 공격력 +3
+        Player.damage = (isMobileEasyModeActive()
             ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier)
-            : baseDamage + itemDamageBonus;
+            : baseDamage + itemDamageBonus) + levelDamageBonus;
 
         const baseFireRate = 200;
         const itemFireRateBonus = (LevelSystem.items.FIRE_RATE.level - 1) * LevelSystem.stats.itemFireRatePerLevel;
