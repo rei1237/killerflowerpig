@@ -10,10 +10,17 @@ let GAME_DPR=1;
  * ============================================================================
  */
 
+function isMobileTouchDevice() {
+    const ua = navigator.userAgent || '';
+    const byUA = /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua);
+    const byPointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    return byUA || byPointer;
+}
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
-// 모바일 고화질: devicePixelRatio 적용
-const DPR = Math.min(window.devicePixelRatio || 1, 3);
+// 모바일 고화질: devicePixelRatio 적용 (모바일 감지 시 1.5로 줄여 극적인 렉 방지 효과 제공)
+const DPR = isMobileTouchDevice() ? Math.min(window.devicePixelRatio || 1, 1.5) : Math.min(window.devicePixelRatio || 1, 3);
 ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = 'high';
 const gameContainer = document.getElementById('game-container');
@@ -538,40 +545,33 @@ let floatingTexts = []; // "BONUS!" 효과 등을 위한 플로팅 텍스트
 const SPAWN_INTERVAL = 2000;
 const GATE_SPAWN_INTERVAL = 6000;
 const EASY_MODE_CONFIG = {
-    // 적 관련 - 가로 모드: 원래 모드와 동일하게, 속도만 50% 느리게
+    // 적 관련 - 모바일 가로 모드 최적화 및 이지 모드 난이도 대폭 하향
     enemySpeedMultiplier: 0.5,           // 적 이동 속도 50% 느리게
-    spawnRateMultiplier: 1.0,            // 원래 모드와 동일한 등장 간격
-    goalMultiplier: 1.0,                 // 원래 목표 수
-    homingSpeedMultiplier: 0.5,          // 홈링 속도 50% 느리게
-    enemyHpMultiplierA: 1.0,             // 원래 체력
-    enemyHpMultiplierB: 1.0,             // 원래 체력
-    enemyShootIntervalMultiplier: 1.0,  // 원래 발사 간격
-    maxActiveEnemies: 15,                // 더 많은 적 (작은 크기로 인해)
+    spawnRateMultiplier: 1.3,            // 등장 간격 30% 늘려서 적 스폰을 늦춤 (스폰량 조절로 렉 완화)
+    goalMultiplier: 0.7,                 // 목표 처치 수 30% 하향 조절 (빠른 스테이지 클리어)
+    homingSpeedMultiplier: 0.4,          // 유도(홈잉) 속도 60% 느리게
+    enemyHpMultiplierA: 0.7,             // 적 체력 30% 감소 (더 잘 잡히게)
+    enemyHpMultiplierB: 0.7,             // 보스전 등에서 적 체력 30% 감소
+    enemyShootIntervalMultiplier: 1.5,  // 적 탄환 발사 간격 50% 늘려서 회피하기 쉽게 함
+    maxActiveEnemies: 10,                // 최대 활성 적 수를 줄여서 렉 방지 및 난이도 하락
 
-    // 플레이어 관련 - 가로 모드: 원래 모드와 동일
+    // 플레이어 관련 - 이지 모드 버프
     playerHpMultiplier: 1.0,             // 원래 HP
-    playerDamageMultiplier: 1.0,          // 원래 공격력
-    playerInvincibleMultiplier: 1.0,     // 원래 무적 시간
-    playerSpeedMultiplier: 1.0,            // 원래 이동 속도
-    fireRateMultiplier: 1.0,             // 원래 발사 속도
+    playerDamageMultiplier: 1.3,          // 플레이어 공격력 30% 버프
+    playerInvincibleMultiplier: 1.5,     // 플레이어 무적 시간 50% 증가
+    playerSpeedMultiplier: 1.2,            // 플레이어 이동 속도 20% 증가
+    fireRateMultiplier: 1.2,             // 플레이어 발사 속도 20% 증가
 
-    // 보스 관련 - 가로 모드: 원래 모드와 동일하게, 속도만 50% 느리게
+    // 보스 관련 - 속도 및 공격력 하향
     bossMoveScaleMultiplier: 0.5,        // 보스 이동 속도 50% 느리게
-    bossAttackIntervalMultiplier: 1.0,   // 원래 공격 간격
-    bossSummonEnemySpeedMultiplier: 0.5, // 소환된 적 속도 50% 느리게
-    bossSummonEnemyHpMultiplier: 1.0,   // 원래 체력
-    bossProjectileSpeedMultiplier: 0.5,   // 보스 발체 속도 50% 느리게
+    bossAttackIntervalMultiplier: 1.5,   // 보스 공격 간격 50% 늘려서 생존력 증가
+    bossSummonEnemySpeedMultiplier: 0.5, // 소환된 쫄몹 속도 50% 느리게
+    bossSummonEnemyHpMultiplier: 0.6,   // 소환된 쫄몹 체력 40% 감소
+    bossProjectileSpeedMultiplier: 0.5,   // 보스 발사체 속도 50% 느리게
 
     // 게임 템포
-    gameSpeedMultiplier: 1.0             // 원래 게임 속도
+    gameSpeedMultiplier: 1.0             // 게임 속도
 };
-
-function isMobileTouchDevice() {
-    const ua = navigator.userAgent || '';
-    const byUA = /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua);
-    const byPointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-    return byUA || byPointer;
-}
 
 function applyMobileOptimizations() {
     const isMobile = isMobileTouchDevice();
@@ -581,8 +581,8 @@ function applyMobileOptimizations() {
 }
 
 function isMobileLandscapePlayMode() {
-    // 가로 모드일 때 이지 모드 활성화 (더 쉬운 게임) - 일반 모드와 동일하게 설정
-    return false;
+    // 모바일 감지 시 가로 이지 모드 활성화 (더 쉬운 난이도 및 렉 최소화 제공)
+    return isMobileTouchDevice();
 }
 
 function isMobileLandscapeOrientation() {
@@ -3545,7 +3545,11 @@ function spawnEnemyWave() {
     enemies.push(e);
 }
 
-function createExplosion(x, y, color = '#e74c3c') { for (let i = 0; i < 15; i++) particles.push(new Particle(x, y, color)); }
+function createExplosion(x, y, color = '#e74c3c') {
+    // 모바일(가로/이지모드)일 때 파티클 개수를 줄여 CPU/GPU 연산 부하를 획기적으로 최적화
+    const count = isMobileEasyModeActive() ? 6 : 15;
+    for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color));
+}
 function usePetalCannon() {
     if (!Player.petalCannonReady) {
         // 아직 충전 안됨
@@ -3566,10 +3570,10 @@ function usePetalCannon() {
     const levelMultiplier = 1 + (playerLevel - 1) * 0.5; // 레벨당 보너스 상향 (0.25 -> 0.5)
     const petalDamage = Math.round(basePetalDamage * levelMultiplier);
     
-    // 가로 모드: 투사체 수 절반으로 줄여 렉 방지
+    // 가로 모드: 렉을 유발하지 않도록 꽃잎포 투사체 개수를 대폭 하향 (렉 방지 극대화)
     const petalCount = isLandscape
-        ? 5 + Math.min(playerLevel, 4)          // 가로: 최대 9발
-        : 7 + Math.min(playerLevel, 8);         // 일반: 최대 15발
+        ? 3 + Math.min(playerLevel, 2)          // 가로 모드: 최대 5발 (렉 차단)
+        : 7 + Math.min(playerLevel, 8);         // 일반 모드: 최대 15발
     const spreadAngle = Math.PI / 4;
     
     // 중앙 메인 꽃잎
@@ -3597,8 +3601,8 @@ function usePetalCannon() {
         projectiles.push(petal);
     }
     
-    // 나선형 꽃잎 (가로 모드: 2개, 일반: 4개)
-    const spiralCount = isLandscape ? 2 : 4;
+    // 나선형 꽃잎 (가로 모드: 렉을 최소화하기 위해 나선형 투사체 0개로 설정, 일반: 4개)
+    const spiralCount = isLandscape ? 0 : 4;
     for (let i = 0; i < spiralCount; i++) {
         const angle = (i % 2 === 0 ? 1 : -1) * (Math.PI / 6 + i * 0.2);
         const speed = isLandscape ? 13 : 16;
