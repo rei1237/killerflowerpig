@@ -1835,8 +1835,17 @@ const LevelSystem = {
             addFloatingText(`❤️ MAX HP UP! ${oldMaxHp} → ${newMaxHp}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 90, '#e74c3c');
         }
 
-        // 기타 스탯 업데이트 (공격력, 필살기 충전량 등)
-        Player.init(); 
+        // 캐릭터 레벨업으로 인한 공격력(damage) 및 스탯 재계산 (기존 아이템 효과, 폭탄 수, 쉴드, 필살기 게이지 등은 완벽히 유지 보존!)
+        const baseDamage = 10;
+        const itemDamageBonus = (this.items.DAMAGE.level - 1) * this.stats.itemDamagePerLevel;
+        const levelDamageBonus = (this.playerLevel - 1) * 3; // 레벨당 공격력 +3
+        Player.damage = (isMobileEasyModeActive() 
+            ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier) 
+            : baseDamage + itemDamageBonus) + levelDamageBonus;
+
+        const baseFireRate = 200;
+        const itemFireRateBonus = (this.items.FIRE_RATE.level - 1) * this.stats.itemFireRatePerLevel;
+        Player.fireRate = Math.max(baseFireRate - itemFireRateBonus, Player.minFireRate);
 
         addFloatingText(`★ LEVEL UP! Lv.${this.playerLevel} ★`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 60, '#f1c40f');
         addFloatingText(`공격력 & 필살기 강화!`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, '#2ecc71');
