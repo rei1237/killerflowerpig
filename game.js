@@ -2479,10 +2479,10 @@ class Enemy {
         const isHardMode = !isMobileLandscapePlayMode();
         const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : (isHardMode ? 1.5 : 1);
 
-        // ── 체력: 지수 커브 스케일링 (총 쏘는 속도 감소에 비례해 대폭 하향) ──
-        // 스테이지별 체력 증가폭을 대폭 낮춤
-        const baseHp = 25;
-        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.1) * 10);
+        // ── 체력: 지수 커브 스케일링 (총 쏘는 속도 감소에 비례해 적절히 하향) ──
+        // 너무 약해지지 않도록 체력 상향 조정
+        const baseHp = 50;
+        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.1) * 20);
         this.hp = Math.round((baseHp + stageBonus) * hpMultiplierA);
         this.maxHp = this.hp;
 
