@@ -1774,33 +1774,20 @@ const Player = {
         const fire = Math.max(this.fireRate * fireRateMultiplier, 10);
         const timeSinceLastFire = time - this.lastFireTime;
 
-        // 사격 중인지 판단 (발사 후 한 주기 이내)
-        if (timeSinceLastFire < fire) {
+        // 꽃잎포 특수 사격 모션 타이머 감소 및 애니메이션 프레임 설정
+        if (this.petalFiringTimer > 0) {
+            this.petalFiringTimer -= 16;
+            if (this.petalFiringTimer < 0) this.petalFiringTimer = 0;
+            const pProgress = 1 - (this.petalFiringTimer / 300);
+            this.aniFrame = Math.min(7, Math.floor(pProgress * 8));
+            this.isShootingAnimation = true;
+        } else if (timeSinceLastFire < fire) {
             this.isShootingAnimation = true;
             const progress = timeSinceLastFire / fire;
             
-            // 극도로 빠른 공격속도(연사)일 때와 일반 속도일 때의 프레임 연출 탄력 보정
-            if (fire < 130) {
-                // 초고속 사격: 눈 피로 방지를 위해 4번(발사화염)과 5번(강한 반동) 위주로 빠르게 교차하여 돌격소총 연사 느낌 극대화
-                if (progress < 0.35) {
-                    this.aniFrame = 4; // 발사 불꽃
-                } else if (progress < 0.80) {
-                    this.aniFrame = 5; // 다리 들림 반동
-                } else {
-                    this.aniFrame = 1; // 정조준 준비
-                }
-            } else {
-                // 일반/저속 사격: 사격, 강한 물리 반동, 숨고르기, 조준 복귀 4단계 시퀀스를 부드럽게 보간
-                if (progress < 0.15) {
-                    this.aniFrame = 4; // 1단계: 분홍 벚꽃 총구 화염 발사 순간
-                } else if (progress < 0.50) {
-                    this.aniFrame = 5; // 2단계: 다리가 들리는 호쾌한 사격 반동
-                } else if (progress < 0.78) {
-                    this.aniFrame = 6; // 3단계: 땀방울을 흘리며 한숨 쉬는 숨고르기/반동 복귀
-                } else {
-                    this.aniFrame = 1; // 4단계: 수평 정조준 복귀
-                }
-            }
+            // 8개의 프레임을 진척도에 따라 자연스럽게 연결하여 재생
+            this.aniFrame = Math.floor(progress * 8);
+            if (this.aniFrame > 7) this.aniFrame = 7;
         } else {
             this.isShootingAnimation = false;
             
@@ -1933,15 +1920,21 @@ const Player = {
             ctx.imageSmoothingQuality = 'high';
 
             // 불투명한 피크셀 정렬 + 물리 반동(recoilX)의 실시간 변위 적용
-            const drawX = Math.round(this.x + this.recoilX);
-            const drawY = Math.round(this.y);
+            let drawX = Math.round(this.x + this.recoilX);
+            let drawY = Math.round(this.y);
             const drawW = Math.round(this.width);
             const drawH = Math.round(this.height);
 
-            // 사격 시 총구 화염 및 총알 격발 글로우 효과 적용
-            if (this.isShootingAnimation && this.aniFrame === 4) {
+            // 꽃잎포 격발 시 강력한 시각 효과 (화려한 핑크 오라와 진동)
+            if (this.petalFiringTimer > 0) {
+                ctx.shadowBlur = 40 + Math.random() * 20;
+                ctx.shadowColor = '#ff1493'; // 딥 핑크 글로우
+                drawX += (Math.random() - 0.5) * 12; // 강력한 화면 진동 연출
+                drawY += (Math.random() - 0.5) * 12;
+            } else if (this.isShootingAnimation && this.aniFrame === 4) {
+                // 일반 사격 시 총구 화염 글로우 효과 적용
                 ctx.shadowBlur = 18;
-                ctx.shadowColor = '#ffb6c1'; // 화사한 핑크빛 총구 화염 격렬 격발 발광
+                ctx.shadowColor = '#ffb6c1';
             }
 
             if (this.shield > 0) {
@@ -3823,6 +3816,11 @@ function usePetalCannon() {
     // 꽃잎 포 발사!
     Player.petalCannonReady = false;
     Player.petalCannonCharge = 0;
+    
+    // 꽃잎포 전용 강력한 발사 모션 및 반동 적용 (뒤로 크게 밀려남)
+    Player.recoilX = -15; 
+    Player.petalFiringTimer = 300; // 300ms 동안 특수 렌더링 상태 유지
+    AudioManager.playSFX('shoot'); // 꽃잎포 고유 효과음이나 발사음 재생
     
     const isLandscape = isMobileEasyModeActive(); // 가로(이지) 모드 여부
     
