@@ -2017,8 +2017,8 @@ const LevelSystem = {
     },
 
     // 레벨당 스탯 증가량
-    maxLevel: 20, // 플레이어 최대 레벨 (20으로 상향)
-    itemMaxLevel: 15, // 아이템 최대 레벨 (공격력 포함 15)
+    maxLevel: 25, // 플레이어 최대 레벨 (25로 상향)
+    itemMaxLevel: 20, // 아이템 최대 레벨 (공격력 포함 20)
     itemMaxLevelFireRate: 12, // 공격속도 최대 레벨 (12로 제한)
     stats: {
         playerHpPerLevel: 2,        // 플레이어 레벨당 체력 +2
