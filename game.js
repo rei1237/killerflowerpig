@@ -1651,7 +1651,7 @@ const Player = {
     x: 50, y: 0, width: 64, height: 64,
     speed: 0.15,
     fireRate: 200,
-    minFireRate: 20,
+    minFireRate: 80,
     lastFireTime: 0,
     damage: 10,
     targetY: 0,
@@ -2024,7 +2024,7 @@ const LevelSystem = {
         playerHpPerLevel: 2,        // 플레이어 레벨당 체력 +2
         playerDefensePerLevel: 0.5, // 플레이어 레벨당 방어력 +0.5
         itemDamagePerLevel: 7.5,    // 공격력 아이템 레벨당 +7.5
-        itemFireRatePerLevel: 16,   // 공격속도 아이템 레벨당 -16ms
+        itemFireRatePerLevel: 11,   // 공격속도 아이템 레벨당 -11ms (최소 80ms)
         itemShieldPerLevel: 1500,   // 무적 아이템 레벨당 +1.5초
         itemSupportPerLevel: 2000,  // 지원군 아이템 레벨당 +2초
         itemDefensePerLevel: 1      // 방어력 아이템 레벨당 +1 (내부용)
@@ -2096,9 +2096,9 @@ const LevelSystem = {
         const oldMaxHp = Player.maxHp;
         const levelHpBonus = Math.floor((this.playerLevel - 1) / 2);
         const newMaxHp = 5 + levelHpBonus;
+        Player.maxHp = newMaxHp;
+        Player.hp = newMaxHp; // 레벨업 시 체력 가득 회복하여 안정적으로 반영
         if (newMaxHp > oldMaxHp) {
-            Player.maxHp = newMaxHp;
-            Player.hp = Math.min(Player.hp + (newMaxHp - oldMaxHp), newMaxHp);
             addFloatingText(`❤️ MAX HP UP! ${oldMaxHp} → ${newMaxHp}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 90, '#e74c3c');
         }
 
@@ -2479,10 +2479,10 @@ class Enemy {
         const isHardMode = !isMobileLandscapePlayMode();
         const hpMultiplierA = isMobileEasyModeActive() ? EASY_MODE_CONFIG.enemyHpMultiplierA : (isHardMode ? 1.5 : 1);
 
-        // ── 체력: 지수 카브 스케일링 (50% 감소 적용) ──
-        // 스테이지별 체력 증가폭을 기존 대비 50% 낮춤
-        const baseHp = 120;
-        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.1) * 50);
+        // ── 체력: 지수 커브 스케일링 (총 쏘는 속도 감소에 비례해 대폭 하향) ──
+        // 스테이지별 체력 증가폭을 대폭 낮춤
+        const baseHp = 25;
+        const stageBonus = Math.round(Math.pow(currentStage - 1, 2.1) * 10);
         this.hp = Math.round((baseHp + stageBonus) * hpMultiplierA);
         this.maxHp = this.hp;
 
@@ -3499,6 +3499,7 @@ class Boss {
         if (level >= 5) {
             baseHp = Math.floor(baseHp * 1.5); // 스테이지 5 이상부터 1.5배 상향
         }
+        baseHp *= 3; // 보스 체력 3배 더 높게 상향 (요청사항 반영)
         const hardModeHpMultiplier = isHardMode ? 1.5 : 1; // 하드모드: 보스 체력 50% 증가
 
         // 보스킹: 20% 더 많은 체력, 보스2: 10% 더 많은 체력, 하드모드: 추가 50%
@@ -3849,14 +3850,14 @@ function usePetalCannon() {
     
     // 가로 모드에서는 파워를 일반 환경과 동일하게 조정 (데미지 0.5배, 투사체 수 감소로 렉 방지)
     const playerLevel = LevelSystem.playerLevel;
-    const basePetalDamage = isLandscape ? 60 : 120; // 기본 데미지 상향 (50/100 -> 60/120)
+    const basePetalDamage = isLandscape ? 60 : 240; // 렉 개선을 위해 투사체를 줄인 대신 화력 대폭 상향
     const levelMultiplier = 1 + (playerLevel - 1) * 0.5; // 레벨당 보너스 상향 (0.25 -> 0.5)
     const petalDamage = Math.round(basePetalDamage * levelMultiplier);
     
     // 가로 모드: 렉을 유발하지 않도록 꽃잎포 투사체 개수를 대폭 하향 (렉 방지 극대화)
     const petalCount = isLandscape
         ? 3 + Math.min(playerLevel, 2)          // 가로 모드: 최대 5발 (렉 차단)
-        : 7 + Math.min(playerLevel, 8);         // 일반 모드: 최대 15발
+        : 4 + Math.min(playerLevel, 2);         // 일반 모드: 렉 개선을 위해 최대 6발로 대폭 하향
     const spreadAngle = Math.PI / 4;
     
     // 중앙 메인 꽃잎
@@ -3884,8 +3885,8 @@ function usePetalCannon() {
         projectiles.push(petal);
     }
     
-    // 나선형 꽃잎 (가로 모드: 렉을 최소화하기 위해 나선형 투사체 0개로 설정, 일반: 4개)
-    const spiralCount = isLandscape ? 0 : 4;
+    // 나선형 꽃잎 (가로 모드: 렉을 최소화하기 위해 나선형 투사체 0개로 설정, 일반: 2개로 줄임)
+    const spiralCount = isLandscape ? 0 : 2;
     for (let i = 0; i < spiralCount; i++) {
         const angle = (i % 2 === 0 ? 1 : -1) * (Math.PI / 6 + i * 0.2);
         const speed = isLandscape ? 13 : 16;
