@@ -1,4 +1,4 @@
-const CACHE_NAME = "yeon-blue-zombie-v7";
+const CACHE_NAME = "yeon-blue-zombie-v8";
 const ASSETS = [
   "./",
   "./index.html",

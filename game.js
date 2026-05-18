@@ -1612,9 +1612,33 @@ const ImageLoader = {
     loadImage: function (key, src) {
         if (!src) return Promise.resolve(null);
         return new Promise((resolve) => {
+            let resolved = false;
+            // 2.5초 동안 로드가 안 되면 강제로 resolve하여 데드락 예방
+            const timer = setTimeout(() => {
+                if (!resolved) {
+                    resolved = true;
+                    console.warn(`[ImageLoader] Timeout loading asset: ${key} (${src})`);
+                    resolve(null);
+                }
+            }, 2500);
+
             const img = new Image();
-            img.onload = () => { this.images[key] = img; resolve(img); };
-            img.onerror = () => { resolve(null); };
+            img.onload = () => {
+                if (!resolved) {
+                    resolved = true;
+                    clearTimeout(timer);
+                    this.images[key] = img;
+                    resolve(img);
+                }
+            };
+            img.onerror = () => {
+                if (!resolved) {
+                    resolved = true;
+                    clearTimeout(timer);
+                    console.error(`[ImageLoader] Failed to load asset: ${key} (${src})`);
+                    resolve(null);
+                }
+            };
             img.src = src;
         });
     },
@@ -5995,12 +6019,21 @@ function addFloatingText(text, x, y, color) {
 }
 
 async function init() {
-    await ImageLoader.loadAllAssets();
-    LevelSystem.init();
-    Player.init();
-    updateMainMenuVisibility();
-    updateInstallButtonVisibility();
-    updateGameOverButtonVisibility();
+    console.log("[Yeon-Game] init() started!");
+    try {
+        console.log("[Yeon-Game] Loading all assets...");
+        await ImageLoader.loadAllAssets();
+        console.log("[Yeon-Game] All assets loaded successfully!");
+        
+        console.log("[Yeon-Game] Initializing LevelSystem...");
+        LevelSystem.init();
+        console.log("[Yeon-Game] Initializing Player...");
+        Player.init();
+        
+        console.log("[Yeon-Game] Updating UI visibility...");
+        updateMainMenuVisibility();
+        updateInstallButtonVisibility();
+        updateGameOverButtonVisibility();
 
     // 패스워드 및 스테이지 선택 이벤트 리스너 설정
     if (passwordSubmitBtn) {
@@ -6125,8 +6158,10 @@ async function init() {
     checkMobileEasyModeStatus();
 
     animationId = requestAnimationFrame(gameLoop);
+    } catch (err) {
+        console.error("[Yeon-Game] Fatal initialization error:", err);
+    }
 }
-init();
 
 // 모바일 첫 터치 시 전체화면
 if (isMobileTouchDevice()) {
