@@ -3217,7 +3217,10 @@ class Boss {
 
         // 기본 체력 계산 (보스는 적보다 강하게 - 상향)
         const isHardMode = !isMobileLandscapePlayMode();
-        const baseHp = 1800 * level + (level === 10 ? 8000 : 0);
+        let baseHp = 1800 * level + (level === 10 ? 8000 : 0);
+        if (level >= 5) {
+            baseHp = Math.floor(baseHp * 1.5); // 스테이지 5 이상부터 1.5배 상향
+        }
         const hardModeHpMultiplier = isHardMode ? 1.5 : 1; // 하드모드: 보스 체력 50% 증가
 
         // 보스킹: 20% 더 많은 체력, 보스2: 10% 더 많은 체력, 하드모드: 추가 50%
@@ -4341,12 +4344,17 @@ function gameLoop(timestamp) {
                     }
                 }
                 if (boss && boss.active && boss.state !== 'DEAD' && checkCollision(p, boss)) {
-                    // 꽃잎 포는 보스에게 2배 데미지
-                    const damageToBoss = p.isPetalCannon ? p.damage * 2 : p.damage;
+                    // 스테이지 5 이상부터는 꽃잎포 보스 2배 데미지 무효화 (1배만 적용)
+                    const isDoubleDamage = p.isPetalCannon && currentStage < 5;
+                    const damageToBoss = isDoubleDamage ? p.damage * 2 : p.damage;
                     boss.hp -= damageToBoss; p.active = false; createExplosion(p.x, p.y, '#ff4757');
                     // 꽃잎 포 보스 타격 시 추가 플로팅 텍스트
                     if (p.isPetalCannon) {
-                        addFloatingText(`💥 CRITICAL! -${damageToBoss}`, p.x, p.y - 20, '#ff00ff');
+                        if (isDoubleDamage) {
+                            addFloatingText(`💥 CRITICAL! -${damageToBoss}`, p.x, p.y - 20, '#ff00ff');
+                        } else {
+                            addFloatingText(`🌸 HIT! -${damageToBoss}`, p.x, p.y - 20, '#ff69b4');
+                        }
                     }
                     if (boss.hp <= 0 && boss.state !== 'DEAD') {
                         boss.state = 'DEAD';
