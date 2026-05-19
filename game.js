@@ -620,7 +620,7 @@ let isBombUnlimited = false; // 패스워드 입력 시 폭탄 무제한 모드
 // --- 1. 에셋 및 전역 상태 설정 ---
 
 const ASSETS = {
-    player: 'asset/꽃돼지 총.png',
+    player: 'asset/꽃돼지 총2.png',
     bullet: '',
     enemy: 'asset/청토끼.png',
     enemy2: 'asset/청토끼 2.png',
@@ -1774,32 +1774,32 @@ const Player = {
         const fire = Math.max(this.fireRate * fireRateMultiplier, 10);
         const timeSinceLastFire = time - this.lastFireTime;
 
-        // 꽃잎포 특수 사격 모션 타이머 감소 및 애니메이션 프레임 설정
+        // 꽃잎 포 특수 사격 모션 타이머 감소 및 애니메이션 프레임 설정
         if (this.petalFiringTimer > 0) {
             this.petalFiringTimer -= 16;
             if (this.petalFiringTimer < 0) this.petalFiringTimer = 0;
             const pProgress = 1 - (this.petalFiringTimer / 300);
-            this.aniFrame = Math.min(7, Math.floor(pProgress * 8));
+            this.aniFrame = Math.min(15, Math.floor(pProgress * 16));
             this.isShootingAnimation = true;
         } else if (timeSinceLastFire < fire) {
             this.isShootingAnimation = true;
             const progress = timeSinceLastFire / fire;
 
-            // 8개의 프레임을 진척도에 따라 자연스럽게 연결하여 재생
-            this.aniFrame = Math.floor(progress * 8);
-            if (this.aniFrame > 7) this.aniFrame = 7;
+            // 16개의 프레임을 진척도에 따라 자연스럽게 연결하여 재생
+            this.aniFrame = Math.floor(progress * 16);
+            if (this.aniFrame > 15) this.aniFrame = 15;
         } else {
             this.isShootingAnimation = false;
 
-            // 평소 걷기/대기 하이브리드 연출:
-            // 위아래 이동 중(dy 존재)일 때는 이동 속도에 맞춰 발을 자연스럽게 교차 (0, 1, 2, 3 순환)
-            // 가만히 대기 중일 때는 0번(기본 대기)과 1번(정조준)이 숨쉬듯 800ms 주기로 은은하게 펄싱
+            // 평소 걷기/대기 하이브리드 연출 (꽃돼지 총2의 4x4 스프라이트 기준):
+            // 이동 중(dy 존재)일 때는 1번 프레임(인덱스 0)과 16번 프레임(인덱스 15)을 가볍게 교차
+            // 가만히 대기 중일 때도 1번 프레임(인덱스 0)과 16번 프레임(인덱스 15)이 숨쉬듯 800ms 주기로 교차
             if (Math.abs(dy) > 0.8) {
                 const walkFrameDuration = 200;
-                this.aniFrame = Math.floor(time / walkFrameDuration) % 4;
+                this.aniFrame = Math.floor(time / walkFrameDuration) % 2 === 0 ? 0 : 15;
             } else {
                 const breathCycle = 1000;
-                this.aniFrame = Math.floor((time % breathCycle) / (breathCycle / 2)) === 0 ? 0 : 1;
+                this.aniFrame = Math.floor((time % breathCycle) / (breathCycle / 2)) === 0 ? 0 : 15;
             }
         }
 
@@ -1891,7 +1891,7 @@ const Player = {
         const img = ImageLoader.get('player');
         if (img) {
             const cols = 4;
-            const rows = 2;
+            const rows = 4;
             const frameW = img.width / cols;
             const frameH = img.height / rows;
             let rowIdx = 0;
@@ -1899,9 +1899,9 @@ const Player = {
 
             // 사망 시 정교한 비주얼 피드백 적용
             if (this.state === 'DEAD') {
-                // 사망 시: 5번 프레임(반동 밀림)에서 서서히 6번 프레임(눈 감고 한숨)으로 연출
+                // 사망 시: 15번 프레임(인덱스 14 - 눈 질끈 감고 연기)에서 16번 프레임(인덱스 15 - 기절 대기)으로 연출
                 const timeSinceDeath = Date.now() - this.lastFrameTime;
-                const deathFrame = timeSinceDeath < 400 ? 5 : 6;
+                const deathFrame = timeSinceDeath < 400 ? 14 : 15;
                 rowIdx = Math.floor(deathFrame / cols);
                 colIdx = deathFrame % cols;
             } else {
@@ -1910,9 +1910,9 @@ const Player = {
                 colIdx = this.aniFrame % cols;
             }
 
-            const sx = colIdx * frameW + 22;
+            const sx = colIdx * frameW;
             const sy = rowIdx * frameH;
-            const cropWidth = frameW - 30;
+            const cropWidth = frameW;
 
             // 모바일 고화질: ctx에 imageSmoothingQuality 명시 적용
             ctx.save();
