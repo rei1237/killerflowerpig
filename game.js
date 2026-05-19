@@ -2128,7 +2128,7 @@ const LevelSystem = {
         const maxLv = (itemType === 'FIRE_RATE') ? this.itemMaxLevelFireRate : this.itemMaxLevel;
         if (item.level >= maxLv) {
             if (itemType === 'DAMAGE' || itemType === 'FIRE_RATE') {
-                this.addPlayerExp(amount);
+                this.addPlayerExp(100);
                 return "MAX_EXP";
             }
             return false;
@@ -2802,7 +2802,7 @@ class GatePair {
             if (leveledUp) {
                 addFloatingText(`🔥 SPD Lv.${newLevel} UP!`, this.x, gatePart.y + gatePart.height / 2 - 10, "#3498db");
             } else if (isMax) {
-                addFloatingText(`🔥 MAX LV EXP +${expGained}`, this.x, gatePart.y + gatePart.height / 2 - 10, "#3498db");
+                addFloatingText(`🔥 MAX LV EXP +100`, this.x, gatePart.y + gatePart.height / 2 - 10, "#3498db");
             }
             AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'DAMAGE') {
@@ -2822,7 +2822,7 @@ class GatePair {
             if (leveledUp) {
                 addFloatingText(`⚔️ ATK Lv.${newLevel} UP!`, this.x, gatePart.y + gatePart.height / 2 - 10, "#2ecc71");
             } else if (isMax) {
-                addFloatingText(`⚔️ MAX LV EXP +${expGained}`, this.x, gatePart.y + gatePart.height / 2 - 10, "#2ecc71");
+                addFloatingText(`⚔️ MAX LV EXP +100`, this.x, gatePart.y + gatePart.height / 2 - 10, "#2ecc71");
             }
             AudioManager.playSFX('powerup');
         } else if (gatePart.type === 'DEFENSE') {
@@ -2855,8 +2855,8 @@ class GatePair {
             if (Player.bombCount >= 5) { isBonus = true; bonusScore = 2000; }
             else { Player.bombCount++; AudioManager.playSFX('bomb'); }
         } else if (gatePart.type === 'COIN') {
-            // 코인 아이템: 플레이어 EXP 즉시 획득 (50 EXP)
-            const expGained = 50 * expMultiplier;
+            // 코인 아이템: 플레이어 EXP 즉시 획득 (기존 50에서 100으로 2배 상향 조정)
+            const expGained = 100 * expMultiplier;
             const prevLevel = LevelSystem.playerLevel;
             LevelSystem.addPlayerExp(expGained);
             const newLevel = LevelSystem.playerLevel;
@@ -2880,10 +2880,10 @@ class GatePair {
 
         if (isBonus) {
             score += bonusScore;
-            // 보너스도 EXP로 변환 (10 EXP)
-            const bonusExp = 10 * expMultiplier;
+            // 폭탄 5개 꽉 찼을 때 경험치 100 고정 획득
+            const bonusExp = 100;
             LevelSystem.addPlayerExp(bonusExp);
-            addFloatingText(`BONUS! +${bonusScore} (+${bonusExp} EXP)`, this.x, gatePart.y + gatePart.height / 2, "#f1c40f");
+            addFloatingText(`BOMB MAX! +${bonusScore} (+${bonusExp} EXP)`, this.x, gatePart.y + gatePart.height / 2, "#f1c40f");
             AudioManager.playSFX('powerup');
         }
 
