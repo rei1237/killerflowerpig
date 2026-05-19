@@ -2741,22 +2741,93 @@ class GatePair {
     constructor(x) {
         this.x = x; this.width = 60; this.speed = 3.5; this.active = true;
         const halfHeight = GAME_HEIGHT / 2;
-        // 공격력/사격속도 비중 대폭 상향 (프롬프트 반영)
-        const types = [
-            { type: 'FIRE_RATE', value: 30, text: 'SPEED UP', color: '#3498db', icon: 'gun' },
-            { type: 'FIRE_RATE', value: 30, text: 'SPEED UP', color: '#3498db', icon: 'gun' },
-            { type: 'DAMAGE', value: 10, text: 'POWER UP', color: '#2ecc71', icon: 'sword' },
-            { type: 'DAMAGE', value: 10, text: 'POWER UP', color: '#2ecc71', icon: 'sword' },
-            { type: 'DEFENSE', value: 1, text: 'DEFENSE UP', color: '#95a5a6', icon: 'defense' },
-            { type: 'HEAL', value: 2, text: 'REPAIR', color: '#e74c3c', icon: 'heart' },
-            { type: 'SHIELD', value: 15000, text: 'SHIELD', color: '#9b59b6', icon: 'shield' },
-            { type: 'ULTIMATE', value: 1, text: 'BOMB', color: '#f1c40f', icon: 'bomb' },
-            { type: 'COIN', value: 1000, text: '+1000', color: '#ffd700', icon: 'coin' }
-        ];
 
-        // 스테이지 5부터 지원군 스킬 게이트 등장
+        // 각 스탯의 '필요 없는 상황'(만렙 달성 또는 수량 풀 충전) 여부를 지능적으로 판단
+        const isFireRateMax = LevelSystem.items.FIRE_RATE.level >= LevelSystem.itemMaxLevelFireRate;
+        const isDamageMax = LevelSystem.items.DAMAGE.level >= LevelSystem.itemMaxLevel;
+        const isDefenseMax = LevelSystem.items.DEFENSE.level >= LevelSystem.itemMaxLevel;
+        const isShieldMax = LevelSystem.items.SHIELD.level >= LevelSystem.itemMaxLevel;
+        const isSupportMax = LevelSystem.items.SUPPORT && LevelSystem.items.SUPPORT.level >= LevelSystem.itemMaxLevel;
+        const isHpFull = Player.hp >= Player.maxHp;
+        const isBombFull = Player.bombCount >= 5;
+
+        const types = [];
+
+        // 1. 공격속도 (기본 2칸) - 만렙 달성 시 90% 확률로 등장 차단
+        if (!isFireRateMax) {
+            types.push({ type: 'FIRE_RATE', value: 30, text: 'SPEED UP', color: '#3498db', icon: 'gun' });
+            types.push({ type: 'FIRE_RATE', value: 30, text: 'SPEED UP', color: '#3498db', icon: 'gun' });
+        } else {
+            if (Math.random() < 0.1) {
+                types.push({ type: 'FIRE_RATE', value: 30, text: 'SPEED UP', color: '#3498db', icon: 'gun' });
+            }
+        }
+
+        // 2. 공격력 (기본 2칸) - 만렙 달성 시 90% 확률로 등장 차단
+        if (!isDamageMax) {
+            types.push({ type: 'DAMAGE', value: 10, text: 'POWER UP', color: '#2ecc71', icon: 'sword' });
+            types.push({ type: 'DAMAGE', value: 10, text: 'POWER UP', color: '#2ecc71', icon: 'sword' });
+        } else {
+            if (Math.random() < 0.1) {
+                types.push({ type: 'DAMAGE', value: 10, text: 'POWER UP', color: '#2ecc71', icon: 'sword' });
+            }
+        }
+
+        // 3. 방어력 - 만렙 달성 시 90% 확률로 등장 차단
+        if (!isDefenseMax) {
+            types.push({ type: 'DEFENSE', value: 1, text: 'DEFENSE UP', color: '#95a5a6', icon: 'defense' });
+        } else {
+            if (Math.random() < 0.1) {
+                types.push({ type: 'DEFENSE', value: 1, text: 'DEFENSE UP', color: '#95a5a6', icon: 'defense' });
+            }
+        }
+
+        // 4. 무적 쉴드 - 만렙 달성 시 90% 확률로 등장 차단
+        if (!isShieldMax) {
+            types.push({ type: 'SHIELD', value: 15000, text: 'SHIELD', color: '#9b59b6', icon: 'shield' });
+        } else {
+            if (Math.random() < 0.1) {
+                types.push({ type: 'SHIELD', value: 15000, text: 'SHIELD', color: '#9b59b6', icon: 'shield' });
+            }
+        }
+
+        // 5. 지원군 (스테이지 5 이상) - 만렙 달성 시 90% 확률로 등장 차단
         if (currentStage >= 5) {
-            types.push({ type: 'SUPPORT', value: 20000, text: 'SUPPORT', color: '#e67e22', icon: 'support' });
+            if (!isSupportMax) {
+                types.push({ type: 'SUPPORT', value: 20000, text: 'SUPPORT', color: '#e67e22', icon: 'support' });
+            } else {
+                if (Math.random() < 0.1) {
+                    types.push({ type: 'SUPPORT', value: 20000, text: 'SUPPORT', color: '#e67e22', icon: 'support' });
+                }
+            }
+        }
+
+        // 6. 회복 - 체력이 꽉 차 있다면 85% 확률로 등장 차단
+        if (!isHpFull) {
+            types.push({ type: 'HEAL', value: 2, text: 'REPAIR', color: '#e74c3c', icon: 'heart' });
+            types.push({ type: 'HEAL', value: 2, text: 'REPAIR', color: '#e74c3c', icon: 'heart' });
+        } else {
+            if (Math.random() < 0.15) {
+                types.push({ type: 'HEAL', value: 2, text: 'REPAIR', color: '#e74c3c', icon: 'heart' });
+            }
+        }
+
+        // 7. 폭탄 - 폭탄이 5개 꽉 차 있다면 85% 확률로 등장 차단
+        if (!isBombFull) {
+            types.push({ type: 'ULTIMATE', value: 1, text: 'BOMB', color: '#f1c40f', icon: 'bomb' });
+        } else {
+            if (Math.random() < 0.15) {
+                types.push({ type: 'ULTIMATE', value: 1, text: 'BOMB', color: '#f1c40f', icon: 'bomb' });
+            }
+        }
+
+        // 8. 코인 - 상시 출현 보장 및 필요 스탯이 적을 때 빈 공간을 메우기 위해 2개 상시 보장
+        types.push({ type: 'COIN', value: 1000, text: '+1000', color: '#ffd700', icon: 'coin' });
+        types.push({ type: 'COIN', value: 1000, text: '+1000', color: '#ffd700', icon: 'coin' });
+
+        // 안전장치: 후보 개수가 최소 2개는 되도록 방어 코드 추가
+        while (types.length < 2) {
+            types.push({ type: 'COIN', value: 1000, text: '+1000', color: '#ffd700', icon: 'coin' });
         }
 
         const shuffled = [...types].sort(() => Math.random() - 0.5);
@@ -2765,6 +2836,12 @@ class GatePair {
             if (!selected.some(s => s.type === t.type)) selected.push(t);
             if (selected.length === 2) break;
         }
+
+        // 두 개의 게이트 타입이 유니크하게 선택되지 못한 예외 처리 안전장치
+        if (selected.length < 2) {
+            selected.push({ type: 'COIN', value: 1000, text: '+1000', color: '#ffd700', icon: 'coin' });
+        }
+
         this.topGate = { ...selected[0], y: 50, height: halfHeight - 60 };
         this.bottomGate = { ...selected[1], y: halfHeight + 10, height: halfHeight - 60 };
     }
