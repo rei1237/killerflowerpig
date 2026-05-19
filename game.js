@@ -3582,7 +3582,7 @@ class Boss {
 
         // 보스킹: 20% 더 많은 체력, 보스2: 10% 더 많은 체력, 하드모드: 추가 50%
         if (this.isBossKing) {
-            this.hp = Math.floor(baseHp * 1.2 * hardModeHpMultiplier);
+            this.hp = Math.floor(baseHp * 0.85 * hardModeHpMultiplier);
         } else if (this.isBoss2) {
             this.hp = Math.floor(baseHp * 1.1 * hardModeHpMultiplier);
         } else {
@@ -3704,8 +3704,8 @@ class Boss {
                     const summonEnemySpeedMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossSummonEnemySpeedMultiplier : 1;
                     const summonEnemyHpMultiplier = isMobileEasyModeActive() ? EASY_MODE_CONFIG.bossSummonEnemyHpMultiplier : 1;
                     // 소환된 적: 빠르지만 체력은 낮게 (원래 500->150, 350->100, 200->80)
-                    e.speed = (this.isBossKing ? 9 : (this.isBoss2 ? 7 : 5)) * summonEnemySpeedMultiplier;
-                    e.hp = Math.round((this.isBossKing ? 150 : (this.isBoss2 ? 100 : 80)) * summonEnemyHpMultiplier);
+                    e.speed = (this.isBossKing ? 7 : (this.isBoss2 ? 7 : 5)) * summonEnemySpeedMultiplier;
+                    e.hp = Math.round((this.isBossKing ? 100 : (this.isBoss2 ? 100 : 80)) * summonEnemyHpMultiplier);
                     e.maxHp = e.hp;
                     enemies.push(e);
                 }
@@ -3717,8 +3717,8 @@ class Boss {
                 // 분노 모드: 탄환 속도 30% 증가
                 if (this.rageMode) bossProjSpeed *= 1.3;
                 const bossProjDamage = isMobileEasyModeActive() ?
-                    (this.isBossKing ? 4 : (this.isBoss2 ? 3 : 2)) :
-                    (this.isBossKing ? 5 : (this.isBoss2 ? 4 : 3));
+                    (this.isBossKing ? 2 : (this.isBoss2 ? 3 : 2)) :
+                    (this.isBossKing ? 3 : (this.isBoss2 ? 4 : 3));
                 // 보스킹: 더 큰 에너지 볼 (75px)
                 const projSize = this.isBossKing ? 75 : (this.isBoss2 ? 60 : 45);
                 const b = new Projectile(this.x, this.y + this.height / 2, -bossProjSpeed, 0, 0);
@@ -3744,7 +3744,7 @@ class Boss {
                     const angle = startAngle + i * angleStep;
                     const b = new Projectile(this.x, this.y + this.height / 2, -bossScatterSpeed, angle, 0);
                     b.isEnemyBullet = true;
-                    b.lifeDamage = this.isBossKing ? 3 : (this.isBoss2 ? 2 : 1); // 보스킹 산탄 데미지 증가
+                    b.lifeDamage = this.isBossKing ? 2 : (this.isBoss2 ? 2 : 1); // 보스킹 산탄 데미지 조정
                     projectiles.push(b);
                 }
             } else if (this.isBossKing) {
@@ -3755,10 +3755,10 @@ class Boss {
                 for (let i = 0; i < rapidCount; i++) {
                     setTimeout(() => {
                         if (this.active && this.state !== 'DEAD') {
-                            const speed = this.rageMode ? -16 : -13; // 분노 모드: 더 빠른 탄환
+                            const speed = this.rageMode ? -12 : -10; // 분노 모드: 더 빠른 탄환 조정
                             const b = new Projectile(this.x, this.y + this.height / 2, speed, 0, 0);
                             b.isBossEnergyBall = true;
-                            b.lifeDamage = this.rageMode ? 5 : 4; // 분노 모드: 더 높은 데미지
+                            b.lifeDamage = this.rageMode ? 3 : 2; // 분노 모드: 더 높은 데미지 조정
                             b.width = 60; b.height = 60;
                             projectiles.push(b);
                         }
@@ -4597,7 +4597,9 @@ window.addEventListener('mousedown', (e) => {
     }
 
     enterMobileFullscreen();
-    AudioManager.init(); AudioManager.startBGM();
+    if (currentState !== GAME_STATE.EPILOGUE && currentState !== GAME_STATE.GAME_CLEAR_IMAGE && currentState !== GAME_STATE.ALL_CLEAR) {
+        AudioManager.init(); AudioManager.startBGM();
+    }
     if (currentState === GAME_STATE.WIN) {
         projectiles = []; enemies = []; particles = []; gates = [];
         currentStage = 1; enemiesKilled = 0; boss = null;
@@ -4651,7 +4653,9 @@ window.addEventListener('touchstart', (e) => {
     }
 
     enterMobileFullscreen();
-    AudioManager.init(); AudioManager.startBGM();
+    if (currentState !== GAME_STATE.EPILOGUE && currentState !== GAME_STATE.GAME_CLEAR_IMAGE && currentState !== GAME_STATE.ALL_CLEAR) {
+        AudioManager.init(); AudioManager.startBGM();
+    }
 
     // 상태 전환 로직
     if (currentState === GAME_STATE.WIN) {
