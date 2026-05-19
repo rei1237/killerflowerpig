@@ -4725,7 +4725,15 @@ window.addEventListener('keydown', (e) => {
 
 function resizeCanvas() {
     const viewport = getViewportSize();
-    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    let dpr = Math.min(window.devicePixelRatio || 1, 3);
+    
+    // 모바일 가로모드 렉 심각으로 인한 성능 최적화
+    if (isMobileTouchDevice()) {
+        const isLandscape = window.innerWidth > window.innerHeight;
+        // 가로모드일 때 dpr을 대폭 낮춤 (렉 최소화)
+        dpr = isLandscape ? Math.min(window.devicePixelRatio || 1, 1.0) : Math.min(window.devicePixelRatio || 1, 1.5);
+    }
+    
     GAME_WIDTH = viewport.width;
     GAME_HEIGHT = viewport.height;
     GAME_DPR = dpr;
@@ -4735,8 +4743,16 @@ function resizeCanvas() {
     canvas.style.height = GAME_HEIGHT + 'px';
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    
+    // 가로모드 최적화: 렌더링 성능을 위해 스무딩 비활성화
+    if (isMobileTouchDevice() && window.innerWidth > window.innerHeight) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.imageSmoothingQuality = 'low';
+    } else {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+    }
+    
     Player.init();
 }
 function handleResize() {
