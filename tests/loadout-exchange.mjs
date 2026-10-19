@@ -44,11 +44,11 @@ test('weapon exchange clears owned effects and hit channels while preserving typ
  for(const pool of [G.shots,G.hazards,G.beams]) {assert.equal(pool.count,1);assert.equal(pool.items[0].weapon,base[1]);}
  assert.equal(enemy.hits,hits); assert.ok(hits.every(x=>x===-99)); assert.deepEqual(G.boss.hits,{});
 });
-test('passive exchange recomputes stats, never heals for free, and persists through snapshots',()=>{
+test('passives take no slots: no passive exchange, a seventh passive is still offered and persists through snapshots',()=>{
  const ids=passiveIds.filter(id=>id!=='heart').slice(0,6); G.passives=Object.fromEntries(ids.map(id=>[id,5])); recomputeStats(); G.player.hp=30;
- assert.equal(swap('passive',ids[0],'heart').ok,true); assert.equal(G.player.hp,30); assert.equal(G.passives.heart,1); assert.equal(Object.keys(G.passives).length,6);
+ assert.equal(previewExchange('passive',ids[0],'heart').code,'INVALID_KIND'); assert.equal(exchangeRemaining(),1);
+ assert.equal(applyChoice(rollChoices(99).find(c=>c.id==='heart')),true); assert.equal(G.passives.heart,1); assert.equal(Object.keys(G.passives).length,7);
  const snap=JSON.parse(JSON.stringify(snapshotBuild())); restoreBuild(snap); assert.deepEqual(G.passives,snap.passives);
- G.player.hp=150; assert.equal(swap('passive','heart',ids[0]).code,'EXCHANGE_SPENT');
 });
 test('every recipe is reachable from full slots missing a partner; fusion outputs upgrade all seven levels',()=>{
  assert.equal(base.length,8); assert.equal(FUSION_RECIPES.length,9);
@@ -67,21 +67,21 @@ test('every recipe is reachable from full slots missing a partner; fusion output
   assert.ok(!rollChoices(99).some(c=>c.id===recipe.output)); assert.ok(Number.isFinite(weaponStats(G.weapons.find(x=>x.id===recipe.output)).dmg));
  }
 });
-test('all eight base weapons upgrade to maximum and evolve through existing chest after missing passive exchange',()=>{
+test('all eight base weapons upgrade to maximum and evolve through existing chest after picking the partner passive',()=>{
  for(const id of base){
   resetBuild(); G.weapons=[w(id)];
   assert.equal(WEAPONS[id].levels.length,WEAPON_MAX_LEVEL-1); assert.ok(PASSIVES[WEAPONS[id].evolve.with]);
   for(let lv=2;lv<=WEAPON_MAX_LEVEL;lv++)assert.equal(applyChoice(rollChoices(99).find(c=>c.id===id)),true);
   const partner=WEAPONS[id].evolve.with; const ids=passiveIds.filter(x=>x!==partner).slice(0,6); G.passives=Object.fromEntries(ids.map(x=>[x,5]));
-  assert.equal(swap('passive',ids[0],partner).ok,true);
+  assert.equal(applyChoice(rollChoices(99).find(c=>c.id===partner)),true);
   assert.equal(rollChest(1)[0].kind,'evolve'); assert.equal(G.weapons[0].evolved,true);
  }
 });
-test('all twelve passives can be acquired by full-slot exchange then upgraded to maximum',()=>{
+test('all twelve passives can be held together and each upgraded to maximum',()=>{
  assert.equal(passiveIds.length,12);
+ resetBuild(); G.weapons=[w('cannon')];
  for(const id of passiveIds){
-  resetBuild(); G.weapons=[w('cannon')]; const ids=passiveIds.filter(x=>x!==id).slice(0,6); G.passives=Object.fromEntries(ids.map(x=>[x,5]));
-  assert.equal(swap('passive',ids[0],id).ok,true);
+  assert.equal(applyChoice(rollChoices(99).find(c=>c.id===id&&c.isNew)),true);
   for(let lv=2;lv<=PASSIVE_MAX_LEVEL;lv++) {const c=rollChoices(99).find(c=>c.id===id);assert.equal(c.level,lv);assert.equal(applyChoice(c),true);}
   assert.ok(!rollChoices(99).some(c=>c.id===id));
  }
@@ -90,10 +90,9 @@ test('all twelve passives can be acquired by full-slot exchange then upgraded to
 test('one shared exchange per run persists across checkpoints and resets only for a new run',()=>{
  G.weapons=base.slice(0,6).map((id,i)=>w(id,5,i)); G.passives=Object.fromEntries(passiveIds.slice(0,6).map(id=>[id,5]));
  const checkpoint=snapshotBuild();assert.equal(exchangeRemaining(),1);
- const passivePreview=previewExchange('passive',passiveIds[0],passiveIds[6]);assert.equal(passivePreview.ok,true);
  const p=previewExchange('weapon',base[0],base[6]);assert.equal(exchangeRemaining(),1);
  assert.equal(exchangeItem('weapon',base[0],base[6],p.signature).remaining,0);
- assert.equal(exchangeItem('passive',passiveIds[0],passiveIds[6],passivePreview.signature).code,'EXCHANGE_SPENT');
+ const p2=previewExchange('weapon',base[1],base[7]);assert.equal(p2.code,'EXCHANGE_SPENT');
  const saved=snapshotBuild();assert.equal(saved.loadoutExchangesUsed,1);
  G.stage++;assert.equal(exchangeRemaining(),0);restoreBuild(checkpoint);assert.equal(exchangeRemaining(),0);
  resetBuild();assert.equal(exchangeRemaining(),1);restoreBuild(saved);assert.equal(exchangeRemaining(),0);

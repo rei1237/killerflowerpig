@@ -16,9 +16,9 @@ test('eligible missing regeneration is offered at early and periodic protected c
  for(const level of [5,10])for(let attempt=0;attempt<20;attempt++){G.level=level;const picks=rollChoices(3);assert.equal(picks.filter(c=>c.id==='regen').length,1);assert.equal(new Set(picks.map(c=>c.id)).size,3);}
  G.level=9;G.pendingLevelUps=4;assert.ok(rollChoices(3).some(c=>c.id==='regen'));
 });
-test('bounded regen offers coexist with thorns eligibility and respects full slots, bans and max level',()=>{
+test('bounded regen offers coexist with thorns eligibility and ignores passive count, respects bans and max level',()=>{
  G.level=5;G.passives={heart:1,nose:1,hide:1,focus:1,sap:1};let picks=rollChoices(3);assert.ok(picks.some(c=>c.id==='regen'));G.level=4;assert.equal(rollChoices(1)[0].id,'thorns');
- G.passives.whet=1;assert.ok(!rollChoices(99).some(c=>c.id==='regen'));delete G.passives.whet;G.banished.add('regen');assert.ok(!rollChoices(99).some(c=>c.id==='regen'));G.banished.clear();G.passives.regen=5;assert.ok(!rollChoices(99).some(c=>c.id==='regen'));
+ G.passives.whet=1;G.passives.scope=1;assert.ok(rollChoices(99).some(c=>c.id==='regen'));delete G.passives.whet;G.banished.add('regen');assert.ok(!rollChoices(99).some(c=>c.id==='regen'));G.banished.clear();G.passives.regen=5;assert.ok(!rollChoices(99).some(c=>c.id==='regen'));
 });
 test('automatic regeneration really ticks at 0.3 HP/s per level, caps HP, pauses and survives restore',()=>{
  applyChoice({kind:'passive',id:'regen',level:1});G.player.hp=50;updatePlayer(10);assert.equal(G.player.hp,53);

@@ -4,7 +4,7 @@ import { bossRewardTier } from '../data/boss-rewards.js';
 import { supplyState } from './supply-drops.js';
 // 경험치/레벨업, 레벨업 카드 생성, 무기·패시브 적용, 진화, 상자 보상
 import { G, emit } from './state.js';
-import { WEAPONS, PASSIVES, MAX_WEAPONS, MAX_PASSIVES, WEAPON_MAX_LEVEL, PASSIVE_MAX_LEVEL } from '../data/weapons.js';
+import { WEAPONS, PASSIVES, MAX_WEAPONS, WEAPON_MAX_LEVEL, PASSIVE_MAX_LEVEL } from '../data/weapons.js';
 import { recomputeStats, healPlayer } from './player.js';
 import { createWeapon } from './weapons.js';
 import { audio } from '../core/audio.js';
@@ -121,11 +121,9 @@ function candidates() {
             out.push({ kind: 'weapon', id, level: 1, weight: 2, name: def.name, icon: def.icon, desc: def.desc, isNew: true });
         }
     }
-    const pCount = Object.keys(G.passives).length;
     for (const id in PASSIVES) {
         const lv = G.passives[id] || 0;
         if (lv >= PASSIVE_MAX_LEVEL || G.banished.has(id)) continue;
-        if (!lv && pCount >= MAX_PASSIVES) continue;
         const def = PASSIVES[id];
         out.push({ kind: 'passive', id, level: lv + 1, weight: lv ? 2.5 : 1.5,
             name: def.name, icon: def.icon, desc: lv ? def.per : def.desc, isNew: !lv });
@@ -228,7 +226,6 @@ export function applyChoice(c) {
         if (!PASSIVES[c.id]) return false;
         const level = G.passives[c.id] || 0;
         if (level >= PASSIVE_MAX_LEVEL || c.level !== level + 1) return false;
-        if (!level && Object.keys(G.passives).length >= MAX_PASSIVES) return false;
         G.passives[c.id] = level + 1;
         recomputeStats();
     } else if (c.kind === 'heal') {
@@ -354,7 +351,7 @@ export function restoreBuild(s) {
     G.passives = {};
     for (const id of Object.keys(PASSIVES)) {
         const level = s.passives?.[id];
-        if (Number.isSafeInteger(level) && level > 0 && Object.keys(G.passives).length < MAX_PASSIVES) G.passives[id] = Math.min(PASSIVE_MAX_LEVEL, level);
+        if (Number.isSafeInteger(level) && level > 0) G.passives[id] = Math.min(PASSIVE_MAX_LEVEL, level);
     }
     G.gold = s.gold;
     restoreChoiceState(s);

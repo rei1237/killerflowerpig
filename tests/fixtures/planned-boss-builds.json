@@ -117,17 +117,17 @@
       "weapons": [
         {
           "id": "scatter_rail",
-          "level": 8,
+          "level": 6,
           "evolved": false
         },
         {
           "id": "lotus_bloom",
-          "level": 8,
+          "level": 3,
           "evolved": false
         },
         {
           "id": "plague_fire",
-          "level": 6,
+          "level": 4,
           "evolved": false
         }
       ],

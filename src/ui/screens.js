@@ -4,7 +4,7 @@ import { clearEncirclement } from '../game/encirclement.js';
 import { G } from '../game/state.js';
 import { STAGES, STAGE_COUNT } from '../data/stages.js';
 import { STORIES, EPILOGUE } from '../data/story.js';
-import { WEAPONS, PASSIVES, MAX_WEAPONS, MAX_PASSIVES } from '../data/weapons.js';
+import { WEAPONS, PASSIVES, MAX_WEAPONS } from '../data/weapons.js';
 import { bossRewardTier } from '../data/boss-rewards.js';
 import { BOSSES } from '../data/bosses.js';
 import { rollChoices, applyChoice, rollChest, rollBossChest, beginChoiceSession, consumeChoiceReroll, finishChoiceSession } from '../game/progression.js';
@@ -285,7 +285,7 @@ function updateReroll() {
 function renderCards() {
     const renderRevision=++choiceRenderRevision;
     const passiveCount=Object.keys(G.passives).length;
-    $('choice-capacity').textContent=`무기 ${G.weapons.length}/${MAX_WEAPONS} · 보조 ${passiveCount}/${MAX_PASSIVES} · 만렙 장비는 선택에서 제외됩니다.${G.weapons.length>=MAX_WEAPONS||passiveCount>=MAX_PASSIVES?' 슬롯이 가득 찼습니다. 선택을 마친 뒤 일시정지 → 장비 교체에서 새 재료를 확보할 수 있습니다.':''}`;
+    $('choice-capacity').textContent=`무기 ${G.weapons.length}/${MAX_WEAPONS} · 보조 ${passiveCount}/${Object.keys(PASSIVES).length}종 (칸 제한 없음) · 만렙 장비는 선택에서 제외됩니다.${G.weapons.length>=MAX_WEAPONS?' 무기 슬롯이 가득 찼습니다. 선택을 마친 뒤 일시정지 → 장비 교체에서 새 무기를 확보할 수 있습니다.':''}`;
     if(G.choiceSession && !G.choiceSession.closed)G.choiceSession.choices=currentChoices.map(c=>({...c}));
     const wrap = $('cards');
     wrap.innerHTML = '';

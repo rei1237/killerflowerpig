@@ -1,7 +1,7 @@
 import test, { beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { G } from '../src/game/state.js';
-import { WEAPONS, PASSIVES, MAX_WEAPONS, MAX_PASSIVES, WEAPON_MAX_LEVEL, PASSIVE_MAX_LEVEL } from '../src/data/weapons.js';
+import { WEAPONS, PASSIVES, MAX_WEAPONS, WEAPON_MAX_LEVEL, PASSIVE_MAX_LEVEL } from '../src/data/weapons.js';
 import { rollChoices, rollChest, resetBuild } from '../src/game/progression.js';
 
 const weapon = (id, level = 1) => ({ id, level, evolved: false });
@@ -116,14 +116,15 @@ test('seeded sampling follows exact weights without starving other choices', () 
     assert.ok(counts.regen > counts.nose * 1.25);
 });
 
-test('full weapon/passive slots exclude new essentials but retain owned upgrades', () => {
+test('full weapon slots exclude new weapons, while passives never fill up', () => {
     G.level = 4;
     G.weapons = Object.keys(WEAPONS).filter(id => id !== 'thorns').slice(0, MAX_WEAPONS).map(id => weapon(id));
-    G.passives = Object.fromEntries(Object.keys(PASSIVES).filter(id => !['heart', 'regen'].includes(id)).slice(0, MAX_PASSIVES).map(id => [id, 1]));
+    G.passives = Object.fromEntries(Object.keys(PASSIVES).filter(id => !['heart', 'regen'].includes(id)).map(id => [id, 1]));
     const choices = allChoices();
-    assert.equal(choices.length, MAX_WEAPONS + MAX_PASSIVES);
-    assert.ok(choices.every(c => !c.isNew));
-    assert.ok(!choices.some(c => ['thorns', 'heart', 'regen'].includes(c.id)));
+    assert.equal(choices.length, MAX_WEAPONS + Object.keys(PASSIVES).length);
+    assert.ok(choices.every(c => !c.isNew || c.kind === 'passive'));
+    assert.ok(!choices.some(c => c.id === 'thorns'));
+    assert.ok(['heart', 'regen'].every(id => choices.some(c => c.id === id && c.isNew)));
     G.weapons[1] = weapon('thorns');
     assert.equal(allChoices().find(c => c.id === 'thorns').weight, 6);
 });
@@ -140,7 +141,7 @@ test('banished essentials are excluded even from the level-4 guarantee', () => {
 test('max-level essentials are excluded and exhausted builds keep medical-kit/gold fallback', () => {
     G.level = 4;
     G.weapons = Object.keys(WEAPONS).slice(0, MAX_WEAPONS).map(id => weapon(id, WEAPON_MAX_LEVEL));
-    G.passives = { heart: PASSIVE_MAX_LEVEL, regen: PASSIVE_MAX_LEVEL, magazine: PASSIVE_MAX_LEVEL, focus: PASSIVE_MAX_LEVEL, sap: PASSIVE_MAX_LEVEL, scope: PASSIVE_MAX_LEVEL };
+    G.passives = Object.fromEntries(Object.keys(PASSIVES).map(id => [id, PASSIVE_MAX_LEVEL]));
     assert.deepEqual(rollChoices().map(c => [c.kind, c.id, c.name]), [
         ['heal', 'meat', '야전 응급 키트'], ['gold', 'gold', '피 묻은 금화'],
     ]);

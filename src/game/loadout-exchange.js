@@ -1,12 +1,13 @@
 // Explicit, loss-disclosing full-slot exchanges. Never called by random rewards.
 import { G, emit } from './state.js';
-import { WEAPONS, PASSIVES, MAX_WEAPONS, MAX_PASSIVES, WEAPON_MAX_LEVEL, PASSIVE_MAX_LEVEL } from '../data/weapons.js';
+import { WEAPONS, PASSIVES, MAX_WEAPONS, WEAPON_MAX_LEVEL, PASSIVE_MAX_LEVEL } from '../data/weapons.js';
 import { createWeapon } from './weapons.js';
 import { recomputeStats } from './player.js';
 
 export function exchangeRemaining() { return G.loadoutExchangesUsed ? 0 : 1; }
 
-const definitions = kind => kind === 'weapon' ? WEAPONS : kind === 'passive' ? PASSIVES : null;
+// 보조 아이템은 슬롯 제한이 없으므로 교체 대상은 무기뿐이다.
+const definitions = kind => kind === 'weapon' ? WEAPONS : null;
 const owned = (kind, id) => kind === 'weapon' ? G.weapons.find(w => w.id === id) : G.passives[id];
 const signature = (kind, fromId, toId) => JSON.stringify([kind, fromId, toId,
     exchangeRemaining(), G.stage, G.stageStartTime, G.fusionRevision || 0, G.player?.stats,
@@ -30,13 +31,13 @@ export function previewExchange(kind, fromId, toId) {
     if (!source) return { ok: false, code: 'NOT_OWNED' };
     if (owned(kind, toId)) return { ok: false, code: 'ALREADY_OWNED' };
     if (G.banished.has(toId)) return { ok: false, code: 'BANISHED' };
-    if (G.weapons.length > MAX_WEAPONS || Object.keys(G.passives).length > MAX_PASSIVES ||
+    if (G.weapons.length > MAX_WEAPONS ||
         new Set(G.weapons.map(w => w.id)).size !== G.weapons.length ||
         G.weapons.some(w => !Object.hasOwn(WEAPONS, w.id) || !Number.isSafeInteger(w.level) || w.level < 1 || w.level > WEAPON_MAX_LEVEL) ||
         Object.entries(G.passives).some(([id, level]) => !Object.hasOwn(PASSIVES, id) || !Number.isSafeInteger(level) || level < 1 || level > PASSIVE_MAX_LEVEL))
         return { ok: false, code: 'INVALID_INVENTORY' };
-    const count = kind === 'weapon' ? G.weapons.length : Object.keys(G.passives).length;
-    if (count !== (kind === 'weapon' ? MAX_WEAPONS : MAX_PASSIVES)) return { ok: false, code: 'SLOTS_NOT_FULL' };
+    const count = G.weapons.length;
+    if (count !== MAX_WEAPONS) return { ok: false, code: 'SLOTS_NOT_FULL' };
     if (G.choiceSession && !G.choiceSession.closed) return { ok: false, code: 'CHOICE_ACTIVE' };
     const evolved = kind === 'weapon' && !!source.evolved;
     return { ok: true, code: null, remaining: exchangeRemaining(), signature: signature(kind, fromId, toId),

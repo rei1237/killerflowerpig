@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { G, clearWorld } from '../src/game/state.js';
 import { createPlayer } from '../src/game/player.js';
 import { createWeapon } from '../src/game/weapons.js';
-import { STARTING_WEAPON, WEAPONS, MAX_WEAPONS, MAX_PASSIVES } from '../src/data/weapons.js';
+import { STARTING_WEAPON, WEAPONS, MAX_WEAPONS } from '../src/data/weapons.js';
 import { STAGES } from '../src/data/stages.js';
 import { FUSION_RECIPES } from '../src/data/fusions.js';
 import { resetSpawner, updateSpawner } from '../src/game/spawner.js';
@@ -15,7 +15,6 @@ import { hitEnemy, flushExplosions } from '../src/game/enemies.js';
 import { resetBuild, addXP, xpForLevel, rollChoices, applyChoice, beginChoiceSession,
     consumeChoiceReroll, finishChoiceSession, rollBossChest } from '../src/game/progression.js';
 import { previewFusion, fuseItems } from '../src/game/fusion.js';
-import { previewExchange, exchangeItem } from '../src/game/loadout-exchange.js';
 import { settings } from '../src/core/settings.js';
 
 export const XP_SCENARIOS = [
@@ -107,23 +106,6 @@ function scoreCard(c, mode) {
     if (c.kind === 'weapon' && recipesFor(mode).some(r => r.output === c.id)) return 100 + c.level;
     return -1;
 }
-function rescueExchange(mode, log) {
-    if (G.loadoutExchangesUsed) return;
-    const recipes = recipesFor(mode).filter(r => !G.weapons.some(w => w.id === r.output));
-    // Repair a full passive inventory when a Lv8 weapon cannot evolve.
-    const ready = G.weapons.filter(w => w.level === 8 && !w.evolved && WEAPONS[w.id].evolve);
-    const missing = ready.map(w => WEAPONS[w.id].evolve.with).find(id => !G.passives[id]);
-    if (!missing || Object.keys(G.passives).length !== MAX_PASSIVES) return;
-    const useful = new Set(G.weapons.filter(w => !w.evolved && WEAPONS[w.id].evolve).map(w => WEAPONS[w.id].evolve.with));
-    if (mode !== 'scattered') for (const recipe of recipes) for (const input of recipe.inputs) useful.add(WEAPONS[input.id].evolve.with);
-    const from = Object.keys(G.passives).filter(id => !useful.has(id)).sort((a, b) => G.passives[a] - G.passives[b])[0];
-    if (!from) return;
-    const preview = previewExchange('passive', from, missing);
-    if (!preview.ok) return;
-    const result = exchangeItem('passive', from, missing, preview.signature);
-    if (!result.ok) throw Error('Rejected valid exchange');
-    log.push({ stage: G.stage, kind: 'passive', from, to: missing, lostLevel: preview.removed.level });
-}
 
 export function simulatePlan({ rows, collection = .85, mode = 'planned', seed = 1, chestFirst = true } = {}) {
     if (!Array.isArray(rows) || rows.length !== 10) throw Error('Exactly ten XP rows required');
@@ -148,14 +130,14 @@ export function simulatePlan({ rows, collection = .85, mode = 'planned', seed = 
                     log.itemChoices[selected.id] = (log.itemChoices[selected.id] || 0) + 1;
                 }
                 log.choices++; finishChoiceSession(session.id);
-                rescueExchange(mode, log.exchanges); fuseReady(mode, log.fusions);
-                if (G.weapons.length > MAX_WEAPONS || Object.keys(G.passives).length > MAX_PASSIVES) throw Error('Slot budget exceeded');
+                fuseReady(mode, log.fusions);
+                if (G.weapons.length > MAX_WEAPONS) throw Error('Slot budget exceeded');
             }
         }
         for (const row of rows) {
             G.stage = row.stage;
             processXP(row.waveXP * collection);
-            rescueExchange(mode, log.exchanges); fuseReady(mode, log.fusions);
+            fuseReady(mode, log.fusions);
             const beforeBoss = build();
             if (!chestFirst) processXP(row.bossXP * collection);
             const reward = rollBossChest(`audit:${seed}:${mode}:${row.stage}`);
