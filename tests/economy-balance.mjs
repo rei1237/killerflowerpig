@@ -17,9 +17,9 @@ test('coin and XP collection are friendlier without expanding chest/bomb activat
  assert.equal(70*PICKUP_ASSIST.coinMultiplier,105);assert.equal(70*PICKUP_ASSIST.gemMultiplier,84);
 });
 test('tech progression requires more XP with steeper late growth',()=>{
- assert.equal(xpForLevel(1),8);assert.equal(xpForLevel(10),71);
- const firstThree=[1,2,3].reduce((sum,level)=>sum+xpForLevel(level),0);assert.equal(firstThree,45);
- assert.equal(xpForLevel(41),8+40*7+21*10+16);
+ assert.equal(xpForLevel(1),10);assert.equal(xpForLevel(10),100);
+ const firstThree=[1,2,3].reduce((sum,level)=>sum+xpForLevel(level),0);assert.equal(firstThree,60);
+ assert.equal(xpForLevel(41),10+40*10+21*20+6*40);
 });
 test('random chest refunds remain strictly below cost and deterministic alternatives are available',()=>{
  assert.equal(RELIC_CHEST.cost,16);assert.deepEqual(RELIC_CHEST.rates,[.6,.3,.1]);assert.equal(RELIC_CHEST.pityAt,10);

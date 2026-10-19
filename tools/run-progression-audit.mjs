@@ -1,3 +1,4 @@
+import { BOSS_XP_GEMS, bossGemValue } from '../src/data/boss-rewards.js';
 // Bounded planning audit, NOT an autonomous combat/survival playtest.
 // Wave XP uses the real director, spawn/death/drop code under declared residency
 // assumptions. Choices, rerolls, chest evolution, exchanges and fusion are real.
@@ -63,7 +64,7 @@ export function estimateWaveXP({ residency = 16, seed = 7, lowQ = false, dt = .1
                 for (let i = 0; i < G.gems.count; i++) xp += G.gems.items[i].value;
                 G.gems.clear(); G.pickups.clear(); G.hazards.clear();
             }
-            rows.push({ stage, waveXP: xp, bossXP: 24 * (5 + stage * 2), kills: G.kills,
+            rows.push({ stage, waveXP: xp, bossXP: BOSS_XP_GEMS * bossGemValue(stage), kills: G.kills,
                 eliteKills, peak, uncreditedSurvivors: G.enemies.items.slice(0, G.enemies.count).filter(e => e.alive).length });
         }
         return rows;

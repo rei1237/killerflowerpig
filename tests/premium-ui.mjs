@@ -238,8 +238,10 @@ test('returning to title invalidates an unfinished chest animation', () => {
 test('first new game optionally offers the guide before entering the stage story', () => {
     showTitle(); node('btn-new').click(); assert.equal(isTutorialOpen(), true); assert.equal(topModalId(), 'tutorial');
     closeTutorial(); assert.equal(topModalId(), 'practice'); assert.equal(isPracticeOpen(), true);
-    closePractice(); assert.equal(topModalId(), null); assert.equal(node('story').hidden, false);
+    closePractice(); assert.equal(topModalId(), 'tech-select', 'start tech is chosen before the story');
+    node('btn-tech-go').click(); assert.equal(topModalId(), null); assert.equal(node('story').hidden, false);
     node('story-skip').click(); assert.equal(G.mode, 'play'); assert.equal(G.paused, false);
+    assert.ok(G.tech, 'a start tech is applied to the new run');
 });
 
 test('guide reopened from pause keeps the parent pause and restores focus/input ownership', () => {
@@ -530,10 +532,10 @@ test('new and restarted runs apply the modest mob HP increase once without raisi
     freshRun();
     const playerMax = G.player.maxHp;
     const first = spawnEnemy('shambler', 400, 0);
-    assert.ok(Math.abs(first.hp - 13.77) < 1e-9);
+    assert.ok(Math.abs(first.hp - 15.39) < 1e-9);
     onPlayerDeath(); retryStage();
     const second = spawnEnemy('shambler', 400, 0);
-    assert.ok(Math.abs(second.hp - 13.77) < 1e-9, 'retry does not compound mob toughness');
+    assert.ok(Math.abs(second.hp - 15.39) < 1e-9, 'retry does not compound mob toughness');
     assert.equal(G.stage, 1);
     assert.equal(G.player.maxHp, playerMax);
     assert.equal(G.player.hp, playerMax);

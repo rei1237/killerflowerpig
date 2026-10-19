@@ -29,6 +29,9 @@ import { mountItemArt, itemArt } from './item-art.js';
 import { initLoadoutExchange, openLoadoutExchange, closeLoadoutExchange, appendEvolutionInfo } from './loadout-exchange.js';
 import { initFusionReveal, openFusionReveal, closeFusionReveal } from './fusion-reveal.js';
 import { initPractice, openPractice, closePractice, cancelPractice, shouldOfferPractice } from './practice.js';
+import { initTechSelect, openTechSelect } from './tech-select.js';
+import { techSummary } from '../game/tech.js';
+import { RESONANCE_STEPS } from '../data/techs.js';
 import { initTutorial, openTutorial, closeTutorial, shouldOfferTutorial } from './tutorial.js';
 
 let rewardSequence = 0;
@@ -313,6 +316,13 @@ function renderCards() {
             s.textContent = 'NEW';
             el.appendChild(s);
         }
+        if (c.tech) {
+            const ts = techSummary();
+            const t = document.createElement('div');
+            t.className = 'card-tech';
+            t.textContent = ts ? `✦ ${ts.tech.name} 계열${c.isNew && ts.next ? ` · 공명 ${ts.count}/${ts.next} → +1` : ''}` : '✦ 테크 계열';
+            el.appendChild(t);
+        }
         if (c.evoHint) {
             const h = document.createElement('div');
             h.className = 'card-evo';
@@ -432,6 +442,7 @@ export function togglePause() {
         else if (top === 'practice') closePractice();
         else if (top === 'loadout-exchange') closeLoadoutExchange();
         else if (top === 'fusion-reveal') closeFusionReveal();
+        else if (top === 'tech-select') $('btn-tech-back').click();
         else if (['pause', 'settings', 'shop', 'install', 'intel', 'fusion'].includes(top)) closeModal(top);
         return;
     }
@@ -443,6 +454,18 @@ export function togglePause() {
 function renderPauseBuild() {
     const wrap = $('pause-build');
     wrap.innerHTML = '';
+    const ts = techSummary();
+    if (ts) {
+        const line = document.createElement('p');
+        line.className = 'pause-tech';
+        const head = document.createElement('b');
+        head.textContent = `${ts.tech.icon} ${ts.tech.name} · 공명 ${ts.count}/6 (${ts.tier}단계)`;
+        line.append(head);
+        ts.tech.tiers.forEach((tier, i) => {
+            line.append(document.createElement('br'), `${ts.tier > i ? '●' : '○'} ${RESONANCE_STEPS[i]}개: ${tier.label}`);
+        });
+        wrap.appendChild(line);
+    }
     for (const w of G.weapons) {
         const d = WEAPONS[w.id];
         const s = document.createElement('span');
@@ -792,6 +815,7 @@ export function initUI() {
     initTutorial({ onOpen: () => { resetInput(); openModal('tutorial'); }, onClose: () => { closeModal('tutorial'); resetInput(); } });
     initLoadoutExchange({ onOpen: () => { resetInput(); openModal('loadout-exchange'); }, onClose: () => { closeModal('loadout-exchange'); resetInput(); } });
     initFusionReveal({ onOpen: () => { resetInput(); openModal('fusion-reveal'); }, onClose: () => { closeModal('fusion-reveal'); resetInput(); } });
+    initTechSelect({ open: () => openModal('tech-select'), close: () => closeModal('tech-select') });
     initPractice({ onOpen: () => { resetInput(); openModal('practice'); }, onClose: () => { closeModal('practice'); resetInput(); } });
     click('btn-practice', () => openPractice());
     click('btn-pause-practice', () => openPractice());
@@ -801,10 +825,11 @@ export function initUI() {
     click('btn-pause-tutorial', () => openTutorial());
 
     click('btn-new', () => {
-        const begin = () => {
+        // 튜토리얼/연습 → 시작 테크 선택 → 스토리 → 출격
+        const begin = () => openTechSelect((techId) => {
             clearRun();
-            beginStageFlow(1, () => { G.godMode = false; newRun(1); startPlaying(); });
-        };
+            beginStageFlow(1, () => { G.godMode = false; newRun(1, techId); startPlaying(); });
+        });
         const practiceThenBegin = () => shouldOfferPractice() ? openPractice({ onDone: begin }) : begin();
         if (shouldOfferTutorial()) openTutorial({ onDone: practiceThenBegin });
         else practiceThenBegin();
@@ -869,8 +894,10 @@ export function initUI() {
         b.onclick = () => {
             if (!devUnlocked) return;
             audio.unlock();
-            clearRun();
-            beginStageFlow(s, () => { newRun(s); G.godMode = $('dev-god').checked; startPlaying(); });
+            openTechSelect((techId) => {
+                clearRun();
+                beginStageFlow(s, () => { newRun(s, techId); G.godMode = $('dev-god').checked; startPlaying(); });
+            });
         };
         grid.appendChild(b);
     }

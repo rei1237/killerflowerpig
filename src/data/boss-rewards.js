@@ -1,3 +1,6 @@
+// 보스 처치 경험치: 젬 개수 × 개당 값. (24개 → 16개로 줄여 보스 직후 레벨업 폭주를 완화)
+export const BOSS_XP_GEMS = 16;
+export const bossGemValue = stage => 5 + stage * 2;
 // Boss-only run rewards. No permanent shop pets, accessories or relics enter this pool.
 export const BOSS_REWARD_TIERS = Object.freeze([
     Object.freeze({ minStage:1,maxStage:2,guaranteedCount:2,premiumChance:0.20 }),

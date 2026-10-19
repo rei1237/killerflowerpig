@@ -3,7 +3,8 @@ import { resetPets, updatePets } from './pets.js';
 // 게임 흐름 제어: 런 시작/스테이지 시작/스텝 업데이트/보스·클리어·사망 전환
 import { G, clearWorld, configureCaps, emit } from './state.js';
 import { STAGES } from '../data/stages.js';
-import { STARTING_WEAPON } from '../data/weapons.js';
+import { STARTING_WEAPON, PASSIVES } from '../data/weapons.js';
+import { TECHS } from '../data/techs.js';
 import { createPlayer, updatePlayer, recomputeStats } from './player.js';
 import { updateEnemies, updateEnemyShots, flushExplosions } from './enemies.js';
 import { updateWeapons, updateShots, createWeapon } from './weapons.js';
@@ -53,7 +54,8 @@ function invalidateDeadRun() {
     if (failed) emit('runSaveError');
 }
 
-export function newRun(stage = 1) {
+// techId 를 생략하면 기존과 동일하게 산탄총 단독으로 시작 (호환용).
+export function newRun(stage = 1, techId = null) {
     configureCaps();
     refreshGore();
     resetBuild();
@@ -62,8 +64,12 @@ export function newRun(stage = 1) {
     G.kills = 0;
     G.damageBy = {};
     G.rerolls = 0;
+    const tech = TECHS[techId] ? techId : null;
+    G.tech = tech;
     createPlayer();
-    G.weapons.push(createWeapon(STARTING_WEAPON, 0));
+    G.weapons.push(createWeapon(tech ? TECHS[tech].start.weapon : STARTING_WEAPON, 0));
+    if (tech && PASSIVES[TECHS[tech].start.passive]) G.passives[TECHS[tech].start.passive] = 1;
+    recomputeStats(true);
     // 스테이지 선택으로 중간부터 시작하면 그에 맞는 레벨 보정
     if (stage > 1) {
         const n = Math.min(40, (stage - 1) * 5);

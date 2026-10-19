@@ -12,6 +12,7 @@ import { fireEnemyShot, spawnEnemy, edgePosition } from './enemies.js';
 import { spawnHazard } from './hazards.js';
 import { damagePlayer } from './player.js';
 import { dropGem, dropPickup } from './pickups.js';
+import { BOSS_XP_GEMS, bossGemValue } from '../data/boss-rewards.js';
 import { blood, gibs, decal, damageText, shake, flash, hitstop, sparks, floatText, smoke } from './effects.js';
 
 const SHOT_SPEED = 190;
@@ -57,7 +58,7 @@ export class Boss {
         let amount = dmg;
         let crit = false;
         const cc = (opts.crit || 0) + G.player.stats.crit;
-        if (cc && Math.random() < cc) { amount *= 2; crit = true; }
+        if (cc && Math.random() < cc) { amount *= G.player.stats.critMul || 2; crit = true; }
         this.hp -= amount;
         this.flash = 0.06;
         if (amount > 0) recordFusionHit(this, opts.weapon, G.clock);
@@ -109,7 +110,7 @@ export class Boss {
         blood(this.x, this.y - this.radius, 80);
         gibs(this.x, this.y - this.radius, 30);
         for (let i = 0; i < 6; i++) decal(this.x + rand(-60, 60), this.y + rand(-30, 30), 'dark', 2);
-        for (let i = 0; i < 24; i++) dropGem(this.x + rand(-80, 80), this.y + rand(-50, 50), 5 + G.stage * 2);
+        for (let i = 0; i < BOSS_XP_GEMS; i++) dropGem(this.x + rand(-80, 80), this.y + rand(-50, 50), bossGemValue(G.stage));
         const c = dropPickup('chest', this.x, this.y);
         c.boss = true;
         // 남은 적 탄 제거

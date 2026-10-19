@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { G, clearWorld, configureCaps, setVisualTier } from '../src/game/state.js';
 import { settings } from '../src/core/settings.js';
 import { atlases } from '../src/core/assets.js';
-import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, stageScaling } from '../src/data/enemies.js';
 import { STAGES, EVENTS } from '../src/data/stages.js';
 import { spawnEnemy, hitEnemy } from '../src/game/enemies.js';
 import { Boss } from '../src/game/boss.js';
@@ -32,10 +32,10 @@ function withFixedRandom(fn) {
 }
 
 function originalScaling(stage, time) {
-    const beginner = stage === 1 ? { hp: .85, speed: .85, dmg: .7 } : stage === 2 ? { hp: .92, speed: .92, dmg: .85 } : { hp: 1, speed: 1, dmg: 1 };
+    const beginner = stage === 1 ? { hp: .95, speed: .9, dmg: .85 } : stage === 2 ? { hp: 1, speed: .95, dmg: .95 } : { hp: 1, speed: 1, dmg: 1 };
     const prog = Math.min(1, time / STAGES[stage].duration);
     return {
-        hp: (1 + (stage - 1) * .6) * (1 + (stage - 1) * .14) * (1 + prog * .5) * beginner.hp,
+        hp: (1 + (stage - 1) * .6) * (1 + (stage - 1) * .14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp,
         speed: (1 + (stage - 1) * .035) * beginner.speed,
         dmg: (1 + (stage - 1) * .24) * beginner.dmg,
         xp: 1 + (stage - 1) * .15,

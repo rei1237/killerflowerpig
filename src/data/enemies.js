@@ -28,9 +28,11 @@ export const RANGED_UNLOCK_STAGE = 5;
 export const ENEMY_TOUGHNESS_MULTIPLIER = 1.62;
 
 const BEGINNER_SCALING = {
-    1: { hp: 0.85, speed: 0.85, dmg: 0.7 },
-    2: { hp: 0.92, speed: 0.92, dmg: 0.85 },
+    1: { hp: 0.95, speed: 0.9, dmg: 0.85 },
+    2: { hp: 1, speed: 0.95, dmg: 0.95 },
 };
+// 스테이지 안에서 시간이 지날수록 적이 단단해지는 비율. 집중하지 않은 빌드는 후반 웨이브를 못 따라간다.
+export const IN_STAGE_HP_RAMP = 0.7;
 const STANDARD_SCALING = { hp: 1, speed: 1, dmg: 1 };
 
 // 스테이지별 배율
@@ -39,7 +41,7 @@ export function stageScaling(stage, t, duration) {
     // 첫 두 스테이지만 완만하게. 경험치와 3스테이지 이후 성장 곡선은 유지한다.
     const beginner = BEGINNER_SCALING[stage] || STANDARD_SCALING;
     return {
-        hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * 0.5) * beginner.hp * ENEMY_TOUGHNESS_MULTIPLIER,
+        hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp * ENEMY_TOUGHNESS_MULTIPLIER,
         speed: (1 + (stage - 1) * 0.035) * beginner.speed,
         dmg: (1 + (stage - 1) * 0.24) * beginner.dmg,
         xp: 1 + (stage - 1) * 0.15,

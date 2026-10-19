@@ -4,6 +4,7 @@ import { mountItemArt } from './item-art.js';
 import { G } from '../game/state.js';
 import { STAGES } from '../data/stages.js';
 import { WEAPONS, PASSIVES } from '../data/weapons.js';
+import { techSummary } from '../game/tech.js';
 
 let lastUpdate = -Infinity;
 let buildKey = '';
@@ -21,7 +22,7 @@ export function drawHUD() {
     if (!nodes) nodes = Object.fromEntries([
         'hud-hp','hud-hp-text','hud-hp-track','hud-xp','hud-xp-track',
         'hud-level','hud-stage','hud-time','hud-score','hud-build',
-        'hud-boss','hud-boss-portrait','hud-boss-name','hud-boss-hp','hud-countdown','hud-stage-progress'
+        'hud-boss','hud-boss-portrait','hud-boss-name','hud-boss-hp','hud-countdown','hud-stage-progress','hud-tech'
     ].map(id => [id,$(id)]));
     const hp = Math.max(0, Math.min(1,G.player.hp/G.player.maxHp));
     nodes['hud-hp'].style.width = hp * 100 + '%';
@@ -32,6 +33,17 @@ export function drawHUD() {
     nodes['hud-xp'].style.width = xp * 100 + '%';
     nodes['hud-xp-track'].setAttribute('aria-valuenow',Math.round(xp*100));
     nodes['hud-level'].textContent = '선택 ' + G.level;
+    const ts = techSummary();
+    if (nodes['hud-tech']) {
+        nodes['hud-tech'].hidden = !ts;
+        if (ts) {
+            const text = `${ts.tech.icon} ${'◆'.repeat(ts.tier)}${'◇'.repeat(3 - ts.tier)} ${ts.count}/6`;
+            if (nodes['hud-tech'].textContent !== text) {
+                nodes['hud-tech'].textContent = text;
+                nodes['hud-tech'].title = `${ts.tech.name} 공명 ${ts.count}/6`;
+            }
+        }
+    }
     const stage = STAGES[G.stage];
     nodes['hud-stage'].textContent = `STAGE ${String(G.stage).padStart(2,'0')} · ${stage?.name || ''}`;
     nodes['hud-time'].textContent = G.boss?.alive ? 'BOSS' : fmtTime(G.time);

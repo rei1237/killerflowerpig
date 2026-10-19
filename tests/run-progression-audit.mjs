@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { estimateWaveXP, simulatePlan, summarizePlans, makeBossBuildFixtures } from '../tools/run-progression-audit.mjs';
 import { FUSION_RECIPES } from '../src/data/fusions.js';
 import { WEAPONS } from '../src/data/weapons.js';
+import { BOSS_XP_GEMS, bossGemValue } from '../src/data/boss-rewards.js';
 
 const rows = estimateWaveXP({ residency: 16, seed: 7 });
 const fixture = JSON.parse(readFileSync(new URL('./fixtures/planned-boss-builds.json', import.meta.url), 'utf8'));
@@ -13,7 +14,7 @@ test('XP estimates use ten real stages, include boss gems separately and reprodu
     assert.deepEqual(estimateWaveXP({ residency: 16, seed: 7 }), rows);
     for (const r of rows) {
         assert.ok(r.kills > 0 && r.waveXP > 0 && r.eliteKills > 0);
-        assert.equal(r.bossXP, 24 * (5 + r.stage * 2));
+        assert.equal(r.bossXP, BOSS_XP_GEMS * bossGemValue(r.stage));
         assert.ok(r.uncreditedSurvivors > 0, 'survivors are not invented XP');
     }
 });

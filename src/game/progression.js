@@ -8,6 +8,8 @@ import { WEAPONS, PASSIVES, MAX_WEAPONS, MAX_PASSIVES, WEAPON_MAX_LEVEL, PASSIVE
 import { recomputeStats, healPlayer } from './player.js';
 import { createWeapon } from './weapons.js';
 import { audio } from '../core/audio.js';
+import { techChoiceWeight } from './tech.js';
+import { TECHS } from '../data/techs.js';
 
 function copyChoiceSession(session) {
     const copy = { ...session };
@@ -21,6 +23,7 @@ function copyChoiceSession(session) {
         if (Number.isSafeInteger(c.level)) card.level = c.level;
         for (const key of ['name', 'icon', 'desc', 'evoHint']) if (typeof c[key] === 'string') card[key] = c[key].slice(0, 500);
         if (c.isNew) card.isNew = true;
+        if (c.tech) card.tech = true;
         if (Number.isFinite(c.weight)) card.weight = c.weight;
         return card;
     });
@@ -75,7 +78,8 @@ function restoreChoiceState(value) {
 }
 
 export function xpForLevel(lv) {
-    return Math.round(8 + (lv - 1) * 7 + Math.max(0, lv - 20) * 10 + Math.max(0, lv - 40) * 16);
+    // 레벨업 비용: 뱀서처럼 구간(20, 35)마다 가팔라진다. 이전 곡선(8+7n…) 대비 런 전체 선택 횟수 약 20% 감소.
+    return Math.round(10 + (lv - 1) * 10 + Math.max(0, lv - 20) * 20 + Math.max(0, lv - 35) * 40);
 }
 
 export function addXP(v) {
@@ -129,6 +133,8 @@ function candidates() {
             if (!w.evolved && WEAPONS[w.id].evolve?.with === c.id) { c.weight += 2; c.evoHint = WEAPONS[w.id].evolve.name; }
         }
     }
+    // 시작 테크: 계열 아이템 우대, 공명 시작 후 다른 계열 신규 무기는 덜 등장
+    for (const c of out) { c.weight *= techChoiceWeight(c); if (techChoiceWeight(c) > 1) c.tech = true; }
     for (const c of out) {
         if (c.kind === 'weapon' && WEAPONS[c.id].fusionOnly) { c.weight *= 0.25; continue; }
         if (!c.isNew) continue;
@@ -273,6 +279,7 @@ export function resetBuild() {
     bossRewardReceipts.clear();
     G.supplyDrought = supplyState();
     G.fusionRevision = (G.fusionRevision || 0) + 1;
+    G.tech = null;
     G.weapons = [];
     G.passives = {};
     G.level = 1;
@@ -291,6 +298,7 @@ export function snapshotBuild() {
         choiceSession: G.choiceSession ? copyChoiceSession(G.choiceSession) : null,
         supplyDrought: supplyState(G.supplyDrought),
         stage: G.stage,
+        tech: G.tech || null,
         level: G.level, xp: G.xp,
         weapons: G.weapons.map(w => ({ id: w.id, level: w.level, evolved: w.evolved })),
         passives: { ...G.passives },
@@ -305,6 +313,7 @@ export function restoreBuild(s) {
     G.supplyDrought = supplyState(s.supplyDrought);
     G.fusionRevision = (G.fusionRevision || 0) + 1;
     G.stage = s.stage;
+    G.tech = TECHS[s.tech] ? s.tech : null;
     G.level = s.level;
     G.xp = s.xp;
     G.xpNext = xpForLevel(s.level);

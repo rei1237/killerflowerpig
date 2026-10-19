@@ -1,3 +1,4 @@
+import { applyTechWeaponBonus } from './tech.js';
 import { FUSION_RECIPES } from '../data/fusions.js';
 import { firingMuzzle } from './player-motion.js';
 import { createWeaponVfxFrame, drawWeaponProjectile, drawWeaponOrbit, drawWeaponBeam, drawBeamHitAccents, drawFusionResidues, drawFusionHitAccents } from './weapon-vfx.js';
@@ -67,6 +68,7 @@ export function weaponStats(w) {
         length: (b.length || 0) * ps.projSpeed, width: b.width || 0,
         bonusAmount: ps.amount, durationScale: ps.duration,
     };
+    applyTechWeaponBonus(w.id, result);
     if (w.sourceId) {
         result.dmg = Math.min(600, result.dmg * ((WEAPONS[w.sourceId]?.tier === 'absolute' ? 1.65 : 1.35) + 0.08 * (Math.min(8, Math.max(1, w.fusionLevel || 1)) - 1)));
         result.amount = Math.min(20, result.amount); result.area = Math.min(3, result.area);
@@ -372,7 +374,7 @@ function updateOrbit(w, s) {
             ensureHitChannels(e);
             if (now - e.hits[hitChannel(w)] < s.hitCd) continue;
             e.hits[hitChannel(w)] = now;
-            const d = hitEnemy(e, s.dmg, { weapon: ownerId(w), kx: Math.cos(a + 1.57), ky: Math.sin(a + 1.57), knock: 90, crit: s.crit });
+            const d = hitEnemy(e, s.dmg, { weapon: ownerId(w), kx: Math.cos(a + 1.57), ky: Math.sin(a + 1.57), knock: 90, crit: s.crit, bleed: s.bleed });
             if (s.lifesteal && d) healPlayer(s.lifesteal);
         }
         const boss = G.boss;

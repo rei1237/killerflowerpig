@@ -10,7 +10,7 @@ beforeEach(()=>{resetBuild();clearWorld();createPlayer();G.mode='play';G.stage=1
 const w=(id,level,evolved=false)=>Object.assign(createWeapon(id,0),{level,evolved});
 const damageRate=item=>{const s=weaponStats(item);return s.dmg*s.amount/s.cd};
 test('cost curve slows discovery while concentrated mid and final tech increase deterministic damage per cooldown',()=>{
- assert.equal(xpForLevel(1),8);assert.equal(xpForLevel(10),71);assert.equal(xpForLevel(20),141);assert.equal(xpForLevel(40),481);
+ assert.equal(xpForLevel(1),10);assert.equal(xpForLevel(10),100);assert.equal(xpForLevel(20),200);assert.equal(xpForLevel(40),1000);
  const scattered=damageRate(w('shotgun',1))+damageRate(w('rifle',1));const focused=damageRate(w('shotgun',5))+damageRate(w('rifle',5));
  const final=damageRate(w('scatter_rail',8));assert.ok(focused>scattered*2);assert.ok(final>focused*1.5);
  for(const recipe of FUSION_RECIPES){const early=damageRate(w(recipe.output,1)),mid=damageRate(w(recipe.output,5)),late=damageRate(w(recipe.output,8));assert.ok(mid>early*1.3,recipe.id);assert.ok(late>mid*1.15,recipe.id);}

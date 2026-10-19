@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { STAGES, EVENTS } from '../src/data/stages.js';
 import { BOSSES } from '../src/data/bosses.js';
-import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, stageScaling } from '../src/data/enemies.js';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
 import { spawnEnemy } from '../src/game/enemies.js';
@@ -70,11 +70,11 @@ test('stage 1 and 2 have bounded density and refill; stage 1 introduces enemy ty
     assert.equal(G.enemies.count, 0, 'retry resets fractional spawn credit');
 });
 
-test('opening speed and damage remain forgiving while tougher enemies retain base XP values', () => withFixedRandom(() => {
-    for (const [stage, multipliers] of [[1, [0.85, 0.85, 0.7]], [2, [0.92, 0.92, 0.85]]]) {
+test('opening stages stay only slightly softer while tougher enemies retain base XP values', () => withFixedRandom(() => {
+    for (const [stage, multipliers] of [[1, [0.95, 0.9, 0.85]], [2, [1, 0.95, 0.95]]]) {
         reset(stage, STAGES[stage].duration / 2);
         const enemy = spawnEnemy('shambler', 400, 0);
-        const oldHp = (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * 1.25;
+        const oldHp = (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + 0.5 * IN_STAGE_HP_RAMP);
         close(enemy.hp, ENEMIES.shambler.hp * oldHp * multipliers[0] * ENEMY_TOUGHNESS_MULTIPLIER);
         close(enemy.speed, ENEMIES.shambler.speed * (1 + (stage - 1) * 0.035) * multipliers[1]);
         close(enemy.dmg, ENEMIES.shambler.dmg * (1 + (stage - 1) * 0.24) * multipliers[2]);
@@ -193,7 +193,7 @@ test('later-stage damage, speed, event timing and legacy charges remain while po
         for (const t of [0, duration / 2, duration, duration + 10]) {
             const prog = Math.min(1, t / duration);
             assert.deepEqual(stageScaling(stage, t, duration), {
-                hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * 0.5) * ENEMY_TOUGHNESS_MULTIPLIER,
+                hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * ENEMY_TOUGHNESS_MULTIPLIER,
                 speed: 1 + (stage - 1) * 0.035,
                 dmg: 1 + (stage - 1) * 0.24,
                 xp: 1 + (stage - 1) * 0.15,

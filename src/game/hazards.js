@@ -32,10 +32,18 @@ export function spawnHazard(kind, x, y, o = {}) {
 }
 
 const list = [];
+function releaseAt(pool, i, h) {
+    if (i < pool.count && pool.items[i] === h) { pool.release(i); return; }
+    const j = pool.items.indexOf(h);
+    if (j >= 0 && j < pool.count) pool.release(j);
+}
 export function updateHazards(dt) {
     const pool = G.hazards;
     const p = G.player;
     for (let i = pool.count - 1; i >= 0; i--) {
+        // 보스 피격(페이즈 전환·사망)이 루프 도중 예고 장판을 제거할 수 있으므로,
+        // 이미 줄어든 범위의 인덱스는 건너뛰고 해제 전에는 동일 객체인지 확인한다.
+        if (i >= pool.count) continue;
         const h = pool.items[i];
         h.t += dt;
         if (h.follow) { h.x = p.x; h.y = p.y; }
@@ -43,11 +51,11 @@ export function updateHazards(dt) {
             if (h.t >= h.delay) {
                 h.onFire?.(h);
                 h.alive = false;
-                pool.release(i);
+                releaseAt(pool, i, h);
             }
             continue;
         }
-        if (h.t >= h.duration) { h.alive = false; pool.release(i); continue; }
+        if (h.t >= h.duration) { h.alive = false; releaseAt(pool, i, h); continue; }
         h.tickT -= dt;
         if (h.tickT > 0) continue;
         h.tickT = h.tick;
