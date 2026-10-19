@@ -1,12 +1,12 @@
 import { G } from '../game/state.js';
-import { WEAPONS, PASSIVES, MAX_WEAPONS, MAX_PASSIVES, WEAPON_MAX_LEVEL } from '../data/weapons.js';
+import { WEAPONS, PASSIVES, MAX_WEAPONS, WEAPON_MAX_LEVEL } from '../data/weapons.js';
 import { listExchangeTargets, previewExchange, exchangeItem, exchangeRemaining } from '../game/loadout-exchange.js';
 import { mountItemArt } from './item-art.js';
 let root, content, status, hooks = {}, opened = false, returnFocus, isolated = [];
 let kind = 'weapon', sourceId = null, targetId = null, preview = null, busy = false;
 const el = (tag, cls, text) => { const n = document.createElement(tag); n.className = cls; if (text) n.textContent = text; return n; };
 const button = (cls, text, action) => { const n = el('button', cls, text); n.type = 'button'; n.addEventListener('click', action); return n; };
-const failures = { EXCHANGE_SPENT: '이번 도전의 교체 기회를 이미 사용했습니다. 무기·보조 아이템을 합쳐 도전당 1회만 교체할 수 있습니다.', CHOICE_ACTIVE: '레벨업 선택을 먼저 완료해 주세요. 다시 뽑기 횟수는 그대로 유지됩니다.', SLOTS_NOT_FULL: '빈 슬롯이 있어요. 레벨업에서 새 아이템을 획득할 수 있습니다.', STALE_PREVIEW: '장비 상태가 바뀌었습니다. 교체할 아이템을 다시 선택해 주세요.', NOT_PLAYING: '살아 있는 전투 중에만 교체할 수 있습니다.' };
+const failures = { EXCHANGE_SPENT: '이번 도전의 교체 기회를 이미 사용했습니다. 도전당 1회만 교체할 수 있습니다.', CHOICE_ACTIVE: '레벨업 선택을 먼저 완료해 주세요. 다시 뽑기 횟수는 그대로 유지됩니다.', SLOTS_NOT_FULL: '빈 슬롯이 있어요. 레벨업에서 새 아이템을 획득할 수 있습니다.', STALE_PREVIEW: '장비 상태가 바뀌었습니다. 교체할 아이템을 다시 선택해 주세요.', NOT_PLAYING: '살아 있는 전투 중에만 교체할 수 있습니다.' };
 
 export function appendEvolutionInfo(container, id) {
     const def = WEAPONS[id];
@@ -36,17 +36,17 @@ function render() {
         mountItemArt(art, w.id, 'weapon', ''); row.append(art, el('h4', '', `${WEAPONS[w.id].name} · Lv.${w.level}`)); appendEvolutionInfo(row, w.id); evolution.append(row);
     }
     content.append(evolution);
-    const exchange = el('section', 'loadout-exchange-controls'); exchange.append(el('h3', '', '가득 찬 슬롯 교체'), el('p', '', '무기 6칸 · 보조 아이템 6칸. 선택한 기존 아이템을 내보내고 미보유 일반 아이템을 Lv.1로 받습니다.'));
-    exchange.append(el('p', 'loadout-exchange-budget', `이번 도전 교체 남음: ${exchangeRemaining()}/1회 · 무기·보조 아이템 공용 · 스테이지가 바뀌어도 충전되지 않습니다.`));
+    const exchange = el('section', 'loadout-exchange-controls'); exchange.append(el('h3', '', '가득 찬 무기 슬롯 교체'), el('p', '', '무기 6칸 · 보조 아이템은 칸 제한 없음. 선택한 기존 무기를 내보내고 미보유 일반 무기를 Lv.1로 받습니다.'));
+    exchange.append(el('p', 'loadout-exchange-budget', `이번 도전 교체 남음: ${exchangeRemaining()}/1회 · 스테이지가 바뀌어도 충전되지 않습니다.`));
     const tabs = el('div', 'loadout-kind-buttons');
-    for (const [value, label] of [['weapon', '무기 교체'], ['passive', '보조 아이템 교체']]) {
+    for (const [value, label] of [['weapon', '무기 교체']]) {
         const b = button('loadout-kind', label, () => { kind = value; sourceId = targetId = preview = null; render(); content.querySelector(`.loadout-kind-${value}`).focus(); });
         b.className += ` loadout-kind-${value}`; b.setAttribute('aria-pressed',String(kind === value)); tabs.append(b);
     }
     exchange.append(tabs);
     const defs = kind === 'weapon' ? WEAPONS : PASSIVES;
     const owned = kind === 'weapon' ? G.weapons.map(w => ({...w, name:w.evolved ? defs[w.id].evolve?.name || defs[w.id].name : defs[w.id].name})) : Object.entries(G.passives).map(([id, level]) => ({id, level, name:defs[id].name}));
-    const capacity = kind === 'weapon' ? MAX_WEAPONS : MAX_PASSIVES;
+    const capacity = MAX_WEAPONS;
     const blocked = !exchangeRemaining() ? failures.EXCHANGE_SPENT : G.choiceSession && !G.choiceSession.closed ? failures.CHOICE_ACTIVE : owned.length !== capacity ? failures.SLOTS_NOT_FULL : null;
     if (blocked) exchange.append(el('p','loadout-exchange-notice',blocked));
     else {

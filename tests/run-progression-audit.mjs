@@ -19,13 +19,13 @@ test('XP estimates use ten real stages, include boss gems separately and reprodu
     }
 });
 
-test('boss benchmark snapshots are reproduced by actual rolls and fit the six plus six slot contract', () => {
+test('boss benchmark snapshots are reproduced by actual rolls and fit the six weapon slot contract', () => {
     assert.deepEqual(makeBossBuildFixtures(), fixture, 'the documented --fixtures command reproduces the complete artifact');
     for (const f of fixture.builds) {
         const run = simulatePlan({ rows, collection: .85, mode: f.mode, seed: f.seed });
         const snapshot = run.stages[f.stage - 1].beforeBoss;
         for (const key of ['level', 'weapons', 'passives', 'stats', 'finals', 'absolutes']) assert.deepEqual(snapshot[key], f[key], `${f.name}/${key}`);
-        assert.ok(snapshot.weapons.length <= 6 && Object.keys(snapshot.passives).length <= 6);
+        assert.ok(snapshot.weapons.length <= 6 && Object.keys(snapshot.passives).length <= 12);
         for (const w of snapshot.weapons) assert.ok(w.level >= 1 && w.level <= 8);
         assert.ok(run.exchanges.length <= 1);
     }
@@ -50,7 +50,7 @@ test('seeded planned versus scattered runs conserve item investment and respect 
             }
             assert.ok(run.exchanges.length <= 1);
             for (const s of run.stages) for (const b of [s.beforeBoss, s.afterReward]) {
-                assert.ok(b.weapons.length <= 6 && Object.keys(b.passives).length <= 6);
+                assert.ok(b.weapons.length <= 6 && Object.keys(b.passives).length <= 12);
                 for (const w of b.weapons) if (WEAPONS[w.id].fusionOnly) assert.equal(w.evolved, false);
             }
         }
@@ -59,7 +59,8 @@ test('seeded planned versus scattered runs conserve item investment and respect 
     assert.equal(result.planned.beforeBoss10Finals[3], 40);
     assert.equal(result.absolute.beforeBoss10Absolutes[1], 40);
     assert.ok((result.scattered.beforeBoss10Finals[0] || 0) + (result.scattered.beforeBoss10Finals[1] || 0) > 0);
-    assert.ok(result.scattered.exchangesUsed > 0);
+    // 보조 아이템은 슬롯 제한이 없어 진화 짝을 얻으려고 교체할 필요가 없다.
+    assert.equal(result.scattered.exchangesUsed, 0);
 });
 
 test('the final boss reward cannot retroactively become the build used against that boss', () => {

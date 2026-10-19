@@ -2,7 +2,7 @@ import { FUSED_WEAPONS } from './fusions.js';
 // 무기 / 패시브 / 진화 정의.
 // levels[i] = (i+2)레벨 도달 시 누적 적용되는 보정. cd/area/speed/duration 은 배율 가산(0.1 = +10%).
 export const MAX_WEAPONS = 6;
-export const MAX_PASSIVES = 6;
+// 보조 아이템(패시브)은 슬롯을 차지하지 않는다: 12종 모두 획득·강화 가능.
 export const WEAPON_MAX_LEVEL = 8;
 export const PASSIVE_MAX_LEVEL = 5;
 
