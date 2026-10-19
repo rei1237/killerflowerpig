@@ -19,23 +19,35 @@ The user reported weak bosses in the existing release. The ten new signatures ha
 
 Only visible HP increases. No hidden resistance, damage cap, damage increase, shorter warning, faster movement, extra projectile or reduced recovery is introduced. Stage 1 retains its 3-second opening, 1.15-second base charge tell, 480-unit charge speed, and 1.5 recovery multiplier. The signature-specific warning/recovery floors and contact radii stay intact.
 
-## Why this range
+## Historical reason for the HP pass
+
+The paragraph below records the earlier economy/HP decision. The XP curve was subsequently raised to `8 + 7 × (level−1) + 10 × max(0,level−20) + 16 × max(0,level−40)`; do not use the old 20% easing statement as the current progression contract. Current reachability is audited in [run-progression-audit.md](run-progression-audit.md).
 
 The economy reduces run XP requirements by 20% and makes permanent damage upgrades easier to obtain. Permanent damage adds up to 25 percentage points, the strongest wing adds 15, and the late crown adds 25. Boss rewards also accelerate weapon levels. At fixed maximum whetstone (+50 percentage points), the equipment comparison is might 1.50 → 2.15, or about 43% more uncapped damage. Accessories occupy one slot; their bonuses are not all stacked together in this audit.
 
 Stages 2–10 receive progressively larger relative adjustments. Stage 1 has a separate evidence-driven correction because its earlier reduced HP allowed phase transitions to cancel every charge before death. A strong build still clears faster than a weak one; purchases are not nullified by adaptive scaling.
 
-## Actual-code stationary samples
+## Current actual-code samples, after inherited-core finals
 
-Run `node tools/boss-damage-bench.mjs`. It uses a fixed seed, actual weapon firing/collision, beam/orbit damage, hazard ticks, and `Boss.hurt`, with real sprite collision radii. The boss is held still with high test HP for 30 seconds so phase invulnerability and movement do not contaminate the damage sample. Pets and critical bonuses are excluded.
+Run `node tools/boss-damage-bench.mjs`. The old stage-5 three-final and stage-10 six-final samples were removed. They assumed implausible investment and their old DPS numbers no longer described the inherited-core combat implementation.
 
-| Selected build | Measured DPS | Old HP / DPS | New HP / DPS |
+Later fixtures are exact pre-boss snapshots produced by actual choice rolls and boss rewards, with no purchases. See `tests/fixtures/planned-boss-builds.json`; regression tests reproduce their levels, evolutions, six passive slots and stats from the ten-stage planner. Stage 5 uses seed 1; late examples seed 101. The XP assumptions are 16-second ordinary / 48-second elite residency and 85% collection, not a measured human clear rate.
+
+| Build | Measured stationary DPS | Current HP / DPS | Live encounter min / median / max |
 | --- | ---: | ---: | ---: |
-| Stage 1: shotgun 5, pistols 3, thorns 2; modest passives | 179.1 | 2.90 s | 7.82 s |
-| Stage 5: scatter rail 5, lotus bloom 3, plague fire 3, pistols 6 | 808.5 | 10.51 s | 15.77 s |
-| Stage 10: six level-8 fusions, maximum relevant passives, permanent damage/wing/crown | 2,735.5 | 15.35 s | 24.57 s |
+| Stage 1: retained strong three-weapon stress fixture | 179.1 | 7.82 s | See early check below |
+| Stage 5: shotgun/thorns/gas evolved 8; rifle 5, cannon 4, molotov 6 | 881.1 | 14.47 s | 14.67 / 17.67 / 25.17 s |
+| Stage 10: scatter rail 8 + lotus bloom 8 | 6,709.2 | 10.02 s | 11.08 / 12.15 / 15.88 s |
+| Stage 10: scatter rail 8 + lotus bloom 8 + plague fire 8 | 11,281.5 | 5.96 s | 10.02 / 10.93 / 14.03 s |
+| Stage 10: absolute bloom 8 + scatter rail 8 | 14,706.5 | 4.57 s | 7.22 / 7.77 / 11.18 s |
 
-These divisions are controlled damage-throughput references, not predicted human clear times. Dodging, range, aim, actual phase transitions and different builds change encounter length. A strong build still defeats a boss quickly; no minimum-life immunity gate is added.
+Stationary samples hold the target still at high test HP for 30 seconds. Live samples use real movement, phase transitions, summons, projectile collisions, hazard ticks, `Boss.hurt` and hitstop: 12 seeds × three distances (100/300/500) per build. All 144 mid/late cases began a real attack pattern before dying. This asserts pattern start, not that every pattern completed.
+
+The player stands still at high test HP. There is no survival validation, ordinary-wave director, pet, purchase bonus, mid-fight XP or new item choice. These are controlled comparisons, not predicted human clear times. The early fixture is deliberately strong and retained for signature regression; it is not claimed to be reachable under the current first-stage XP budget.
+
+The two-final build invests its spare passive slots in whetstone and heart (might 1.5 / HP 200); the three-final build needs all six evolution passives and has might 1.0 / HP 100. Absolute + scatter uses five evolution passives plus whetstone. This is a meaningful build-allocation tradeoff, not a comparison with impossible stacked passive bonuses. Equipment scaling is tested separately by changing only might 1.50 → 2.15 at equal legal weapon/passive levels.
+
+Recommendation from these bounded samples: retain current HP. Do not inflate HP to compensate for the removed six-final fixture. Human survival and mobile encounter pacing remain unmeasured.
 
 ## Live early encounter check
 
@@ -49,4 +61,4 @@ The subsequent fewer/stronger-mob request also scales explicit boss summons to 6
 
 ## Tests
 
-`tests/boss-durability.mjs` verifies exact HP values, stage-monotonic HP and later-stage multipliers, unchanged direct damage taken, collision geometry, early timing, ten signatures, actual-code damage samples, equipment scaling, explicit summon counts and 36 live early encounters. Existing boss-signature, animation, hazard and beginner tests remain applicable. The earlier fixture's HP-only assertions were updated to reflect this explicit later request; damage/speed/scaling protections remain.
+`tests/boss-durability.mjs` verifies exact HP values, stage-monotonic HP and later-stage multipliers, unchanged direct damage taken, collision geometry, early timing, ten signatures, reproducible legal-build damage samples, equipment scaling, explicit summon counts, 36 live early encounters and 144 live mid/late encounters. Existing boss-signature, animation, hazard and beginner tests remain applicable. The earlier fixture's HP-only assertions were updated to reflect this explicit later request; damage/speed/scaling protections remain.

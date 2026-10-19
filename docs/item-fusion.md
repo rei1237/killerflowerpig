@@ -1,3 +1,17 @@
+# Final fusion update (current rules)
+
+Eight final recipes require BOTH ordinary inputs at Lv8 AND evolved. The ninth absolute_bloom recipe requires THREE: cannon, thorns and molotov, all Lv8 and evolved. Evolution still needs the matching passive at Lv1 and a boss chest. An unevolved Lv8 input returns EVOLUTION_REQUIRED. Existing saved fused outputs remain valid.
+
+A final fused item occupies one slot, retains both evolved parent attack cores, and adds its unique fusion attack. Parent cores use Lv8 evolved stats and damage ×(1.35 + 0.08 × (final item level−1)); bounded at damage600/count20/area3/duration14s/cooldown0.2s. Unique fusion attacks keep their prior caps. Child cores are runtime-only, nonrecursive, restored freshly, reset at stage start, and attribute every shot/beam/field to the final item for cleanup. Their orbital/saw hit channels are independent, with typed buffers expanded safely to24 entries. Rendered orbit cores use the same stats as damage.
+
+Preview exposes requiredEvolution, current evolved state, and inheritedCores including names/descriptions/current stats. The ordinary cannon now evolves into 개화 꽃잎포 (four baseline radial rays). lotus_bloom remains 만개 연꽃포, a two-parent final fusion. The old 만개 spectacle is promoted to 절대 만개 (absolute_bloom): eight baseline radial beams plus three inherited evolved cores, consuming three inputs and freeing two slots. Absolute main damage caps at420; inherited cores use multiplier1.65→2.21, with the same600 cap. Existing saved final outputs remain intact.
+
+Actual collision audit: 30 seconds, identical passive prerequisites, fixed seed, high-HP single boss or18 targets in scattered/corridor layouts. All eight final Lv1 outputs beat BOTH evolved Lv8 parents: minimum ratio1.29, maximum2.02 across tested layouts. This is a stationary-target collision benchmark, not a claim that every moving combat encounter has identical DPS. The helper includes actual projectile/beam/orbit/field collisions and bleed ticks; no nominal-only damage comparison. Existing full update/projectile-render swap tests also pass.
+
+Absolute audit, same three evolution prerequisites and30-second real collisions: single boss13,169→41,293 (3.14×), scattered18 targets64,912→154,210 (2.38×), corridor18 targets255,088→470,730 (1.85×). Inventory commit is atomic3→1; tests cover partially evolved rejection, stale preview, repeated confirm, four slots after a full-six-slot commit, and restore. Attack cores are attributed to the absolute item for exchange/fusion cleanup.
+
+## Earlier implementation notes (requirements superseded by the current rules above)
+
 # Item-only growth and explicit two-item fusion
 
 The ordinary `cannon` (꽃잎포) is a normal acquired weapon, upgraded from item level 1 to 8 through run item choices and combat chests. Its automatic beam shares the normal weapon cooldown loop. There is no global charged attack or permanent-character-level multiplier. Run XP only opens item-choice opportunities; the old permanent character XP/reward fields are retained inert in save v4. No wallet, pet, relic, upgrade or previous save backup is removed or converted.

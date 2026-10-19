@@ -17,6 +17,9 @@ export function initFusionReveal(options = {}) {
     const panel = el('div', 'fusion-reveal-panel');
     const heading = el('h2', '', '새로운 아이템 탄생!'); heading.id = 'fusion-reveal-heading';
     const ingredients = el('div', 'fusion-reveal-ingredients');
+    const halo = el('div', 'fusion-reveal-halo'); halo.setAttribute('aria-hidden','true');
+    for (let i=0;i<12;i++) { const petal=el('span','fusion-reveal-petal'); petal.style?.setProperty?.('--petal-angle',`${i*30}deg`); halo.append(petal); }
+    panel.append(halo);
     const result = el('div', 'fusion-reveal-result'); result.setAttribute('aria-live', 'polite');
     const skip = el('button', 'fusion-reveal-skip', '즉시 보기'); skip.type = 'button'; skip.addEventListener('click', reveal);
     const confirm = el('button', 'fusion-reveal-confirm', '확인'); confirm.type = 'button'; confirm.addEventListener('click', closeFusionReveal);
@@ -30,23 +33,27 @@ export function initFusionReveal(options = {}) {
     document.addEventListener('visibilitychange', () => { if (document.hidden) reveal(); });
 }
 export function openFusionReveal({ ingredients, output, statText = '', onDone: done } = {}) {
-    if (opened || !Array.isArray(ingredients) || ingredients.length !== 2 || !output?.id) return false;
+    if (opened || !Array.isArray(ingredients) || ![2, 3].includes(ingredients.length) || !output?.id) return false;
     if (!root) initFusionReveal(hooks);
+    const absolute = output.tier === 'absolute' || ingredients.length === 3;
+    root.dataset.tier = absolute ? 'absolute' : 'final';
+    root.querySelector('#fusion-reveal-heading').textContent = absolute ? '절대 무기 · 만개 각성' : '최종 무기 탄생!';
+    root.querySelector('.fusion-reveal-eyebrow').textContent = absolute ? 'ABSOLUTE AWAKENING · 3 → 1' : 'FINAL FUSION · 2 → 1';
     const source = root.querySelector('.fusion-reveal-ingredients'); source.replaceChildren();
     for (const item of ingredients) {
         const card = el('div', 'fusion-reveal-source'), art = el('div', 'fusion-reveal-art');
         mountItemArt(art, item.id, 'weapon', item.name || item.id);
-        card.append(art, el('span', '', `${item.name || item.id} · Lv.${item.level || 5}`)); source.append(card);
+        card.append(art, el('span', '', `${item.name || item.id} · Lv.${item.level || 8}`)); source.append(card);
     }
     const result = root.querySelector('.fusion-reveal-result'), art = el('div', 'fusion-reveal-output-art');
     mountItemArt(art, output.id, 'weapon', output.name || output.id);
-    result.replaceChildren(art, el('h3', '', `${output.name || output.id} · Lv.1`), el('p', '', output.desc || ''), el('p', 'fusion-reveal-stats', statText), el('p', 'fusion-reveal-slots', '재료 2개 → 새 아이템 1개 · 무기 슬롯 1칸 확보'));
+    result.replaceChildren(art, el('h3', '', `${output.name || output.id} · Lv.1`), el('p', '', output.desc || ''), el('p', 'fusion-reveal-stats', statText), el('p', 'fusion-reveal-slots', `진화 재료 ${ingredients.length}개 → ${absolute ? '절대' : '최종'} 무기 1개 · 무기 슬롯 ${ingredients.length-1}칸 확보`));
     result.hidden = true; root.querySelector('.fusion-reveal-confirm').hidden = true; root.querySelector('.fusion-reveal-skip').hidden = false;
     returnFocus = document.activeElement; isolated = Array.from(document.body.children).filter(n => n !== root).map(n => [n, n.inert]);
     isolated.forEach(([n]) => { n.inert = true; });
     opened = true; onDone = done; root.dataset.phase = 'bloom'; root.hidden = false; hooks.onOpen?.();
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || document.hidden) reveal();
-    else { root.querySelector('.fusion-reveal-skip').focus(); timer = setTimeout(reveal, 900); }
+    else { root.querySelector('.fusion-reveal-skip').focus(); timer = setTimeout(reveal, absolute ? 1800 : 900); }
     return true;
 }
 export function closeFusionReveal() {

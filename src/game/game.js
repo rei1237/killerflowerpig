@@ -17,20 +17,46 @@ import { invalidateStageVisuals } from './render.js';
 import { audio } from '../core/audio.js';
 
 const RUN_KEY = 'kfp.run.v1';
+const DEAD_RUNS_KEY = 'kfp.dead-runs.v1';
 let clearTimer = 0;
 let heartbeatT = 0;
 let stageSnapshot = null;
-
-export function loadRun() {
-    try { const r = localStorage.getItem(RUN_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
+let runSerial = 0;
+const deadRuns = new Set();
+const runToken = snap => snap?.runId || (snap ? `legacy:${JSON.stringify(snap)}` : null);
+function readDeadRuns() {
+    try { const list = JSON.parse(localStorage.getItem(DEAD_RUNS_KEY) || '[]'); if (Array.isArray(list)) for (const id of list) if (typeof id === 'string') deadRuns.add(id); } catch { /* In-memory invalidation still applies. */ }
 }
-function saveRun(snap) { try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); } catch { /* ignore */ } }
-export function clearRun() { try { localStorage.removeItem(RUN_KEY); } catch { /* ignore */ } }
+function isDeadRun(snap) { readDeadRuns(); return !snap || snap.dead === true || deadRuns.has(runToken(snap)); }
+export function loadRun() {
+    try { const r = localStorage.getItem(RUN_KEY); const snap = r ? JSON.parse(r) : null; return isDeadRun(snap) ? null : snap; } catch { return null; }
+}
+function saveRun(snap) { try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); } catch { emit('runSaveError'); } }
+export function markLoadoutExchangeSpent() {
+    G.loadoutExchangesUsed = 1;
+    if (stageSnapshot) { stageSnapshot.loadoutExchangesUsed = 1; saveRun(stageSnapshot); }
+}
+export function clearRun() { stageSnapshot = null; try { localStorage.removeItem(RUN_KEY); } catch { /* A new run overwrites this checkpoint. */ } }
+function invalidateDeadRun() {
+    const token = G.runId || runToken(stageSnapshot);
+    readDeadRuns(); if (token) deadRuns.add(token);
+    // Keep a tombstone independent of checkpoint removal. Either successful
+    // write is enough to reject the stale checkpoint on the next page load.
+    let failed = false;
+    try { localStorage.setItem(DEAD_RUNS_KEY, JSON.stringify([...deadRuns])); } catch { failed = true; }
+    try { localStorage.removeItem(RUN_KEY); } catch {
+        failed = true;
+        try { localStorage.setItem(RUN_KEY, JSON.stringify({ dead: true, runId: token })); } catch { /* Warn below; current session remains invalidated. */ }
+    }
+    stageSnapshot = null;
+    if (failed) emit('runSaveError');
+}
 
 export function newRun(stage = 1) {
     configureCaps();
     refreshGore();
     resetBuild();
+    G.runId = globalThis.crypto?.randomUUID?.() || `run:${Date.now()}:${++runSerial}:${Math.random().toString(36).slice(2)}`;
     G.gold = 0;
     G.kills = 0;
     G.damageBy = {};
@@ -48,26 +74,30 @@ export function newRun(stage = 1) {
 }
 
 export function continueRun(snap) {
+    if (isDeadRun(snap)) return false;
+    G.runId = snap.runId || runToken(snap);
     configureCaps();
     refreshGore();
     G.damageBy = {};
     createPlayer();
     restoreBuild(snap);
     startStage(snap.stage, true);
+    return true;
 }
 
 export function retryStage() {
-    if (!stageSnapshot) return newRun(1);
-    continueRun(stageSnapshot);
+    // Death ends the build; this compatibility name now starts a new run.
+    return newRun(1);
 }
 
 export function startStage(stage, restored = false) {
+    if (G.player?.dead || deadRuns.has(G.runId)) return false;
     G.stage = stage;
     prepareBossSheets(stage);
     clearWorld();
     resetSpawner();
     invalidateStageVisuals();
-    for (const w of G.weapons) { w.follow = null; w.cd = 0.5; w.activeT = 0; w.burst = 0; }
+    for (const w of G.weapons) { w.fusionCores = null; w.follow = null; w.cd = 0.5; w.activeT = 0; w.burst = 0; }
     const p = G.player;
     p.x = 0; p.y = 0; p.dead = false; p.iframes = 1.5;
     recomputeStats(true);
@@ -80,7 +110,7 @@ export function startStage(stage, restored = false) {
     G.settlement = null;
     G.stageStartTime = performance.now();
     clearTimer = 0;
-    stageSnapshot = snapshotBuild();
+    stageSnapshot = { ...snapshotBuild(), runId: G.runId };
     saveRun(stageSnapshot);
     audio.setBGMRate(1);
     audio.playBGM();
@@ -147,6 +177,7 @@ export function step(dt) {
 
 // 보스 상자를 열고 난 뒤 호출 → 남은 젬 흡수 후 클리어
 export function beginStageClear() {
+    if (G.player?.dead || deadRuns.has(G.runId)) return false;
     G.mode = 'clearing';
     clearTimer = 0;
     magnetAll();
@@ -159,6 +190,8 @@ export function beginStageClear() {
 }
 
 export function onPlayerDeath() {
+    if (G.mode === 'dead') return;
+    invalidateDeadRun();
     G.mode = 'dead';
     G.deadT = 0;
     G.deathShown = false;

@@ -1,0 +1,210 @@
+{
+  "method": "Actual rollChoices/rollBossChest; 16s ordinary/48s elite synthetic residency, 85% collected XP, spawn seed7, chest before boss XP, no permanent purchases. Pre-boss snapshots.",
+  "builds": [
+    {
+      "name": "mid invested/evolved build",
+      "mode": "planned",
+      "seed": 1,
+      "stage": 5,
+      "distance": 130,
+      "level": 40,
+      "weapons": [
+        {
+          "id": "shotgun",
+          "level": 8,
+          "evolved": true
+        },
+        {
+          "id": "thorns",
+          "level": 8,
+          "evolved": true
+        },
+        {
+          "id": "gas",
+          "level": 8,
+          "evolved": true
+        },
+        {
+          "id": "rifle",
+          "level": 5,
+          "evolved": false
+        },
+        {
+          "id": "cannon",
+          "level": 4,
+          "evolved": false
+        },
+        {
+          "id": "molotov",
+          "level": 6,
+          "evolved": false
+        }
+      ],
+      "passives": {
+        "magazine": 3,
+        "regen": 2,
+        "pollen": 1,
+        "spread": 1,
+        "scope": 1,
+        "sap": 1
+      },
+      "stats": {
+        "might": 1,
+        "area": 1.1,
+        "cooldown": 0.9299999999999999,
+        "duration": 1.12,
+        "projSpeed": 1.12,
+        "amount": 2,
+        "crit": 0,
+        "regen": 0.6,
+        "magnet": 70,
+        "speed": 135,
+        "armor": 0,
+        "maxHp": 100,
+        "greed": 1
+      },
+      "finals": 0,
+      "absolutes": 0
+    },
+    {
+      "name": "late two-final build",
+      "mode": "twoFinal",
+      "seed": 101,
+      "stage": 10,
+      "distance": 130,
+      "level": 80,
+      "weapons": [
+        {
+          "id": "scatter_rail",
+          "level": 8,
+          "evolved": false
+        },
+        {
+          "id": "lotus_bloom",
+          "level": 8,
+          "evolved": false
+        }
+      ],
+      "passives": {
+        "magazine": 5,
+        "scope": 5,
+        "pollen": 5,
+        "regen": 5,
+        "whet": 5,
+        "heart": 5
+      },
+      "stats": {
+        "might": 1.5,
+        "area": 1,
+        "cooldown": 0.6499999999999999,
+        "duration": 1,
+        "projSpeed": 1.6,
+        "amount": 3,
+        "crit": 0,
+        "regen": 1.5,
+        "magnet": 70,
+        "speed": 135,
+        "armor": 0,
+        "maxHp": 200,
+        "greed": 1
+      },
+      "finals": 2,
+      "absolutes": 0
+    },
+    {
+      "name": "late three-final build",
+      "mode": "planned",
+      "seed": 101,
+      "stage": 10,
+      "distance": 130,
+      "level": 80,
+      "weapons": [
+        {
+          "id": "scatter_rail",
+          "level": 8,
+          "evolved": false
+        },
+        {
+          "id": "lotus_bloom",
+          "level": 8,
+          "evolved": false
+        },
+        {
+          "id": "plague_fire",
+          "level": 8,
+          "evolved": false
+        }
+      ],
+      "passives": {
+        "magazine": 5,
+        "scope": 5,
+        "pollen": 5,
+        "regen": 5,
+        "sap": 5,
+        "spread": 5
+      },
+      "stats": {
+        "might": 1,
+        "area": 1.5,
+        "cooldown": 0.6499999999999999,
+        "duration": 1.6,
+        "projSpeed": 1.6,
+        "amount": 3,
+        "crit": 0,
+        "regen": 1.5,
+        "magnet": 70,
+        "speed": 135,
+        "armor": 0,
+        "maxHp": 100,
+        "greed": 1
+      },
+      "finals": 3,
+      "absolutes": 0
+    },
+    {
+      "name": "late absolute plus one final",
+      "mode": "absolute",
+      "seed": 101,
+      "stage": 10,
+      "distance": 130,
+      "level": 80,
+      "weapons": [
+        {
+          "id": "scatter_rail",
+          "level": 8,
+          "evolved": false
+        },
+        {
+          "id": "absolute_bloom",
+          "level": 8,
+          "evolved": false
+        }
+      ],
+      "passives": {
+        "regen": 5,
+        "scope": 5,
+        "pollen": 5,
+        "magazine": 5,
+        "whet": 5,
+        "spread": 5
+      },
+      "stats": {
+        "might": 1.5,
+        "area": 1.5,
+        "cooldown": 0.6499999999999999,
+        "duration": 1,
+        "projSpeed": 1.6,
+        "amount": 3,
+        "crit": 0,
+        "regen": 1.5,
+        "magnet": 70,
+        "speed": 135,
+        "armor": 0,
+        "maxHp": 100,
+        "greed": 1
+      },
+      "finals": 1,
+      "absolutes": 1
+    }
+  ]
+}

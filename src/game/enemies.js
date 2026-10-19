@@ -1,3 +1,4 @@
+import { coinDropValue } from './coin-drops.js';
 import { rollSupplies, KILL_OPPORTUNITY } from './supply-drops.js';
 import { playerBody } from './player-motion.js';
 // 적 시스템: 스폰, 추적 이동 + 상호 밀어내기(그리드), 원거리 공격, 상태이상, 피격/사망 처리
@@ -115,9 +116,10 @@ function killEnemy(e, opts) {
     if (e.elite) { shake(6); hitstop(0.06); }
 
     dropGem(e.x, e.y, e.xp * KILL_OPPORTUNITY);
-    dropCoin(e.x, e.y, e.elite ? 40 : 5);
-    if (e.elite) dropPickup('chest', e.x, e.y);
-    else {
+    const coinValue = coinDropValue(e.elite);
+    if (coinValue) dropCoin(e.x, e.y, coinValue);
+    // Elite enemies award only XP and coins; gear chests are boss-exclusive.
+    if (!e.elite) {
         pruneFieldSupplies();
         let healingOnField=0,magnetsOnField=0;
         for(let i=0;i<G.pickups.count;i++){

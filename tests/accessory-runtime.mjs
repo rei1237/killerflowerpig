@@ -19,12 +19,12 @@ test('v4 migration preserves wallet, pet, relic and records while initializing e
 test('durable buy/equip/reload rejects stale or failed writes without charges or unowned grants',()=>{
  api.save.maxClearedStage=10;api.earnCoins(10000,'accessory-seed');let revision=api.save.revision;
  fail=true;assert.equal(api.buyAccessory('moon_guard',revision).ok,false);assert.equal(api.save.gold,10000);assert.deepEqual(api.save.accessoryInventory,[]);
- fail=false;assert.equal(api.buyAccessory('moon_guard',revision).ok,true);assert.equal(api.save.gold,9550);assert.equal(api.save.equippedAccessory,'moon_guard');
- assert.equal(api.buyAccessory('moon_guard',revision).duplicate,true);assert.equal(api.save.gold,9550);
+ fail=false;assert.equal(api.buyAccessory('moon_guard',revision).ok,true);assert.equal(api.save.gold,9910);assert.equal(api.save.equippedAccessory,'moon_guard');
+ assert.equal(api.buyAccessory('moon_guard',revision).duplicate,true);assert.equal(api.save.gold,9910);
  assert.equal(api.buyAccessory('astral_lens',revision).code,'REVISION_CONFLICT');assert.equal(api.setAccessory('astral_lens').code,'NOT_OWNED');
- assert.equal(api.buyAccessory('astral_lens',api.save.revision).ok,true);assert.equal(api.save.gold,8900);
+ assert.equal(api.buyAccessory('astral_lens',api.save.revision).ok,true);assert.equal(api.save.gold,9780);
  fail=true;assert.equal(api.setAccessory('moon_guard').ok,false);assert.equal(api.save.equippedAccessory,'astral_lens');fail=false;
- assert.equal(api.setAccessory('moon_guard').ok,true);const loaded=createGuestAdapter(localStorage).load();assert.equal(loaded.equippedAccessory,'moon_guard');assert.deepEqual(loaded.accessoryInventory,['moon_guard','astral_lens']);assert.equal(loaded.gold,8900);
+ assert.equal(api.setAccessory('moon_guard').ok,true);const loaded=createGuestAdapter(localStorage).load();assert.equal(loaded.equippedAccessory,'moon_guard');assert.deepEqual(loaded.accessoryInventory,['moon_guard','astral_lens']);assert.equal(loaded.gold,9780);
 });
 test('actual player recomputation does not stack bonuses or heal by repeatedly switching',()=>{
  G.passives={};api.save.relics=[];api.save.upgrades={};api.save.accessoryInventory=ACCESSORIES.map(i=>i.id);api.save.equippedAccessory='moon_guard';createPlayer();assert.equal(G.player.maxHp,140);G.player.hp=80;

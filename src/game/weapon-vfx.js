@@ -11,6 +11,7 @@ export const WEAPON_VFX = Object.freeze({
  molotov:{color:'#f5a34f',light:'#ffe7b2',shape:'ember'},
  gas:{color:'#61c7ad',light:'#d3ffe5',shape:'gas'},
  saw:{color:'#dac9a9',light:'#fff2ce',shape:'blade'},
+ absolute_bloom:{color:'#f7d58f',light:'#fff6df',accent:'#d7a5f5',shape:'absolute'},
  lotus_bloom:{color:'#d994e5',light:'#fff0fc',accent:'#ed86b5',shape:'lotus'},
  scatter_rail:{color:'#75c9ed',light:'#e0f6ff',trail:42,shape:'split'},
  plague_fire:{color:'#a9cf75',light:'#f5f5b1',accent:'#f0ae69',shape:'plague'},
@@ -23,7 +24,7 @@ export const WEAPON_VFX = Object.freeze({
 for(const value of Object.values(WEAPON_VFX))Object.freeze(value);
 const motionPreference=typeof window!=='undefined'&&window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):null;
 const TAU=Math.PI*2;
-const FUSIONS=new Set(['lotus_bloom','scatter_rail','plague_fire','burst_rail','venom_saw','ember_lance','orbit_saw','toxic_scatter']);
+const FUSIONS=new Set(['absolute_bloom','lotus_bloom','scatter_rail','plague_fire','burst_rail','venom_saw','ember_lance','orbit_saw','toxic_scatter']);
 // Actual hit events only. One weak entry per pooled object, guarded by spawn ID.
 // This metadata never applies damage, extends slow, or creates world residues.
 const fusionHits=new WeakMap();
@@ -146,7 +147,7 @@ export function drawWeaponBeam(ctx,b,frame) {
   }
   // No fake impacts at the beam end. Petals decorate the light path only.
   const count=Math.min(frame.petalLeft,frame.lowQ?3:8);frame.petalLeft-=count;frame.petalsUsed+=count;
-  const bloom=Math.min(count,style.shape==='lotus'?4:style.shape==='petal'?3:0);
+  const bloom=Math.min(count,style.shape==='absolute'?6:style.shape==='lotus'?4:style.shape==='petal'?3:0);
   for(let i=0;i<count;i++){
    ctx.globalAlpha=k*(.42+(i%2)*.17);
    if(i<bloom){

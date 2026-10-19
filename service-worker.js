@@ -1,5 +1,5 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v8-survival-training-fusion-bosses';
+const VERSION = 'v9-absolute-roguelike';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
@@ -38,6 +38,7 @@ const PRECACHE = [
     './src/game/boss-sheets.js',
     './src/game/weapon-vfx.js',
     './src/game/supply-drops.js',
+    './src/game/coin-drops.js',
     './src/game/pet-sprite.js',
     './asset/sprites/pet-yeongnyang.json',
     './asset/sprites/pet-yeongnyang.webp',

@@ -6,7 +6,8 @@ import {previewFusion,fuseItems,FUSION_RECIPES} from '../src/game/fusion.js';
 import {rollChoices,snapshotBuild,restoreBuild,resetBuild} from '../src/game/progression.js';
 import {save} from '../src/core/save.js';
 import {WEAPONS} from '../src/data/weapons.js';
-const weapon=(id,level=5,slot=0)=>Object.assign(createWeapon(id,slot),{level});
+// Unique-attack unit tests isolate the fusion attack; full inherited cores have separate combat tests.
+const weapon=(id,level=8,slot=0)=>Object.assign(createWeapon(id,slot),{level,evolved:!!WEAPONS[id].evolve&&level===8,fusionCores:WEAPONS[id].fusionOnly?[]:null});
 beforeEach(()=>{
  resetBuild();G.mode='play';G.paused=true;G.stage=1;G.stageStartTime=1;G.clock=1;G.lowQ=true;G.caps={particles:100,texts:10};
  G.player={x:0,y:0,vx:0,vy:0,facingX:1,facingY:0,hp:100,maxHp:100,radius:12,dead:false,stats:{might:1,cooldown:1,amount:0,area:1,duration:1,projSpeed:1,crit:0}};
@@ -15,11 +16,11 @@ beforeEach(()=>{
 test('recipes lock missing/low-level inputs and expose explicit stats preview without mutation',()=>{
  assert.equal(previewFusion('lotus_bloom').code,'MISSING_INGREDIENT');
  G.weapons=[weapon('cannon',4,0),weapon('thorns',5,1)];const before=JSON.stringify(G.weapons),p=previewFusion('lotus_bloom');
- assert.equal(p.code,'ITEM_LEVEL_REQUIRED');assert.equal(p.ingredients[0].requiredLevel,5);assert.equal(p.output.stats.dmg,50);assert.equal(p.output.stats.orbitDamage,14.000000000000002);assert.equal(JSON.stringify(G.weapons),before);
+ assert.equal(p.code,'ITEM_LEVEL_REQUIRED');assert.equal(p.ingredients[0].requiredLevel,8);assert.equal(p.output.stats.dmg,50);assert.equal(p.output.stats.orbitDamage,14.000000000000002);assert.equal(JSON.stringify(G.weapons),before);
  assert.equal(fuseItems('lotus_bloom',p.signature).ok,false);assert.equal(G.weapons.length,2);
 });
 test('fusion atomically consumes two, frees full slot, rejects duplicate click and cleans old effects',()=>{
- G.weapons=['cannon','thorns','pistols','rifle','gas','saw'].map((id,i)=>weapon(id,5,i));
+ G.weapons=['cannon','thorns','pistols','rifle','gas','saw'].map((id,i)=>weapon(id,8,i));
  const old=G.shots.spawn();old.weapon='cannon';const h=G.hazards.spawn();h.weapon='thorns';
  const p=previewFusion('lotus_bloom');assert.equal(p.ok,true);const r=fuseItems('lotus_bloom',p.signature);
  assert.equal(r.ok,true);assert.equal(G.weapons.length,5);assert.equal(G.weapons[0].id,'lotus_bloom');assert.equal(G.weapons[0].level,1);
@@ -27,11 +28,11 @@ test('fusion atomically consumes two, frees full slot, rejects duplicate click a
  assert.equal(fuseItems('lotus_bloom',p.signature).code,'ALREADY_FUSED');assert.equal(G.weapons.length,5);
 });
 test('stale/evolved changes, overcapacity, invalid inventory and dead confirmation cannot consume',()=>{
- G.weapons=[weapon('shotgun'),weapon('rifle',5,1)];const p=previewFusion('scatter_rail');G.weapons[0].evolved=true;
+ G.weapons=[weapon('shotgun'),weapon('rifle',8,1)];const p=previewFusion('scatter_rail');G.weapons[0].slot=5;
  assert.equal(fuseItems('scatter_rail',p.signature).code,'STALE_PREVIEW');assert.equal(G.weapons.length,2);
  const fresh=previewFusion('scatter_rail');assert.equal(fresh.ingredients[0].name,WEAPONS.shotgun.evolve.name);
  G.player.dead=true;assert.equal(fuseItems('scatter_rail',fresh.signature).code,'NOT_PLAYING');G.player.dead=false;
- G.weapons.push(...['pistols','gas','saw','thorns','cannon'].map((id,i)=>weapon(id,5,i+2)));assert.equal(previewFusion('scatter_rail').code,'CAPACITY');
+ G.weapons.push(...['pistols','gas','saw','thorns','cannon'].map((id,i)=>weapon(id,8,i+2)));assert.equal(previewFusion('scatter_rail').code,'CAPACITY');
  G.weapons=[weapon('shotgun'),weapon('rifle'),weapon('rifle')];assert.equal(previewFusion('scatter_rail').code,'INVALID_INVENTORY');
 });
 test('fusions never appear as unowned random drops, but acquired fusion levels upgrade',()=>{
@@ -41,7 +42,7 @@ test('fusions never appear as unowned random drops, but acquired fusion levels u
 test('ordinary cannon stats depend on item level, not archived character XP; growth caps hold',()=>{
  const w=weapon('cannon',1);save.characterXP=0;const first=weaponStats(w);save.characterXP=28420;assert.deepEqual(weaponStats(w),first);
  w.level=8;assert.ok(weaponStats(w).dmg>first.dmg);assert.ok(weaponStats(w).area>first.area);
- for(const recipe of FUSION_RECIPES){const f=weapon(recipe.output,8);G.player.stats.amount=100;G.player.stats.area=100;const s=weaponStats(f);assert.ok(s.amount<=12);assert.ok(s.area<=2);assert.ok(s.dmg<=220);}
+ for(const recipe of FUSION_RECIPES){const f=weapon(recipe.output,8);G.player.stats.amount=100;G.player.stats.area=100;const s=weaponStats(f);assert.ok(s.amount<=12);assert.ok(s.area<=2);assert.ok(s.dmg<=(recipe.tier==='absolute'?420:220));}
 });
 test('lotus fusion actually fires piercing beam and activates damaging orbit together',()=>{
  const w=weapon('lotus_bloom',1);w.cd=0;G.weapons=[w];let damage=0;
@@ -62,15 +63,15 @@ test('fused loadout and item levels survive run snapshot restore without touchin
  assert.equal(G.weapons[0].id,'lotus_bloom');assert.equal(G.weapons[0].level,6);assert.equal(G.weapons[0].evolved,false);assert.deepEqual({gold:save.gold,xp:save.characterXP},original);
 });
 test('preview signature binds exact recipe and damage modifiers',()=>{
- G.weapons=['cannon','thorns','shotgun','rifle'].map((id,i)=>weapon(id,5,i));
+ G.weapons=['cannon','thorns','shotgun','rifle'].map((id,i)=>weapon(id,8,i));
  const p=previewFusion('lotus_bloom');assert.equal(fuseItems('scatter_rail',p.signature).code,'STALE_PREVIEW');
  G.player.stats.might=1.5;assert.equal(fuseItems('lotus_bloom',p.signature).code,'STALE_PREVIEW');assert.equal(G.weapons.length,4);
 });
 test('eight distinct recipes each lock low levels, consume two once, and restore output',()=>{
- assert.equal(FUSION_RECIPES.length,8);assert.equal(new Set(FUSION_RECIPES.map(r=>r.output)).size,8);
+ assert.equal(FUSION_RECIPES.length,9);assert.equal(new Set(FUSION_RECIPES.map(r=>r.output)).size,9);
  for(const recipe of FUSION_RECIPES){
   G.weapons=recipe.inputs.map((x,i)=>weapon(x.id,4,i));assert.equal(previewFusion(recipe.id).code,'ITEM_LEVEL_REQUIRED');
-  G.weapons.forEach(w=>w.level=5);const p=previewFusion(recipe.id);assert.equal(p.ok,true,recipe.id);
+  G.weapons.forEach(w=>{w.level=8;w.evolved=true;});const p=previewFusion(recipe.id);assert.equal(p.ok,true,recipe.id);
   assert.equal(fuseItems(recipe.id,p.signature).ok,true);assert.equal(G.weapons.length,1);assert.equal(G.weapons[0].id,recipe.output);
   assert.equal(fuseItems(recipe.id,p.signature).ok,false);const snap=JSON.parse(JSON.stringify(snapshotBuild()));restoreBuild(snap);
   assert.equal(G.weapons[0].id,recipe.output);assert.equal(G.weapons[0].level,1);
@@ -104,14 +105,14 @@ test('orbit saw fires bouncing blades while activating its separate damaging orb
 });
 test('all expanded fusion caps hold under maximum item and extreme passive bonuses',()=>{
  Object.assign(G.player.stats,{amount:100,might:100,area:100,duration:100,cooldown:.01});
- for(const recipe of FUSION_RECIPES){const w=weapon(recipe.output,8);const s=weaponStats(w);assert.ok(s.dmg<=220);assert.ok(s.area<=2);assert.ok(s.cd>=.5);assert.ok(s.amount<=(WEAPONS[w.id].amountCap ||12));assert.ok(s.duration<=6);assert.ok(s.slow<=.65);}
+ for(const recipe of FUSION_RECIPES){const w=weapon(recipe.output,8);const s=weaponStats(w);assert.ok(s.dmg<=(recipe.tier==='absolute'?420:220));assert.ok(s.area<=2);assert.ok(s.cd>=.5);assert.ok(s.amount<=(WEAPONS[w.id].amountCap ||12));assert.ok(s.duration<=6);assert.ok(s.slow<=.65);}
 });
 test('all eight fusions preserve live enemy hit buffers through release and pooled respawn',async()=>{
  const {spawnEnemy}=await import('../src/game/enemies.js');const {ENEMIES}=await import('../src/data/enemies.js');
  const type=Object.keys(ENEMIES).find(id=>!ENEMIES[id].ranged);G.caps.enemies=420;G.time=0;
  for(const recipe of FUSION_RECIPES){
   G.enemies.clear();const e=spawnEnemy(type,50,50,{force:true});assert.ok(e);const buffer=e.hits;
-  G.weapons=recipe.inputs.map((input,i)=>weapon(input.id,5,i));const preview=previewFusion(recipe.id);
+  G.weapons=recipe.inputs.map((input,i)=>weapon(input.id,8,i));const preview=previewFusion(recipe.id);
   assert.equal(fuseItems(recipe.id,preview.signature).ok,true);
   G.enemies.release(0);
   let reused;assert.doesNotThrow(()=>{reused=spawnEnemy(type,70,70,{force:true});},`${recipe.id}: pooled respawn`);

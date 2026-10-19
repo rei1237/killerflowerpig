@@ -9,7 +9,7 @@ import { rollChoices, applyChoice, rollChest, rollBossChest, beginChoiceSession,
 import { createStoryPacer } from './story-pacing.js';
 import { choiceInfo, relatedFusionInfo, passiveEffectNote } from './item-choice-info.js';
 import { FUSION_RECIPES, previewFusion, fuseItems } from '../game/fusion.js';
-import { newRun, continueRun, retryStage, startStage, beginStageClear, loadRun, clearRun } from '../game/game.js';
+import { newRun, continueRun, retryStage, startStage, beginStageClear, loadRun, clearRun, markLoadoutExchangeSpent } from '../game/game.js';
 import { refreshGore } from '../game/effects.js';
 import { configureCaps } from '../game/state.js';
 import { resize } from '../game/render.js';
@@ -340,8 +340,8 @@ function appendChoiceRecipes(container,id) {
     details.addEventListener('keydown',e=>e.stopPropagation());
     for(const preview of recipes){
         const row=document.createElement('div');row.className='choice-recipe-detail';
-        const title=document.createElement('strong');title.textContent=`${preview.ok?'✓ 조합 가능':'◇ 재료 성장 필요'} · ${preview.output.name}`;
-        const ingredients=document.createElement('p');ingredients.textContent=preview.ingredients.map(i=>`${i.name}: ${i.level?`보유 Lv.${i.level}`:'미보유'} / 필요 Lv.${i.requiredLevel}`).join(' + ');
+        const title=document.createElement('strong');title.textContent=`${preview.ok?'✓ 조합 가능':'◇ 재료 성장 필요'} · ${preview.ingredients.length===3?'절대':'최종'} · ${preview.output.name}`;
+        const ingredients=document.createElement('p');ingredients.textContent=preview.ingredients.map(i=>`${i.name}: ${i.level?`보유 Lv.${i.level}`:'미보유'} / 필요 Lv.${i.requiredLevel}${i.requiredEvolution ? ` · ${i.evolved ? '진화 완료' : '진화 필요'}` : ''}`).join(' + ');
         const effect=document.createElement('p');effect.textContent=preview.output.desc;
         const stats=document.createElement('small');stats.textContent=fusionStatText(preview.output.stats);
         row.append(title,ingredients,effect,stats);details.appendChild(row);
@@ -465,6 +465,8 @@ function fusionStatText(stats) {
     if (Number.isFinite(stats?.cd)) parts.push(`주기 ${Math.round(stats.cd*100)/100}초`);
     if (Number.isFinite(stats?.duration)) parts.push(`지속 ${Math.round(stats.duration*100)/100}초`);
     if (Number.isFinite(stats?.slow)) parts.push(`감속 ${Math.round(stats.slow*100)}%`);
+    const inherited=stats?.inheritedCores || [];
+    if(inherited.length) parts.push(`진화 능력 ${inherited.length}개 계승: ${inherited.map(core=>`${core.name} — ${core.desc}`).join(' / ')}`);
     return parts.join(' · ');
 }
 export function showFusion() {
@@ -477,36 +479,37 @@ function renderFusion() {
     const wrap=$('fusion-recipes');wrap.replaceChildren();
     const recipes=FUSION_RECIPES.map(recipe=>({recipe,preview:previewFusion(recipe.id)}));
     const ready=recipes.filter(row=>row.preview.ok).length;
-    $('fusion-summary').textContent=`전체 ${recipes.length}개 레시피 · 조합 가능 ${ready}개 · 재료는 각각 Lv.5 이상`;
+    $('fusion-summary').textContent=`전체 ${recipes.length}개 레시피 · 조합 가능 ${ready}개 · 진화 2개 → 최종 · 진화 3개 → 절대 무기`;
     for (const {recipe,preview} of recipes) {
-        const card=document.createElement('article');card.className=preview.ok?'fusion-recipe fusion-ready':'fusion-recipe';card.dataset.recipe=recipe.id;
+        const card=document.createElement('article');card.className=preview.ok?'fusion-recipe fusion-ready':'fusion-recipe';card.dataset.recipe=recipe.id;card.dataset.tier=preview.output.tier || (preview.ingredients.length===3?'absolute':'final');
         const ingredients=document.createElement('div');ingredients.className='fusion-ingredients';
         for(const item of preview.ingredients){
             const cell=document.createElement('div');const art=document.createElement('div');art.className='fusion-art';mountItemArt(art,item.id);
             const name=document.createElement('strong');name.textContent=item.name;
-            const level=document.createElement('small');level.textContent=`현재 Lv.${item.level} / 필요 Lv.${item.requiredLevel}`;
+            const level=document.createElement('small');level.textContent=`현재 Lv.${item.level} / 필요 Lv.${item.requiredLevel}${item.requiredEvolution ? ` · ${item.evolved ? '진화 완료' : '진화 필요'}` : ''}`;
             cell.append(art,name,level);ingredients.appendChild(cell);
         }
         const output=document.createElement('div');output.className='fusion-output';
         const art=document.createElement('div');art.className='fusion-art';mountItemArt(art,preview.output.id);
-        const copy=document.createElement('div');const name=document.createElement('h3');name.textContent=`${preview.output.name} · Lv.1`;
+        const copy=document.createElement('div');const name=document.createElement('h3');name.textContent=`${preview.ingredients.length===3?'절대':'최종'} · ${preview.output.name} · Lv.1`;
         const desc=document.createElement('p');desc.textContent=preview.output.desc;
         const stats=document.createElement('small');stats.textContent=fusionStatText(preview.output.stats);
         copy.append(name,desc,stats);output.append(art,copy);
         const button=document.createElement('button');button.type='button';button.className='btn btn-blood';button.disabled=!preview.ok;
-        button.textContent=preview.ok?'재료 2개를 소모하고 조합':'재료 아이템과 레벨을 모으세요';
+        button.textContent=preview.ok?`진화 무기 ${preview.ingredients.length}개를 소모하고 ${preview.ingredients.length===3?'절대':'최종'} 조합`:`재료 ${preview.ingredients.length}개 모두 진화가 필요합니다`;
+        const cost=document.createElement('p');cost.className='fusion-cost';cost.textContent=`진화 무기 ${preview.ingredients.length}개 소모 → 새 무기 1개 · 슬롯 ${preview.ingredients.length-1}칸 확보. 소모한 재료의 강화·진화는 되돌릴 수 없습니다.`;
         button.addEventListener('click',()=>{
             if(topModalId()!=='fusion'||button.disabled)return;
             button.disabled=true;
             const result=fuseItems(recipe.id,preview.signature);
             if(!result.ok){$('fusion-status').textContent='장비 상태가 바뀌었습니다. 현재 재료와 레벨을 확인하세요.';renderFusion();return;}
-            $('fusion-status').textContent=`${preview.output.name} Lv.1 조합 완료. 재료 2개가 새 아이템으로 바뀌었습니다.`;
+            $('fusion-status').textContent=`${preview.output.name} Lv.1 조합 완료. 재료 ${preview.ingredients.length}개가 새 아이템으로 바뀌었습니다. 슬롯 ${preview.ingredients.length-1}칸 확보.`;
             if(modalStack.includes('levelup')){currentChoices=rollChoices(3);renderCards();}
             if(modalStack.includes('pause'))renderPauseBuild();
             renderFusion();
             openFusionReveal({ ingredients: preview.ingredients, output: preview.output, statText: fusionStatText(preview.output.stats), onDone: () => closeModal('fusion') });
         });
-        card.append(ingredients,output,button);wrap.appendChild(card);
+        card.append(ingredients,output,cost,button);wrap.appendChild(card);
     }
 }
 
@@ -732,7 +735,7 @@ export function showGameOver() {
     const earned = settleStage('death');
     let lore = LORE[0][1];
     for (const [s, t] of LORE) if (G.stage >= s) lore = t;
-    $('gameover-lore').textContent = lore;
+    $('gameover-lore').textContent = `${lore} 이번 도전의 무기·보조 아이템·진화·조합은 종료됩니다. 상점 구매와 영구 강화는 유지됩니다.`;
     $('gameover-stats').innerHTML = statsHTML([['스테이지', G.stage], ['획득 골드', `+${earned}`]]);
     show('gameover');
 }
@@ -777,6 +780,8 @@ function showInstall() {
 
 // ─────────────────────────── 바인딩 ───────────────────────────
 export function initUI() {
+    G.events.loadoutExchanged = markLoadoutExchangeSpent;
+    G.events.runSaveError = () => toast('도전 기록을 저장하지 못했습니다. 종료한 도전은 다시 시작해야 합니다. 브라우저 저장 공간을 확인하세요.', 6000);
     const click = (id, fn) => $(id).addEventListener('click', () => { audio.unlock(); audio.sfx('click'); fn(); });
     initTutorial({ onOpen: () => { resetInput(); openModal('tutorial'); }, onClose: () => { closeModal('tutorial'); resetInput(); } });
     initLoadoutExchange({ onOpen: () => { resetInput(); openModal('loadout-exchange'); }, onClose: () => { closeModal('loadout-exchange'); resetInput(); } });
@@ -803,7 +808,7 @@ export function initUI() {
         if (!run) return showTitle();
         hide('title');
         G.godMode = false;
-        continueRun(run);
+        if (!continueRun(run)) return showTitle();
         startPlaying();
     });
     click('btn-shop', () => { renderShop(); openModal('shop'); });
@@ -830,7 +835,7 @@ export function initUI() {
     click('btn-next', () => {
         hide('clear');
         const next = G.stage + 1;
-        playStory(`EPISODE ${next} — ${STAGES[next].name}`, STORIES[next], () => { startStage(next); startPlaying(); }, next);
+        playStory(`EPISODE ${next} — ${STAGES[next].name}`, STORIES[next], () => { if (startStage(next) !== false) startPlaying(); }, next);
     });
     click('btn-ending-title', () => { audio.stopEpilogue(); audio.playBGM(); showTitle(); });
 

@@ -75,7 +75,7 @@ function restoreChoiceState(value) {
 }
 
 export function xpForLevel(lv) {
-    return Math.round(4 + (lv - 1) * 4 + Math.max(0, lv - 20) * 7 + Math.max(0, lv - 40) * 12);
+    return Math.round(8 + (lv - 1) * 7 + Math.max(0, lv - 20) * 10 + Math.max(0, lv - 40) * 16);
 }
 
 export function addXP(v) {
@@ -132,7 +132,7 @@ function candidates() {
     for (const c of out) {
         if (c.kind === 'weapon' && WEAPONS[c.id].fusionOnly) { c.weight *= 0.25; continue; }
         if (!c.isNew) continue;
-        c.weight *= 1.6 * (1 + 0.15 * Math.min(5, Math.max(0, G.choiceAbsence?.[c.id] || 0)));
+        c.weight *= 1.2 * (1 + 0.08 * Math.min(5, Math.max(0, G.choiceAbsence?.[c.id] || 0)));
         if (c.kind === 'weapon' && FUSION_RECIPES.some(recipe => !weaponOf(recipe.output) && recipe.inputs.some(input => input.id === c.id) && recipe.inputs.some(input => input.id !== c.id && weaponOf(input.id)))) c.weight *= 1.35;
     }
     return out;
@@ -153,7 +153,7 @@ export function rollChoices(n = 3) {
     }
     // Offer automatic regeneration before early passive slots fill. This is an
     // offer guarantee only: never bypass bans, slot limits, max level or ownership.
-    const regenProtected = choiceLevel === 3 || (choiceLevel >= 5 && choiceLevel % 5 === 0) || Object.keys(G.passives).length === MAX_PASSIVES - 1;
+    const regenProtected = choiceLevel === 5 || choiceLevel === 10;
     if (picks.length < n && regenProtected) {
         const regen = pool.findIndex(c => c.kind === 'passive' && c.id === 'regen' && c.isNew);
         if (regen >= 0) picks.push(pool.splice(regen, 1)[0]);
@@ -268,6 +268,7 @@ export function rollBossChest(requestId, random = Math.random) {
 }
 
 export function resetBuild() {
+    G.loadoutExchangesUsed = 0;
     restoreChoiceState({});
     bossRewardReceipts.clear();
     G.supplyDrought = supplyState();
@@ -284,6 +285,7 @@ export function resetBuild() {
 // 스테이지 시작 시점의 빌드 스냅샷 (사망 시 해당 스테이지 재도전용 / 이어하기 저장)
 export function snapshotBuild() {
     return {
+        loadoutExchangesUsed: G.loadoutExchangesUsed > 0 ? 1 : 0,
         choiceAbsence: { ...G.choiceAbsence },
         choiceEventSerial: G.choiceEventSerial, choiceClosedThrough: G.choiceClosedThrough,
         choiceSession: G.choiceSession ? copyChoiceSession(G.choiceSession) : null,
@@ -299,6 +301,7 @@ export function snapshotBuild() {
 }
 
 export function restoreBuild(s) {
+    G.loadoutExchangesUsed = G.loadoutExchangesUsed > 0 || s.loadoutExchangesUsed > 0 ? 1 : 0;
     G.supplyDrought = supplyState(s.supplyDrought);
     G.fusionRevision = (G.fusionRevision || 0) + 1;
     G.stage = s.stage;

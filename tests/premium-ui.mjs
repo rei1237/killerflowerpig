@@ -272,7 +272,7 @@ test('repeated result notifications settle stage rewards only once', async()=>{
 test('coin chest shows current odds and locks repeat opening until result acknowledgement',async()=>{
  const {save,earnCoins}=await import('../src/core/save.js');
  showTitle();save.maxClearedStage=4;earnCoins(3000,'premium-cache-test');node('btn-shop').click();
- assert.match(node('cache-rates').textContent,/60%/);assert.match(node('cache-rates').textContent,/16 코인/);
+ assert.match(node('cache-rates').textContent,/60%/);assert.match(node('cache-rates').textContent,/3 코인/);
  const before=save.chestCount;node('btn-coin-cache').click();
  assert.equal(save.chestCount,before+1);assert.equal(node('btn-coin-cache').disabled,true);
  node('btn-coin-cache').onclick();assert.equal(save.chestCount,before+1);
@@ -301,10 +301,10 @@ test('smaller flowerpig reduces real contact and projectile hit boundaries',asyn
 });
 
 test('fusion preview pauses safely and consumes two inputs only after explicit confirmation',()=>{
- freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>w.level=5);
+ freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>{w.level=8;w.evolved=true;});
  const before=JSON.stringify(G.weapons);togglePause();showFusion();
  assert.equal(topModalId(),'fusion');assert.equal(G.paused,true);assert.equal(JSON.stringify(G.weapons),before);
- assert.equal(node('fusion-recipes').children.length,8);
+ assert.equal(node('fusion-recipes').children.length,9);
  const button=node('fusion-recipes').children[0].querySelector('button');assert.equal(button.disabled,false);
  button.click();assert.deepEqual(G.weapons.map(w=>w.id),['lotus_bloom']);assert.equal(G.weapons[0].level,1);
  button.click();assert.equal(G.weapons.length,1);assert.match(node('fusion-status').textContent,/조합 완료/);
@@ -312,7 +312,7 @@ test('fusion preview pauses safely and consumes two inputs only after explicit c
  togglePause();assert.equal(G.paused,false);
 });
 test('fusion rejects stale preview and closing locked recipes never consumes items',()=>{
- freshRun();G.weapons=[createWeapon('shotgun',0),createWeapon('rifle',1)];G.weapons.forEach(w=>w.level=5);showFusion();
+ freshRun();G.weapons=[createWeapon('shotgun',0),createWeapon('rifle',1)];G.weapons.forEach(w=>{w.level=8;w.evolved=true;});showFusion();
  const button=node('fusion-recipes').children[1].querySelector('button');G.weapons[0].level=4;button.click();
  assert.deepEqual(G.weapons.map(w=>w.id),['shotgun','rifle']);assert.match(node('fusion-status').textContent,/바뀌었습니다/);
  const before=JSON.stringify(G.weapons);closeModal('fusion');assert.equal(JSON.stringify(G.weapons),before);assert.equal(G.paused,false);
@@ -341,7 +341,7 @@ test('every fusion resumes real update/render frames after UI confirmation and c
  fx.splats={red:[{width:16,height:16}],black:[{width:16,height:16}],green:[{width:16,height:16}]};
  initRender(node('game'));
  for(const [index,recipe] of FUSION_RECIPES.entries()){
-  freshRun();G.godMode=true;G.weapons=recipe.inputs.map((i,slot)=>{const w=createWeapon(i.id,slot);w.level=5;return w;});
+  freshRun();G.godMode=true;G.weapons=recipe.inputs.map((i,slot)=>{const w=createWeapon(i.id,slot);w.level=8;w.evolved=true;return w;});
   spawnEnemy('shambler',180,0);
   showLevelUp();showFusion();
   const button=node('fusion-recipes').children[index].querySelector('button');button.click();button.click();
@@ -366,8 +366,8 @@ test('upgrade cards show live current levels and all recipe details without sele
  G.banished=new Set([...Object.keys(WEAPONS),...Object.keys(PASSIVES)].filter(id=>id!=='cannon'));
  showLevelUp();const card=node('cards').children[0];
  assert.match(card.querySelector('.card-lv').textContent,/Lv.5 → Lv.6/);
- const details=card.querySelector('details');assert.ok(details);assert.equal(details.querySelectorAll('.choice-recipe-detail').length,2);
- assert.match(details.textContent,/만개 연꽃포/);assert.match(details.textContent,/화염 꽃잎창/);assert.match(details.textContent,/필요 Lv.5/);assert.match(details.textContent,/조합 가능/);
+ const details=card.querySelector('details');assert.ok(details);assert.equal(details.querySelectorAll('.choice-recipe-detail').length,3);
+ assert.match(details.textContent,/만개 연꽃포/);assert.match(details.textContent,/화염 꽃잎창/);assert.match(details.textContent,/필요 Lv.8/);assert.match(details.textContent,/진화 필요/);
  const event=details.dispatch('click');assert.equal(event.stopped,true);assert.equal(G.weapons[0].level,5);assert.equal(topModalId(),'levelup');
  card.querySelector('.choice-select').click();assert.equal(G.weapons[0].level,6);
  showLevelUp();assert.match(node('cards').children[0].querySelector('.card-lv').textContent,/Lv.6 → Lv.7/);
@@ -390,10 +390,10 @@ test('premium accessory shop shows six actual items with ownership, locks and re
  showTitle();save.maxClearedStage=9;earnCoins(10000,'accessory-ui-test');node('btn-shop').click();
  assert.equal(node('accessory-list').children.length,6);
  const card=node('accessory-list').children[0],button=card.querySelector('button'),gold=save.gold;
- assert.match(card.textContent,/450/);assert.match(card.textContent,/최대 HP \+40/);assert.match(card.textContent,/미보유/);
- button.click();button.click();assert.equal(save.gold,gold-450);assert.equal(save.equippedAccessory,'moon_guard');assert.match(node('accessory-equipped').textContent,/달빛 수호 망토/);
- node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,null);assert.equal(save.gold,gold-450);
- node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,'moon_guard');assert.equal(save.gold,gold-450);
+ assert.match(card.textContent,/90/);assert.match(card.textContent,/최대 HP \+40/);assert.match(card.textContent,/미보유/);
+ button.click();button.click();assert.equal(save.gold,gold-90);assert.equal(save.equippedAccessory,'moon_guard');assert.match(node('accessory-equipped').textContent,/달빛 수호 망토/);
+ node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,null);assert.equal(save.gold,gold-90);
+ node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,'moon_guard');assert.equal(save.gold,gold-90);
  closeModal('shop');save.maxClearedStage=0;node('btn-shop').click();assert.equal(node('accessory-list').children[1].querySelector('button').disabled,true);
 });
 
@@ -420,7 +420,7 @@ test('next stage story selects that exact stage artwork and never defaults to th
 });
 
 test('leaving fusion celebration cancels its animation and cannot restart play after title navigation', () => {
-    freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>w.level=5);
+    freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>{w.level=8;w.evolved=true;});
     showFusion();node('fusion-recipes').children[0].querySelector('button').click();
     assert.equal(topModalId(),'fusion-reveal');showTitle();advanceTime(1800);
     assert.equal(topModalId(),null);assert.equal(node('fusion-reveal').hidden,true);assert.equal(G.mode,'idle');
@@ -460,7 +460,8 @@ test('loadout exchange pause UI discloses loss, cancels safely, confirms once an
  assert.match(modal.querySelector('.loadout-exchange-loss').textContent,/강화 레벨과 진화는 사라지고/);
  modal.querySelector('.loadout-exchange-cancel').click();assert.equal(JSON.stringify(G.weapons),before);
  select('source','rifle');select('target','shotgun');const confirm=modal.querySelector('.loadout-exchange-confirm');confirm.click();confirm.click();
- assert.equal(G.weapons.length,6);assert.equal(G.weapons.find(w=>w.id==='shotgun').level,1);assert.ok(!G.weapons.some(w=>w.id==='rifle'));
+ assert.match(modal.querySelector('.loadout-exchange-budget').textContent,/0\/1회/);assert.equal(G.weapons.length,6);assert.equal(G.weapons.find(w=>w.id==='shotgun').level,1);assert.ok(!G.weapons.some(w=>w.id==='rifle'));
+ assert.equal(JSON.parse(localStorage.getItem('kfp.run.v1')).loadoutExchangesUsed,1,'spent exchange persists immediately before stage changes or reload');
  const after=JSON.stringify(G.weapons);modal.querySelector('.loadout-exchange-close').click();
  assert.equal(topModalId(),'pause');assert.equal(G.paused,true);assert.equal(document.activeElement,node('btn-pause-loadout'));
  node('btn-pause-loadout').click();confirm.click();assert.equal(JSON.stringify(G.weapons),after);assert.equal(modal.querySelector('.loadout-exchange-confirm'),null);
@@ -479,4 +480,46 @@ test('loadout evolution helper describes fused maxima and CSS retains mobile rea
  appendEvolutionInfo(box,'lotus_bloom');assert.match(box.textContent,/Lv.8까지 강화.*별도 진화 없음/);
  const css=fs.readFileSync(new URL('../src/ui/loadout-exchange.css',import.meta.url),'utf8');
  assert.match(css,/min-height:44px/);assert.match(css,/overflow:auto/);assert.match(css,/@media\(max-width:600px\)/);assert.match(css,/focus-visible/);assert.match(css,/\[hidden\]/);
+});
+
+test('death immediately tombstones checkpoint; retry starts stage one fresh while permanent shop progress survives',async()=>{
+ const {loadRun,continueRun,onPlayerDeath,startStage}=await import('../src/game/game.js');
+ const {save}=await import('../src/core/save.js');
+ freshRun();const checkpoint=loadRun(),oldId=G.runId;assert.equal(continueRun(checkpoint),true);
+ G.weapons=[Object.assign(createWeapon('lotus_bloom',0),{level:8})];G.passives={heart:5};G.stage=5;G.loadoutExchangesUsed=1;
+ const permanent=JSON.stringify({gold:save.gold,upgrades:save.upgrades,accessories:save.accessories,relics:save.relics});
+ onPlayerDeath();assert.equal(loadRun(),null);assert.equal(continueRun(checkpoint),false);assert.equal(G.mode,'dead');assert.equal(startStage(6),false);
+ showTitle();node('btn-retry').click();assert.equal(G.stage,1);assert.notEqual(G.runId,oldId);assert.equal(G.level,1);assert.deepEqual(G.passives,{});
+ assert.equal(G.weapons.length,1);assert.equal(G.weapons[0].level,1);assert.equal(G.weapons[0].evolved,false);assert.equal(G.loadoutExchangesUsed,0);
+ assert.equal(JSON.stringify({gold:save.gold,upgrades:save.upgrades,accessories:save.accessories,relics:save.relics}),permanent);
+ assert.equal(continueRun(checkpoint),false,'dead build cannot be loaded after a new run');assert.match(html,/id="btn-retry"[^>]*>[^<]*STAGE 1/);
+});
+test('death storage failure retains in-memory invalidation and tombstone protection with warning',async()=>{
+ const {loadRun,continueRun,onPlayerDeath}=await import('../src/game/game.js');freshRun();const checkpoint=loadRun();
+ const remove=localStorage.removeItem;let warnings=0;const handler=G.events.runSaveError;G.events.runSaveError=()=>warnings++;
+ localStorage.removeItem=()=>{throw new Error('storage blocked');};
+ try{onPlayerDeath();assert.equal(loadRun(),null);assert.equal(continueRun(checkpoint),false);assert.equal(warnings,1);assert.ok(JSON.parse(localStorage.getItem('kfp.dead-runs.v1')).includes(checkpoint.runId));}
+ finally{localStorage.removeItem=remove;G.events.runSaveError=handler;}
+});
+test('fusion UI requires both evolved inputs and displays the actual final tech requirement',()=>{
+ freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>w.level=8);showFusion();
+ assert.equal(node('fusion-recipes').children[0].querySelector('button').disabled,true);assert.match(node('fusion-summary').textContent,/진화 2개 → 최종.*진화 3개 → 절대/);
+ assert.match(node('fusion-recipes').children[0].textContent,/진화 필요/);const before=JSON.stringify(G.weapons);
+ node('fusion-recipes').children[0].querySelector('button').click();assert.equal(JSON.stringify(G.weapons),before);
+});
+test('when all death storage operations fail, current session still blocks old continuation and warns',async()=>{
+ const {loadRun,continueRun,onPlayerDeath}=await import('../src/game/game.js');freshRun();const checkpoint=loadRun();
+ const put=localStorage.setItem,remove=localStorage.removeItem,handler=G.events.runSaveError;let warnings=0;
+ G.events.runSaveError=()=>warnings++;localStorage.setItem=localStorage.removeItem=()=>{throw new Error('storage unavailable');};
+ try{onPlayerDeath();assert.equal(loadRun(),null);assert.equal(continueRun(checkpoint),false);assert.equal(warnings,1);}
+ finally{localStorage.setItem=put;localStorage.removeItem=remove;G.events.runSaveError=handler;}
+});
+test('absolute recipe UI consumes three evolved ingredients and reveals three-to-one with two freed slots',()=>{
+ freshRun();G.weapons=['cannon','thorns','molotov'].map((id,i)=>Object.assign(createWeapon(id,i),{level:8,evolved:true}));showFusion();
+ const card=node('fusion-recipes').querySelectorAll('article').find(n=>n.dataset.recipe==='absolute_bloom');
+ assert.ok(card);assert.match(card.textContent,/절대/);assert.match(card.textContent,/진화 능력 3개 계승/);assert.match(card.querySelector('.fusion-cost').textContent,/3개.*2칸/);
+ const button=card.querySelector('button');assert.equal(button.disabled,false);button.click();button.click();
+ assert.deepEqual(G.weapons.map(w=>w.id),['absolute_bloom']);const reveal=node('fusion-reveal');assert.equal(reveal.dataset.tier,'absolute');
+ assert.equal(reveal.querySelector('.fusion-reveal-ingredients').children.length,3);assert.match(reveal.querySelector('.fusion-reveal-slots').textContent,/3개.*2칸/);
+ reveal.querySelector('.fusion-reveal-skip').click();reveal.querySelector('.fusion-reveal-confirm').click();assert.equal(G.paused,false);
 });

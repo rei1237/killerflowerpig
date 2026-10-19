@@ -9,10 +9,15 @@ export function previewFusion(recipeId) {
     if (!recipe) return { ok: false, code: 'UNKNOWN_RECIPE' };
     const ingredients = recipe.inputs.map(input => {
         const owned = G.weapons.find(w => w.id === input.id), def = WEAPONS[input.id];
-        return { id: input.id, name: owned?.evolved ? def.evolve.name : def.name, level: owned?.level || 0, requiredLevel: input.level, evolved: !!owned?.evolved };
+        return { id: input.id, name: owned?.evolved ? def.evolve.name : def.name, level: owned?.level || 0, requiredLevel: input.level, requiredEvolution: true, evolved: !!owned?.evolved };
     });
     const def = WEAPONS[recipe.output], candidate = createWeapon(recipe.output, 0);
     const stats = weaponStats(candidate);
+    stats.inheritedCores = recipe.inputs.map(input => {
+        const core = Object.assign(createWeapon(input.id, 0), { level: 8, evolved: true, sourceId: recipe.output, fusionLevel: 1 });
+        return { id: input.id, name: WEAPONS[input.id].evolve.name, desc: WEAPONS[input.id].evolve.desc, stats: weaponStats(core) };
+    });
+    stats.coreDamageMultiplier = recipe.tier === 'absolute' ? 1.65 : 1.35;
     if (['lotus_bloom', 'orbit_saw'].includes(recipe.output)) {
         const orbit = orbitStats(candidate, stats);
         Object.assign(stats, { orbitDamage: orbit.dmg, orbitAmount: orbit.amount, orbitRadius: orbit.radius * orbit.area, orbitDuration: orbit.duration });
@@ -26,9 +31,10 @@ export function previewFusion(recipeId) {
     else if (G.weapons.some(w => w.id === recipe.output)) code = 'ALREADY_FUSED';
     else if (ingredients.some(i => !i.level)) code = 'MISSING_INGREDIENT';
     else if (ingredients.some(i => i.level < i.requiredLevel)) code = 'ITEM_LEVEL_REQUIRED';
-    else if (G.weapons.length > MAX_WEAPONS || G.weapons.length - 1 > MAX_WEAPONS) code = 'CAPACITY';
+    else if (ingredients.some(i => !i.evolved)) code = 'EVOLUTION_REQUIRED';
+    else if (G.weapons.length > MAX_WEAPONS || G.weapons.length - recipe.inputs.length + 1 > MAX_WEAPONS) code = 'CAPACITY';
     return { ok: !code, code, signature: signature(recipeId), ingredients,
-        output: { id: recipe.output, name: def.name, desc: def.desc, level: 1, stats }, slotsAfter: G.weapons.length - 1 };
+        output: { id: recipe.output, name: def.name, desc: def.desc, level: 1, tier: recipe.tier || 'final', stats }, slotsFreed: recipe.inputs.length - 1, slotsAfter: G.weapons.length - recipe.inputs.length + 1 };
 }
 function removeOwnedEffects(pool, ids) {
     for (let i = pool.count - 1; i >= 0; i--) if (ids.has(pool.items[i].weapon)) { pool.items[i].alive = false; pool.release(i); }

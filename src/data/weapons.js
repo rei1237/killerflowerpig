@@ -65,7 +65,7 @@ export const WEAPONS = {
             { dmg: 3, area: 0.15, t: '피해 +3, 범위 +15%' },
         ],
         evolve: { with: 'spread', name: '지옥 불꽃길', icon: '🌋', desc: '걸어간 자리마다 지옥불이 남는다.',
-            mods: { dmg: 1.5, area: 1.3, trail: 1 } },
+            mods: { dmg: 2, area: 1.6, duration: 2.2, trail: 1 } },
     },
     cannon: {
         name: '꽃잎포', icon: '🌺', color: '#ff69b4',
@@ -76,8 +76,8 @@ export const WEAPONS = {
             { amount: 1, t: '반대 방향 동시 발사' }, { dmg: 15, t: '피해 +15' }, { cd: -0.15, t: '재사용 -15%' },
             { dmg: 20, area: 0.2, t: '피해 +20, 굵기 +20%' },
         ],
-        evolve: { with: 'pollen', name: '만개(滿開)', icon: '💮', desc: '사방으로 피어나는 꽃잎 광선.',
-            mods: { dmg: 1.5, amount: 4, area: 1.25 } },
+        evolve: { with: 'pollen', name: '개화 꽃잎포', icon: '💮', desc: '네 방향으로 피어나는 진화 꽃잎 광선. 절대 만개의 재료가 된다.',
+            mods: { dmg: 1.5, amount: 2, area: 1.25 } },
     },
     gas: {
         name: '독가스 수류탄', icon: '☣️', color: '#7dff4a',

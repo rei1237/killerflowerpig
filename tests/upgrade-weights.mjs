@@ -26,17 +26,17 @@ beforeEach(() => {
 
 test('only thorns and core HP/regen choices gain base weight', () => {
     const choices = Object.fromEntries(allChoices().map(c => [c.id, c]));
-    assert.equal(choices.thorns.weight, 8); // previously 2
-    assert.equal(choices.heart.weight, 3.6); // previously 1.5
-    assert.equal(choices.regen.weight, 3.6); // previously 1.5
+    assert.equal(choices.thorns.weight, 6); // previously 2
+    assert.equal(choices.heart.weight, 2.6999999999999997); // previously 1.5
+    assert.equal(choices.regen.weight, 2.6999999999999997); // previously 1.5
     assert.equal(choices.shotgun.weight, 3);
     for (const id of Object.keys(WEAPONS).filter(id => !['shotgun', 'thorns'].includes(id) && !WEAPONS[id].fusionOnly)) {
-        assert.equal(choices[id].weight, ['rifle','gas'].includes(id) ? 4.32 : 3.2);
+        assert.equal(choices[id].weight, ['rifle','gas'].includes(id) ? 3.24 : 2.4);
     }
     for (const id of Object.keys(PASSIVES).filter(id => !['heart', 'regen', 'magazine'].includes(id))) {
-        assert.equal(choices[id].weight, 2.4000000000000004);
+        assert.equal(choices[id].weight, 1.7999999999999998);
     }
-    assert.equal(choices.magazine.weight, 5.6000000000000005); // existing evolution bonus +2
+    assert.equal(choices.magazine.weight, 4.2); // existing evolution bonus +2
 });
 
 test('owned essentials retain their boost and add the unchanged evolution bonus afterward', () => {
@@ -70,8 +70,8 @@ test('early guarantee uses the queued upgrade level, including later-stage start
     G.level = 9;
     G.pendingLevelUps = 5;
     assert.equal(withRandom(0, () => rollChoices(1))[0].id, 'thorns');
-    G.pendingLevelUps = 6; // processing level 3: regeneration protection
-    assert.equal(withRandom(0, () => rollChoices(1))[0].id, 'regen');
+    G.pendingLevelUps = 6; // processing level 3
+    assert.equal(withRandom(0, () => rollChoices(1))[0].id, 'shotgun');
     G.level = 6;
     G.pendingLevelUps = 2; // third choice in a stage-2 start
     assert.equal(withRandom(0, () => rollChoices(1))[0].id, 'thorns');
@@ -80,7 +80,7 @@ test('early guarantee uses the queued upgrade level, including later-stage start
 test('thorns guarantee is bounded to level 4, alongside regeneration protected levels', () => {
     for (const level of [1, 2, 3, 5, 6, 20]) {
         G.level = level;
-        assert.equal(withRandom(0, () => rollChoices(1))[0].id, [3,5,20].includes(level) ? 'regen' : 'shotgun');
+        assert.equal(withRandom(0, () => rollChoices(1))[0].id, [5,10].includes(level) ? 'regen' : 'shotgun');
     }
     G.level = 4;
     G.weapons.push(weapon('thorns'));

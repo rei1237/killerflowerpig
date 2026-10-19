@@ -15,14 +15,14 @@ test('invalid fields are clamped or rejected without prototype pollution', () =>
     assert.equal(s.gold, 0); assert.equal(s.kills, 0); assert.equal(s.upgrades.maxHp, 5); assert.equal(s.upgrades.evil, undefined); assert.equal(s.equippedPet, null);
 });
 test('purchases are immutable, level-checked and idempotent', () => {
-    const s = funded(); const r = buy(s); assert.equal(r.ok, true); assert.equal(s.gold, 500); assert.equal(r.state.gold, 450);
-    const repeated = buy(r.state); assert.equal(repeated.duplicate, true); assert.equal(repeated.state.gold, 450);
+    const s = funded(); const r = buy(s); assert.equal(r.ok, true); assert.equal(s.gold, 500); assert.equal(r.state.gold, 490);
+    const repeated = buy(r.state); assert.equal(repeated.duplicate, true); assert.equal(repeated.state.gold, 490);
     assert.equal(buy(r.state, 'maxHp', 0, 'other').code, 'STALE_LEVEL');
     assert.equal(buy(defaultProgress()).code, 'INSUFFICIENT_FUNDS');
     assert.equal(buy(s, 'invented').code, 'UNKNOWN_ITEM');
 });
 test('pet ownership and active choice survive reload; second purchase cannot charge', () => {
-    const r = buy(funded(), 'pet_yeongnyang'); assert.equal(r.state.gold, 360); assert.equal(r.state.equippedPet, 'pet_yeongnyang');
+    const r = buy(funded(), 'pet_yeongnyang'); assert.equal(r.state.gold, 472); assert.equal(r.state.equippedPet, 'pet_yeongnyang');
     const a = createGuestAdapter(memory()); a.commit(r.state); const s = a.load(); assert.deepEqual(s.inventory, ['pet_yeongnyang']);
     assert.equal(buy(s, 'pet_yeongnyang', 1, 'second').code, 'MAX_LEVEL');
 });
@@ -51,9 +51,9 @@ test('save facade does not charge twice or change state on failed disk write', a
     const api = await import('../src/core/save.js');
     api.save.maxClearedStage = 10;
     assert.equal(api.earnCoins(500, 'reward-1'), true); api.earnCoins(500, 'reward-1'); assert.equal(api.save.gold, 500);
-    assert.equal(api.buyUpgrade('maxHp', 0), true); assert.equal(api.buyUpgrade('maxHp', 0), true); assert.equal(api.save.gold, 450);
+    assert.equal(api.buyUpgrade('maxHp', 0), true); assert.equal(api.buyUpgrade('maxHp', 0), true); assert.equal(api.save.gold, 490);
     storage.setItem = () => { throw Error('full'); };
-    assert.equal(api.buyUpgrade('maxHp', 1), false); assert.equal(api.save.gold, 450); assert.equal(api.upgradeLevel('maxHp'), 1);
+    assert.equal(api.buyUpgrade('maxHp', 1), false); assert.equal(api.save.gold, 490); assert.equal(api.upgradeLevel('maxHp'), 1);
     assert.equal(api.equipPet('pet_yeongnyang'), false);
 });
 test('another tab revision change prevents overwriting its progress', () => {

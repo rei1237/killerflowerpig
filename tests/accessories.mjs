@@ -6,16 +6,16 @@ const state=()=>({gold:10000,revision:0,maxClearedStage:10,receipts:[],accessory
 const buy=(s,id='moon_guard',requestId=id)=>purchaseAccessory(s,{itemId:id,requestId,expectedRevision:s.revision});
 test('six unique expensive stage-gated accessories do not touch starter economy',()=>{
  assert.equal(ACCESSORIES.length,6);assert.equal(new Set(ACCESSORIES.map(i=>i.id)).size,6);assert.equal(ACCESSORY_SLOT_LIMIT,1);
- assert.deepEqual(ACCESSORIES.map(i=>i.price),[450,650,900,1200,1500,2200]);assert.deepEqual(ACCESSORIES.map(i=>i.unlockStage),[3,4,5,6,7,9]);
+ assert.deepEqual(ACCESSORIES.map(i=>i.price),[90,130,180,240,300,440]);assert.deepEqual(ACCESSORIES.map(i=>i.unlockStage),[3,4,5,6,7,9]);
 });
 test('legacy normalization is empty and never accepts unowned equipped items',()=>{
  assert.deepEqual(normalizeAccessories({gold:77,inventory:['pet_yeongnyang']}),{accessoryInventory:[],equippedAccessory:null});
  assert.equal(activeAccessory({accessoryInventory:['moon_guard'],equippedAccessory:'royal_star_crown'}),null);
 });
 test('purchase is immutable, gated, affordable and replay-safe without retrocharges',()=>{
- const s=state(),r=buy(s);assert.equal(s.gold,10000);assert.equal(r.state.gold,9550);assert.equal(r.state.equippedAccessory,'moon_guard');
- assert.equal(buy(r.state).duplicate,true);assert.equal(buy(r.state).state.gold,9550);
- assert.equal(buy({...s,maxClearedStage:2}).code,'STAGE_LOCKED');assert.equal(buy({...s,gold:449}).code,'INSUFFICIENT_FUNDS');
+ const s=state(),r=buy(s);assert.equal(s.gold,10000);assert.equal(r.state.gold,9910);assert.equal(r.state.equippedAccessory,'moon_guard');
+ assert.equal(buy(r.state).duplicate,true);assert.equal(buy(r.state).state.gold,9910);
+ assert.equal(buy({...s,maxClearedStage:2}).code,'STAGE_LOCKED');assert.equal(buy({...s,gold:89}).code,'INSUFFICIENT_FUNDS');
  assert.equal(purchaseAccessory(s,{itemId:'moon_guard',requestId:'x',expectedRevision:9}).code,'REVISION_CONFLICT');
 });
 test('one equipped slot requires ownership and switching never stacks all owned bonuses',()=>{

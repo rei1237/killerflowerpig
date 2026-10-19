@@ -1,3 +1,5 @@
+import { coinRandom } from '../src/game/coin-drops.js';
+coinRandom.next = () => .99;
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { G, clearWorld } from '../src/game/state.js';
@@ -58,15 +60,15 @@ test('real kill compensation produces18/36 guarantees with exact coin and XP tot
   assert.equal(field('meat').length,Math.floor(count/18));
   assert.equal(field('magnet').length,count===36?1:0);
  }
- assert.equal(G.kills,36);assert.equal(field('coin').reduce((n,c)=>n+c.value,0),180);
+ assert.equal(G.kills,36);assert.equal(field('coin').reduce((n,c)=>n+c.value,0),0);
  assert.ok(xp>0);close(G.gems.items[0].value,ENEMIES.shambler.xp*5/3);
 }));
 
-test('low HP real kills guarantee at8; elites retain their separate chest and40 coins',()=>withRandom(.99,()=>{
+test('low HP real kills guarantee at8; elites retain their 8 coins without a chest',()=>withRandom(.99,()=>{
  reset(1,20);for(let n=0;n<7;n++)kill();assert.equal(field('meat').length,0);
  kill();assert.equal(field('meat').length,1);
  const before={...G.supplyDrought};kill(true);assert.deepEqual(G.supplyDrought,before);
- assert.equal(field('chest').length,1);assert.equal(field('coin').at(-1).value,40);
+ assert.equal(field('chest').length,0);assert.equal(field('coin').at(-1).value,8);
 }));
 
 test('field cap retains pending guarantees and useful collection releases slots',()=>withRandom(.99,()=>{
