@@ -2,7 +2,8 @@
 // 패턴: charge(돌진), ring(원형탄), spiral(나선탄), aimed(조준 부채꼴), summon(소환),
 //       pools(산성 장판), slam(내려찍기), snipe(조준선 저격), blink(순간이동)
 export const BOSSES = {
-    1: { name: '알파 청토끼', title: '지면이 고동친다...', sheet: 'boss1', tint: 'normal', scale: 0.62, hp: 750, speed: 58, dmg: 14,
+    1: { name: '알파 청토끼', title: '지면이 고동친다...', sheet: 'boss1', tint: 'normal', scale: 0.62, hp: 520, speed: 48, dmg: 10,
+        pacing: { opening: 3, phaseRest: 2.2, recovery: 1.5, chargeWarning: 1.15, chargeSpeed: 480, summons: 0.6 },
         phases: [['charge', 'summon'], ['charge', 'ring', 'summon'], ['charge', 'ring', 'aimed']] },
     2: { name: '엘리트 청토끼', title: '전투 머신이 다가온다...', sheet: 'boss1', tint: 'elite', scale: 0.64, hp: 1600, speed: 66, dmg: 16,
         phases: [['aimed', 'charge'], ['aimed', 'charge', 'ring'], ['aimed', 'ring', 'charge', 'summon']] },

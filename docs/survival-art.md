@@ -12,7 +12,7 @@ The character references supplied by the owner informed the four-frame flowerpig
 
 Original profile: https://code-destiny.com/images/novel/rab-sheet.webp
 
-The final-boss illustration adapts the novel's blue rabbit, purple/gold attire, violet jewel, coin and pink-sand hourglass into this survival game's visual treatment. This is an adaptation, not a claim that the survival game's villain role is novel canon. The portrait is used in archive/story/HUD presentation. Each boss has a different runtime costume signature around its original animated sprite; combat attack patterns and collision shapes remain unchanged. These overlays are not a replacement full animation set.
+The final-boss illustration adapts the novel's blue rabbit, purple/gold attire, violet jewel, coin and pink-sand hourglass into this survival game's visual treatment. This is an adaptation, not a claim that the survival game's villain role is novel canon. All ten portraits are now the actual combat sprites as well as archive/HUD illustrations. Each full image is drawn once with bounded procedural breathing, attack squash, tilt and death collapse; no static image is cropped as an animated atlas. Feet are normalized using measured alpha bounds. The visible hit circle matches the existing projectile center/radius. Original atlases are load-failure fallbacks only. Ordinary mobs are unchanged.
 
 ## Verification limits
 

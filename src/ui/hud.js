@@ -1,4 +1,3 @@
-import { getPetalStatus } from '../game/petal-cannon.js';
 import { mountItemArt } from './item-art.js';
 // Read-only DOM projection of the survivor state, capped at 10 Hz.
 // UI portraits are static illustrations; combat continues using animated atlases.
@@ -22,7 +21,7 @@ export function drawHUD() {
     if (!nodes) nodes = Object.fromEntries([
         'hud-hp','hud-hp-text','hud-hp-track','hud-xp','hud-xp-track',
         'hud-level','hud-stage','hud-time','hud-score','hud-build',
-        'btn-petal','hud-character-level','hud-character-xp','hud-petal-charge','hud-petal-stats','hud-boss','hud-boss-portrait','hud-boss-name','hud-boss-hp','hud-countdown','hud-stage-progress'
+        'hud-boss','hud-boss-portrait','hud-boss-name','hud-boss-hp','hud-countdown','hud-stage-progress'
     ].map(id => [id,$(id)]));
     const hp = Math.max(0, Math.min(1,G.player.hp/G.player.maxHp));
     nodes['hud-hp'].style.width = hp * 100 + '%';
@@ -32,7 +31,7 @@ export function drawHUD() {
     const xp = Math.min(1,G.xp/G.xpNext);
     nodes['hud-xp'].style.width = xp * 100 + '%';
     nodes['hud-xp-track'].setAttribute('aria-valuenow',Math.round(xp*100));
-    nodes['hud-level'].textContent = '런 Lv.' + G.level;
+    nodes['hud-level'].textContent = '선택 ' + G.level;
     const stage = STAGES[G.stage];
     nodes['hud-stage'].textContent = `STAGE ${String(G.stage).padStart(2,'0')} · ${stage?.name || ''}`;
     nodes['hud-time'].textContent = G.boss?.alive ? 'BOSS' : fmtTime(G.time);
@@ -58,14 +57,6 @@ export function drawHUD() {
             return slot;
         }));
     }
-    const petal = getPetalStatus();
-    nodes['hud-character-level'].textContent = `캐릭터 Lv.${petal.level}`;
-    nodes['hud-character-xp'].textContent = petal.xpNext ? `성장 ${petal.xp} / ${petal.xpNext}` : '최고 레벨';
-    nodes['hud-petal-stats'].textContent = `피해 ${petal.damage} · 범위 ${petal.radius}`;
-    nodes['hud-petal-charge'].textContent = petal.ready ? '준비 완료' : `${Math.floor(petal.normalized*100)}%`;
-    nodes['btn-petal'].style.setProperty?.('--charge',`${petal.normalized*100}%`);
-    nodes['btn-petal'].disabled = !petal.canFire;
-    nodes['btn-petal'].setAttribute('aria-label', `꽃잎포 ${Math.floor(petal.normalized*100)}% · 피해 ${petal.damage} · 범위 ${petal.radius}`);
     const b=G.boss;
     nodes['hud-boss'].hidden = !b || (!b.alive && b.deadT >= 1.2);
     if(b){

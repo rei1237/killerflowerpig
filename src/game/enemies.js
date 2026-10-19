@@ -19,9 +19,11 @@ let sepFrame = 0;
 export function liveEnemyCount() { return G.enemies.count; }
 
 export function spawnEnemy(typeId, x, y, opts = {}) {
+    const st = STAGES[G.stage];
+    // 초반 인원 제한은 이벤트/보스의 force 소환에도 적용한다.
+    if (st.enemyCap && G.enemies.count >= st.enemyCap) return null;
     if (G.enemies.count >= G.caps.enemies && !opts.force) return null;
     const def = ENEMIES[typeId];
-    const st = STAGES[G.stage];
     const sc = stageScaling(G.stage, G.time, st.duration);
     const e = G.enemies.spawn();
     const elite = !!opts.elite;
@@ -109,7 +111,7 @@ function killEnemy(e, opts) {
     if (e.elite) { shake(6); hitstop(0.06); }
 
     dropGem(e.x, e.y, e.xp);
-    dropCoin(e.x, e.y, e.elite ? 12 : 1);
+    dropCoin(e.x, e.y, e.elite ? 24 : 3);
     const r = Math.random();
     if (e.elite) dropPickup('chest', e.x, e.y);
     else if (r < 0.006) dropPickup('meat', e.x, e.y);

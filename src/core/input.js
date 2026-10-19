@@ -12,7 +12,6 @@ export const input = {
     joy: { active: false, id: -1, ox: 0, oy: 0, x: 0, y: 0, radius: 56 },
     onPause: null,
     onConfirm: null,
-    onSpecial: null,
     enabled: false,
 };
 
@@ -31,11 +30,6 @@ function updateKeyboardMove() {
 export function initInput(canvas) {
     window.addEventListener('keydown', (e) => {
         if (e.target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || '')) return;
-        if (e.code === 'Space' && input.enabled) {
-            e.preventDefault();
-            if (!e.repeat) input.onSpecial?.();
-            return;
-        }
         if (e.code === 'Escape' || e.code === 'KeyP') {
             if (e.repeat) return;
             if (input.onPause) { input.onPause(); e.preventDefault(); }

@@ -1,3 +1,4 @@
+import { FUSED_WEAPONS } from './fusions.js';
 // 무기 / 패시브 / 진화 정의.
 // levels[i] = (i+2)레벨 도달 시 누적 적용되는 보정. cd/area/speed/duration 은 배율 가산(0.1 = +10%).
 export const MAX_WEAPONS = 6;
@@ -67,7 +68,7 @@ export const WEAPONS = {
             mods: { dmg: 1.5, area: 1.3, trail: 1 } },
     },
     cannon: {
-        name: '꽃잎 포', icon: '🌺', color: '#ff69b4',
+        name: '꽃잎포', icon: '🌺', color: '#ff69b4',
         desc: '진행 방향으로 꽃잎 광선을 일직선 발사.',
         base: { dmg: 28, cd: 4.6, amount: 1, speed: 1, duration: 0.35, area: 1, length: 520, width: 38 },
         levels: [
@@ -102,6 +103,7 @@ export const WEAPONS = {
         evolve: { with: 'whet', name: '척추 분쇄기', icon: '🦴', desc: '척추뼈를 이어 만든 거대 톱날. 출혈을 일으킨다.',
             mods: { dmg: 1.8, amount: 2, area: 1.35, bleed: 3 } },
     },
+    ...FUSED_WEAPONS,
 };
 
 export const PASSIVES = {

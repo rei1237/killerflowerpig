@@ -2,7 +2,7 @@
 // cover weapon hardware so no browser-dependent emoji is used for inventory art.
 const ROOT = 'asset/items/';
 const weapons = {
-    petalCannon:'cannon.svg',shotgun:'shotgun.svg', pistols:'pistols.svg', rifle:'rifle.svg',
+    lotus_bloom:'cannon.svg',scatter_rail:'shotgun.svg',plague_fire:'molotov.svg',petalCannon:'cannon.svg',shotgun:'shotgun.svg', pistols:'pistols.svg', rifle:'rifle.svg',
     thorns:'thorns.svg', molotov:'molotov.svg', cannon:'cannon.svg', gas:'gas.svg', saw:'saw.svg',
 };
 const passives = {

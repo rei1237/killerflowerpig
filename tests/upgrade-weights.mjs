@@ -30,7 +30,7 @@ test('only thorns and core HP/regen choices gain base weight', () => {
     assert.equal(choices.heart.weight, 2.25); // previously 1.5
     assert.equal(choices.regen.weight, 2.25); // previously 1.5
     assert.equal(choices.shotgun.weight, 3);
-    for (const id of Object.keys(WEAPONS).filter(id => !['shotgun', 'thorns'].includes(id))) {
+    for (const id of Object.keys(WEAPONS).filter(id => !['shotgun', 'thorns'].includes(id) && !WEAPONS[id].fusionOnly)) {
         assert.equal(choices[id].weight, 2);
     }
     for (const id of Object.keys(PASSIVES).filter(id => !['heart', 'regen', 'magazine'].includes(id))) {

@@ -19,12 +19,12 @@ export function weaponStats(w) {
     const b = def.base;
     const ps = G.player.stats;
     const acc = { dmg: 0, cd: 0, amount: 0, area: 0, duration: 0, speed: 0, pierce: 0, slow: 0 };
-    for (let i = 0; i < w.level - 1; i++) {
+    for (let i = 0; i < Math.min(8, Math.max(1, w.level)) - 1; i++) {
         const l = def.levels[i];
         for (const k in acc) if (l[k]) acc[k] += l[k];
     }
-    const ev = w.evolved ? def.evolve.mods : {};
-    return {
+    const ev = w.evolved && def.evolve ? def.evolve.mods : {};
+    const result = {
         dmg: (b.dmg + acc.dmg) * (ev.dmg || 1) * ps.might,
         cd: b.cd * Math.max(0.25, 1 + acc.cd) * (ev.cd || 1) * ps.cooldown,
         amount: Math.max(1, Math.round((b.amount + acc.amount + ps.amount) * (ev.amount || 1))),
@@ -38,6 +38,13 @@ export function weaponStats(w) {
         spread: b.spread || 0, radius: b.radius || 0, tick: b.tick || 0.3, hitCd: b.hitCd || 0.3,
         length: b.length || 0, width: b.width || 0,
     };
+    if (def.fusionOnly) {
+        result.dmg = Math.min(220, result.dmg); result.cd = Math.max(0.5, result.cd);
+        result.amount = Math.min(w.id === 'lotus_bloom' ? 3 : w.id === 'plague_fire' ? 5 : 12, result.amount);
+        result.area = Math.min(2, result.area); result.duration = Math.min(w.id === 'lotus_bloom' ? 0.7 : 6, result.duration);
+        result.pierce = Math.min(12, result.pierce); result.slow = Math.min(0.65, result.slow);
+    }
+    return result;
 }
 
 // 가장 가까운 적 (그리드 반경 확장 탐색)
@@ -103,7 +110,7 @@ function lob(w, s, tx, ty, hazardKind) {
     sh.t = 0; sh.dur = 0.55; sh.life = 1;
     sh.hazard = hazardKind;
     sh.s = s;
-    sh.img = hazardKind === 'fire' ? fx.bomb : null;
+    sh.img = (hazardKind === 'fire' || hazardKind === 'firegas') ? fx.bomb : null;
     sh.lastHit = sh.lastHit || [];
 }
 
@@ -121,7 +128,18 @@ function randomEnemyNear(maxR) {
     return pick;
 }
 
+export function orbitStats(w, s) {
+    return w.id === 'lotus_bloom' ? { ...s, dmg: s.dmg * 0.28, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3)), radius: 90, duration: 2.8, permanent: false } : s;
+}
 const FIRE = {
+    lotus_bloom(w, s) { FIRE.cannon(w, s); w.activeT = 2.8; },
+    scatter_rail(w, s) { FIRE.shotgun(w, s); },
+    plague_fire(w, s) {
+        for (let i = 0; i < s.amount; i++) {
+            const e = randomEnemyNear(340), p = G.player;
+            lob(w, s, e ? e.x : p.x + rand(-180, 180), e ? e.y : p.y + rand(-140, 140), 'firegas');
+        }
+    },
     shotgun(w, s) {
         const t = nearestEnemy(G.player.x, G.player.y, 420);
         const [dx, dy] = aimAt(w, t);
@@ -211,6 +229,7 @@ function fireBeam(w, s, angle) {
     const p = G.player;
     const b = G.beams.spawn();
     const muzzle = images.playerFire ? firingMuzzle(p, G.clock, Math.cos(angle)) : { x: p.x, y: p.y - 22 };
+    b.weapon = w.id;
     b.x = muzzle.x; b.y = muzzle.y;
     b.angle = angle;
     b.len = s.length * Math.sqrt(s.area);
@@ -264,10 +283,10 @@ export function updateWeapons(dt) {
             }
         }
         // 연꽃 가시 궤도
-        if (w.id === 'thorns' && (w.activeT > 0 || s.permanent)) {
+        if ((w.id === 'thorns' || w.id === 'lotus_bloom') && (w.activeT > 0 || s.permanent)) {
             if (!s.permanent) w.activeT -= dt;
             w.angle += WEAPONS.thorns.base.speed * dt;
-            updateOrbit(w, s);
+            updateOrbit(w, orbitStats(w, s));
         }
         // 지옥 불꽃길
         if (s.trail) {
@@ -336,8 +355,8 @@ export function updateShots(dt) {
             sh.spin = (sh.spin || 0) + dt * 12;
             if (k >= 1) {
                 const s = sh.s;
-                if (sh.hazard === 'fire') {
-                    spawnHazard('fire', sh.tx, sh.ty, { radius: s.radius * s.area, duration: s.duration, dmg: s.dmg, tick: s.tick, weapon: sh.weapon });
+                if (sh.hazard === 'fire' || sh.hazard === 'firegas') {
+                    spawnHazard('fire', sh.tx, sh.ty, { radius: s.radius * s.area, duration: s.duration, dmg: s.dmg, tick: s.tick, slow: sh.hazard === 'firegas' ? s.slow : 0, weapon: sh.weapon });
                     embers(sh.tx, sh.ty, 10);
                     audio.sfx('fire');
                 } else {
@@ -412,7 +431,7 @@ export function drawShots(ctx) {
             ctx.save();
             ctx.translate(sh.x, sh.y);
             ctx.rotate(sh.spin);
-            if (sh.hazard === 'fire') ctx.drawImage(fx.bomb, -11, -11, 22, 22);
+            if (sh.hazard === 'fire' || sh.hazard === 'firegas') ctx.drawImage(fx.bomb, -11, -11, 22, 22);
             else { ctx.fillStyle = '#3b6b1a'; ctx.fillRect(-6, -8, 12, 16); ctx.fillStyle = '#7dff4a'; ctx.fillRect(-3, -11, 6, 4); }
             ctx.restore();
             continue;
@@ -436,8 +455,8 @@ export function drawShots(ctx) {
     }
     // 연꽃 가시
     for (const w of G.weapons) {
-        if (w.id !== 'thorns' || !w.s || !(w.activeT > 0 || w.s.permanent)) continue;
-        const s = w.s, p = G.player;
+        if ((w.id !== 'thorns' && w.id !== 'lotus_bloom') || !w.s || !(w.activeT > 0 || w.s.permanent)) continue;
+        const s = orbitStats(w, w.s), p = G.player;
         const n = s.amount, R = s.radius * s.area, size = 26 * s.area;
         const img = w.evolved ? fx.petalBlood : fx.petal;
         for (let i = 0; i < n; i++) {

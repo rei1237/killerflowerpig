@@ -15,9 +15,9 @@ test('insufficient funds and stale opening never roll or charge',()=>{
  assert.equal(openRelicChest(funded(),{expectedCount:1,requestId:'a'},random).code,'STALE_CHEST');assert.equal(calls,0);
 });
 test('debit, award, pity and duplicate compensation are one immutable operation',()=>{
- const s=funded();const first=open(s);assert.equal(s.gold,5000);assert.equal(first.state.gold,4900);assert.deepEqual(first.state.relics,['wind_feather']);
- const second=open(first.state);assert.equal(second.state.gold,4820);assert.equal(second.reward.compensation,20);assert.equal(second.state.relicDuplicates,1);assert.equal(second.state.chestPity,2);
- const retry=openRelicChest(second.state,{expectedCount:1,requestId:second.reward.requestId},()=>{throw Error('must not reroll');});assert.equal(retry.duplicate,true);assert.equal(retry.state.gold,4820);
+ const s=funded();const first=open(s);assert.equal(s.gold,5000);assert.equal(first.state.gold,4920);assert.deepEqual(first.state.relics,['wind_feather']);
+ const second=open(first.state);assert.equal(second.state.gold,4856);assert.equal(second.reward.compensation,16);assert.equal(second.state.relicDuplicates,1);assert.equal(second.state.chestPity,2);
+ const retry=openRelicChest(second.state,{expectedCount:1,requestId:second.reward.requestId},()=>{throw Error('must not reroll');});assert.equal(retry.duplicate,true);assert.equal(retry.state.gold,4856);
  const third=open(second.state,.7);const stale=openRelicChest(third.state,{expectedCount:1,requestId:second.reward.requestId});assert.equal(stale.code,'USED_REQUEST');
 });
 test('tenth opening guarantees epic after nine misses and resets pity',()=>{
@@ -25,8 +25,8 @@ test('tenth opening guarantees epic after nine misses and resets pity',()=>{
  const r=open(s,0);assert.equal(r.reward.itemId,'star_wings');assert.equal(r.state.chestPity,0);assert.deepEqual(chestRates(r.state),[.6,.3,.1]);
 });
 test('direct purchase bypasses chance, cannot charge owned relic twice, preserves pity',()=>{
- const s={...funded(),chestPity:5};const r=purchaseRelic(s,{itemId:'star_wings',requestId:'direct'});assert.equal(r.state.gold,4000);assert.equal(r.state.chestPity,5);
- assert.equal(purchaseRelic(r.state,{itemId:'star_wings',requestId:'again'}).state.gold,4000);
+ const s={...funded(),chestPity:5};const r=purchaseRelic(s,{itemId:'star_wings',requestId:'direct'});assert.equal(r.state.gold,4350);assert.equal(r.state.chestPity,5);
+ assert.equal(purchaseRelic(r.state,{itemId:'star_wings',requestId:'again'}).state.gold,4350);
 });
 test('only strongest relic affects stats and movement speed is globally bounded',()=>{
  const s={...funded(),relics:RELICS.map(r=>r.id)};const stats=relicStats({speed:220,might:1,maxHp:100},s);assert.equal(stats.speed,MAX_MOVE_SPEED);assert.equal(stats.might,1.15);assert.equal(stats.maxHp,120);
@@ -47,13 +47,13 @@ test('facade never debits or grants on failed write, and committed retry survive
  const values=new Map();let blocked=false;globalThis.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>{if(blocked)throw Error('quota');values.set(k,v);}};
  const api=await import('../src/core/save.js');api.save.maxClearedStage=10;api.earnCoins(500,'chest-test-seed');blocked=true;
  assert.equal(api.openChest(0).ok,false);assert.equal(api.save.gold,500);assert.equal(api.save.chestCount,0);assert.deepEqual(api.save.relics,[]);
- blocked=false;const r=api.openChest(0);assert.equal(r.ok,true);assert.equal(api.save.gold,400);const repeated=api.openChest(0);assert.deepEqual(repeated.reward,r.reward);assert.equal(api.save.gold,400);
+ blocked=false;const r=api.openChest(0);assert.equal(r.ok,true);assert.equal(api.save.gold,420);const repeated=api.openChest(0);assert.deepEqual(repeated.reward,r.reward);assert.equal(api.save.gold,420);
  const restored=createGuestAdapter(globalThis.localStorage).load();assert.equal(restored.chestCount,1);assert.deepEqual(restored.lastChest,r.reward);
 });
 test('every duplicate tier pays its published compensation without stacking ownership',()=>{
  for(const [index,roll] of [[0,0],[1,.7],[2,.95]]){
   const item=RELICS[index],s={...funded(),relics:[item.id]};const r=open(s,roll);
-  assert.equal(r.reward.compensation,item.duplicateCoins);assert.equal(r.state.gold,5000-100+item.duplicateCoins);assert.deepEqual(r.state.relics,[item.id]);
+  assert.equal(r.reward.compensation,item.duplicateCoins);assert.equal(r.state.gold,5000-RELIC_CHEST.cost+item.duplicateCoins);assert.deepEqual(r.state.relics,[item.id]);
  }
 });
 test('actual player recomputation applies epic HP/damage and caps combined movement',async()=>{

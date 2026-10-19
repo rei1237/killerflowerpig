@@ -8,10 +8,10 @@ Schema v4 stores integer gold, existing permanent upgrade IDs, owned pet IDs, ac
 
 ## Gameplay / integration contract
 
-- Enemy kill: `dropCoin(x,y, elite ? 12 : 1)`; collection calls `earnCoins` and increments run HUD gold. Do not credit these coins again at stage end. Coin piles merge above the pickup budget without discarding value.
+- Enemy kill: `dropCoin(x,y, elite ? 24 : 3)`; collection calls `earnCoins` and increments run HUD gold. Do not credit these coins again at stage end. Coin piles merge above the pickup budget without discarding value.
 - `queueCoins(amount, eventId)` retains failed non-repeatable rewards in memory; `retryPendingCoins()` retries them and `pendingCoinTotal()` supplies an unsaved-reward warning. This queue is lost on reload if storage remains blocked, so the UI must say so. Never queue the same reward and leave a coin pickup alive.
 - Existing stage/chest/skip bonuses can call `earnCoins(integerAmount, stableEventId)` separately. The bounded 128-event cache only protects recent guest retries, not a lifetime server ledger.
-- Catalog in `src/data/shop.js`: legacy upgrade IDs retained, six Yeongnyang-themed permanent items and one 180-coin pet. Stage bonuses plus early coin kills make the first companion achievable in a starter run.
+- Catalog in `src/data/shop.js`: legacy upgrade IDs retained, six Yeongnyang-themed permanent items and one 140-coin pet. Stage bonuses plus early coin kills make the first companion achievable in a starter run.
 - `buyUpgrade(id, capturedExpectedLevel, requestId?)` rejects stale level changes and unaffordable buys. The default purchase ID includes item and level. Use the level captured when the button was rendered to prevent stale/double clicks from buying the next tier accidentally.
 - `equipPet(id|null)` supports owned pet or unequip. `upgradeLevel` works for permanent upgrades and one-time pets.
 - Call `resetPets()` at stage start, `updatePets(dt)` while alive, `drawPets(ctx, optionalLoadedImage)` in world coordinates. Pet follows, attracts coins within 180 units, and strikes up to three nearby living enemies within 180 units every 0.9 seconds. Damage is 14 + 0.8 per run level capped at level 30, scaled by might, with a 25% brief slow. It heals 3 HP every 6 seconds. Attack work is bounded to one pool scan and at most three hit calls, without projectile spawning. It cannot independently open chests. Pause is inherited from the game step.
@@ -39,13 +39,13 @@ Required backend rules before production:
 Run `node --test tests/progression-store.mjs` for migration, purchase, replay, ownership, failure, namespacing and online-intent contract tests. These tests do not verify a deployed backend.
 
 
-## Earned-coin wing relics (catalog v3 / save v4)
+## Earned-coin wing relics (catalog v4)
 
-The shop adds a 100-earned-coin chest; no money, payment, trading, cash-out or transferable value. Normal probabilities are common 60%, rare 30%, epic 10%. After nine consecutive non-epic chest results, opening ten is 100% epic, and epic resets pity. The UI must display normal rates, current effective rates, cost, pity progress and duplicate compensation before opening. There is no countdown or timed promotion.
+The shop adds a 80-earned-coin chest; no money, payment, trading, cash-out or transferable value. Normal probabilities are common 60%, rare 30%, epic 10%. After nine consecutive non-epic chest results, opening ten is 100% epic, and epic resets pity. The UI must display normal rates, current effective rates, cost, pity progress and duplicate compensation before opening. There is no countdown or timed promotion.
 
-- Common wind_feather: movement +6%; direct purchase 120; duplicate returns 20 coins.
-- Rare moon_wings: movement +12%, damage +8%; direct purchase 400; duplicate returns 45 coins.
-- Epic star_wings: movement +18%, damage +15%, HP +20; direct purchase 1000; duplicate returns 90 coins.
+- Common wind_feather: movement +6%; direct purchase 60; duplicate returns 16 coins.
+- Rare moon_wings: movement +12%, damage +8%; direct purchase 260; duplicate returns 36 coins.
+- Epic star_wings: movement +18%, damage +15%, HP +20; direct purchase 650; duplicate returns 72 coins.
 
 Only the strongest owned relic applies automatically; duplicates never stack stats. Existing paw speed upgrade and madness passive are retained. All movement sources combined cap at 243 (base 135 × 1.8). Stat bonuses are additive to their base multipliers. Direct purchases bypass randomness entirely, do not alter pity, and never charge again for an owned item.
 

@@ -1,5 +1,5 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v5-survival-field-guide';
+const VERSION = 'v6-item-fusion-survival';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
@@ -14,10 +14,10 @@ const PRECACHE = [
     './asset/tutorial/yeongnyang.webp',
     './manifest.webmanifest',
     './src/main.js',
-    './src/core/character-progression.js',
     './src/core/shop-access.js',
-    './src/game/petal-charge.js',
-    './src/game/petal-cannon.js',
+    './src/game/fusion.js',
+    './src/data/fusions.js',
+    './src/game/boss-appearance.js',
     './asset/sprites/player.webp',
     './asset/sprites/rabbit1.webp',
     './asset/ui/title.webp',

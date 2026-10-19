@@ -35,3 +35,13 @@ test('strong companion hits at most three enemies per attack and heals on bounde
  const damage=G.damageBy.pet_yeongnyang;updatePets(.1);assert.equal(G.damageBy.pet_yeongnyang,damage);
  updatePets(5.3);assert.equal(G.player.hp,53);
 });
+test('coin sweep attracts existing coin drops without crediting until collected',async()=>{
+ const {magnetAll,dropGem,dropPickup}=await import('../src/game/pickups.js');reset();const before=save.gold;
+ const coin=dropCoin(300,0,3);dropGem(300,0,1);const chest=dropPickup('chest',300,0);magnetAll();
+ assert.equal(coin.pull,true);assert.equal(G.gems.items[0].pull,true);assert.equal(chest.pull,false);assert.equal(save.gold,before);
+});
+test('expanded pull starts for nearby coins and gems and cannot overshoot a long frame',async()=>{
+ const {dropGem}=await import('../src/game/pickups.js');reset();G.xp=0;G.xpNext=9999;
+ const coin=dropCoin(100,-14,3);dropGem(80,-14,1);const gem=G.gems.items[0];gem.x=80;gem.y=-14;
+ updatePickups(.5);assert.equal(coin.pull,true);assert.equal(gem.pull,true);assert.equal(gem.x,0);
+});

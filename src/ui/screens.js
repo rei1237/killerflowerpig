@@ -5,36 +5,28 @@ import { STORIES, EPILOGUE } from '../data/story.js';
 import { WEAPONS, PASSIVES } from '../data/weapons.js';
 import { BOSSES } from '../data/bosses.js';
 import { rollChoices, applyChoice, rollChest } from '../game/progression.js';
+import { FUSION_RECIPES, previewFusion, fuseItems } from '../game/fusion.js';
 import { newRun, continueRun, retryStage, startStage, beginStageClear, loadRun, clearRun } from '../game/game.js';
 import { refreshGore } from '../game/effects.js';
 import { configureCaps } from '../game/state.js';
 import { resize } from '../game/render.js';
 import { settings, setSetting } from '../core/settings.js';
-import { save, persist, SHOP, upgradeLevel, buyUpgrade, equipPet, lastSaveError, queueCoins, retryPendingCoins, pendingCoinTotal, openChest, buyRelic, queueCharacterXP, retryPendingCharacterXP, pendingCharacterXP } from '../core/save.js';
+import { save, persist, SHOP, upgradeLevel, buyUpgrade, equipPet, lastSaveError, queueCoins, retryPendingCoins, pendingCoinTotal, openChest, buyRelic } from '../core/save.js';
 import { audio } from '../core/audio.js';
 import { input, resetJoy } from '../core/input.js';
 
-import { characterProgress, petalStats } from '../core/character-progression.js';
-import { firePetalCannon } from '../game/petal-cannon.js';
 import { shopAccess, highestClearedStage } from '../core/shop-access.js';
 import { PET_REDEMPTION } from '../core/pet-redemption.js';
 import { RELICS, RELIC_CHEST, strongestRelic, chestRates } from '../data/relics.js';
 import { mountItemArt, itemArt } from './item-art.js';
 import { initTutorial, openTutorial, closeTutorial, shouldOfferTutorial } from './tutorial.js';
 
-let presentedCharacterLevel = characterProgress(save.characterXP).level;
-function announceCharacterGrowth() {
-    const level = characterProgress(save.characterXP).level;
-    if (level > presentedCharacterLevel) toast(`캐릭터 Lv.${level} · 꽃잎포 위력과 범위가 성장했어요`,4000);
-    presentedCharacterLevel = level;
-}
 let rewardSequence = 0;
 const rewardSession = Date.now().toString(36) + Math.random().toString(36).slice(2);
 function creditReward(amount) {
     if (amount > 0 && !queueCoins(amount, `${rewardSession}:${++rewardSequence}`)) notifyPending();
 }
 function notifyPending() {
-    if (pendingCharacterXP()) { toast(`캐릭터 경험치 ${pendingCharacterXP()} 저장 대기 · 새로고침하면 사라질 수 있습니다`,6000); return; }
     if (pendingCoinTotal()) toast(`저장 대기 코인 ${pendingCoinTotal()} · 새로고침하면 사라질 수 있습니다`, 6000);
     else if (lastSaveError) toast('저장하지 못했습니다. 저장 공간을 확인하고 다시 시도하세요.', 5000);
 }
@@ -92,7 +84,6 @@ export function closeModal(id) {
     // An underlying or already-closed dialog must never change pause ownership.
     if (topModalId() !== id) return false;
     if (!retryPendingCoins()) notifyPending();
-    if (!retryPendingCharacterXP()) notifyPending(); else announceCharacterGrowth();
     hide(id);
     $(id).inert = false;
     $(id).style.zIndex = '';
@@ -139,7 +130,6 @@ function banner(main, sub) {
 // ─────────────────────────── 타이틀 ───────────────────────────
 export function showTitle() {
     if (!retryPendingCoins()) notifyPending();
-    if (!retryPendingCharacterXP()) notifyPending(); else announceCharacterGrowth();
     G.mode = 'idle';
     G.paused = false;
     setPlaying(false);
@@ -161,7 +151,7 @@ export function showTitle() {
         cont.hidden = false;
         cont.textContent = `이어하기 — STAGE ${run.stage} (LV ${run.level})`;
     } else cont.hidden = true;
-    $('title-record').textContent = `캐릭터 Lv.${characterProgress(save.characterXP).level} · 최고 도달: STAGE ${save.maxStage} · 누적 처치 ${save.kills.toLocaleString()} · 골드 ${save.gold}`;
+    $('title-record').textContent = `최고 도달: STAGE ${save.maxStage} · 누적 처치 ${save.kills.toLocaleString()} · 골드 ${save.gold}`;
     $('btn-install').hidden = isStandalone();
     show('title');
 }
@@ -181,7 +171,8 @@ let storyTimer = null;
 function playStory(head, text, onDone, stage = STAGE_COUNT) {
     const art = $('story-art');
     art.src = `asset/story/stage-${String(stage).padStart(2, '0')}.webp`;
-    art.style.objectPosition = `${stage === 6 ? 58 : stage === 7 ? 70 : stage === 10 ? 65 : 75}% center`;
+    // The complete chapter illustration is contained by CSS, without focal-point cropping.
+    art.style.objectPosition = 'center';
     art.alt = STAGES[stage]?.subtitle || '작전 기록';
     $('story-location').textContent = `SECTOR ${String(stage).padStart(2, '0')} / ${STAGES[stage]?.subtitle || '새벽'}`;
     G.paused = true;
@@ -239,7 +230,7 @@ export function showLevelUp() {
 function presentLevelUp() {
     currentChoices = rollChoices(3);
     renderCards();
-    $('levelup-lv').textContent = `LV ${G.level}`;
+    $('levelup-lv').textContent = `선택 ${G.level}`;
     updateReroll();
     openModal('levelup');
     audio.sfx('levelup');
@@ -284,7 +275,7 @@ function renderCards() {
             el.appendChild(h);
         } else if (c.kind === 'weapon' && WEAPONS[c.id] && !c.isNew) {
             const ev = WEAPONS[c.id].evolve;
-            if (c.level === 8) {
+            if (ev && c.level === 8) {
                 const h = document.createElement('div');
                 h.className = 'card-evo';
                 h.textContent = `최대 레벨 + ${PASSIVES[ev.with].name} → 보스 보상에서 진화`;
@@ -365,10 +356,15 @@ export function togglePause() {
     const top = topModalId();
     if (top) {
         if (top === 'tutorial') closeTutorial();
-        else if (['pause', 'settings', 'shop', 'install', 'intel'].includes(top)) closeModal(top);
+        else if (['pause', 'settings', 'shop', 'install', 'intel', 'fusion'].includes(top)) closeModal(top);
         return;
     }
     if (G.mode !== 'play' && G.mode !== 'boss') return;
+    renderPauseBuild();
+    openModal('pause');
+}
+
+function renderPauseBuild() {
     const wrap = $('pause-build');
     wrap.innerHTML = '';
     for (const w of G.weapons) {
@@ -384,7 +380,59 @@ export function togglePause() {
         const name = document.createElement('b'); name.textContent = `${PASSIVES[id].name} Lv${G.passives[id]}`; s.appendChild(name);
         wrap.appendChild(s);
     }
-    openModal('pause');
+}
+
+// Explicit item fusion: displaying a recipe never consumes its ingredients.
+function fusionStatText(stats) {
+    const area=stats?.area || 1;
+    const shown={...stats,radius:stats?.radius*area,length:stats?.length*Math.sqrt(area),width:stats?.width*area};
+    const parts=[];
+    for (const [key,label] of [['dmg','피해'],['amount','발수'],['pierce','관통'],['radius','범위'],['length','사거리'],['orbitDamage','꽃잎 피해'],['orbitAmount','꽃잎 수'],['orbitRadius','꽃잎 범위']]) {
+        if (Number.isFinite(shown[key])) parts.push(`${label} ${Math.round(shown[key]*10)/10}`);
+    }
+    if (Number.isFinite(stats?.cd)) parts.push(`주기 ${Math.round(stats.cd*100)/100}초`);
+    if (Number.isFinite(stats?.duration)) parts.push(`지속 ${Math.round(stats.duration*100)/100}초`);
+    if (Number.isFinite(stats?.slow)) parts.push(`감속 ${Math.round(stats.slow*100)}%`);
+    return parts.join(' · ');
+}
+export function showFusion() {
+    if (!['play','boss'].includes(G.mode) || G.player?.dead) return;
+    $('fusion-status').textContent='';
+    renderFusion();
+    openModal('fusion');
+}
+function renderFusion() {
+    const wrap=$('fusion-recipes');wrap.replaceChildren();
+    for (const recipe of FUSION_RECIPES) {
+        const preview=previewFusion(recipe.id);
+        const card=document.createElement('article');card.className='fusion-recipe';
+        const ingredients=document.createElement('div');ingredients.className='fusion-ingredients';
+        for(const item of preview.ingredients){
+            const cell=document.createElement('div');const art=document.createElement('div');art.className='fusion-art';mountItemArt(art,item.id);
+            const name=document.createElement('strong');name.textContent=item.name;
+            const level=document.createElement('small');level.textContent=`현재 Lv.${item.level} / 필요 Lv.${item.requiredLevel}`;
+            cell.append(art,name,level);ingredients.appendChild(cell);
+        }
+        const output=document.createElement('div');output.className='fusion-output';
+        const art=document.createElement('div');art.className='fusion-art';mountItemArt(art,preview.output.id);
+        const copy=document.createElement('div');const name=document.createElement('h3');name.textContent=`${preview.output.name} · Lv.1`;
+        const desc=document.createElement('p');desc.textContent=preview.output.desc;
+        const stats=document.createElement('small');stats.textContent=fusionStatText(preview.output.stats);
+        copy.append(name,desc,stats);output.append(art,copy);
+        const button=document.createElement('button');button.type='button';button.className='btn btn-blood';button.disabled=!preview.ok;
+        button.textContent=preview.ok?'재료 2개를 소모하고 조합':'재료 아이템과 레벨을 모으세요';
+        button.addEventListener('click',()=>{
+            if(topModalId()!=='fusion'||button.disabled)return;
+            button.disabled=true;
+            const result=fuseItems(recipe.id,preview.signature);
+            if(!result.ok){$('fusion-status').textContent='장비 상태가 바뀌었습니다. 현재 재료와 레벨을 확인하세요.';renderFusion();return;}
+            $('fusion-status').textContent=`${preview.output.name} Lv.1 조합 완료. 재료 2개가 새 아이템으로 바뀌었습니다.`;
+            if(modalStack.includes('levelup')){currentChoices=rollChoices(3);renderCards();}
+            if(modalStack.includes('pause'))renderPauseBuild();
+            renderFusion();
+        });
+        card.append(ingredients,output,button);wrap.appendChild(card);
+    }
 }
 
 // ─────────────────────────── 설정 ───────────────────────────
@@ -427,8 +475,7 @@ function renderShop() {
     retryPendingCoins();
     const pending = pendingCoinTotal();
     $('shop-status').textContent = pending ? `저장 대기 ${pending} 코인 · 새로고침 전에 다시 시도하세요.` : '청토끼 처치 후 코인을 회수하세요. 구매한 장비는 다음 작전부터 적용됩니다.';
-    const growth = characterProgress(save.characterXP);
-    $('shop-character').textContent = `캐릭터 Lv.${growth.level} · 최고 클리어 STAGE ${highestClearedStage(save)} · 꽃잎포 피해 ${petalStats(growth.level).damage} / 범위 ${petalStats(growth.level).radius} · 경험치는 작전 종료 시 저장됩니다.`;
+    $('shop-character').textContent = `최고 클리어 STAGE ${highestClearedStage(save)} · 전투에서는 아이템을 획득·강화하고, 상점에서는 다음 작전을 준비하세요.`;
     $('pet-redemption-note').textContent = PET_REDEMPTION.reason;
     $('shop-gold').textContent = `● ${save.gold}`;
     const list = $('shop-list');
@@ -532,9 +579,7 @@ function fmtTime(t) { const m = Math.floor(t / 60), s = Math.floor(t % 60); retu
 
 function statsHTML(extra = []) {
     const items = [
-        ['런 레벨', G.level],
-        ['캐릭터 레벨', characterProgress(save.characterXP).level],
-        ['캐릭터 경험치', `+${G.settlement?.characterXP || 0}`],
+        ['아이템 선택 단계', G.level],
         ['처치', G.kills.toLocaleString()],
         ['생존', fmtTime(G.time)],
         ['골드', save.gold],
@@ -565,11 +610,8 @@ function settleStage(outcome) {
     if (G.settlement) return G.settlement.earned;
     const stageKills = G.kills - (G.stageKillsStart || 0);
     const earned = Math.round((outcome === 'clear' ? stageKills * 0.2 + 40 * G.stage : stageKills * 0.1) * G.player.stats.greed);
-    const characterXP = Math.min(10000,stageKills + (outcome === 'clear' ? 50*G.stage : 0));
-    const eventId = `${rewardSession}:character:${++rewardSequence}`;
-    G.settlement = { outcome, earned, characterXP, eventId };
-    retryPendingCharacterXP();
-    if (!queueCharacterXP(characterXP,eventId)) notifyPending(); else announceCharacterGrowth();
+    const eventId = `${rewardSession}:settlement:${++rewardSequence}`;
+    G.settlement = { outcome, earned, eventId };
     if (outcome === 'clear') G.gold += earned;
     creditReward(earned);
     save.kills += stageKills;
@@ -633,6 +675,8 @@ function showInstall() {
 export function initUI() {
     const click = (id, fn) => $(id).addEventListener('click', () => { audio.unlock(); audio.sfx('click'); fn(); });
     initTutorial({ onOpen: () => openModal('tutorial'), onClose: () => closeModal('tutorial') });
+    for (const id of ['btn-fusion','btn-pause-fusion','btn-levelup-fusion']) click(id,showFusion);
+    click('btn-fusion-close',()=>closeModal('fusion'));
     click('btn-tutorial', () => openTutorial());
     click('btn-pause-tutorial', () => openTutorial());
 
@@ -661,7 +705,6 @@ export function initUI() {
     click('btn-install', showInstall);
     click('btn-install-close', () => closeModal('install'));
     click('btn-pause', togglePause);
-    click('btn-petal', firePetalCannon);
     click('btn-resume', () => closeModal('pause'));
     click('btn-quit', () => { closeModal('pause'); audio.pauseBGM(); showTitle(); audio.playBGM(); });
     click('btn-reroll', () => {

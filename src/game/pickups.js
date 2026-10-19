@@ -8,6 +8,8 @@ import { flash, shake, floatText } from './effects.js';
 import { earnCoins } from '../core/save.js';
 import { hitEnemy } from './enemies.js';
 
+export const PICKUP_ASSIST = Object.freeze({ gemMultiplier: 1.2, coinMultiplier: 1.5 });
+
 function tierOf(v) { return v < 4 ? 0 : v < 20 ? 1 : 2; }
 
 export function dropGem(x, y, value) {
@@ -50,6 +52,7 @@ export function dropCoin(x, y, value = 1) {
 export function magnetAll() {
     const pool = G.gems;
     for (let i = 0; i < pool.count; i++) pool.items[i].pull = true;
+    for (let i = 0; i < G.pickups.count; i++) if (G.pickups.items[i].kind === 'coin') G.pickups.items[i].pull = true;
 }
 
 function detonate() {
@@ -95,7 +98,7 @@ function collect(item) {
 export function updatePickups(dt) {
     const p = G.player;
     const mr = p.stats.magnet;
-    const mr2 = mr * mr;
+    const mr2 = (mr * PICKUP_ASSIST.gemMultiplier) ** 2;
     const pool = G.gems;
     const py = p.y - 14;
     for (let i = pool.count - 1; i >= 0; i--) {
@@ -106,8 +109,9 @@ export function updatePickups(dt) {
         if (g.pull) {
             const d = Math.sqrt(d2) || 1;
             g.speed = Math.min(900, g.speed + 1400 * dt);
-            g.x += (dx / d) * g.speed * dt;
-            g.y += (dy / d) * g.speed * dt;
+            const step = Math.min(d, g.speed * dt);
+            g.x += (dx / d) * step;
+            g.y += (dy / d) * step;
             if (d < 14) {
                 addXP(g.value);
                 audio.sfx('gem');
@@ -121,7 +125,7 @@ export function updatePickups(dt) {
         it.t += dt;
         const dx = p.x - it.x, dy = py - it.y;
         const d = Math.hypot(dx, dy) || 1;
-        if (!it.pull && d < (it.kind === 'coin' ? mr : Math.max(40, mr * 0.6))) it.pull = true;
+        if (!it.pull && d < (it.kind === 'coin' ? mr * PICKUP_ASSIST.coinMultiplier : Math.max(40, mr * 0.6))) it.pull = true;
         // 보스 관은 잠시 후 플레이어에게 끌려옴 (놓치지 않게)
         if (!it.pull && it.boss && it.t > 1.6) it.pull = true;
         if (it.pull) {

@@ -1,3 +1,7 @@
+# Archived design: charged cannon and character level
+
+Superseded by item-only growth and two-weapon fusion. See `item-fusion.md`. The old charge/character-XP modules remain for save compatibility and historical tests only; no active game hooks award character XP or enable the manual ability. Existing saved XP is retained inert with no conversion or compensation.
+
 # Petal cannon and permanent character growth
 
 ## Rules shown to players

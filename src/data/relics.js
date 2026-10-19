@@ -1,9 +1,9 @@
 // Earned in-game coins only. No money, trading, cash-out, or transferable value.
-export const RELIC_CHEST = Object.freeze({ cost: 100, unlockStage: 4, pityAt: 10, rates: Object.freeze([0.60, 0.30, 0.10]) });
+export const RELIC_CHEST = Object.freeze({ cost: 80, unlockStage: 4, pityAt: 10, rates: Object.freeze([0.60, 0.30, 0.10]) });
 export const RELICS = Object.freeze([
-    { id: 'wind_feather', unlockStage: 0, tier: 'common', name: '산들바람 깃털', icon: '🪶', rate: 0.60, price: 120, duplicateCoins: 20, speed: 0.06, might: 0, hp: 0, desc: '이동 속도 +6%' },
-    { id: 'moon_wings', unlockStage: 2, tier: 'rare', name: '달빛 날개', icon: '🌙', rate: 0.30, price: 400, duplicateCoins: 45, speed: 0.12, might: 0.08, hp: 0, desc: '이동 속도 +12% · 피해 +8%' },
-    { id: 'star_wings', unlockStage: 4, tier: 'epic', name: '영냥이 별빛 날개', icon: '✨', rate: 0.10, price: 1000, duplicateCoins: 90, speed: 0.18, might: 0.15, hp: 20, desc: '이동 속도 +18% · 피해 +15% · 최대 HP +20' },
+    { id: 'wind_feather', unlockStage: 0, tier: 'common', name: '산들바람 깃털', icon: '🪶', rate: 0.60, price: 60, duplicateCoins: 16, speed: 0.06, might: 0, hp: 0, desc: '이동 속도 +6%' },
+    { id: 'moon_wings', unlockStage: 2, tier: 'rare', name: '달빛 날개', icon: '🌙', rate: 0.30, price: 260, duplicateCoins: 36, speed: 0.12, might: 0.08, hp: 0, desc: '이동 속도 +12% · 피해 +8%' },
+    { id: 'star_wings', unlockStage: 4, tier: 'epic', name: '영냥이 별빛 날개', icon: '✨', rate: 0.10, price: 650, duplicateCoins: 72, speed: 0.18, might: 0.15, hp: 20, desc: '이동 속도 +18% · 피해 +15% · 최대 HP +20' },
 ]);
 export const MAX_MOVE_SPEED = 243; // Base 135 × 1.8, including every passive/permanent source.
 export function strongestRelic(state) { return [...RELICS].reverse().find(r => state.relics?.includes(r.id)) || null; }

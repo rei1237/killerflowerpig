@@ -132,7 +132,7 @@ const { drawHUD } = await import('../src/ui/hud.js');
 const { WEAPONS, PASSIVES } = await import('../src/data/weapons.js');
 const { dropPickup, updatePickups } = await import('../src/game/pickups.js');
 const { initInput, input } = await import('../src/core/input.js');
-const { initUI, showTitle, showChest, showLevelUp, showGameOver, showStageClear, togglePause, openModal, closeModal, topModalId, isAnyModalOpen } = await import('../src/ui/screens.js');
+const { initUI, showFusion, showTitle, showChest, showLevelUp, showGameOver, showStageClear, togglePause, openModal, closeModal, topModalId, isAnyModalOpen } = await import('../src/ui/screens.js');
 const { openTutorial, closeTutorial, isTutorialOpen } = await import('../src/ui/tutorial.js');
 const node = id => document.getElementById(id);
 initUI(); initInput(node('game')); input.onPause = togglePause;
@@ -267,7 +267,7 @@ test('repeated result notifications settle stage rewards only once', async()=>{
 test('coin chest shows current odds and locks repeat opening until result acknowledgement',async()=>{
  const {save,earnCoins}=await import('../src/core/save.js');
  showTitle();save.maxClearedStage=4;earnCoins(3000,'premium-cache-test');node('btn-shop').click();
- assert.match(node('cache-rates').textContent,/60%/);assert.match(node('cache-rates').textContent,/20 코인/);
+ assert.match(node('cache-rates').textContent,/60%/);assert.match(node('cache-rates').textContent,/16 코인/);
  const before=save.chestCount;node('btn-coin-cache').click();
  assert.equal(save.chestCount,before+1);assert.equal(node('btn-coin-cache').disabled,true);
  node('btn-coin-cache').onclick();assert.equal(save.chestCount,before+1);
@@ -276,12 +276,10 @@ test('coin chest shows current odds and locks repeat opening until result acknow
  closeModal('shop');
 });
 
-test('Space special input ignores held repeats and editable controls',()=>{
+test('manual charge shortcut is retired; Space does not fire an attack',()=>{
  freshRun();let fires=0;input.onSpecial=()=>fires++;input.enabled=true;
- window.dispatch('keydown',{code:'Space',repeat:true,target:node('game')});assert.equal(fires,0);
- window.dispatch('keydown',{code:'Space',repeat:false,target:node('game')});assert.equal(fires,1);
- window.dispatch('keydown',{code:'Space',repeat:false,target:{tagName:'INPUT'}});assert.equal(fires,1);
- input.enabled=false;window.dispatch('keydown',{code:'Space',target:node('game')});assert.equal(fires,1);
+ window.dispatch('keydown',{code:'Space',repeat:false,target:node('game')});assert.equal(fires,0);
+ delete input.onSpecial;
 });
 
 test('smaller flowerpig reduces real contact and projectile hit boundaries',async()=>{
@@ -295,4 +293,35 @@ test('smaller flowerpig reduces real contact and projectile hit boundaries',asyn
  fireEnemyShot(18,-16,0,0,0,8);updateEnemyShots(0);assert.equal(p.hp,hp,'outside torso radius plus projectile radius misses');
  fireEnemyShot(16,-16,0,0,0,8);updateEnemyShots(0);assert.ok(p.hp<hp,'inside torso boundary hits');
  assert.equal(p.stats.speed,speed);assert.equal(p.x,0);assert.equal(p.y,0);
+});
+
+test('fusion preview pauses safely and consumes two inputs only after explicit confirmation',()=>{
+ freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>w.level=5);
+ const before=JSON.stringify(G.weapons);togglePause();showFusion();
+ assert.equal(topModalId(),'fusion');assert.equal(G.paused,true);assert.equal(JSON.stringify(G.weapons),before);
+ assert.equal(node('fusion-recipes').children.length,3);
+ const button=node('fusion-recipes').children[0].querySelector('button');assert.equal(button.disabled,false);
+ button.click();assert.deepEqual(G.weapons.map(w=>w.id),['lotus_bloom']);assert.equal(G.weapons[0].level,1);
+ button.click();assert.equal(G.weapons.length,1);assert.match(node('fusion-status').textContent,/조합 완료/);
+ togglePause();assert.equal(topModalId(),'pause');assert.equal(G.paused,true);
+ togglePause();assert.equal(G.paused,false);
+});
+test('fusion rejects stale preview and closing locked recipes never consumes items',()=>{
+ freshRun();G.weapons=[createWeapon('shotgun',0),createWeapon('rifle',1)];G.weapons.forEach(w=>w.level=5);showFusion();
+ const button=node('fusion-recipes').children[1].querySelector('button');G.weapons[0].level=4;button.click();
+ assert.deepEqual(G.weapons.map(w=>w.id),['shotgun','rifle']);assert.match(node('fusion-status').textContent,/바뀌었습니다/);
+ const before=JSON.stringify(G.weapons);closeModal('fusion');assert.equal(JSON.stringify(G.weapons),before);assert.equal(G.paused,false);
+});
+test('active gameplay no longer exposes global charge or character XP advancement',()=>{
+ assert.doesNotMatch(html,/id="btn-petal"|id="hud-character-level"|SPACE · 수동/);
+ const screens=fs.readFileSync(new URL('../src/ui/screens.js',import.meta.url),'utf8');
+ assert.doesNotMatch(screens,/queueCharacterXP|characterProgress|firePetalCannon/);
+});
+
+test('fused weapon level seven to eight selection renders without a legacy evolution recipe',async()=>{
+ freshRun();const {WEAPONS,PASSIVES}=await import('../src/data/weapons.js');
+ G.weapons=[createWeapon('lotus_bloom',0)];G.weapons[0].level=7;
+ G.banished=new Set([...Object.keys(WEAPONS),...Object.keys(PASSIVES)].filter(id=>id!=='lotus_bloom'));
+ showLevelUp();assert.equal(topModalId(),'levelup');assert.equal(node('cards').children.length,1);
+ node('cards').children[0].click();assert.equal(G.weapons[0].level,8);assert.equal(topModalId(),null);
 });

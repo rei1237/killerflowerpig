@@ -35,7 +35,7 @@ test('HUD reads player HP, XP, stage, counters without changing game state',()=>
  tick();
  assert.equal(nodes.get('hud-hp').style.width,'45%');
  assert.equal(nodes.get('hud-xp').style.width,'40%');
- assert.equal(nodes.get('hud-level').textContent,'런 Lv.3');
+ assert.equal(nodes.get('hud-level').textContent,'선택 3');
  assert.equal(nodes.get('hud-time').textContent,'1:05');
  assert.equal(nodes.get('hud-hp-track').attributes['aria-valuenow'],45);
  assert.equal(nodes.get('hud-build').children.length,1);

@@ -1,4 +1,3 @@
-import { drawPetalCannon } from './petal-cannon.js';
 import { drawPets } from './pets.js';
 // 월드 렌더링. 캔버스 1장, 레이어 순서로 그리며 화면 밖 객체는 컬링.
 import { G, VIEW_H } from './state.js';
@@ -143,7 +142,6 @@ export function render(dt) {
     }
 
     drawPets(ctx, images.petYeongnyang);
-    drawPetalCannon(ctx);
 
     // 7. 투사체
     drawEnemyShots(ctx, fx);

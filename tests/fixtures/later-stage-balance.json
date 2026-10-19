@@ -1,0 +1,461 @@
+{
+  "stages": {
+    "3": {
+      "duration": 170,
+      "weights": [
+        [
+          0,
+          {
+            "shambler": 2,
+            "runner": 2,
+            "bloater": 1
+          }
+        ],
+        [
+          60,
+          {
+            "runner": 2,
+            "bloater": 1,
+            "brute": 1
+          }
+        ],
+        [
+          90,
+          {
+            "runner": 2,
+            "spitter": 2,
+            "bloater": 1,
+            "brute": 1
+          }
+        ]
+      ],
+      "density": [
+        26,
+        100
+      ]
+    },
+    "4": {
+      "duration": 180,
+      "weights": [
+        [
+          0,
+          {
+            "brute": 2,
+            "runner": 3,
+            "spitter": 1
+          }
+        ],
+        [
+          70,
+          {
+            "brute": 2,
+            "runner": 3,
+            "spitter": 2,
+            "bloater": 1
+          }
+        ]
+      ],
+      "density": [
+        32,
+        125
+      ]
+    },
+    "5": {
+      "duration": 180,
+      "weights": [
+        [
+          0,
+          {
+            "brute": 3,
+            "runner": 2,
+            "bloater": 1
+          }
+        ],
+        [
+          60,
+          {
+            "brute": 3,
+            "runner": 3,
+            "spitter": 2,
+            "bloater": 1,
+            "splitter": 1
+          }
+        ]
+      ],
+      "density": [
+        38,
+        150
+      ]
+    },
+    "6": {
+      "duration": 190,
+      "weights": [
+        [
+          0,
+          {
+            "brute": 2,
+            "spitter": 2,
+            "bloater": 2,
+            "splitter": 1
+          }
+        ],
+        [
+          80,
+          {
+            "brute": 2,
+            "spitter": 2,
+            "bloater": 2,
+            "splitter": 2,
+            "hulk": 1
+          }
+        ]
+      ],
+      "density": [
+        45,
+        175
+      ]
+    },
+    "7": {
+      "duration": 190,
+      "weights": [
+        [
+          0,
+          {
+            "splitter": 2,
+            "runner": 3,
+            "brute": 2
+          }
+        ],
+        [
+          70,
+          {
+            "splitter": 2,
+            "runner": 3,
+            "brute": 2,
+            "hulk": 1,
+            "spitter": 2
+          }
+        ]
+      ],
+      "density": [
+        52,
+        200
+      ]
+    },
+    "8": {
+      "duration": 200,
+      "weights": [
+        [
+          0,
+          {
+            "splitter": 3,
+            "hulk": 1,
+            "runner": 3,
+            "bloater": 2
+          }
+        ],
+        [
+          80,
+          {
+            "splitter": 3,
+            "hulk": 2,
+            "runner": 3,
+            "bloater": 2,
+            "spitter": 2
+          }
+        ]
+      ],
+      "density": [
+        60,
+        225
+      ]
+    },
+    "9": {
+      "duration": 200,
+      "weights": [
+        [
+          0,
+          {
+            "hulk": 2,
+            "splitter": 3,
+            "runner": 3,
+            "spitter": 2
+          }
+        ],
+        [
+          80,
+          {
+            "hulk": 3,
+            "splitter": 3,
+            "runner": 3,
+            "spitter": 2,
+            "bloater": 2
+          }
+        ]
+      ],
+      "density": [
+        68,
+        250
+      ]
+    },
+    "10": {
+      "duration": 210,
+      "weights": [
+        [
+          0,
+          {
+            "hulk": 3,
+            "splitter": 3,
+            "runner": 4,
+            "spitter": 2,
+            "bloater": 2
+          }
+        ]
+      ],
+      "density": [
+        76,
+        280
+      ]
+    }
+  },
+  "bosses": {
+    "2": {
+      "hp": 1600,
+      "speed": 66,
+      "dmg": 16,
+      "phases": [
+        [
+          "aimed",
+          "charge"
+        ],
+        [
+          "aimed",
+          "charge",
+          "ring"
+        ],
+        [
+          "aimed",
+          "ring",
+          "charge",
+          "summon"
+        ]
+      ]
+    },
+    "3": {
+      "hp": 3400,
+      "speed": 72,
+      "dmg": 18,
+      "phases": [
+        [
+          "charge",
+          "aimed"
+        ],
+        [
+          "charge",
+          "aimed",
+          "summon"
+        ],
+        [
+          "blink",
+          "charge",
+          "ring"
+        ]
+      ]
+    },
+    "4": {
+      "hp": 5600,
+      "speed": 60,
+      "dmg": 20,
+      "phases": [
+        [
+          "snipe",
+          "summon"
+        ],
+        [
+          "snipe",
+          "aimed",
+          "summon"
+        ],
+        [
+          "snipe",
+          "ring",
+          "aimed",
+          "pools"
+        ]
+      ]
+    },
+    "5": {
+      "hp": 8500,
+      "speed": 48,
+      "dmg": 26,
+      "phases": [
+        [
+          "ring",
+          "slam"
+        ],
+        [
+          "ring",
+          "slam",
+          "spiral"
+        ],
+        [
+          "spiral",
+          "slam",
+          "charge",
+          "ring"
+        ]
+      ]
+    },
+    "6": {
+      "hp": 12000,
+      "speed": 52,
+      "dmg": 26,
+      "phases": [
+        [
+          "pools",
+          "ring"
+        ],
+        [
+          "pools",
+          "ring",
+          "summon"
+        ],
+        [
+          "pools",
+          "spiral",
+          "summon",
+          "slam"
+        ]
+      ]
+    },
+    "7": {
+      "hp": 16000,
+      "speed": 78,
+      "dmg": 28,
+      "phases": [
+        [
+          "blink",
+          "aimed"
+        ],
+        [
+          "blink",
+          "aimed",
+          "charge"
+        ],
+        [
+          "blink",
+          "charge",
+          "spiral",
+          "aimed"
+        ]
+      ]
+    },
+    "8": {
+      "hp": 21000,
+      "speed": 58,
+      "dmg": 30,
+      "phases": [
+        [
+          "spiral",
+          "pools"
+        ],
+        [
+          "spiral",
+          "pools",
+          "blink"
+        ],
+        [
+          "spiral",
+          "blink",
+          "ring",
+          "summon"
+        ]
+      ]
+    },
+    "9": {
+      "hp": 28000,
+      "speed": 60,
+      "dmg": 34,
+      "phases": [
+        [
+          "spiral",
+          "ring",
+          "charge"
+        ],
+        [
+          "spiral",
+          "ring",
+          "charge",
+          "summon",
+          "slam"
+        ],
+        [
+          "spiral",
+          "slam",
+          "charge",
+          "pools",
+          "ring"
+        ]
+      ]
+    },
+    "10": {
+      "hp": 42000,
+      "speed": 64,
+      "dmg": 38,
+      "phases": [
+        [
+          "spiral",
+          "ring",
+          "charge",
+          "summon"
+        ],
+        [
+          "spiral",
+          "snipe",
+          "pools",
+          "charge",
+          "slam"
+        ],
+        [
+          "spiral",
+          "ring",
+          "blink",
+          "snipe",
+          "pools",
+          "slam",
+          "summon"
+        ]
+      ]
+    }
+  },
+  "events": [
+    {
+      "t": 45,
+      "type": "ring"
+    },
+    {
+      "t": 60,
+      "type": "elite"
+    },
+    {
+      "t": 95,
+      "type": "swarm"
+    },
+    {
+      "t": 120,
+      "type": "elite"
+    },
+    {
+      "t": 140,
+      "type": "ring"
+    },
+    {
+      "t": 175,
+      "type": "swarm"
+    },
+    {
+      "t": 185,
+      "type": "elite"
+    }
+  ]
+}

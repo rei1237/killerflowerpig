@@ -3,6 +3,7 @@
 //   → 매 프레임 ctx.filter / shadowBlur / scale(-1,1) 없이 drawImage 한 번으로 그린다.
 // - 글로우·핏자국·젬 등 절차적 스프라이트도 오프스크린 캔버스로 미리 그려 둔다.
 import { SPRITES } from '../data/sprites.js';
+import { BOSS_ART } from '../game/boss-appearance.js';
 
 export const images = {};
 export const atlases = {};
@@ -413,6 +414,9 @@ export async function loadAssets(onProgress) {
 
     for (const [key, file] of [['cacheArt','salvage-cache'],['medArt','medical-kit'],['magnetArt','field-magnet']])
         add(key, `asset/items/${file}.png`, img => { images[key] = img; });
+    for (let stage = 1; stage <= 10; stage++) {
+        add(`bossArt${stage}`, BOSS_ART[stage].src, img => { images[`bossArt${stage}`] = img; });
+    }
     add('petYeongnyang', 'asset/items/pet-yeongnyang.png', img => { images.petYeongnyang = img; });
     add('playerFire', 'asset/sprites/player-fire.png', (img) => {
         if (!img) return;

@@ -6,7 +6,7 @@ import { createWeapon } from './weapons.js';
 import { audio } from '../core/audio.js';
 
 export function xpForLevel(lv) {
-    return Math.round(5 + (lv - 1) * 5 + Math.max(0, lv - 20) * 7 + Math.max(0, lv - 40) * 12);
+    return Math.round(4 + (lv - 1) * 4 + Math.max(0, lv - 20) * 7 + Math.max(0, lv - 40) * 12);
 }
 
 export function addXP(v) {
@@ -34,7 +34,7 @@ function candidates() {
     }
     if (G.weapons.length < MAX_WEAPONS) {
         for (const id in WEAPONS) {
-            if (weaponOf(id) || G.banished.has(id)) continue;
+            if (weaponOf(id) || G.banished.has(id) || WEAPONS[id].fusionOnly) continue;
             const def = WEAPONS[id];
             out.push({ kind: 'weapon', id, level: 1, weight: 2, name: def.name, icon: def.icon, desc: def.desc, isNew: true });
         }
@@ -57,7 +57,7 @@ function candidates() {
     for (const c of out) {
         if (c.kind !== 'passive') continue;
         for (const w of G.weapons) {
-            if (!w.evolved && WEAPONS[w.id].evolve.with === c.id) { c.weight += 2; c.evoHint = WEAPONS[w.id].evolve.name; }
+            if (!w.evolved && WEAPONS[w.id].evolve?.with === c.id) { c.weight += 2; c.evoHint = WEAPONS[w.id].evolve.name; }
         }
     }
     return out;
@@ -92,8 +92,9 @@ export function rollChoices(n = 3) {
 export function applyChoice(c) {
     if (c.kind === 'weapon') {
         const w = weaponOf(c.id);
-        if (w) w.level++;
-        else G.weapons.push(createWeapon(c.id, G.weapons.length));
+        if (!WEAPONS[c.id]) return false;
+        if (w) { if (w.level >= WEAPON_MAX_LEVEL || c.level !== w.level + 1) return false; w.level++; }
+        else { if (G.weapons.length >= MAX_WEAPONS || WEAPONS[c.id].fusionOnly || c.level !== 1) return false; G.weapons.push(createWeapon(c.id, G.weapons.length)); }
     } else if (c.kind === 'passive') {
         G.passives[c.id] = (G.passives[c.id] || 0) + 1;
         recomputeStats();
@@ -106,7 +107,7 @@ export function applyChoice(c) {
 }
 
 export function evolvable() {
-    return G.weapons.filter(w => !w.evolved && w.level >= WEAPON_MAX_LEVEL && G.passives[WEAPONS[w.id].evolve.with]);
+    return G.weapons.filter(w => !w.evolved && w.level >= WEAPON_MAX_LEVEL && WEAPONS[w.id].evolve && G.passives[WEAPONS[w.id].evolve.with]);
 }
 
 // 상자 보상: 진화 우선 → 보유 아이템 레벨업 → 골드
@@ -136,6 +137,7 @@ export function rollChest(count) {
 }
 
 export function resetBuild() {
+    G.fusionRevision = (G.fusionRevision || 0) + 1;
     G.weapons = [];
     G.passives = {};
     G.level = 1;
@@ -159,11 +161,12 @@ export function snapshotBuild() {
 }
 
 export function restoreBuild(s) {
+    G.fusionRevision = (G.fusionRevision || 0) + 1;
     G.stage = s.stage;
     G.level = s.level;
     G.xp = s.xp;
     G.xpNext = xpForLevel(s.level);
-    G.weapons = s.weapons.map((w, i) => Object.assign(createWeapon(w.id, i), { level: w.level, evolved: w.evolved }));
+    G.weapons = s.weapons.filter(w => WEAPONS[w.id]).slice(0, MAX_WEAPONS).map((w, i) => Object.assign(createWeapon(w.id, i), { level: Math.max(1, Math.min(WEAPON_MAX_LEVEL, Number.isSafeInteger(w.level) ? w.level : 1)), evolved: !!w.evolved && !!WEAPONS[w.id].evolve }));
     G.passives = { ...s.passives };
     G.gold = s.gold;
     G.rerolls = s.rerolls;

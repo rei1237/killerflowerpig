@@ -1,4 +1,3 @@
-import { resetPetalCannon } from './petal-cannon.js';
 import { resetPets, updatePets } from './pets.js';
 // 게임 흐름 제어: 런 시작/스테이지 시작/스텝 업데이트/보스·클리어·사망 전환
 import { G, clearWorld, configureCaps, emit } from './state.js';
@@ -72,7 +71,6 @@ export function startStage(stage, restored = false) {
     p.x = 0; p.y = 0; p.dead = false; p.iframes = 1.5;
     recomputeStats(true);
     resetPets();
-    resetPetalCannon();
     G.camera.x = 0; G.camera.y = -20;
     G.time = 0;
     G.mode = 'play';

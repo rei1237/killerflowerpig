@@ -1,9 +1,9 @@
-import { drawBossSignature } from './boss-appearance.js';
+import { drawBossArtwork } from './boss-appearance.js';
 // 보스: 3페이즈, 예고(텔레그래프) 기반 패턴, 페이즈 전환 연출, 처치 시 관 상자
 import { G, rand, emit, pickWeighted } from './state.js';
 import { BOSSES, PHASE_THRESHOLDS } from '../data/bosses.js';
 import { STAGES } from '../data/stages.js';
-import { atlases } from '../core/assets.js';
+import { atlases, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { fireEnemyShot, spawnEnemy, edgePosition } from './enemies.js';
 import { spawnHazard } from './hazards.js';
@@ -33,7 +33,7 @@ export class Boss {
         this.anim = 0; this.animT = 0;
         this.flash = 0;
         this.flip = false;
-        this.attackT = 2.2;
+        this.attackT = def.pacing?.opening ?? 2.2;
         this.task = null;      // 진행 중인 패턴
         this.lastPattern = null;
         this.invuln = 0;
@@ -66,7 +66,7 @@ export class Boss {
         this.phase = n;
         this.invuln = 1.0;
         this.task = null;
-        this.attackT = 1.4;
+        this.attackT = this.def.pacing?.phaseRest ?? 1.4;
         this.state = 'attack'; this.anim = 0;
         audio.sfx('boss');
         shake(12);
@@ -162,7 +162,7 @@ export class Boss {
 
     endTask(rest = 1.6) {
         this.task = null;
-        this.attackT = rest / this.phaseMul * rand(0.85, 1.15);
+        this.attackT = rest / this.phaseMul * rand(0.85, 1.15) * (this.def.pacing?.recovery ?? 1);
     }
 
     bodyY() { return this.y - this.radius; }
@@ -179,14 +179,15 @@ export class Boss {
         const p = G.player;
         const a = Math.atan2(p.y - this.y, p.x - this.x);
         const len = 420;
-        spawnHazard('tline', this.x, this.y, { angle: a, len, width: this.radius * 2, delay: 0.75 / Math.sqrt(this.phaseMul) });
+        const warning = (this.def.pacing?.chargeWarning ?? 0.75) / Math.sqrt(this.phaseMul);
+        spawnHazard('tline', this.x, this.y, { angle: a, len, width: this.radius * 2, delay: warning });
         audio.sfx('warn');
         return {
             phase: 0, a, len, dash: 0,
             step: (dt, s) => {
-                if (s.phase === 0 && s.t > 0.75 / Math.sqrt(this.phaseMul)) { s.phase = 1; s.dash = 0; shake(4); }
+                if (s.phase === 0 && s.t > warning) { s.phase = 1; s.dash = 0; shake(4); }
                 if (s.phase === 1) {
-                    const sp = 620;
+                    const sp = this.def.pacing?.chargeSpeed ?? 620;
                     this.x += Math.cos(s.a) * sp * dt;
                     this.y += Math.sin(s.a) * sp * dt;
                     this.flip = Math.cos(s.a) < 0;
@@ -253,6 +254,7 @@ export class Boss {
     }
 
     patternSummon(count) {
+        count = Math.ceil(count * (this.def.pacing?.summons ?? 1));
         const st = STAGES[G.stage];
         const table = st.weights[st.weights.length - 1][1];
         for (let i = 0; i < count; i++) {
@@ -367,9 +369,10 @@ export class Boss {
         if (this.alpha < 1) ctx.globalAlpha = this.alpha;
         if (!this.alive && this.deadT > 2.5) ctx.globalAlpha = Math.max(0, 1 - (this.deadT - 2.5));
         if (this.invuln > 0 && this.alive) ctx.globalAlpha = 0.6 + Math.sin(G.clock * 40) * 0.3;
-        drawBossSignature(ctx, this, G.clock);
-        this.atlas.draw(ctx, anim, this.anim, this.x, this.y, this.scale, this.flip, tint);
-        drawBossSignature(ctx, this, G.clock, true);
+        if (!drawBossArtwork(ctx, this, G.clock, images[`bossArt${this.stage}`])) {
+            // Keep the encounter playable if a portrait fails to load.
+            this.atlas.draw(ctx, anim, this.anim, this.x, this.y, this.scale, this.flip, tint);
+        }
         ctx.globalAlpha = 1;
     }
 }
