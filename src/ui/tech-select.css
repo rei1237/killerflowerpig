@@ -1,0 +1,66 @@
+/* 시작 테크 선택 (Blue Night 톤) */
+.tech-box{width:min(980px,100%)}
+.tech-caption{max-width:68ch;line-height:1.7;margin-bottom:16px}
+.tech-caption b{color:#e8d6a8;font-weight:700}
+.tech-list{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.tech-option{--tech:#9fd3ff;position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;min-height:150px;padding:14px 12px 12px;border-radius:8px;border:1px solid #4a5e6666;background:linear-gradient(160deg,#1b2932,#121c23);color:var(--text,#e9e7df);font:inherit;cursor:pointer;transition:border-color .15s,transform .15s,background .15s;touch-action:manipulation}
+.tech-option:hover{border-color:color-mix(in srgb,var(--tech) 60%,transparent);transform:translateY(-2px)}
+.tech-option[aria-checked="true"]{border-color:var(--tech);background:linear-gradient(160deg,color-mix(in srgb,var(--tech) 18%,#1b2932),#121c23);box-shadow:0 0 0 1px var(--tech) inset,0 10px 28px #0006}
+.tech-option:focus-visible{outline:3px solid var(--tech);outline-offset:3px}
+.tech-arts{display:flex;align-items:flex-end;gap:4px}
+.tech-art{display:grid;place-items:center;width:48px;height:48px;border-radius:7px;background:#0e191f;border:1px solid #59695e55;padding:3px}
+.tech-art.small{width:34px;height:34px}
+.tech-art.tiny{width:26px;height:26px;padding:2px;border-radius:5px}
+.tech-art>img{width:100%;height:100%;object-fit:contain}
+.tech-text{display:flex;flex-direction:column;gap:6px;min-width:0}
+.tech-text strong{font-size:15px;font-weight:750;word-break:keep-all;color:var(--tech)}
+.tech-text small{font-size:12px;line-height:1.55;color:#a6b6c0;word-break:keep-all}
+.tech-key{position:absolute;top:10px;right:10px;color:#73848d;font:11px/1 ui-monospace,monospace}
+.tech-detail{--tech:#9fd3ff;display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px 18px;padding:14px 16px;border-radius:8px;border:1px solid color-mix(in srgb,var(--tech) 35%,transparent);background:#101a21cc}
+.tech-detail-head{grid-column:1/-1}
+.tech-combo{margin:0;font-size:13px;font-weight:700;color:var(--tech)}
+.tech-tiers{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.tech-tiers li{display:grid;grid-template-columns:62px 1fr;gap:8px;align-items:baseline;font-size:13px;line-height:1.5;color:#d5dedb;word-break:keep-all}
+.tech-tiers b{font:700 11px/1.6 ui-monospace,monospace;color:#0e1a20;background:var(--tech);border-radius:4px;text-align:center}
+.tech-sub{margin:0 0 7px;font-size:11px;letter-spacing:.08em;color:#8fa1aa}
+.tech-family-items{display:flex;flex-wrap:wrap;gap:6px}
+.tech-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border-radius:6px;background:#17242c;border:1px solid #4a5e6644;font-size:12px;color:#c9d4d8}
+.tech-route ul{margin:0;padding-left:16px;font-size:12px;line-height:1.7;color:#c4ccc9;word-break:keep-all}
+.tech-box .modal-actions{justify-content:flex-end;position:sticky;bottom:-28px;margin:14px -28px -28px;padding:12px 28px 20px;background:linear-gradient(0deg,var(--panel,#151d25) 70%,transparent)}
+#btn-tech-go{min-width:180px}
+
+[data-tech=gunline]{--tech:#9fd3ff}[data-tech=bloom]{--tech:#ffb3d6}[data-tech=plague]{--tech:#ffb36b}[data-tech=executioner]{--tech:#e6c6ff}[data-tech=butcher]{--tech:#ff8f8f}
+
+/* 레벨업 카드 · HUD · 일시정지 */
+.card-tech{margin-top:10px;font-size:11px;font-weight:700;color:#e8d6a8;letter-spacing:.02em}
+.hud-tech{font:9px ui-monospace,monospace;color:#e8d6a8;margin-left:4px;white-space:nowrap}
+.pause-tech{width:100%;margin:0 0 6px;font-size:12px;line-height:1.6;color:#d5dedb;text-align:left}
+.pause-tech b{color:#e8d6a8}
+
+@media (max-width:900px){
+ .tech-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .tech-detail{grid-template-columns:1fr 1fr}
+ .tech-tiers{grid-column:1/-1}
+}
+@media (max-width:600px){
+ .tech-list{grid-template-columns:1fr;gap:8px}
+ .tech-option{flex-direction:row;align-items:center;min-height:0;padding:10px 12px}
+ .tech-art{width:40px;height:40px}.tech-art.small{width:28px;height:28px}
+ .tech-detail{grid-template-columns:1fr;padding:12px}
+ .tech-box .modal-actions{justify-content:stretch}.tech-box .modal-actions .btn{flex:1}
+}
+@media (max-height:520px) and (orientation:landscape){
+ .tech-box{padding:14px 18px!important}
+ .tech-box .eyebrow,.tech-caption,.tech-family{display:none}
+ .tech-box .modal-title{font-size:18px!important;margin-bottom:8px!important}
+ .tech-box .modal-actions{bottom:-14px;margin:8px -18px -14px;padding:8px 18px 12px}
+ .tech-detail{grid-template-columns:1.2fr 1fr!important}
+ .tech-list{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:10px}
+ .tech-option{min-height:0;padding:8px;gap:6px}
+ .tech-text small{display:none}
+ .tech-art{width:34px;height:34px}.tech-art.small{width:24px;height:24px}
+ .tech-detail{padding:10px 12px;gap:6px 12px}
+ .tech-combo{font-size:12px}
+ .tech-tiers{grid-column:auto}
+ .tech-tiers li{font-size:11px}.tech-route ul,.tech-chip{font-size:11px}
+}

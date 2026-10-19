@@ -1,12 +1,12 @@
 # Boss encounter signatures
 
-Each stage opens with its signature. A secondary move cannot displace it twice in a row. These are movement, spatial and timing differences, rather than reskins of the same random bullet list. Base speed, damage and contact radii retain the previous values. The later requested durability adjustment raises HP only; see `boss-durability.md`.
+Each stage opens with its signature. A secondary move cannot displace it twice in a row. These are movement, spatial and timing differences, rather than reskins of the same random bullet list. Damage and contact radii retain the previous values. The later durability adjustment raised HP; the subsequent Hunter request separately changes only stage 3 movement and its signature, described in `hunter-speed.md`.
 
 | Stage | Signature | Readable response |
 | --- | --- | --- |
 | 1 Alpha | Existing long-windup, single-lane charge with reduced early summons | Step beside the lane, punish the long recovery. Existing beginner warning/speed/recovery multipliers are unchanged. |
 | 2 Elite gunner | Stationary locked corridor, 3–5 spaced machine-gun bursts, then reload | Leave the locked line once; reload always lasts at least 1.8 seconds. |
-| 3 Hunter | Short marked leap followed by a perpendicular retreat | Sidestep the leap, then track the sideways landing recovery. No surprise landing ring. |
+| 3 Hunter | Fast lateral chase, then separately locked .65/.50-second dash tells | Sidestep each line; punish the stationary 1.25-second recovery after the combo or a contact hit. No surprise landing ring. |
 | 4 Predator sniper | Two separately reacquired sights; each tracks for .6 seconds then locks for .55 | Change direction after the sight stops; prepare for the second independent lock. |
 | 5 Tank | Three forward impact circles detonate in sequence; final phase adds an offset return shell | Move to a flank/back rather than running along the artillery corridor. |
 | 6 Abomination | Five acid pockets form a horseshoe around a captured position | Use the broad missing sector. Pools last 2.8 seconds; phase changes rotate the exit, not its width. |
@@ -17,7 +17,7 @@ Each stage opens with its signature. A secondary move cannot displace it twice i
 
 ## Safety, animation and performance
 
-- Stages 2–10 retain at least 1.05 seconds before their first damaging event, independent of phase. Recovery floors are 1.25–1.8 seconds depending on signature. Stage 1 retains its tested beginner values.
+- Stages 2 and 4–10 retain at least 1.05 seconds before their first damaging event, independent of phase. Hunter has fixed .65/.50-second tells and 1.25 seconds of stationary, contact-safe recovery. Other recovery floors remain 1.25–1.8 seconds. Stage 1 retains its tested beginner values.
 - Circle damage uses the existing radius and 0.7 vertical ratio. New instantaneous line damage uses exactly the rendered rectangle, without invisible radius expansion.
 - Projectile sight lines use their actual locked firing angles. The financier has one sight line per outgoing coin ray.
 - Windup begins with the warning. Attack poses are triggered by actual shots, leap movement or hazard release. Simulation pause still freezes both warning and sprite clocks.
@@ -28,4 +28,4 @@ Each stage opens with its signature. A secondary move cannot displace it twice i
 
 ## Verification
 
-`tests/boss-signatures.mjs` covers all ten identifiers, unchanged damage/speed/radii, early timing, each move's actual event sequence and safe area, exact sight locking, coin/hourglass settlement, bounded output, interruption cancellation and pooled marker reset. Existing animation/hazard/beginner tests still exercise the original hooks. Native canvas previews use the real rendering functions, but are not browser gameplay recordings.
+`tests/boss-signatures.mjs` covers all ten identifiers, unchanged damage/radii and non-Hunter speeds, early timing, each move's actual event sequence and safe area, exact sight locking, coin/hourglass settlement, bounded output, interruption cancellation and pooled marker reset. Existing animation/hazard/beginner tests still exercise the original hooks. Native canvas previews use the real rendering functions, but are not browser gameplay recordings.

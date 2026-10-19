@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="src/ui/fusion-reveal.css">
     <link rel="stylesheet" href="src/ui/loadout-exchange.css">
     <link rel="stylesheet" href="src/ui/loading.css">
+    <link rel="stylesheet" href="src/ui/tech-select.css">
 </head>
 <body>
     <div id="app">
@@ -76,6 +77,7 @@
                 <nav class="menu-utility" aria-label="작전 준비 메뉴">
                     <button id="btn-shop" class="btn btn-ghost menu-card menu-card-shop" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 11h24v17H4zM9 11V6h14v5M4 18h24M14 15h4v6h-4z"/></svg></span><strong>장비 보급소</strong><small>보급 · 강화 · 동행 펫</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
                     <button id="btn-practice" class="btn btn-ghost menu-card" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 3v7m0 12v7M3 16h7m12 0h7M9 9a10 10 0 1 1-1 13M12 16h8m-4-4v8"/></svg></span><strong>조작 연습</strong><small>이동 · 집중 조준 · 강화 선택</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
+                    <button id="btn-bestiary" class="btn btn-ghost menu-card menu-card-bestiary" type="button"><span class="menu-icon" aria-hidden="true">♧</span><strong>청토끼 도감</strong><small>특징 · 예고 신호 · 대응법</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
                     <button id="btn-tutorial" class="btn btn-ghost menu-card menu-card-tutorial" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 6h10l2 3 2-3h10v21H18l-2-3-2 3H4zM16 9v15M8 12h4m-4 5h4m8-5h4m-4 5h4"/></svg></span><strong>생존 가이드</strong><small>조작 · 아이템 · 조합</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
                     <button id="btn-intel" class="btn btn-ghost menu-card menu-card-intel" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 3l13 25H3zM16 11v8m0 4v1"/></svg></span><strong>보스 위협 기록</strong><small>구역별 표적과 전투 정보</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
                     <details id="secret" class="secret terminal-card">
@@ -101,7 +103,6 @@
                 <p class="eyebrow">INFECTED ARCHIVE</p><h2 class="modal-title">보스 위협 기록</h2>
                 <p class="panel-caption">구역마다 다른 보스를 상대하세요. 공격 예고를 확인하고 안전한 틈으로 이동하세요.</p>
                 <div id="boss-archive" class="intel-grid"></div>
-                <article class="boss-dossier"><img src="asset/bosses/boss-10.webp" alt="금화와 모래시계를 든 청토끼"><div><p class="eyebrow">FINAL THREAT / SECTOR 10</p><h3>청토끼 · 시간의 채권자</h3><p>금화와 모래시계, 보랏빛 예복. 마지막 구역에서 기다리는 계약의 주인.</p><small>코드 데스티니 청토끼를 바탕으로 한 게임 각색</small></div></article>
                 <p class="panel-caption">처치한 일반 개체는 3코인, 엘리트는 24코인을 떨어뜨립니다. 가까이 가서 회수하세요.</p>
                 <div class="modal-actions"><button id="btn-intel-close" class="btn btn-blood" type="button">기록 닫기</button></div>
             </div>
@@ -122,7 +123,7 @@
 
         <div id="battle-hud" class="battle-hud" hidden>
             <div class="guardian-card"><img src="asset/ui/menu-yeoni.webp" alt="" width="1254" height="1254"><div class="guardian-vitals">
-                <div class="vitals-label"><strong>꽃돼지 <span id="hud-level">Lv.1</span></strong><span id="hud-hp-text"></span></div>
+                <div class="vitals-label"><strong>꽃돼지 <span id="hud-level">Lv.1</span> <span id="hud-tech" class="hud-tech" hidden></span></strong><span id="hud-hp-text"></span></div>
                 <div id="hud-hp-track" class="vital-track" role="progressbar" aria-label="체력" aria-valuemin="0" aria-valuemax="100"><div id="hud-hp"></div></div>
                 <div id="hud-xp-track" class="xp-track" role="progressbar" aria-label="경험치" aria-valuemin="0" aria-valuemax="100"><div id="hud-xp"></div></div>
             </div></div>
@@ -138,6 +139,21 @@
         <div id="banner" class="banner" hidden></div>
 
         <!-- 레벨업 -->
+        <!-- 시작 테크 선택 -->
+        <section id="tech-select" class="modal" hidden aria-labelledby="tech-title">
+            <div class="modal-box tech-box">
+                <p class="eyebrow"><span></span>LOADOUT · 출격 준비</p>
+                <h2 id="tech-title" class="modal-title">시작 테크 선택</h2>
+                <p class="panel-caption tech-caption">시작 무기와 짝 보조 장비가 주어집니다. 같은 계열 장비를 <b>2·4·6개</b> 모으면 <b>공명</b> 보너스가 단계별로 열리고, 다른 계열 무기는 테크 보너스를 받지 못합니다.</p>
+                <div id="tech-list" class="tech-list" role="radiogroup" aria-label="시작 테크"></div>
+                <div id="tech-detail" class="tech-detail" aria-live="polite"></div>
+                <div class="modal-actions">
+                    <button id="btn-tech-back" class="btn btn-ghost btn-small" type="button">돌아가기</button>
+                    <button id="btn-tech-go" class="btn btn-blood" type="button">이 테크로 출격</button>
+                </div>
+            </div>
+        </section>
+
         <section id="levelup" class="modal" hidden>
             <div class="modal-box levelup-box">
                 <h2 class="modal-title drip">생존 장비 선택 <small id="levelup-lv">LV 2</small></h2>
@@ -246,7 +262,7 @@
                 <p id="gameover-lore" class="lore"></p>
                 <div id="gameover-stats" class="stats"></div>
                 <div class="menu-buttons row">
-                    <button id="btn-retry" class="btn btn-blood" type="button">⚔ 이 스테이지 재도전</button>
+                    <button id="btn-retry" class="btn btn-blood" type="button">⚔ 새 도전 · STAGE 1부터</button>
                     <button id="btn-gameover-title" class="btn btn-ghost" type="button">타이틀로</button>
                 </div></div>
             </div>

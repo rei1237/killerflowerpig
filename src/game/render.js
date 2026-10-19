@@ -1,3 +1,4 @@
+import { drawEncirclement, updateEncirclementCamera } from './encirclement.js';
 import { drawPets } from './pets.js';
 // 월드 렌더링. 캔버스 1장, 레이어 순서로 그리며 화면 밖 객체는 컬링.
 import { G, VIEW_H, setVisualTier } from './state.js';
@@ -141,10 +142,9 @@ export function render(dt) {
     ensureGround();
 
     // 카메라 (부드럽게 추적 + 흔들림)
-    const k = Math.min(1, dt * 10);
-    cam.x += (p.x - cam.x) * k;
-    cam.y += (p.y - 20 - cam.y) * k;
-    const sh = G.shake;
+    const enclosed = updateEncirclementCamera(dt);
+    // A fixed active camera must not shake the far fog edge outside mobile view.
+    const sh = enclosed ? 0 : G.shake;
     const sx = sh ? (Math.random() - 0.5) * sh : 0;
     const sy = sh ? (Math.random() - 0.5) * sh : 0;
     const z = screen.zoom;
@@ -156,12 +156,15 @@ export function render(dt) {
     ctx.setTransform(z, 0, 0, z, screen.worldTx, screen.worldTy);
 
     // 1. 바닥
+    // 불투명 바닥은 정확히 보이는 영역(+흔들림 여유)만 칠한다. 컬링용 vx0..vy1 은 여유를 더 둔 별도 범위.
+    const pad = 2 + Math.abs(sx) + Math.abs(sy);
     ctx.fillStyle = groundPattern;
-    ctx.fillRect(vx0, vy0, vx1 - vx0, vy1 - vy0);
+    ctx.fillRect(cam.x - hw - pad, cam.y - hh - pad, G.view.w + pad * 2, G.view.h + pad * 2);
 
     // 2~4. 데칼, 장판, 젬
     drawDecals(ctx, vx0, vy0, vx1, vy1);
     drawHazards(ctx);
+    drawEncirclement(ctx);
     drawPickups(ctx, vx0, vy0, vx1, vy1);
 
     // 5. 그림자 (한 번의 path 로 일괄)
@@ -224,7 +227,8 @@ export function render(dt) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     // 스테이지 안개 색 + 비네트를 한 장으로 미리 합성해 둔 오버레이
     const st = STAGES[G.stage];
-    ctx.drawImage(vignette(screen.w, screen.h, st ? st.fog : null), 0, 0);
+    // 최저 화질 단계에서는 전체 화면 합성 1회를 아끼기 위해 안개·비네트 오버레이를 생략
+    if (G.visuals.vignette) ctx.drawImage(vignette(screen.w, screen.h, st ? st.fog : null), 0, 0);
 
     // 저체력/피격: 혈관이 뻗은 붉은 가장자리
     const hpR = p.hp / p.maxHp;

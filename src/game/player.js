@@ -1,3 +1,4 @@
+import { constrainEncirclementPlayer } from './encirclement.js';
 import { accessoryStats, activeAccessory, accessoryEquipHP } from '../core/accessories.js';
 // 플레이어(연이): 8방향 이동, 피격/무적, 재생, 패시브·영구강화 반영 스탯
 import { G, emit } from './state.js';
@@ -7,6 +8,7 @@ import { audio } from '../core/audio.js';
 import { relicStats } from '../data/relics.js';
 import { upgradeLevel, save } from '../core/save.js';
 import { MAGAZINE_TABLE } from '../data/weapons.js';
+import { applyTechPlayerBonus, resonanceTier } from './tech.js';
 import { blood, flash, shake, damageText, hitstop } from './effects.js';
 
 import { shotFrame, firingDrawRect, markPlayerShot, PLAYER_HIT_RADIUS, playerBob, advancePlayerMovement } from './player-motion.js';
@@ -47,7 +49,10 @@ export function recomputeStats(fullHeal = false) {
         armor: lv('hide'),
         maxHp: BASE.hp + lv('heart') * 20 + upgradeLevel('maxHp') * 10,
         greed: 1 + upgradeLevel('greed') * 0.1,
+        critMul: 2,
     };
+    applyTechPlayerBonus(s);
+    p.techTier = resonanceTier();
     Object.assign(s, relicStats(s, save));
     Object.assign(s, accessoryStats(s, save));
     const accessoryId = activeAccessory(save)?.id || null;
@@ -66,7 +71,10 @@ export function updatePlayer(dt) {
     const p = G.player;
     if (p.dead) return;
     const s = p.stats;
+    // 테크 공명 단계가 바뀌면(무기 획득·융합 포함) 캐릭터 보너스를 다시 계산
+    if (G.tech && resonanceTier() !== p.techTier) recomputeStats();
     advancePlayerMovement(p, input.move, dt);
+    constrainEncirclementPlayer();
 
     if (p.iframes > 0) p.iframes -= dt;
     if (p.hurtT > 0) p.hurtT -= dt;

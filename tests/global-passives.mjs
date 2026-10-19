@@ -19,7 +19,7 @@ test('late weapons inherit all max-level global boosts identically to early weap
 });
 test('all eight actual fusions inherit boosts regardless of order and restore without double application',()=>{
  for(const r of FUSION_RECIPES){
-  const fuse=()=>{G.weapons=r.inputs.map((i,slot)=>Object.assign(createWeapon(i.id,slot),{level:5}));const p=previewFusion(r.id);assert.equal(fuseItems(r.id,p.signature).ok,true);};
+  const fuse=()=>{G.weapons=r.inputs.map((i,slot)=>Object.assign(createWeapon(i.id,slot),{level:8,evolved:true}));const p=previewFusion(r.id);assert.equal(fuseItems(r.id,p.signature).ok,true);};
   reset();fuse();maxBoosts();const early=weaponStats(G.weapons[0]);reset();maxBoosts();fuse();assert.deepEqual(weaponStats(G.weapons[0]),early,r.id);
   const snap=JSON.parse(JSON.stringify(snapshotBuild()));for(let i=0;i<3;i++){restoreBuild(snap);assert.deepEqual(weaponStats(G.weapons[0]),early,r.id);assert.equal(G.player.stats.amount,3);}
  }

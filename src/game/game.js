@@ -1,8 +1,10 @@
+import { updateEncirclement, clearEncirclement, constrainEncirclementPlayer } from './encirclement.js';
 import { resetPets, updatePets } from './pets.js';
 // 게임 흐름 제어: 런 시작/스테이지 시작/스텝 업데이트/보스·클리어·사망 전환
 import { G, clearWorld, configureCaps, emit } from './state.js';
 import { STAGES } from '../data/stages.js';
-import { STARTING_WEAPON } from '../data/weapons.js';
+import { STARTING_WEAPON, PASSIVES } from '../data/weapons.js';
+import { TECHS } from '../data/techs.js';
 import { createPlayer, updatePlayer, recomputeStats } from './player.js';
 import { updateEnemies, updateEnemyShots, flushExplosions } from './enemies.js';
 import { updateWeapons, updateShots, createWeapon } from './weapons.js';
@@ -17,26 +19,57 @@ import { invalidateStageVisuals } from './render.js';
 import { audio } from '../core/audio.js';
 
 const RUN_KEY = 'kfp.run.v1';
+const DEAD_RUNS_KEY = 'kfp.dead-runs.v1';
 let clearTimer = 0;
 let heartbeatT = 0;
 let stageSnapshot = null;
-
-export function loadRun() {
-    try { const r = localStorage.getItem(RUN_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
+let runSerial = 0;
+const deadRuns = new Set();
+const runToken = snap => snap?.runId || (snap ? `legacy:${JSON.stringify(snap)}` : null);
+function readDeadRuns() {
+    try { const list = JSON.parse(localStorage.getItem(DEAD_RUNS_KEY) || '[]'); if (Array.isArray(list)) for (const id of list) if (typeof id === 'string') deadRuns.add(id); } catch { /* In-memory invalidation still applies. */ }
 }
-function saveRun(snap) { try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); } catch { /* ignore */ } }
-export function clearRun() { try { localStorage.removeItem(RUN_KEY); } catch { /* ignore */ } }
+function isDeadRun(snap) { readDeadRuns(); return !snap || snap.dead === true || deadRuns.has(runToken(snap)); }
+export function loadRun() {
+    try { const r = localStorage.getItem(RUN_KEY); const snap = r ? JSON.parse(r) : null; return isDeadRun(snap) ? null : snap; } catch { return null; }
+}
+function saveRun(snap) { try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); } catch { emit('runSaveError'); } }
+export function markLoadoutExchangeSpent() {
+    G.loadoutExchangesUsed = 1;
+    if (stageSnapshot) { stageSnapshot.loadoutExchangesUsed = 1; saveRun(stageSnapshot); }
+}
+export function clearRun() { stageSnapshot = null; try { localStorage.removeItem(RUN_KEY); } catch { /* A new run overwrites this checkpoint. */ } }
+function invalidateDeadRun() {
+    const token = G.runId || runToken(stageSnapshot);
+    readDeadRuns(); if (token) deadRuns.add(token);
+    // Keep a tombstone independent of checkpoint removal. Either successful
+    // write is enough to reject the stale checkpoint on the next page load.
+    let failed = false;
+    try { localStorage.setItem(DEAD_RUNS_KEY, JSON.stringify([...deadRuns])); } catch { failed = true; }
+    try { localStorage.removeItem(RUN_KEY); } catch {
+        failed = true;
+        try { localStorage.setItem(RUN_KEY, JSON.stringify({ dead: true, runId: token })); } catch { /* Warn below; current session remains invalidated. */ }
+    }
+    stageSnapshot = null;
+    if (failed) emit('runSaveError');
+}
 
-export function newRun(stage = 1) {
+// techId 를 생략하면 기존과 동일하게 산탄총 단독으로 시작 (호환용).
+export function newRun(stage = 1, techId = null) {
     configureCaps();
     refreshGore();
     resetBuild();
+    G.runId = globalThis.crypto?.randomUUID?.() || `run:${Date.now()}:${++runSerial}:${Math.random().toString(36).slice(2)}`;
     G.gold = 0;
     G.kills = 0;
     G.damageBy = {};
     G.rerolls = 0;
+    const tech = TECHS[techId] ? techId : null;
+    G.tech = tech;
     createPlayer();
-    G.weapons.push(createWeapon(STARTING_WEAPON, 0));
+    G.weapons.push(createWeapon(tech ? TECHS[tech].start.weapon : STARTING_WEAPON, 0));
+    if (tech && PASSIVES[TECHS[tech].start.passive]) G.passives[TECHS[tech].start.passive] = 1;
+    recomputeStats(true);
     // 스테이지 선택으로 중간부터 시작하면 그에 맞는 레벨 보정
     if (stage > 1) {
         const n = Math.min(40, (stage - 1) * 5);
@@ -48,26 +81,30 @@ export function newRun(stage = 1) {
 }
 
 export function continueRun(snap) {
+    if (isDeadRun(snap)) return false;
+    G.runId = snap.runId || runToken(snap);
     configureCaps();
     refreshGore();
     G.damageBy = {};
     createPlayer();
     restoreBuild(snap);
     startStage(snap.stage, true);
+    return true;
 }
 
 export function retryStage() {
-    if (!stageSnapshot) return newRun(1);
-    continueRun(stageSnapshot);
+    // Death ends the build; this compatibility name now starts a new run.
+    return newRun(1);
 }
 
 export function startStage(stage, restored = false) {
+    if (G.player?.dead || deadRuns.has(G.runId)) return false;
     G.stage = stage;
     prepareBossSheets(stage);
     clearWorld();
     resetSpawner();
     invalidateStageVisuals();
-    for (const w of G.weapons) { w.follow = null; w.cd = 0.5; w.activeT = 0; w.burst = 0; }
+    for (const w of G.weapons) { w.fusionCores = null; w.follow = null; w.cd = 0.5; w.activeT = 0; w.burst = 0; }
     const p = G.player;
     p.x = 0; p.y = 0; p.dead = false; p.iframes = 1.5;
     recomputeStats(true);
@@ -80,7 +117,7 @@ export function startStage(stage, restored = false) {
     G.settlement = null;
     G.stageStartTime = performance.now();
     clearTimer = 0;
-    stageSnapshot = snapshotBuild();
+    stageSnapshot = { ...snapshotBuild(), runId: G.runId };
     saveRun(stageSnapshot);
     audio.setBGMRate(1);
     audio.playBGM();
@@ -88,6 +125,7 @@ export function startStage(stage, restored = false) {
 }
 
 export function step(dt) {
+    if (G.mode !== 'play' || G.player?.dead) clearEncirclement();
     if (G.mode === 'idle' || G.paused) return;
     if (G.hitstop > 0) {
         G.hitstop -= dt;
@@ -103,6 +141,7 @@ export function step(dt) {
     G.clock += dt;
     if (G.mode === 'play') G.time += dt;
 
+    updateEncirclement(dt);
     updatePlayer(dt);
     if (G.mode !== 'dead') updatePets(dt);
     if (G.mode === 'play' || G.mode === 'boss') updateSpawner(dt);
@@ -114,6 +153,7 @@ export function step(dt) {
     updateHazards(dt);
     if (G.mode !== 'dead') updatePickups(dt);
     if (G.boss) G.boss.update(dt);
+    constrainEncirclementPlayer();
     updateEffects(dt);
 
     // 레벨업 대기열 → UI
@@ -124,6 +164,7 @@ export function step(dt) {
     }
 
     if (G.mode === 'play' && G.time >= STAGES[G.stage].duration) {
+        clearEncirclement();
         G.mode = 'boss';
         spawnBoss();
         audio.setBGMRate(1.08);
@@ -147,6 +188,8 @@ export function step(dt) {
 
 // 보스 상자를 열고 난 뒤 호출 → 남은 젬 흡수 후 클리어
 export function beginStageClear() {
+    if (G.player?.dead || deadRuns.has(G.runId)) return false;
+    clearEncirclement();
     G.mode = 'clearing';
     clearTimer = 0;
     magnetAll();
@@ -159,6 +202,9 @@ export function beginStageClear() {
 }
 
 export function onPlayerDeath() {
+    if (G.mode === 'dead') return;
+    clearEncirclement();
+    invalidateDeadRun();
     G.mode = 'dead';
     G.deadT = 0;
     G.deathShown = false;

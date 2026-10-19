@@ -41,3 +41,25 @@ Spawn-limited opportunity proxy: 60 old ordinary kills (180coins,60×baseXP) bec
 Supply rolls use1−(1−old probability)^(5/3), preserving no-drop probability per equivalent spawn opportunity. Wounded >40% HP:4%→6.5774%; lowHP≤40%:10%→16.1047%; magnet1.5%→2.4875%; bomb0.15%→0.249875%. FullHP still suppresses healing. Drought counters retain old opportunity units, advancing5/3 per eligible ordinary kill. Guarantees become18 wounded kills (old30),8 lowHP kills (old12),36 magnet kills (old60). LowHP rounding gives13.333 old-opportunity units versus12, within one new kill. Existing integer save counters retain their original progress; fractional counters survive JSON snapshots and validation. Floating comparison epsilon prevents missing exact18/36 thresholds.
 
 Regression tests exercise actual kill rewards, exact guarantee boundaries, probability boundaries, fullHP suppression, field cap recovery, pet/bleed kills, and fractional/legacy reloads.
+
+## Latest roguelike request: occasional ordinary gold (supersedes guaranteed coins)
+
+Ordinary enemy deaths now have a15% chance to drop3 coins;85% drop no coins. Elite enemies retain guaranteed40 coins and their chest. Existing boss/clear settlement rewards are untouched. XP, healing, magnets and bomb rolls are independent of whether gold appears. No wallet, purchased item, ownership or shop price is reset by this change.
+
+Expected ordinary income is0.45 coins/kill, versus5 before: a91% reduction. At100 ordinary kills this is45 expected coins rather than500 (random variation means no promise of45 actual coins). Cheapest40-coin magnet needs about89 ordinary kills on an expectation basis;60-coin speed about134;140-coin pet about312, with stage locks still applying. One elite covers the40-coin magnet. A100-kill +1-elite interval changes from540 expected drop coins to85, before existing stage/boss bonuses and greed effects.
+
+Recommendation: keep current shop prices for this first scarce-gold pass. Lowering prices at the same time would undermine the requested scarcity; evaluate actual completion/drop totals before a separate price change. Expensive accessories remain longer-term goals. No real-money purchase or paid randomness is introduced.
+
+`src/game/coin-drops.js` uses its own seeded coin stream, initialized independently of Math.random. Coin success/failure therefore consumes identical shared combat/supply RNG draws. This is guest-mode gameplay randomness, not anti-cheat or authoritative server reward validation. Tests cover exact15% boundary, guaranteed elites without an RNG call, duplicate-death suppression, reproducible independent RNG and real-kill XP/healing/magnet invariance.
+
+## Latest override: scarce coins, affordable shop, boss-only gear
+
+This supersedes the previous unchanged-price recommendation. All permanent upgrade tiers and pet prices are now exactly one fifth of their prior values (catalog5). Starter magnet40→8, speed60→12, HP50→10; pet140→28. Relic direct purchases60/260/650→12/52/130; earned-coin chest80→16. Duplicate refunds are3/7/14 (floor of previous16/36/72 divided by5), always below chest cost. Premium accessories450/650/900/1200/1500/2200→90/130/180/240/300/440. Stage gates, effects and ownership stay unchanged. Existing saved wallets and purchases are preserved; there is no automatic refund, retroactive charge or reset.
+
+Ordinary enemies still drop3 coins with15% probability (0.45 expected coins/kill). Elites now give guaranteed8 coins and XP only, with no gear chest or battlefield supply roll. Boss defeats retain their guaranteed boss chest; ordinary healing/magnet supply rules remain separate. At100 ordinary kills +1 elite, expected dropped gold is53 (previous scarce-gold pass85, original guaranteed pass540), before boss/clear bonuses or greed. Cheapest8-coin upgrade is about18 ordinary kills in expectation, speed12 about27 and pet28 about63; one elite funds the cheapest starter. Chance means these are not guaranteed kill counts.
+
+Regression coverage includes10000 actual elite kills with no gear/supply, exact80000 combined elite coins, nonduplicate death rewards, actual boss defeat producing exactly one boss chest, immutable/idempotent purchases, insufficient funds, and lower-price persistence through reload. Normal coin RNG remains independent from XP/healing/magnet randomness.
+
+## Hunter update durability follow-up
+
+Ordinary toughness is now 1.62×, an 11.72% increase over the prior 1.45×. This follow-up changes no density, XP, gold or shop values. Historical throughput proxies above describe the earlier 1.45× revision.

@@ -1,15 +1,22 @@
-// Each fusion consumes two owned weapon items, both at least level five.
+// Final recipes consume two evolved Lv8 weapons; the absolute recipe consumes three.
 export const FUSION_RECIPES = Object.freeze([
-    { id: 'lotus_bloom', inputs: [{ id: 'cannon', level: 5 }, { id: 'thorns', level: 5 }], output: 'lotus_bloom' },
-    { id: 'scatter_rail', inputs: [{ id: 'shotgun', level: 5 }, { id: 'rifle', level: 5 }], output: 'scatter_rail' },
-    { id: 'plague_fire', inputs: [{ id: 'molotov', level: 5 }, { id: 'gas', level: 5 }], output: 'plague_fire' },
-    { id: 'burst_rail', inputs: [{ id: 'pistols', level: 5 }, { id: 'rifle', level: 5 }], output: 'burst_rail' },
-    { id: 'venom_saw', inputs: [{ id: 'saw', level: 5 }, { id: 'gas', level: 5 }], output: 'venom_saw' },
-    { id: 'ember_lance', inputs: [{ id: 'cannon', level: 5 }, { id: 'molotov', level: 5 }], output: 'ember_lance' },
-    { id: 'orbit_saw', inputs: [{ id: 'thorns', level: 5 }, { id: 'saw', level: 5 }], output: 'orbit_saw' },
-    { id: 'toxic_scatter', inputs: [{ id: 'shotgun', level: 5 }, { id: 'gas', level: 5 }], output: 'toxic_scatter' },
+    { id: 'lotus_bloom', inputs: [{ id: 'cannon', level: 8 }, { id: 'thorns', level: 8 }], output: 'lotus_bloom' },
+    { id: 'scatter_rail', inputs: [{ id: 'shotgun', level: 8 }, { id: 'rifle', level: 8 }], output: 'scatter_rail' },
+    { id: 'plague_fire', inputs: [{ id: 'molotov', level: 8 }, { id: 'gas', level: 8 }], output: 'plague_fire' },
+    { id: 'burst_rail', inputs: [{ id: 'pistols', level: 8 }, { id: 'rifle', level: 8 }], output: 'burst_rail' },
+    { id: 'venom_saw', inputs: [{ id: 'saw', level: 8 }, { id: 'gas', level: 8 }], output: 'venom_saw' },
+    { id: 'ember_lance', inputs: [{ id: 'cannon', level: 8 }, { id: 'molotov', level: 8 }], output: 'ember_lance' },
+    { id: 'orbit_saw', inputs: [{ id: 'thorns', level: 8 }, { id: 'saw', level: 8 }], output: 'orbit_saw' },
+    { id: 'toxic_scatter', inputs: [{ id: 'shotgun', level: 8 }, { id: 'gas', level: 8 }], output: 'toxic_scatter' },
+    { id: 'absolute_bloom', tier: 'absolute', inputs: [{ id: 'cannon', level: 8 }, { id: 'thorns', level: 8 }, { id: 'molotov', level: 8 }], output: 'absolute_bloom' },
 ]);
 export const FUSED_WEAPONS = {
+    absolute_bloom: {
+        name: '절대 만개', icon: '💮', color: '#fff0b8', fusionOnly: true, tier: 'absolute', amountCap: 12,
+        desc: '세 진화 무기의 공격을 계승하고 여덟 방향의 거대한 연꽃 광선으로 전장을 뒤덮는다.',
+        base: { dmg: 150, cd: 2.4, amount: 8, speed: 1, duration: 0.6, area: 1, length: 760, width: 68 },
+        levels: [{dmg:15,t:'절대 광선 피해 +15 · 계승 공격 강화'},{area:0.12,t:'절대 광선 범위 +12%'},{cd:-0.08,t:'재사용 -8%'},{dmg:20,t:'절대 광선 피해 +20 · 계승 공격 강화'},{area:0.12,t:'절대 광선 범위 +12%'},{cd:-0.08,t:'재사용 -8%'},{dmg:25,t:'절대 광선 피해 +25 · 세 진화 공격 최종 강화'}],
+    },
     lotus_bloom: {
         name: '만개 연꽃포', icon: '💮', color: '#ff8bcc', fusionOnly: true,
         desc: '꽃잎 관통 광선과 몸을 지키는 회전 연꽃 가시를 함께 발사한다.',

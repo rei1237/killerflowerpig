@@ -3,15 +3,16 @@ import assert from 'node:assert/strict';
 import { G, clearWorld, configureCaps, setVisualTier } from '../src/game/state.js';
 import { settings } from '../src/core/settings.js';
 import { atlases } from '../src/core/assets.js';
-import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, stageScaling } from '../src/data/enemies.js';
 import { STAGES, EVENTS } from '../src/data/stages.js';
 import { spawnEnemy, hitEnemy } from '../src/game/enemies.js';
 import { Boss } from '../src/game/boss.js';
 import { resetSpawner, spawnRate, updateSpawner } from '../src/game/spawner.js';
 
 const oldDensity = [[8,36],[14,56],[26,100],[32,125],[38,150],[45,175],[52,200],[60,225],[68,250],[76,280]];
-const newDensity = [[5,22],[8,34],[16,60],[19,75],[23,90],[27,105],[31,120],[36,135],[41,150],[46,168]];
-const caps = [29,43,84,100,116,132,148,164,180,196];
+const previousDensity = [[5,22],[8,34],[16,60],[19,75],[23,90],[27,105],[31,120],[36,135],[41,150],[46,168]];
+const newDensity = previousDensity.map(pair => pair.map(n => Math.round(n * .88)));
+const caps = [29,43,84,100,116,132,148,164,180,196].map(n => Math.round(n * .88));
 const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
 const active = pool => pool.items.slice(0, pool.count);
 
@@ -31,27 +32,27 @@ function withFixedRandom(fn) {
 }
 
 function originalScaling(stage, time) {
-    const beginner = stage === 1 ? { hp: .85, speed: .85, dmg: .7 } : stage === 2 ? { hp: .92, speed: .92, dmg: .85 } : { hp: 1, speed: 1, dmg: 1 };
+    const beginner = stage === 1 ? { hp: .95, speed: .9, dmg: .85 } : stage === 2 ? { hp: 1, speed: .95, dmg: .95 } : { hp: 1, speed: 1, dmg: 1 };
     const prog = Math.min(1, time / STAGES[stage].duration);
     return {
-        hp: (1 + (stage - 1) * .6) * (1 + (stage - 1) * .14) * (1 + prog * .5) * beginner.hp,
+        hp: (1 + (stage - 1) * .6) * (1 + (stage - 1) * .14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp,
         speed: (1 + (stage - 1) * .035) * beginner.speed,
         dmg: (1 + (stage - 1) * .24) * beginner.dmg,
         xp: 1 + (stage - 1) * .15,
     };
 }
 
-test('all stage population endpoints and special waves reduce approximately40 percent', () => {
+test('all stage population endpoints fall a further12 percent and late swarms are bounded specialists', () => {
     for (let stage = 1; stage <= 10; stage++) {
         const st = STAGES[stage], old = oldDensity[stage - 1];
         assert.deepEqual(st.density, newDensity[stage - 1]);
         assert.equal(st.enemyCap, caps[stage - 1]);
         for (let index = 0; index < 2; index++) {
             const ratio = st.density[index] / old[index];
-            assert.ok(ratio >= .55 && ratio <= .65, `stage ${stage} endpoint ${index}: ${ratio}`);
+            assert.ok(ratio >= .48 && ratio <= .60, `stage ${stage} endpoint ${index}: ${ratio}`);
         }
-        assert.equal(st.eventTuning.ringCount, Math.round((stage === 1 ? 10 : stage === 2 ? 16 : 18 + stage * 3) * .6));
-        assert.equal(st.eventTuning.swarmCount, Math.round((stage === 1 ? 12 : stage === 2 ? 20 : 26 + stage * 3) * .6));
+        assert.equal(st.eventTuning.ringCount, Math.round(Math.round((stage === 1 ? 10 : stage === 2 ? 16 : 18 + stage * 3) * .6) * .88));
+        assert.equal(st.eventTuning.swarmCount, stage >= 5 ? Math.min(10, stage + 1) : Math.round(Math.round((stage === 1 ? 12 : stage === 2 ? 20 : 26 + stage * 3) * .6) * .88));
     }
 });
 
@@ -63,25 +64,25 @@ test('refill rates track the smaller population without double-scaling the defic
             const oldTarget = oldDensity[stage - 1][0], newTarget = st.density[0];
             const oldRate = Math.min(old.max, old.base + oldTarget * (1 - fullness) * old.gap);
             const rate = spawnRate(st, newTarget, newTarget * fullness);
-            assert.ok(rate / oldRate >= .55 && rate / oldRate <= .65, `stage ${stage}, fullness ${fullness}: ${rate / oldRate}`);
+            assert.ok(rate / oldRate >= .48 && rate / oldRate <= .60, `stage ${stage}, fullness ${fullness}: ${rate / oldRate}`);
         }
     }
 });
 
-test('enemy HP rises45 percent while speed, damage, collision and original appearance are unchanged', () => withFixedRandom(() => {
-    assert.equal(ENEMY_TOUGHNESS_MULTIPLIER, 1.45);
+test('enemy HP rises11.7 percent from the previous1.45 tuning while speed, damage, collision and original appearance are unchanged', () => withFixedRandom(() => {
+    assert.equal(ENEMY_TOUGHNESS_MULTIPLIER, 1.62);
     for (let stage = 1; stage <= 10; stage++) {
         for (const progress of [0, .5, 1]) {
             reset(stage); G.time = STAGES[stage].duration * progress;
             const old = originalScaling(stage, G.time), scaling = stageScaling(stage, G.time, STAGES[stage].duration);
-            close(scaling.hp, old.hp * 1.45);
+            close(scaling.hp, old.hp * 1.62);
             for (const key of ['speed','dmg','xp']) close(scaling[key], old[key]);
             for (const [id, def] of Object.entries(ENEMIES)) {
                 for (const elite of [false, true]) {
                     G.enemies.clear();
                     const enemy = spawnEnemy(id, 100, 0, { elite, force: true });
-                    if (def.ranged && stage < 5) { assert.equal(enemy, null); continue; }
-                    close(enemy.hp, def.hp * old.hp * 1.45 * (elite ? ELITE.hp : 1));
+                    if ((def.ranged && stage < 5) || stage < (def.unlockStage || 1)) { assert.equal(enemy, null); continue; }
+                    close(enemy.hp, def.hp * old.hp * 1.62 * (elite ? ELITE.hp : 1));
                     close(enemy.speed, def.speed * old.speed * (elite ? ELITE.speed : 1));
                     close(enemy.dmg, def.dmg * old.dmg * (elite ? ELITE.dmg : 1));
                     close(enemy.radius, def.radius * (elite ? ELITE.scale : 1));
@@ -99,7 +100,7 @@ test('fixed-damage kill-count and HP-per-DPS proxies reflect sturdier individual
         reset(stage);
         const beforeHp = ENEMIES.shambler.hp * originalScaling(stage, 0).hp;
         const enemy = spawnEnemy('shambler', 500, 0);
-        close(enemy.hp / 40, beforeHp / 40 * 1.45);
+        close(enemy.hp / 40, beforeHp / 40 * 1.62);
         const expectedHits = Math.ceil(enemy.hp / 9);
         let hits = 0;
         while (enemy.alive && hits < 1000) { hitEnemy(enemy, 9, { silent: true }); hits++; }

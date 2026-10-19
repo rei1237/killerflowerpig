@@ -1,3 +1,5 @@
+import { coinRandom } from '../src/game/coin-drops.js';
+coinRandom.next = () => .99;
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DEATH_CLOUD_UNLOCK_STAGE, ENEMIES, ELITE, stageScaling } from '../src/data/enemies.js';
@@ -48,8 +50,8 @@ function killBloater(stage, elite = false) {
     assert.equal(G.gems.count, 1);
     close(G.gems.items[0].value, ENEMIES.bloater.xp * stageScaling(stage, 0, STAGES[stage].duration).xp * (elite ? ELITE.xp : 1) * (5 / 3));
     assert.deepEqual(active(G.pickups).map(({ kind, value }) => ({ kind, value })), elite
-        ? [{ kind: 'coin', value: 40 }, { kind: 'chest', value: 0 }]
-        : [{ kind: 'coin', value: 5 }]);
+        ? [{ kind: 'coin', value: 8 }]
+        : []);
     flushExplosions();
     const blastDamage = ENEMIES.bloater.explode.dmg * (1 + (stage - 1) * 0.16);
     close(G.player.hp, 1000 - blastDamage, 'immediate explosion remains unchanged');
@@ -117,7 +119,7 @@ test('death-cloud gate preserves direct splash and chain explosions against enem
         assert.equal(outside.hp, outsideBefore);
         assert.equal(G.hazards.count, stage < 5 ? 0 : 2);
         assert.equal(G.gems.count, 2);
-        assert.equal(active(G.pickups).filter(p => p.kind === 'coin').reduce((total, p) => total + p.value, 0), 10);
+        assert.equal(active(G.pickups).filter(p => p.kind === 'coin').reduce((total, p) => total + p.value, 0), 0);
     }
 }));
 
@@ -126,14 +128,14 @@ test('all other enemy death types retain their loot and do not gain poison cloud
         for (const type of Object.keys(ENEMIES).filter(type => type !== 'bloater')) {
             reset(stage);
             const enemy = spawnEnemy(type, 500, 0);
-            if (!enemy) { assert.ok(ENEMIES[type].ranged && stage < 5); continue; }
+            if (!enemy) { assert.ok((ENEMIES[type].ranged && stage < 5) || stage < (ENEMIES[type].unlockStage || 1)); continue; }
             const xp = enemy.xp;
             hitEnemy(enemy, enemy.hp + 1, { silent: true });
             flushExplosions();
             assert.equal(G.hazards.count, 0, `${type} in stage ${stage}`);
             assert.equal(G.gems.count, 1);
             assert.equal(G.gems.items[0].value, xp * (5 / 3));
-            assert.deepEqual(active(G.pickups).map(({ kind, value }) => ({ kind, value })), [{ kind: 'coin', value: 5 }]);
+            assert.deepEqual(active(G.pickups).map(({ kind, value }) => ({ kind, value })), []);
             assert.equal(active(G.enemies).filter(e => e.alive).length, type === 'splitter' ? 3 : 0);
         }
     }

@@ -4,10 +4,12 @@ import { WEAPONS, PASSIVES, MAX_WEAPONS, MAX_PASSIVES, WEAPON_MAX_LEVEL, PASSIVE
 import { createWeapon } from './weapons.js';
 import { recomputeStats } from './player.js';
 
+export function exchangeRemaining() { return G.loadoutExchangesUsed ? 0 : 1; }
+
 const definitions = kind => kind === 'weapon' ? WEAPONS : kind === 'passive' ? PASSIVES : null;
 const owned = (kind, id) => kind === 'weapon' ? G.weapons.find(w => w.id === id) : G.passives[id];
 const signature = (kind, fromId, toId) => JSON.stringify([kind, fromId, toId,
-    G.stage, G.stageStartTime, G.fusionRevision || 0, G.player?.stats,
+    exchangeRemaining(), G.stage, G.stageStartTime, G.fusionRevision || 0, G.player?.stats,
     G.weapons.map(w => [w.id, w.level, !!w.evolved, w.slot]), G.passives,
     [...G.banished].sort(), G.choiceSession?.id, G.choiceSession?.revision, G.choiceSession?.closed]);
 
@@ -20,6 +22,7 @@ export function listExchangeTargets(kind) {
 
 export function previewExchange(kind, fromId, toId) {
     const defs = definitions(kind);
+    if (!exchangeRemaining()) return { ok: false, code: 'EXCHANGE_SPENT' };
     if (!defs) return { ok: false, code: 'INVALID_KIND' };
     if (!Object.hasOwn(defs, fromId) || !Object.hasOwn(defs, toId)) return { ok: false, code: 'UNKNOWN_ITEM' };
     if (defs[toId].fusionOnly) return { ok: false, code: 'FUSION_ONLY' };
@@ -36,7 +39,7 @@ export function previewExchange(kind, fromId, toId) {
     if (count !== (kind === 'weapon' ? MAX_WEAPONS : MAX_PASSIVES)) return { ok: false, code: 'SLOTS_NOT_FULL' };
     if (G.choiceSession && !G.choiceSession.closed) return { ok: false, code: 'CHOICE_ACTIVE' };
     const evolved = kind === 'weapon' && !!source.evolved;
-    return { ok: true, code: null, signature: signature(kind, fromId, toId),
+    return { ok: true, code: null, remaining: exchangeRemaining(), signature: signature(kind, fromId, toId),
         removed: { id: fromId, name: evolved ? defs[fromId].evolve?.name || defs[fromId].name : defs[fromId].name,
             icon: evolved ? defs[fromId].evolve?.icon || defs[fromId].icon : defs[fromId].icon,
             level: kind === 'weapon' ? source.level : source, evolved },
@@ -78,8 +81,9 @@ export function exchangeItem(kind, fromId, toId, expectedSignature) {
         // Exchanges cannot be cycled for free healing via the heart passive.
         G.player.hp = Math.min(hp, G.player.maxHp);
     }
+    G.loadoutExchangesUsed = 1;
     G.fusionRevision = (G.fusionRevision || 0) + 1;
     delete G.choiceAbsence?.[toId];
     emit('loadoutExchanged', { kind, fromId, toId });
-    return { ...preview, signature: undefined, ok: true };
+    return { ...preview, signature: undefined, remaining: 0, ok: true };
 }

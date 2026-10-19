@@ -9,9 +9,9 @@ beforeEach(()=>{resetBuild();createPlayer();G.level=2;G.stage=1;G.gold=0;G.weapo
 const weights=()=>Object.fromEntries(rollChoices(99).map(c=>[c.id,c]));
 function seeded(){let seed=123456789;return()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);}
 test('unowned and recipe partner weights increase once while fused upgrades are quarter-weight',()=>{
- let w=weights();assert.equal(w.shotgun.weight,3);assert.equal(w.lotus_bloom.weight,.75);assert.equal(w.pistols.weight,3.2);assert.equal(w.rifle.weight,4.32);assert.equal(w.gas.weight,4.32);
- G.weapons[0].evolved=true;assert.equal(weights().rifle.weight,4.32);
- G.choiceAbsence={pistols:5};assert.equal(weights().pistols.weight,5.6000000000000005);G.choiceAbsence.pistols=99;assert.equal(weights().pistols.weight,5.6000000000000005);
+ let w=weights();assert.equal(w.shotgun.weight,3);assert.equal(w.lotus_bloom.weight,.75);assert.equal(w.pistols.weight,2.4);assert.equal(w.rifle.weight,3.24);assert.equal(w.gas.weight,3.24);
+ G.weapons[0].evolved=true;assert.equal(weights().rifle.weight,3.24);
+ G.choiceAbsence={pistols:5};assert.equal(weights().pistols.weight,3.36);G.choiceAbsence.pistols=99;assert.equal(weights().pistols.weight,3.36);
 });
 test('absence advances only once per completed session, offers across rerolls reset it and reload preserves history',()=>{
  const a=beginChoiceSession();rollChoices(1);const eligible=[...G.choiceSession.eligibleIds],first=[...G.choiceSession.offeredIds];
@@ -21,7 +21,7 @@ test('absence advances only once per completed session, offers across rerolls re
  const saved=snapshotBuild();resetBuild();restoreBuild(saved);assert.deepEqual(G.choiceAbsence,history);assert.ok(first.length);
 });
 test('seeded first-card shares favor exploration and reduce fused repeats without removing normal upgrades',()=>{
- const pool=rollChoices(99).sort((a,b)=>a.id.localeCompare(b.id));const baseline=pool.map(c=>({...c,weight:c.id==='lotus_bloom'?3:c.isNew?c.weight/1.6/(['rifle','gas'].includes(c.id)?1.35:1):c.weight}));
+ const pool=rollChoices(99).sort((a,b)=>a.id.localeCompare(b.id));const baseline=pool.map(c=>({...c,weight:c.id==='lotus_bloom'?3:c.isNew?c.weight/1.2/(['rifle','gas'].includes(c.id)?1.35:1):c.weight}));
  function measure(items){const random=seeded(),total=items.reduce((s,c)=>s+c.weight,0),out={new:0,fused:0,ordinary:0};for(let n=0;n<30000;n++){let r=random()*total;const c=items.find(c=>(r-=c.weight)<0)||items.at(-1);out[c.isNew?'new':WEAPONS[c.id]?.fusionOnly?'fused':'ordinary']++;}return out;}
  const before=measure(baseline),after=measure(pool);assert.ok(after.new>before.new);assert.ok(after.fused<before.fused*.4);assert.ok(after.ordinary>900);
  console.log('Seeded 30k first-card shares',JSON.stringify({before,after}));
@@ -31,6 +31,6 @@ test('three-card screens always retain eligible ordinary growth alongside discov
  for(let i=0;i<1000;i++){
   const cards=rollChoices(3);assert.ok(cards.some(c=>!c.isNew&&(c.kind==='passive'||c.kind==='weapon'&&!WEAPONS[c.id].fusionOnly)));assert.equal(new Set(cards.map(c=>c.id)).size,3);
  }
- G.level=4;G.passives={heart:1,nose:1,hide:1,focus:1,sap:1};let cards=rollChoices(3);assert.ok(cards.some(c=>c.id==='thorns'));assert.ok(cards.some(c=>c.id==='regen'));assert.ok(cards.some(c=>!c.isNew));
+ G.level=4;G.passives={heart:1,nose:1,hide:1,focus:1,sap:1};let cards=rollChoices(3);assert.ok(cards.some(c=>c.id==='thorns'));assert.ok(cards.some(c=>!c.isNew));
  G.weapons=[createWeapon('lotus_bloom',0)];G.passives={};G.level=2;const original=Math.random;Math.random=()=>.99;try{cards=rollChoices(3);assert.ok(cards.every(c=>c.isNew));}finally{Math.random=original;}
 });

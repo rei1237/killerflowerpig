@@ -1,9 +1,14 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v8-survival-training-fusion-bosses';
+const VERSION = 'v12-tech-resonance';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
 const PRECACHE = [
+    './src/data/bestiary.js',
+    './src/ui/bestiary.js',
+    './src/ui/bestiary.css',
+    './asset/enemies/rabbit-suicider.png',
+    './asset/enemies/rabbit-gunner.png',
     './',
     './index.html',
     './style.css',
@@ -21,6 +26,10 @@ const PRECACHE = [
     './asset/tutorial/yeongnyang.webp',
     './manifest.webmanifest',
     './src/main.js',
+    './src/data/techs.js',
+    './src/game/tech.js',
+    './src/ui/tech-select.js',
+    './src/ui/tech-select.css',
     './src/core/shop-access.js',
     './src/game/fusion.js',
     './src/game/loadout-exchange.js',
@@ -38,6 +47,7 @@ const PRECACHE = [
     './src/game/boss-sheets.js',
     './src/game/weapon-vfx.js',
     './src/game/supply-drops.js',
+    './src/game/coin-drops.js',
     './src/game/pet-sprite.js',
     './asset/sprites/pet-yeongnyang.json',
     './asset/sprites/pet-yeongnyang.webp',

@@ -37,3 +37,11 @@ test('reduced motion uses static immediate result, and focus trap blocks game ke
 test('natural bloom completion still requires explicit confirmation',()=>{
  reduced=false;openFusionReveal(data);const before=done;[...timers.values()][0]();assert.equal(root.dataset.phase,'result');assert.equal(done,before);assert.equal(root.hidden,false);closeFusionReveal();assert.equal(done,before+1);
 });
+test('absolute three-ingredient awakening frees two slots and reduced motion shows static result',()=>{
+ const absolute={ingredients:[{id:'cannon',level:8},{id:'thorns',level:8},{id:'molotov',level:8}],output:{id:'absolute_bloom',name:'절대 만개',tier:'absolute',desc:'세 진화 무기의 힘'},statText:'진화 코어 3개'};
+ reduced=false;assert.equal(openFusionReveal(absolute),true);assert.equal(root.dataset.tier,'absolute');assert.equal(q('.fusion-reveal-ingredients').children.length,3);
+ assert.match(q('#fusion-reveal-heading').textContent,/절대/);assert.match(q('.fusion-reveal-slots').textContent,/3개.*2칸/);assert.equal(q('.fusion-reveal-halo').children.length,12);
+ assert.equal(timers.size,1);q('.fusion-reveal-skip').click();assert.equal(root.dataset.phase,'result');closeFusionReveal();
+ reduced=true;assert.equal(openFusionReveal(absolute),true);assert.equal(root.dataset.phase,'result');assert.equal(timers.size,0);closeFusionReveal();
+ assert.equal(openFusionReveal({...absolute,ingredients:[absolute.ingredients[0]]}),false);
+});

@@ -31,5 +31,5 @@ test('boss renderer selects stage artwork with old atlas only as missing-image f
 });
 test('ordinary mob appearance remains original while kills drop coins',()=>{
  const code=fs.readFileSync(new URL('../src/game/enemies.js',import.meta.url),'utf8');
- assert.match(code,/e.tint = elite \? 'elite' : def.tint/);assert.doesNotMatch(code,/enemyAppearance|drawBossSignature/);assert.match(code,/dropCoin\(e.x, e.y, e.elite \? 40 : 5\)/);
+ assert.match(code,/e.tint = elite \? 'elite' : def.tint/);assert.doesNotMatch(code,/enemyAppearance|drawBossSignature/);assert.match(code,/coinDropValue\(e.elite\)/);
 });
