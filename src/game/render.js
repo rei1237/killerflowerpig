@@ -199,11 +199,11 @@ function drawJoystick() {
     if (!j.active) return;
     const pr = screen.pr;
     ctx.globalAlpha = 0.35;
-    ctx.strokeStyle = '#ff4a6a';
+    ctx.strokeStyle = '#a5edcd';
     ctx.lineWidth = 3 * pr;
     ctx.beginPath(); ctx.arc(j.ox * pr, j.oy * pr, j.radius * pr, 0, Math.PI * 2); ctx.stroke();
     ctx.globalAlpha = 0.6;
-    ctx.fillStyle = '#8b0d22';
+    ctx.fillStyle = '#568e7e';
     ctx.beginPath(); ctx.arc(j.x * pr, j.y * pr, 22 * pr, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 1;
 }

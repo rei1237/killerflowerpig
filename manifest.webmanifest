@@ -1,11 +1,11 @@
 {
-  "name": "꽃돼지 연이 vs 청토끼",
-  "short_name": "Yeon Zombie",
-  "description": "청토끼 변이체 무리 속에서 살아남는 그로테스크 서바이벌 슈터",
+  "name": "꽃돼지 · 푸른 밤의 수호자",
+  "short_name": "꽃돼지",
+  "description": "꽃돼지와 함께 청토끼 좀비를 물리치는 서바이벌 슈터",
   "start_url": "./",
   "display": "fullscreen",
-  "background_color": "#0b0507",
-  "theme_color": "#0b0507",
+  "background_color": "#101f32",
+  "theme_color": "#101f32",
   "orientation": "any",
   "icons": [
     {

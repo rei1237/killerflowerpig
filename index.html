@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>꽃돼지 연이 vs 청토끼 — Yeon the Killer of Blue Zombie</title>
-    <meta name="description" content="청토끼 변이체 무리 속에서 살아남는 그로테스크 서바이벌 슈터">
-    <meta name="theme-color" content="#0b0507">
+    <title>꽃돼지 · 푸른 밤의 수호자</title>
+    <meta name="description" content="꽃돼지와 함께 청토끼 좀비를 물리치는 서바이벌 슈터">
+    <meta name="theme-color" content="#101f32">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Yeon Zombie">
+    <meta name="apple-mobile-web-app-title" content="꽃돼지">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,6 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="preload" href="asset/sprites/player.webp" as="image">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="blue-night.css">
 </head>
 <body>
     <div id="app">
@@ -24,7 +25,7 @@
         <!-- 로딩 -->
         <section id="loading" class="screen">
             <div class="loading-box">
-                <div class="drip-title">감염 확산 중...</div>
+                <div class="drip-title">꽃잎을 준비하는 중...</div>
                 <div class="flesh-bar"><div id="loading-fill" class="flesh-fill"></div></div>
                 <div id="loading-text" class="small-text">0%</div>
             </div>
@@ -33,22 +34,37 @@
         <!-- 타이틀 -->
         <section id="title" class="screen" hidden>
             <div class="title-wrap">
-                <div class="title-art"><img src="asset/ui/title.webp" alt="" width="343" height="512"></div>
-                <div class="title-menu panel">
-                    <h1 class="game-title"><span class="t-kr">꽃돼지 연이</span><span class="t-vs">VS</span><span class="t-kr blue">청토끼</span></h1>
-                    <p class="game-sub">THE KILLER OF BLUE ZOMBIE</p>
-                    <div class="menu-buttons">
-                        <button id="btn-new" class="btn btn-blood" type="button">새 게임</button>
+                <header class="menu-brand"><span class="brand-mark" aria-hidden="true">✿</span> FLOWERPIG <span class="edition">BLUE NIGHT</span></header>
+                <div class="menu-copy">
+                    <p class="eyebrow"><span></span> 작은 영웅의 커다란 모험</p>
+                    <h1>꽃돼지<span>푸른 밤의 수호자</span></h1>
+                    <p class="menu-description">청토끼 좀비가 몰려오는 밤.<br>꽃잎 총을 들고, 우리의 정원을 지켜요.</p>
+                    <div class="mission-tags"><span>자동 사격</span><span>10개의 스테이지</span><span>나만의 성장 조합</span></div>
+                </div>
+                <div class="hero-scene" aria-label="꽃돼지와 청토끼 좀비">
+                    <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+                    <span class="scene-petal petal-one">✦</span><span class="scene-petal petal-two">✿</span>
+                    <img class="menu-enemy" src="asset/ui-rabbit.png" alt="푸른 청토끼 좀비" width="1254" height="1254">
+                    <img class="menu-hero" src="asset/ui-flowerpig.png" alt="꽃잎 총을 든 꽃돼지" width="1254" height="1254">
+                    <div class="hero-caption"><span class="hero-dot"></span> YEON <small>THE GARDEN GUARDIAN</small></div>
+                </div>
+                <div class="menu-bottom">
+                    <div class="menu-launch">
+                        <button id="btn-new" class="btn btn-blood" type="button">모험 시작 <span aria-hidden="true">↗</span></button>
                         <button id="btn-continue" class="btn" type="button" hidden>이어하기</button>
-                        <button id="btn-shop" class="btn" type="button">강화 상점</button>
-                        <button id="btn-settings" class="btn" type="button">설정</button>
-                        <button id="btn-install" class="btn btn-ghost" type="button" hidden>📲 앱 설치</button>
                     </div>
-                    <div id="title-record" class="small-text record"></div>
+                    <div class="how-to"><span class="how-label">HOW TO PLAY</span><p>자유롭게 이동 · 사격은 자동</p><small>WASD / 방향키 · 터치 드래그 · Esc 일시정지</small></div>
+                </div>
+                <nav class="menu-utility" aria-label="게임 메뉴">
+                    <button id="btn-shop" class="btn btn-ghost" type="button">✦ 강화 상점</button>
+                    <button id="btn-settings" class="btn btn-ghost" type="button">설정</button>
+                    <button id="btn-install" class="btn btn-ghost" type="button" hidden>홈 화면에 추가</button>
+                </nav>
+                <div class="menu-footer"><div id="title-record" class="small-text record"></div>
                     <details id="secret" class="secret">
-                        <summary>🔐 SECRET CODE</summary>
+                        <summary>비밀 코드</summary>
                         <div class="secret-body">
-                            <input id="secret-input" type="password" inputmode="numeric" maxlength="6" placeholder="연이의 생년월일 6자리" autocomplete="off">
+                            <input id="secret-input" aria-label="비밀 코드 6자리" type="password" inputmode="numeric" maxlength="6" placeholder="연이의 생년월일 6자리" autocomplete="off">
                             <button id="secret-submit" class="btn btn-small" type="button">해제</button>
                             <div id="secret-error" class="error-text" hidden>코드가 틀렸습니다</div>
                         </div>
@@ -57,8 +73,7 @@
                             <div id="stage-grid" class="stage-grid"></div>
                             <label class="check"><input id="dev-god" type="checkbox" checked> 무적 모드</label>
                         </div>
-                    </details>
-                </div>
+                    </details></div>
             </div>
         </section>
 
@@ -74,6 +89,17 @@
             </div>
         </section>
 
+        <div id="battle-hud" class="battle-hud" hidden>
+            <div class="guardian-card"><img src="asset/ui-flowerpig.png" alt="" width="1254" height="1254"><div class="guardian-vitals">
+                <div class="vitals-label"><strong>꽃돼지 <span id="hud-level">Lv.1</span></strong><span id="hud-hp-text"></span></div>
+                <div id="hud-hp-track" class="vital-track" role="progressbar" aria-label="체력" aria-valuemin="0" aria-valuemax="100"><div id="hud-hp"></div></div>
+                <div id="hud-xp-track" class="xp-track" role="progressbar" aria-label="경험치" aria-valuemin="0" aria-valuemax="100"><div id="hud-xp"></div></div>
+            </div></div>
+            <div class="mission-card"><span id="hud-stage"></span><strong id="hud-time">0:00</strong><small id="hud-score"></small></div>
+            <div id="hud-build" class="hud-build" aria-label="현재 장비"></div>
+            <div id="hud-boss" class="hud-boss" hidden><span id="hud-boss-name"></span><div class="boss-track"><div id="hud-boss-hp"></div></div></div>
+            <div class="movement-hint">✥ 드래그 / WASD로 이동 <span>공격은 자동이에요</span></div>
+        </div>
         <!-- 인게임 버튼 -->
         <button id="btn-pause" class="pause-btn" type="button" aria-label="일시정지" hidden>❚❚</button>
         <div id="banner" class="banner" hidden></div>
@@ -81,7 +107,7 @@
         <!-- 레벨업 -->
         <section id="levelup" class="modal" hidden>
             <div class="modal-box levelup-box">
-                <h2 class="modal-title drip">변이 선택 <small id="levelup-lv">LV 2</small></h2>
+                <h2 class="modal-title drip">성장을 골라 주세요 <small id="levelup-lv">LV 2</small></h2>
                 <div id="cards" class="cards"></div>
                 <div class="modal-actions">
                     <button id="btn-reroll" class="btn btn-small" type="button">🎲 리롤</button>
@@ -93,7 +119,7 @@
         <!-- 관 상자 -->
         <section id="chest" class="modal" hidden>
             <div class="modal-box chest-box">
-                <h2 class="modal-title drip" id="chest-title">피 묻은 관</h2>
+                <h2 class="modal-title drip" id="chest-title">보물 상자</h2>
                 <div id="coffin" class="coffin"><div class="coffin-lid"></div><div class="coffin-body"></div></div>
                 <div id="rewards" class="rewards"></div>
                 <div class="modal-actions">
@@ -105,7 +131,7 @@
         <!-- 일시정지 -->
         <section id="pause" class="modal" hidden>
             <div class="modal-box small-box">
-                <h2 class="modal-title drip">일시정지</h2>
+                <p class="eyebrow">TAKE A BREATH</p><h2 class="modal-title drip">잠시, 꽃을 고르는 시간</h2><p class="panel-caption">모험이 멈췄어요. 지금까지의 성장을 확인해요.</p>
                 <div id="pause-build" class="pause-build"></div>
                 <div class="menu-buttons">
                     <button id="btn-resume" class="btn btn-blood" type="button">계속하기</button>
@@ -162,8 +188,8 @@
         <!-- 게임 오버 -->
         <section id="gameover" class="screen result-screen" hidden>
             <div class="result-panel panel">
-                <h2 class="died-title">연이가 쓰러졌다</h2>
-                <img class="result-img" src="asset/ui/gameover.webp" alt="" width="442" height="63">
+                <p class="eyebrow">UNTIL NEXT BLOOM</p><h2 class="died-title">다시 피어날 수 있어요</h2>
+                <img class="result-img" src="asset/ui-flowerpig.png" alt="꽃돼지" width="1254" height="1254">
                 <p id="gameover-lore" class="lore"></p>
                 <div id="gameover-stats" class="stats"></div>
                 <div class="menu-buttons row">
@@ -176,10 +202,11 @@
         <!-- 스테이지 클리어 -->
         <section id="clear" class="screen result-screen" hidden>
             <div class="result-panel panel">
+                <img class="result-hero" src="asset/ui-flowerpig.png" alt="정원을 지킨 꽃돼지" width="1254" height="1254">
                 <h2 id="clear-title" class="result-title">STAGE 1 CLEAR</h2>
                 <div id="clear-stats" class="stats"></div>
                 <div class="menu-buttons row">
-                    <button id="btn-next" class="btn btn-blood" type="button">다음 지옥으로 ▶</button>
+                    <button id="btn-next" class="btn btn-blood" type="button">다음 정원으로 →</button>
                 </div>
             </div>
         </section>
@@ -187,8 +214,8 @@
         <!-- 엔딩 -->
         <section id="ending" class="screen result-screen" hidden>
             <div class="result-panel panel">
-                <img class="ending-img" src="asset/ui/clear.webp" alt="GAME CLEAR" width="512" height="196">
-                <h2 class="result-title gold">REQUIEM FOR THE PINK DAWN</h2>
+                <img class="result-hero" src="asset/ui-flowerpig.png" alt="모든 정원을 지켜 낸 꽃돼지" width="1254" height="1254">
+                <h2 class="result-title gold">모든 정원에, 다시 꽃이 피었어요</h2>
                 <div id="ending-stats" class="stats"></div>
                 <div class="menu-buttons row">
                     <button id="btn-ending-title" class="btn btn-blood" type="button">타이틀로</button>

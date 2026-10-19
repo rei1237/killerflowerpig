@@ -1,5 +1,5 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v3-survivor';
+const VERSION = 'v4-blue-night';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
@@ -7,11 +7,14 @@ const PRECACHE = [
     './',
     './index.html',
     './style.css',
+    './blue-night.css',
     './manifest.webmanifest',
     './src/main.js',
     './asset/sprites/player.webp',
     './asset/sprites/rabbit1.webp',
     './asset/ui/title.webp',
+    './asset/ui-flowerpig.png',
+    './asset/ui-rabbit.png',
 ];
 
 self.addEventListener('install', (event) => {

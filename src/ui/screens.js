@@ -26,6 +26,7 @@ function hide(id) { $(id).hidden = true; }
 
 function setPlaying(on) {
     $('btn-pause').hidden = !on;
+    $('battle-hud').hidden = !on;
     input.enabled = on;
     if (!on) resetJoy();
 }
@@ -188,14 +189,14 @@ function renderCards() {
         if (c.evoHint) {
             const h = document.createElement('div');
             h.className = 'card-evo';
-            h.textContent = `🩸 진화 재료 → ${c.evoHint}`;
+            h.textContent = `✿ 진화 재료 → ${c.evoHint}`;
             el.appendChild(h);
         } else if (c.kind === 'weapon' && WEAPONS[c.id] && !c.isNew) {
             const ev = WEAPONS[c.id].evolve;
             if (c.level === 8) {
                 const h = document.createElement('div');
                 h.className = 'card-evo';
-                h.textContent = `최대 레벨 + ${PASSIVES[ev.with].name} → 보스 관에서 진화`;
+                h.textContent = `최대 레벨 + ${PASSIVES[ev.with].name} → 보스 보상에서 진화`;
                 el.appendChild(h);
             }
         }
@@ -217,7 +218,7 @@ function pickCard(idx) {
 export function showChest(kind) {
     const boss = kind === 'boss';
     const count = boss ? (G.stage >= 6 ? 5 : G.stage >= 3 ? 3 : 1) : 1;
-    $('chest-title').textContent = boss ? `${BOSSES[G.stage].name}의 관` : '피 묻은 관';
+    $('chest-title').textContent = boss ? `${BOSSES[G.stage].name}의 보물` : '보물 상자';
     const coffin = $('coffin');
     coffin.className = 'coffin';
     $('rewards').innerHTML = '';
