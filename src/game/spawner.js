@@ -12,7 +12,7 @@ export function resetSpawner() {
     G.eventIdx = 0;
 }
 
-function currentWeights(st, t) {
+export function currentWeights(st, t) {
     let w = st.weights[0][1];
     for (const [time, table] of st.weights) if (t >= time) w = table;
     return w;

@@ -20,7 +20,7 @@ export const BOSSES = {
         phases: [['spiral', 'pools'], ['spiral', 'pools', 'blink'], ['spiral', 'blink', 'ring', 'summon']] },
     9: { name: '브루투스 킹', title: '최강의 왕이 눈을 떴다!', sheet: 'bossKing', tint: 'normal', scale: 0.66, hp: 28000, speed: 60, dmg: 34,
         phases: [['spiral', 'ring', 'charge'], ['spiral', 'ring', 'charge', 'summon', 'slam'], ['spiral', 'slam', 'charge', 'pools', 'ring']] },
-    10: { name: '얼티메이트 원', title: '재앙의 근원이 여기 있다...', sheet: 'bossKing', tint: 'elite', scale: 0.76, hp: 42000, speed: 64, dmg: 38, hallucinate: true,
+    10: { name: '청토끼 · 시간의 채권자', title: '마지막 계약의 시간이 다가온다...', sheet: 'bossKing', tint: 'elite', scale: 0.76, hp: 42000, speed: 64, dmg: 38, hallucinate: true,
         phases: [['spiral', 'ring', 'charge', 'summon'], ['spiral', 'snipe', 'pools', 'charge', 'slam'], ['spiral', 'ring', 'blink', 'snipe', 'pools', 'slam', 'summon']] },
 };
 

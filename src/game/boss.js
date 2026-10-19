@@ -1,3 +1,4 @@
+import { drawBossSignature } from './boss-appearance.js';
 // 보스: 3페이즈, 예고(텔레그래프) 기반 패턴, 페이즈 전환 연출, 처치 시 관 상자
 import { G, rand, emit, pickWeighted } from './state.js';
 import { BOSSES, PHASE_THRESHOLDS } from '../data/bosses.js';
@@ -366,7 +367,9 @@ export class Boss {
         if (this.alpha < 1) ctx.globalAlpha = this.alpha;
         if (!this.alive && this.deadT > 2.5) ctx.globalAlpha = Math.max(0, 1 - (this.deadT - 2.5));
         if (this.invuln > 0 && this.alive) ctx.globalAlpha = 0.6 + Math.sin(G.clock * 40) * 0.3;
+        drawBossSignature(ctx, this, G.clock);
         this.atlas.draw(ctx, anim, this.anim, this.x, this.y, this.scale, this.flip, tint);
+        drawBossSignature(ctx, this, G.clock, true);
         ctx.globalAlpha = 1;
     }
 }

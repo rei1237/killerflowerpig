@@ -1,13 +1,16 @@
 // 플레이어(연이): 8방향 이동, 피격/무적, 재생, 패시브·영구강화 반영 스탯
 import { G, emit } from './state.js';
 import { input } from '../core/input.js';
-import { atlases } from '../core/assets.js';
+import { atlases, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
-import { upgradeLevel } from '../core/save.js';
+import { relicStats } from '../data/relics.js';
+import { upgradeLevel, save } from '../core/save.js';
 import { MAGAZINE_TABLE } from '../data/weapons.js';
 import { blood, flash, shake, damageText, hitstop } from './effects.js';
 
-const BASE = { hp: 100, speed: 135, magnet: 70, radius: 13 };
+import { shotFrame, firingDrawRect, markPlayerShot, PLAYER_HIT_RADIUS, playerBob } from './player-motion.js';
+
+const BASE = { hp: 100, speed: 135, magnet: 70, radius: PLAYER_HIT_RADIUS };
 
 export function createPlayer() {
     G.player = {
@@ -17,6 +20,7 @@ export function createPlayer() {
         facingX: 1, facingY: 0, flip: false,
         iframes: 0, hurtT: 0,
         anim: 0, animT: 0,
+        shotAt: -Infinity, shotFlip: false,
         trailT: 0,
         stats: null,
         dead: false,
@@ -43,6 +47,7 @@ export function recomputeStats(fullHeal = false) {
         maxHp: BASE.hp + lv('heart') * 20 + upgradeLevel('maxHp') * 10,
         greed: 1 + upgradeLevel('greed') * 0.1,
     };
+    Object.assign(s, relicStats(s, save));
     const oldMax = p.maxHp;
     p.stats = s;
     p.maxHp = s.maxHp;
@@ -107,14 +112,28 @@ export function healPlayer(amount) {
     if (p.hp > before) damageText(p.x, p.y - 44, p.hp - before, false, '#5dff7a');
 }
 
+export function triggerPlayerShot(dx) {
+    markPlayerShot(G.player, G.clock, dx);
+}
+
 export function drawPlayer(ctx) {
     const p = G.player;
     const atlas = atlases.player;
-    if (!atlas) return;
+    if (!atlas && !images.playerFire) return;
     const blink = p.iframes > 0 && Math.floor(G.clock * 20) % 2 === 0;
     const tint = p.hurtT > 0 ? 'flash' : 'normal';
     if (blink && p.hurtT <= 0) ctx.globalAlpha = 0.55;
-    const bob = Math.abs(Math.sin(G.clock * 12)) * (p.vx || p.vy ? 2 : 0.5);
-    atlas.draw(ctx, 'walk', p.anim, p.x, p.y - bob, 0.6, p.flip, tint);
+    const bob = playerBob(p,G.clock);
+    if (images.playerFire) {
+        const frame = shotFrame(G.clock - p.shotAt);
+        const flip = frame ? p.shotFlip : p.flip;
+        ctx.save();
+        ctx.translate(p.x, p.y - bob);
+        if (flip) ctx.scale(-1, 1);
+        ctx.drawImage(tint === 'flash' ? images.playerFireFlash : images.playerFire, ...firingDrawRect(frame));
+        ctx.restore();
+    } else {
+        atlas.draw(ctx, 'walk', p.anim, p.x, p.y - bob, 0.48, p.flip, tint);
+    }
     ctx.globalAlpha = 1;
 }

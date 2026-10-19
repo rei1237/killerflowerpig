@@ -1,3 +1,5 @@
+import { creditPetalKill, firePetalCannon } from './game/petal-cannon.js';
+import { triggerPlayerShot } from './game/player.js';
 // 부트스트랩: 에셋 로딩 → UI/입력 연결 → 고정 타임스텝 루프
 import { G, configureCaps } from './game/state.js';
 import { initRender, render, resize } from './game/render.js';
@@ -26,7 +28,11 @@ async function boot() {
     G.events.gameOver = showGameOver;
     G.events.stageClear = showStageClear;
     G.events.bossSpawn = onBossSpawn;
+    G.events.saveError = () => toast('코인을 저장하지 못했습니다. 코인은 바닥에 유지됩니다. 저장 공간을 확인하세요.', 5000);
     input.onPause = togglePause;
+    input.onSpecial = firePetalCannon;
+    G.events.kill = creditPetalKill;
+    G.events.petalFired = () => triggerPlayerShot(G.player.facingX);
 
     const fill = document.getElementById('loading-fill');
     const txt = document.getElementById('loading-text');

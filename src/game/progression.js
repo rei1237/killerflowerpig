@@ -25,7 +25,7 @@ export function weaponOf(id) { return G.weapons.find(w => w.id === id); }
 function candidates() {
     const out = [];
     for (const w of G.weapons) {
-        if (w.level < WEAPON_MAX_LEVEL) {
+        if (w.level < WEAPON_MAX_LEVEL && !G.banished.has(w.id)) {
             const def = WEAPONS[w.id];
             out.push({ kind: 'weapon', id: w.id, level: w.level + 1, weight: 3,
                 name: w.evolved ? def.evolve.name : def.name, icon: w.evolved ? def.evolve.icon : def.icon,
@@ -48,7 +48,12 @@ function candidates() {
         out.push({ kind: 'passive', id, level: lv + 1, weight: lv ? 2.5 : 1.5,
             name: def.name, icon: def.icon, desc: lv ? def.per : def.desc, isNew: !lv });
     }
-    // 진화 힌트: 무기 최대 레벨 근처 + 짝 패시브 없음 → 패시브 가중치 증가
+    // 핵심 생존 선택지 우대. 상점 희귀도/천장 및 상자 보상 확률과는 별개다.
+    for (const c of out) {
+        if (c.id === 'thorns') c.weight *= c.isNew ? 2.5 : 2;
+        else if (c.kind === 'passive' && (c.id === 'heart' || c.id === 'regen')) c.weight *= 1.5;
+    }
+    // 진화 힌트: 미진화 무기의 짝 패시브 가중치 증가 (기존 +2 유지)
     for (const c of out) {
         if (c.kind !== 'passive') continue;
         for (const w of G.weapons) {
@@ -61,6 +66,14 @@ function candidates() {
 export function rollChoices(n = 3) {
     const pool = candidates();
     const picks = [];
+    // 세 번째 레벨업(Lv.4)에는 미보유 연꽃 가시를 한 자리 보장한다.
+    // 한 번에 여러 레벨이 올라도 현재 처리 중인 선택 화면의 레벨을 사용한다.
+    // 후보 풀 안에서만 고르므로 금지·최대 레벨·무기 슬롯 제한을 우회하지 않는다.
+    const choiceLevel = G.level - G.pendingLevelUps;
+    if (n > 0 && choiceLevel === 4) {
+        const thorns = pool.findIndex(c => c.id === 'thorns' && c.isNew);
+        if (thorns >= 0) picks.push(pool.splice(thorns, 1)[0]);
+    }
     while (picks.length < n && pool.length) {
         let total = 0;
         for (const c of pool) total += c.weight;
@@ -70,7 +83,7 @@ export function rollChoices(n = 3) {
         picks.push(pool.splice(Math.min(idx, pool.length - 1), 1)[0]);
     }
     if (!picks.length) {
-        picks.push({ kind: 'heal', id: 'meat', name: '썩은 고기', icon: '🍖', desc: '체력 50 회복' });
+        picks.push({ kind: 'heal', id: 'meat', name: '야전 응급 키트', icon: '🍖', desc: '체력 50 회복' });
         picks.push({ kind: 'gold', id: 'gold', name: '피 묻은 금화', icon: '🪙', desc: '골드 +40' });
     }
     return picks;

@@ -5,6 +5,7 @@ import { audio } from '../core/audio.js';
 import { addXP } from './progression.js';
 import { healPlayer } from './player.js';
 import { flash, shake, floatText } from './effects.js';
+import { earnCoins } from '../core/save.js';
 import { hitEnemy } from './enemies.js';
 
 function tierOf(v) { return v < 4 ? 0 : v < 20 ? 1 : 2; }
@@ -27,8 +28,23 @@ export function dropGem(x, y, value) {
 
 export function dropPickup(kind, x, y) {
     const p = G.pickups.spawn();
-    p.kind = kind; p.x = x; p.y = y; p.t = 0; p.pull = false; p.speed = 0; p.boss = false;
+    p.kind = kind; p.x = x; p.y = y; p.t = 0; p.pull = false; p.speed = 0; p.boss = false; p.value = 0;
     return p;
+}
+
+// Coins share the bounded pickup field; excess coins merge without losing value.
+export function dropCoin(x, y, value = 1) {
+    if (!Number.isSafeInteger(value) || value <= 0) return null;
+    if (G.pickups.count >= 180) {
+        for (let i = 0; i < G.pickups.count; i++) {
+            const coin = G.pickups.items[i];
+            if (coin.kind === 'coin') { coin.value += value; return coin; }
+        }
+    }
+    const coin = dropPickup('coin', x, y);
+    coin.value = value;
+    coin.retryAt = 0;
+    return coin;
 }
 
 export function magnetAll() {
@@ -51,14 +67,29 @@ function detonate() {
     if (G.boss && G.boss.alive) G.boss.hurt(60 + G.stage * 40, { silent: false });
 }
 
+let nextStorageNotice = -Infinity;
 function collect(item) {
     switch (item.kind) {
+        case 'coin': {
+            const value = Math.max(1, Math.round(item.value * G.player.stats.greed));
+            if (item.retryAt > G.clock) return false;
+            if (!earnCoins(value)) {
+                item.retryAt = G.clock + 2;
+                if (G.clock >= nextStorageNotice) { nextStorageNotice = G.clock + 6; emit('saveError'); }
+                return false;
+            }
+            G.gold += value;
+            audio.sfx('pickup');
+            floatText(G.player.x, G.player.y - 44, `+${value}`, '#ffd877');
+            break;
+        }
         case 'meat': healPlayer(30); audio.sfx('heal'); break;
         case 'magnet': magnetAll(); audio.sfx('pickup'); floatText(G.player.x, G.player.y - 60, '굶주림!', '#ff8fa3'); break;
         case 'bomb': detonate(); break;
         case 'chest': audio.sfx('chest'); emit('chest', item.boss ? 'boss' : 'elite'); break;
         default: break;
     }
+    return true;
 }
 
 export function updatePickups(dt) {
@@ -90,17 +121,17 @@ export function updatePickups(dt) {
         it.t += dt;
         const dx = p.x - it.x, dy = py - it.y;
         const d = Math.hypot(dx, dy) || 1;
-        if (!it.pull && d < Math.max(40, mr * 0.6)) it.pull = true;
+        if (!it.pull && d < (it.kind === 'coin' ? mr : Math.max(40, mr * 0.6))) it.pull = true;
         // 보스 관은 잠시 후 플레이어에게 끌려옴 (놓치지 않게)
         if (!it.pull && it.boss && it.t > 1.6) it.pull = true;
         if (it.pull) {
             it.speed = Math.min(700, it.speed + 1000 * dt);
-            it.x += (dx / d) * it.speed * dt;
-            it.y += (dy / d) * it.speed * dt;
+            const step = Math.min(d, it.speed * dt);
+            it.x += (dx / d) * step;
+            it.y += (dy / d) * step;
         }
         if (d < 18) {
-            pk.release(i);
-            collect(it);
+            if (collect(it)) pk.release(i);
         }
     }
 }
@@ -119,6 +150,15 @@ export function drawPickups(ctx, vx0, vy0, vx1, vy1) {
     const pk = G.pickups;
     for (let i = 0; i < pk.count; i++) {
         const it = pk.items[i];
+        if (it.kind === 'coin') {
+            if (it.x < vx0 || it.x > vx1 || it.y < vy0 || it.y > vy1) continue;
+            const bob = Math.sin(t * 4 + i) * 2;
+            ctx.save(); ctx.translate(it.x, it.y - 6 + bob);
+            ctx.fillStyle = '#9f641d'; ctx.beginPath(); ctx.ellipse(0, 1, 7, 8, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffd76a'; ctx.beginPath(); ctx.ellipse(0, -1, 6, 7, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fff2b3'; ctx.fillRect(-1, -5, 2, 8);
+            ctx.restore(); continue;
+        }
         const img = it.kind === 'meat' ? fx.meat : it.kind === 'magnet' ? fx.magnet : it.kind === 'bomb' ? fx.bomb : fx.chest;
         const bob = Math.sin(t * 3 + i) * 2;
         if (it.kind === 'chest') {

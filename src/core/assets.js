@@ -411,11 +411,33 @@ export async function loadAssets(onProgress) {
     for (const n of [1, 3, 5, 7, 9]) add(`bg${n}`, `asset/bg/stage${n}.webp`, (img) => { images[`bg${n}`] = img; });
     for (const n of ['title', 'victory', 'gameover', 'clear']) add(n, `asset/ui/${n}.webp`, (img) => { images[n] = img; });
 
+    for (const [key, file] of [['cacheArt','salvage-cache'],['medArt','medical-kit'],['magnetArt','field-magnet']])
+        add(key, `asset/items/${file}.png`, img => { images[key] = img; });
+    add('petYeongnyang', 'asset/items/pet-yeongnyang.png', img => { images.petYeongnyang = img; });
+    add('playerFire', 'asset/sprites/player-fire.png', (img) => {
+        if (!img) return;
+        images.playerFire = img;
+        const flash = makeCanvas(img.width, img.height);
+        const g = flash.getContext('2d');
+        g.drawImage(img, 0, 0);
+        g.globalCompositeOperation = 'source-atop';
+        g.fillStyle = 'rgba(255,255,255,0.72)';
+        g.fillRect(0, 0, img.width, img.height);
+        images.playerFireFlash = flash;
+    });
     const total = jobs.length;
     let done = 0;
     await Promise.all(jobs.map(j => j.then(() => { done++; onProgress?.(null, done / total); })));
 
     buildFx();
+    for (const [key, target, size] of [['cacheArt','chest',44],['medArt','meat',30],['magnetArt','magnet',30]]) {
+        const img = images[key];
+        if (!img) continue;
+        const c = makeCanvas(size,size), g = c.getContext('2d');
+        const scale = Math.min(size/img.width,size/img.height);
+        g.drawImage(img,(size-img.width*scale)/2,(size-img.height*scale)/2,img.width*scale,img.height*scale);
+        fx[target] = c;
+    }
 }
 
 function buildFx() {
@@ -427,8 +449,8 @@ function buildFx() {
         fx.splats.gray.push(makeSplat(31 + i * 9, '#24242c', 56));
     }
     fx.gems = [
-        makeGem('#ff8fa3', '#7a1f30', 14), // 살점 조각 (1)
-        makeGem('#e0213a', '#4a0010', 18), // 썩은 심장 (5)
+        makeGem('#71b8cf', '#183b50', 14), // 경험치 조각 (1)
+        makeGem('#5bd3be', '#174e49', 18), // 경험치 결정 (5)
         makeGem('#4aa8ff', '#0b2a5a', 22), // 푸른 결정 (25)
     ];
     fx.bullet = makeBullet('#ffd27a', 14, 6);

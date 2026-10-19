@@ -1,0 +1,47 @@
+/* Isolated illustrated field guide; no global element overrides. */
+.tutorial-overlay[hidden] { display: none !important; }
+.tutorial-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); background: #050b20d9; backdrop-filter: blur(14px); color: #f1f5ff; font-family: inherit; overflow-y: auto; overscroll-behavior: contain; }
+.tutorial-panel { width: min(820px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; display: grid; grid-template-columns: 44% 56%; background: linear-gradient(135deg, #192b49, #101b33 65%); border: 1px solid #6083b55c; border-radius: 28px; box-shadow: 0 30px 100px #0009, inset 0 1px #b3ceff16; }
+.tutorial-top { grid-column: 1/-1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 24px 4px; }
+.tutorial-eyebrow { font-size: 10px; letter-spacing: .16em; font-weight: 800; color: #91b7e4; }
+.tutorial-overlay button { min-height: 44px; padding: 10px 18px; border-radius: 12px; border: 1px solid transparent; font: inherit; font-size: 14px; font-weight: 750; cursor: pointer; touch-action: manipulation; }
+.tutorial-overlay button:focus-visible { outline: 3px solid #9decff; outline-offset: 3px; }
+.tutorial-overlay .tutorial-skip { background: transparent; color: #bdcbe0; font-size: 12px; padding: 8px 12px; }
+.tutorial-picture { display: grid; place-items: center; min-height: 290px; margin: 10px 0 10px 20px; background: radial-gradient(ellipse, #4269ae38 0, #9e7bd417 35%, transparent 68%); }
+.tutorial-art { display: block; width: 100%; height: 300px; object-fit: contain; filter: drop-shadow(0 15px 20px #0004); }
+.tutorial-copy { align-self: center; padding: 28px 30px 24px 18px; }
+.tutorial-count { margin: 0 0 14px; font-size: 12px; font-weight: 800; color: #92d8f7; }
+.tutorial-copy h2 { margin: 0 0 16px; color: #f5f7ff; font-size: clamp(23px, 3.5vw, 30px); line-height: 1.35; word-break: keep-all; outline: none; }
+.tutorial-text { margin: 0; color: #c8d5e9; font-size: 15px; line-height: 1.85; word-break: keep-all; }
+.tutorial-tip { margin: 22px 0 0; border-left: 2px solid #8dafe4; padding: 8px 0 8px 12px; color: #a9bedf; font-size: 12px; line-height: 1.75; word-break: keep-all; }
+.tutorial-footer { grid-column: 1/-1; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #90b1dc20; padding: 18px 24px; }
+.tutorial-back { background: #bacfff0c; color: #d5e2f5; border-color: #a1b8dc30 !important; }
+.tutorial-back:disabled { opacity: .3; cursor: default; }
+.tutorial-next { background: linear-gradient(135deg, #d4e9ff, #9fc0f5); color: #142544; min-width: 108px; box-shadow: 0 4px 18px #6da5fc22; }
+.tutorial-dots { display: flex; gap: 7px; }
+.tutorial-dot { width: 6px; height: 6px; border-radius: 9px; background: #6680a666; transition: width .15s; }
+.tutorial-dot.is-current { background: #a8d9ff; width: 22px; }
+@media (max-width: 580px) {
+ .tutorial-panel { grid-template-columns: 1fr; border-radius: 22px; }
+ .tutorial-top { padding: 10px 16px 0; }
+ .tutorial-eyebrow { font-size: 9px; letter-spacing: .1em; }
+ .tutorial-picture { margin: 0 24px; min-height: 0; }
+ .tutorial-art { height: clamp(145px, 26dvh, 230px); }
+ .tutorial-copy { padding: 10px 24px 20px; }
+ .tutorial-copy h2 { font-size: 24px; margin-bottom: 12px; }
+ .tutorial-count { margin-bottom: 9px; }
+ .tutorial-text { font-size: 14px; line-height: 1.75; }
+ .tutorial-tip { margin-top: 14px; }
+ .tutorial-footer { padding: 14px 18px; gap: 10px; }
+}
+@media (max-height: 510px) and (min-width: 581px) {
+ .tutorial-top { padding-top: 6px; }
+ .tutorial-picture { min-height: 0; }
+ .tutorial-art { height: 180px; }
+ .tutorial-copy { padding-top: 8px; padding-bottom: 12px; }
+ .tutorial-copy h2 { font-size: 23px; margin-bottom: 8px; }
+ .tutorial-text { font-size: 13px; line-height: 1.55; }
+ .tutorial-tip { margin-top: 10px; }
+ .tutorial-footer { padding-top: 10px; padding-bottom: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .tutorial-dot { transition: none; } }

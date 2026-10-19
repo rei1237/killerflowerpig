@@ -1,3 +1,4 @@
+import { playerBody } from './player-motion.js';
 // 적 시스템: 스폰, 추적 이동 + 상호 밀어내기(그리드), 원거리 공격, 상태이상, 피격/사망 처리
 import { G, rand, emit } from './state.js';
 import { ENEMIES, ELITE, stageScaling } from '../data/enemies.js';
@@ -7,7 +8,7 @@ import { audio } from '../core/audio.js';
 import { goreProfile } from '../core/settings.js';
 import { blood, gibs, decal, damageText, sparks, smoke, shake, hitstop } from './effects.js';
 import { damagePlayer } from './player.js';
-import { dropGem, dropPickup } from './pickups.js';
+import { dropGem, dropPickup, dropCoin } from './pickups.js';
 import { spawnHazard } from './hazards.js';
 
 let nextId = 1;
@@ -108,6 +109,7 @@ function killEnemy(e, opts) {
     if (e.elite) { shake(6); hitstop(0.06); }
 
     dropGem(e.x, e.y, e.xp);
+    dropCoin(e.x, e.y, e.elite ? 12 : 1);
     const r = Math.random();
     if (e.elite) dropPickup('chest', e.x, e.y);
     else if (r < 0.006) dropPickup('meat', e.x, e.y);
@@ -271,7 +273,8 @@ export function updateEnemyShots(dt) {
         s.x += s.vx * dt; s.y += s.vy * dt;
         if (s.accel) { s.vx *= 1 + s.accel * dt; s.vy *= 1 + s.accel * dt; }
         if (s.life <= 0) { pool.release(i); continue; }
-        const dx = p.x - s.x, dy = (p.y - 20) - s.y;
+        const body = playerBody(p);
+        const dx = body.x - s.x, dy = body.y - s.y;
         const r = s.radius + p.radius;
         if (dx * dx + dy * dy < r * r) {
             damagePlayer(s.dmg, s.x, s.y);

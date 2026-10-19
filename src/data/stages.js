@@ -12,14 +12,14 @@ export const STAGES = {
         name: 'NEON GRAVEYARD', subtitle: '네온 시티 중심가', duration: 160, bg: 'bg1',
         ground: { seed: 2, base: '#16151d', stain: 'rgba(120,20,90,0.16)', crack: 'rgba(0,0,0,0.5)' },
         fog: 'rgba(160,40,140,0.06)', bossId: 2,
-        weights: [[0, { shambler: 3, runner: 1 }], [50, { shambler: 2, runner: 2, spitter: 1 }], [110, { shambler: 2, runner: 2, spitter: 1, brute: 1 }]],
+        weights: [[0, { shambler: 3, runner: 1 }], [50, { shambler: 2, runner: 2 }], [110, { shambler: 2, runner: 2, brute: 1 }]],
         density: [20, 80],
     },
     3: {
         name: 'POISON MIST', subtitle: '호텔 지구', duration: 170, bg: 'bg3',
         ground: { seed: 3, base: '#18201a', stain: 'rgba(90,160,40,0.2)', crack: 'rgba(0,0,0,0.45)' },
         fog: 'rgba(90,200,60,0.1)', bossId: 3,
-        weights: [[0, { shambler: 2, runner: 2, bloater: 1 }], [60, { runner: 2, spitter: 2, bloater: 1, brute: 1 }]],
+        weights: [[0, { shambler: 2, runner: 2, bloater: 1 }], [60, { runner: 2, bloater: 1, brute: 1 }], [90, { runner: 2, spitter: 2, bloater: 1, brute: 1 }]],
         density: [26, 100],
     },
     4: {

@@ -10,16 +10,46 @@ import { refreshGore } from '../game/effects.js';
 import { configureCaps } from '../game/state.js';
 import { resize } from '../game/render.js';
 import { settings, setSetting } from '../core/settings.js';
-import { save, persist, SHOP, upgradeLevel, buyUpgrade } from '../core/save.js';
+import { save, persist, SHOP, upgradeLevel, buyUpgrade, equipPet, lastSaveError, queueCoins, retryPendingCoins, pendingCoinTotal, openChest, buyRelic, queueCharacterXP, retryPendingCharacterXP, pendingCharacterXP } from '../core/save.js';
 import { audio } from '../core/audio.js';
 import { input, resetJoy } from '../core/input.js';
+
+import { characterProgress, petalStats } from '../core/character-progression.js';
+import { firePetalCannon } from '../game/petal-cannon.js';
+import { shopAccess, highestClearedStage } from '../core/shop-access.js';
+import { PET_REDEMPTION } from '../core/pet-redemption.js';
+import { RELICS, RELIC_CHEST, strongestRelic, chestRates } from '../data/relics.js';
+import { mountItemArt, itemArt } from './item-art.js';
+import { initTutorial, openTutorial, closeTutorial, shouldOfferTutorial } from './tutorial.js';
+
+let presentedCharacterLevel = characterProgress(save.characterXP).level;
+function announceCharacterGrowth() {
+    const level = characterProgress(save.characterXP).level;
+    if (level > presentedCharacterLevel) toast(`캐릭터 Lv.${level} · 꽃잎포 위력과 범위가 성장했어요`,4000);
+    presentedCharacterLevel = level;
+}
+let rewardSequence = 0;
+const rewardSession = Date.now().toString(36) + Math.random().toString(36).slice(2);
+function creditReward(amount) {
+    if (amount > 0 && !queueCoins(amount, `${rewardSession}:${++rewardSequence}`)) notifyPending();
+}
+function notifyPending() {
+    if (pendingCharacterXP()) { toast(`캐릭터 경험치 ${pendingCharacterXP()} 저장 대기 · 새로고침하면 사라질 수 있습니다`,6000); return; }
+    if (pendingCoinTotal()) toast(`저장 대기 코인 ${pendingCoinTotal()} · 새로고침하면 사라질 수 있습니다`, 6000);
+    else if (lastSaveError) toast('저장하지 못했습니다. 저장 공간을 확인하고 다시 시도하세요.', 5000);
+}
 
 const $ = (id) => document.getElementById(id);
 const SECRET = '910902';
 
 let installPrompt = null;
 let devUnlocked = false;
-let modalStack = 0;
+const modalStack = [];
+const modalFocus = new Map();
+const pendingRewardScreens = [];
+let modalBasePaused = false;
+let chestTimer = null;
+let activeChest = null;
 
 function show(id) { $(id).hidden = false; }
 function hide(id) { $(id).hidden = true; }
@@ -31,19 +61,57 @@ function setPlaying(on) {
     if (!on) resetJoy();
 }
 
-function openModal(id) {
-    modalStack++;
+export function topModalId() { return modalStack.at(-1) || null; }
+
+function syncModalState() {
+    const top = topModalId();
+    for (let i = 0; i < modalStack.length; i++) {
+        const node = $(modalStack[i]);
+        node.inert = modalStack[i] !== top;
+        node.style.zIndex = String(100 + i);
+    }
+    G.paused = top ? true : modalBasePaused;
+    input.enabled = !G.paused && (G.mode === 'play' || G.mode === 'boss' || G.mode === 'clearing');
+}
+
+export function openModal(id) {
+    if (modalStack.includes(id)) return false;
+    if (!modalStack.length) modalBasePaused = G.paused;
+    modalFocus.set(id, document.activeElement);
+    modalStack.push(id);
     G.paused = true;
     resetJoy();
     show(id);
+    syncModalState();
     const first = $(id).querySelector('button, .card');
     first?.focus({ preventScroll: true });
+    return true;
 }
 
-function closeModal(id) {
+export function closeModal(id) {
+    // An underlying or already-closed dialog must never change pause ownership.
+    if (topModalId() !== id) return false;
+    if (!retryPendingCoins()) notifyPending();
+    if (!retryPendingCharacterXP()) notifyPending(); else announceCharacterGrowth();
     hide(id);
-    modalStack = Math.max(0, modalStack - 1);
-    if (modalStack === 0 && (G.mode === 'play' || G.mode === 'boss' || G.mode === 'clearing' || G.mode === 'dead')) G.paused = false;
+    $(id).inert = false;
+    $(id).style.zIndex = '';
+    modalStack.pop();
+    const previousFocus = modalFocus.get(id);
+    modalFocus.delete(id);
+    if (id === 'chest') { clearTimeout(chestTimer); activeChest = null; }
+    syncModalState();
+    if (topModalId()) $(topModalId()).querySelector('button, .card')?.focus({ preventScroll: true });
+    else if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+    drainRewardScreens();
+    return true;
+}
+
+function drainRewardScreens() {
+    if (modalStack.length || !pendingRewardScreens.length || G.mode === 'idle' || G.mode === 'dead') return;
+    const next = pendingRewardScreens.shift();
+    if (next.type === 'chest') presentChest(next.kind);
+    else presentLevelUp();
 }
 
 export function toast(msg, ms = 1800) {
@@ -56,6 +124,7 @@ export function toast(msg, ms = 1800) {
 
 function banner(main, sub) {
     const b = $('banner');
+    b.classList.remove('boss-intro');
     b.innerHTML = `<span class="b-main"></span><span class="b-sub"></span>`;
     b.querySelector('.b-main').textContent = main;
     b.querySelector('.b-sub').textContent = sub || '';
@@ -69,18 +138,30 @@ function banner(main, sub) {
 
 // ─────────────────────────── 타이틀 ───────────────────────────
 export function showTitle() {
+    if (!retryPendingCoins()) notifyPending();
+    if (!retryPendingCharacterXP()) notifyPending(); else announceCharacterGrowth();
     G.mode = 'idle';
     G.paused = false;
     setPlaying(false);
     for (const id of ['story', 'gameover', 'clear', 'ending', 'levelup', 'chest', 'pause']) hide(id);
-    modalStack = 0;
+    clearTimeout(chestTimer);
+    activeChest = null;
+    pendingRewardScreens.length = 0;
+    for (const id of modalStack) {
+        hide(id);
+        $(id).inert = false;
+        $(id).style.zIndex = '';
+    }
+    modalStack.length = 0;
+    modalFocus.clear();
+    modalBasePaused = false;
     const run = loadRun();
     const cont = $('btn-continue');
     if (run && run.stage) {
         cont.hidden = false;
         cont.textContent = `이어하기 — STAGE ${run.stage} (LV ${run.level})`;
     } else cont.hidden = true;
-    $('title-record').textContent = `최고 도달: STAGE ${save.maxStage} · 누적 처치 ${save.kills.toLocaleString()} · 골드 ${save.gold}`;
+    $('title-record').textContent = `캐릭터 Lv.${characterProgress(save.characterXP).level} · 최고 도달: STAGE ${save.maxStage} · 누적 처치 ${save.kills.toLocaleString()} · 골드 ${save.gold}`;
     $('btn-install').hidden = isStandalone();
     show('title');
 }
@@ -90,14 +171,19 @@ function beginStageFlow(stage, start) {
     const seenKey = `s${stage}`;
     playStory(`EPISODE ${stage} — ${STAGES[stage].name}`, STORIES[stage], () => {
         save.seenStory[seenKey] = true;
-        persist();
+        if (!persist()) notifyPending();
         start();
-    });
+    }, stage);
 }
 
 // ─────────────────────────── 스토리 (타자기) ───────────────────────────
 let storyTimer = null;
-function playStory(head, text, onDone) {
+function playStory(head, text, onDone, stage = STAGE_COUNT) {
+    const art = $('story-art');
+    art.src = `asset/story/stage-${String(stage).padStart(2, '0')}.webp`;
+    art.style.objectPosition = `${stage === 6 ? 58 : stage === 7 ? 70 : stage === 10 ? 65 : 75}% center`;
+    art.alt = STAGES[stage]?.subtitle || '작전 기록';
+    $('story-location').textContent = `SECTOR ${String(stage).padStart(2, '0')} / ${STAGES[stage]?.subtitle || '새벽'}`;
     G.paused = true;
     setPlaying(false);
     $('story-head').textContent = head;
@@ -146,6 +232,11 @@ function startPlaying() {
 // ─────────────────────────── 레벨업 ───────────────────────────
 let currentChoices = [];
 export function showLevelUp() {
+    pendingRewardScreens.push({ type: 'levelup' });
+    drainRewardScreens();
+}
+
+function presentLevelUp() {
     currentChoices = rollChoices(3);
     renderCards();
     $('levelup-lv').textContent = `LV ${G.level}`;
@@ -176,7 +267,7 @@ function renderCards() {
                 <div><div class="card-name"></div><div class="card-lv"></div></div>
             </div>
             <div class="card-desc"></div>`;
-        el.querySelector('.card-icon').textContent = c.icon;
+        mountItemArt(el.querySelector('.card-icon'), c.id, c.kind);
         el.querySelector('.card-name').textContent = c.name;
         el.querySelector('.card-lv').textContent = `${lvText}  [${idx + 1}]`;
         el.querySelector('.card-desc').textContent = c.desc;
@@ -206,19 +297,26 @@ function renderCards() {
 }
 
 function pickCard(idx) {
+    if (topModalId() !== 'levelup') return;
     const c = currentChoices[idx];
     if (!c) return;
     const before = G.gold;
     applyChoice(c);
-    save.gold += Math.max(0, G.gold - before);
+    creditReward(Math.max(0, G.gold - before));
     closeModal('levelup');
 }
 
 // ─────────────────────────── 관 상자 ───────────────────────────
 export function showChest(kind) {
+    pendingRewardScreens.push({ type: 'chest', kind });
+    drainRewardScreens();
+}
+
+function presentChest(kind) {
+    const session = activeChest = {};
     const boss = kind === 'boss';
     const count = boss ? (G.stage >= 6 ? 5 : G.stage >= 3 ? 3 : 1) : 1;
-    $('chest-title').textContent = boss ? `${BOSSES[G.stage].name}의 보물` : '보물 상자';
+    $('chest-title').textContent = boss ? `${BOSSES[G.stage].name}의 회수 물자` : '회수 물자';
     const coffin = $('coffin');
     coffin.className = 'coffin';
     $('rewards').innerHTML = '';
@@ -228,24 +326,26 @@ export function showChest(kind) {
     openModal('chest');
     let opened = false;
     btn.onclick = () => {
+        if (activeChest !== session || topModalId() !== 'chest' || btn.disabled) return;
         if (!opened) {
             opened = true;
             btn.disabled = true;
             coffin.classList.add('shaking');
             audio.sfx('heartbeat');
-            setTimeout(() => {
+            chestTimer = setTimeout(() => {
+                if (activeChest !== session || !modalStack.includes('chest')) return;
                 coffin.classList.remove('shaking');
                 coffin.classList.add('open');
                 audio.sfx('chest');
                 const before = G.gold;
                 const rewards = rollChest(count);
-                save.gold += Math.max(0, G.gold - before);
+                creditReward(Math.max(0, G.gold - before));
                 rewards.forEach((r, i) => {
                     const el = document.createElement('div');
                     el.className = 'reward' + (r.kind === 'evolve' ? ' evolve' : '');
                     el.style.animationDelay = `${i * 0.12}s`;
                     el.innerHTML = '<div class="r-icon"></div><div><div class="r-name"></div><div class="r-desc"></div></div>';
-                    el.querySelector('.r-icon').textContent = r.icon;
+                    mountItemArt(el.querySelector('.r-icon'), r.id, r.kind);
                     el.querySelector('.r-name').textContent = r.kind === 'evolve' ? `진화! ${r.name}` : r.name;
                     el.querySelector('.r-desc').textContent = r.desc;
                     $('rewards').appendChild(el);
@@ -255,27 +355,33 @@ export function showChest(kind) {
             }, 900);
             return;
         }
-        closeModal('chest');
         if (boss) beginStageClear();
+        closeModal('chest');
     };
 }
 
 // ─────────────────────────── 일시정지 ───────────────────────────
 export function togglePause() {
-    if (!$('pause').hidden) { closeModal('pause'); return; }
+    const top = topModalId();
+    if (top) {
+        if (top === 'tutorial') closeTutorial();
+        else if (['pause', 'settings', 'shop', 'install', 'intel'].includes(top)) closeModal(top);
+        return;
+    }
     if (G.mode !== 'play' && G.mode !== 'boss') return;
-    if (modalStack > 0) return;
     const wrap = $('pause-build');
     wrap.innerHTML = '';
     for (const w of G.weapons) {
         const d = WEAPONS[w.id];
         const s = document.createElement('span');
-        s.textContent = `${w.evolved ? d.evolve.icon : d.icon} ${w.evolved ? d.evolve.name : d.name} Lv${w.level}`;
+        mountItemArt(s,w.id);
+        const name = document.createElement('b'); name.textContent = `${w.evolved ? d.evolve.name : d.name} Lv${w.level}`; s.appendChild(name);
         wrap.appendChild(s);
     }
     for (const id in G.passives) {
         const s = document.createElement('span');
-        s.textContent = `${PASSIVES[id].icon} ${PASSIVES[id].name} Lv${G.passives[id]}`;
+        mountItemArt(s,id);
+        const name = document.createElement('b'); name.textContent = `${PASSIVES[id].name} Lv${G.passives[id]}`; s.appendChild(name);
         wrap.appendChild(s);
     }
     openModal('pause');
@@ -316,33 +422,108 @@ function bindSettings() {
 function openSettings() { syncSettingsUI(); openModal('settings'); }
 
 // ─────────────────────────── 상점 ───────────────────────────
+let chestResultOpen = false;
 function renderShop() {
+    retryPendingCoins();
+    const pending = pendingCoinTotal();
+    $('shop-status').textContent = pending ? `저장 대기 ${pending} 코인 · 새로고침 전에 다시 시도하세요.` : '청토끼 처치 후 코인을 회수하세요. 구매한 장비는 다음 작전부터 적용됩니다.';
+    const growth = characterProgress(save.characterXP);
+    $('shop-character').textContent = `캐릭터 Lv.${growth.level} · 최고 클리어 STAGE ${highestClearedStage(save)} · 꽃잎포 피해 ${petalStats(growth.level).damage} / 범위 ${petalStats(growth.level).radius} · 경험치는 작전 종료 시 저장됩니다.`;
+    $('pet-redemption-note').textContent = PET_REDEMPTION.reason;
     $('shop-gold').textContent = `● ${save.gold}`;
     const list = $('shop-list');
     list.innerHTML = '';
     for (const item of SHOP) {
         const lv = upgradeLevel(item.id);
+        const access = shopAccess(save,item);
         const el = document.createElement('div');
         el.className = 'shop-item';
-        el.innerHTML = '<div class="s-name"></div><div class="s-desc"></div><div class="s-pips"></div>';
+        el.innerHTML = '<div class="s-art"></div><div class="s-name"></div><div class="s-desc"></div><div class="s-pips"></div>';
+        mountItemArt(el.querySelector('.s-art'), item.id, 'shop');
         el.querySelector('.s-name').textContent = item.name;
         el.querySelector('.s-desc').textContent = item.desc;
         el.querySelector('.s-pips').textContent = '●'.repeat(lv) + '○'.repeat(item.max - lv);
         const b = document.createElement('button');
         b.type = 'button';
         b.className = 'btn btn-small';
-        if (lv >= item.max) { b.textContent = '최대'; b.disabled = true; }
+        if (item.kind === 'pet' && lv > 0) {
+            const equipped = save.equippedPet === item.id;
+            b.textContent = equipped ? '동행 해제' : '동행하기';
+            b.onclick = () => { if (!equipPet(equipped ? null : item.id)) notifyPending(); renderShop(); };
+        } else if (lv >= item.max) { b.textContent = '최대'; b.disabled = true; }
+        else if (!access.unlocked) { b.textContent = access.message; b.disabled = true; el.classList.add('locked'); }
         else {
             const cost = item.cost[lv];
             b.textContent = `구매 ● ${cost}`;
             b.disabled = save.gold < cost;
             b.onclick = () => {
-                if (buyUpgrade(item.id)) { audio.sfx('levelup'); renderShop(); }
-                else audio.sfx('deny');
+                if (buyUpgrade(item.id, lv)) { audio.sfx('levelup'); renderShop(); }
+                else { audio.sfx('deny'); notifyPending(); }
             };
         }
         el.appendChild(b);
         list.appendChild(el);
+    }
+    renderRelicShop();
+}
+
+function renderRelicShop() {
+    const active = strongestRelic(save);
+    const list = $('relic-list'); list.replaceChildren();
+    for (const relic of RELICS) {
+        const owned = save.relics.includes(relic.id);
+        const access = shopAccess(save,relic);
+        const card = document.createElement('article'); card.className = `relic-card ${relic.tier}`;
+        const art = document.createElement('img'); art.src = itemArt(relic.id); art.alt = '';
+        const rarity = document.createElement('span'); rarity.className = 'rarity'; rarity.textContent = relic.tier.toUpperCase();
+        const name = document.createElement('h4'); name.textContent = relic.name;
+        const desc = document.createElement('p'); desc.textContent = relic.desc;
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'btn btn-small';
+        button.textContent = owned ? (active?.id === relic.id ? '적용 중 · 다음 작전' : '보유 중') : `확정 구매 · ${relic.price} 코인`;
+        if (!owned && !access.unlocked) button.textContent = access.message;
+        button.disabled = owned || !access.unlocked || save.gold < relic.price;
+        button.onclick = () => { if (!buyRelic(relic.id)) notifyPending(); else audio.sfx('levelup'); renderShop(); };
+        card.append(art,rarity,name,desc,button); list.appendChild(card);
+    }
+    const rates = chestRates(save);
+    $('cache-rates').textContent = RELICS.map((r,i) => `${r.name} ${Math.round(rates[i]*100)}% · 중복 시 ${r.duplicateCoins} 코인`).join('\n');
+    $('cache-pity').textContent = `기본 확률 일반 60% / 희귀 30% / 영웅 10%. 영웅 미획득 ${save.chestPity}회 · ${RELIC_CHEST.pityAt}번째에는 영웅 확정. 확정 구매는 이 횟수를 바꾸지 않습니다.`;
+    const button = $('btn-coin-cache');
+    button.textContent = `상자 1개 열기 · ${RELIC_CHEST.cost} 코인`;
+    const access = shopAccess(save,RELIC_CHEST);
+    if (!access.unlocked) button.textContent = access.message;
+    button.disabled = !access.unlocked || chestResultOpen || save.gold < RELIC_CHEST.cost;
+    const expectedCount = save.chestCount;
+    button.onclick = () => {
+        if (chestResultOpen) return;
+        button.disabled = true;
+        const result = openChest(expectedCount);
+        if (!result.ok) { notifyPending(); renderShop(); return; }
+        chestResultOpen = true; renderShop();
+        const relic = RELICS.find(r=>r.id===result.reward.itemId);
+        const panel = $('cache-result'); panel.replaceChildren(); panel.hidden = false;
+        const art = document.createElement('img'); art.src = itemArt(relic.id); art.alt = '';
+        const body = document.createElement('div'), title = document.createElement('strong'), text = document.createElement('p');
+        title.textContent = `${relic.tier.toUpperCase()} · ${relic.name}`;
+        text.textContent = result.reward.duplicate ? `이미 보유한 유물입니다. ${result.reward.compensation} 코인을 돌려받았어요.` : `${relic.desc}. 가장 높은 등급의 효과가 다음 작전에 적용됩니다.`;
+        const done = document.createElement('button'); done.type = 'button'; done.className = 'btn btn-small'; done.textContent = '결과 확인';
+        done.onclick = () => { chestResultOpen = false; panel.hidden = true; renderShop(); $('btn-coin-cache').focus(); };
+        body.append(title,text,done); panel.append(art,body); done.focus();
+    };
+}
+
+function renderBossArchive() {
+    const list = $('boss-archive');
+    list.replaceChildren();
+    for (const [stage, boss] of Object.entries(BOSSES)) {
+        const card = document.createElement('article');
+        const img = document.createElement('img');
+        img.src = `asset/bosses/boss-${String(stage).padStart(2,'0')}.webp`;
+        img.alt = boss.name; img.loading = 'lazy';
+        const label = document.createElement('span'); label.textContent = `SECTOR ${String(stage).padStart(2,'0')}`;
+        const name = document.createElement('h3'); name.textContent = boss.name;
+        const desc = document.createElement('p'); desc.textContent = boss.title;
+        card.append(img,label,name,desc); list.appendChild(card);
     }
 }
 
@@ -351,7 +532,9 @@ function fmtTime(t) { const m = Math.floor(t / 60), s = Math.floor(t % 60); retu
 
 function statsHTML(extra = []) {
     const items = [
-        ['레벨', G.level],
+        ['런 레벨', G.level],
+        ['캐릭터 레벨', characterProgress(save.characterXP).level],
+        ['캐릭터 경험치', `+${G.settlement?.characterXP || 0}`],
         ['처치', G.kills.toLocaleString()],
         ['생존', fmtTime(G.time)],
         ['골드', save.gold],
@@ -362,10 +545,10 @@ function statsHTML(extra = []) {
     if (dmg.length) {
         const max = dmg[0][1] || 1;
         html += '<div class="stat dmg-table"><span>무기별 피해</span>' + dmg.map(([id, v]) => {
-            const d = WEAPONS[id];
+            const d = WEAPONS[id] || { name: id === 'petalCannon' ? '꽃잎포' : '동행 펫 · 영냥이', icon: '', evolve: {} };
             const w = G.weapons.find(x => x.id === id);
             const name = w && w.evolved ? d.evolve.name : d.name;
-            return `<div class="dmg-row"><span>${w && w.evolved ? d.evolve.icon : d.icon}</span><div><div>${name}</div><div class="dmg-bar" style="width:${Math.max(4, (v / max) * 100)}%"></div></div><b style="font-size:10px">${Math.round(v).toLocaleString()}</b></div>`;
+            return `<div class="dmg-row"><span><img class="inventory-art" src="${itemArt(id)}" alt=""></span><div><div>${name}</div><div class="dmg-bar" style="width:${Math.max(4, (v / max) * 100)}%"></div></div><b style="font-size:10px">${Math.round(v).toLocaleString()}</b></div>`;
         }).join('') + '</div>';
     }
     return html;
@@ -378,13 +561,29 @@ const LORE = [
     [9, '전설적인 좀비 킬러. 당신의 투혼은 청토끼들에게 영원한 공포로 각인될 것입니다.'],
 ];
 
+function settleStage(outcome) {
+    if (G.settlement) return G.settlement.earned;
+    const stageKills = G.kills - (G.stageKillsStart || 0);
+    const earned = Math.round((outcome === 'clear' ? stageKills * 0.2 + 40 * G.stage : stageKills * 0.1) * G.player.stats.greed);
+    const characterXP = Math.min(10000,stageKills + (outcome === 'clear' ? 50*G.stage : 0));
+    const eventId = `${rewardSession}:character:${++rewardSequence}`;
+    G.settlement = { outcome, earned, characterXP, eventId };
+    retryPendingCharacterXP();
+    if (!queueCharacterXP(characterXP,eventId)) notifyPending(); else announceCharacterGrowth();
+    if (outcome === 'clear') G.gold += earned;
+    creditReward(earned);
+    save.kills += stageKills;
+    if (outcome === 'clear') {
+        save.maxStage = Math.max(save.maxStage, Math.min(STAGE_COUNT, G.stage + 1));
+        save.maxClearedStage = Math.max(save.maxClearedStage || 0,G.stage);
+    }
+    if (!persist()) notifyPending();
+    return earned;
+}
+
 export function showGameOver() {
     setPlaying(false);
-    const stageKills = G.kills - (G.stageKillsStart || 0);
-    const earned = Math.round(stageKills * 0.1 * G.player.stats.greed);
-    save.gold += earned;
-    save.kills += stageKills;
-    persist();
+    const earned = settleStage('death');
     let lore = LORE[0][1];
     for (const [s, t] of LORE) if (G.stage >= s) lore = t;
     $('gameover-lore').textContent = lore;
@@ -394,13 +593,7 @@ export function showGameOver() {
 
 export function showStageClear() {
     setPlaying(false);
-    const stageKills = G.kills - (G.stageKillsStart || 0);
-    const earned = Math.round((stageKills * 0.2 + 40 * G.stage) * G.player.stats.greed);
-    G.gold += earned;
-    save.gold += earned;
-    save.kills += stageKills;
-    save.maxStage = Math.max(save.maxStage, Math.min(STAGE_COUNT, G.stage + 1));
-    persist();
+    const earned = settleStage('clear');
     if (G.stage >= STAGE_COUNT) {
         clearRun();
         playEnding();
@@ -439,10 +632,17 @@ function showInstall() {
 // ─────────────────────────── 바인딩 ───────────────────────────
 export function initUI() {
     const click = (id, fn) => $(id).addEventListener('click', () => { audio.unlock(); audio.sfx('click'); fn(); });
+    initTutorial({ onOpen: () => openModal('tutorial'), onClose: () => closeModal('tutorial') });
+    click('btn-tutorial', () => openTutorial());
+    click('btn-pause-tutorial', () => openTutorial());
 
     click('btn-new', () => {
-        clearRun();
-        beginStageFlow(1, () => { G.godMode = false; newRun(1); startPlaying(); });
+        const begin = () => {
+            clearRun();
+            beginStageFlow(1, () => { G.godMode = false; newRun(1); startPlaying(); });
+        };
+        if (shouldOfferTutorial()) openTutorial({ onDone: begin });
+        else begin();
     });
     click('btn-continue', () => {
         const run = loadRun();
@@ -455,10 +655,13 @@ export function initUI() {
     click('btn-shop', () => { renderShop(); openModal('shop'); });
     click('btn-shop-close', () => closeModal('shop'));
     click('btn-settings', openSettings);
+    click('btn-intel', () => { renderBossArchive(); openModal('intel'); });
+    click('btn-intel-close', () => closeModal('intel'));
     click('btn-pause-settings', openSettings);
     click('btn-install', showInstall);
     click('btn-install-close', () => closeModal('install'));
     click('btn-pause', togglePause);
+    click('btn-petal', firePetalCannon);
     click('btn-resume', () => closeModal('pause'));
     click('btn-quit', () => { closeModal('pause'); audio.pauseBGM(); showTitle(); audio.playBGM(); });
     click('btn-reroll', () => {
@@ -471,7 +674,7 @@ export function initUI() {
     click('btn-skip', () => {
         const g = 10 * G.stage;
         G.gold += g;
-        save.gold += g;
+        creditReward(g);
         closeModal('levelup');
     });
     click('btn-retry', () => { hide('gameover'); retryStage(); startPlaying(); });
@@ -517,11 +720,12 @@ export function initUI() {
 
     // 레벨업 카드 숫자키 선택
     window.addEventListener('keydown', (e) => {
-        if (!$('levelup').hidden) {
+        if (e.repeat || e.target.closest?.('input, textarea, [contenteditable]')) return;
+        if (topModalId() === 'levelup') {
             const n = parseInt(e.key, 10);
             if (n >= 1 && n <= currentChoices.length) pickCard(n - 1);
             if (e.key === 'r' || e.key === 'R') $('btn-reroll').click();
-        } else if (!$('chest').hidden && (e.key === 'Enter' || e.key === ' ')) {
+        } else if (topModalId() === 'chest' && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
             $('btn-chest').click();
         }
@@ -540,6 +744,11 @@ export function initUI() {
 
 export function onBossSpawn(b) {
     banner(b.def.name, b.def.title);
+    const portrait = document.createElement('img');
+    portrait.src = `asset/bosses/boss-${String(b.stage || G.stage).padStart(2,'0')}.webp`;
+    portrait.alt = '';
+    $('banner').appendChild(portrait);
+    $('banner').classList.add('boss-intro');
 }
 
-export function isAnyModalOpen() { return modalStack > 0; }
+export function isAnyModalOpen() { return modalStack.length > 0; }

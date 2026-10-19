@@ -1,12 +1,13 @@
+import { firingMuzzle } from './player-motion.js';
 // 무기 런타임: 쿨다운 → 발사 패턴, 플레이어 투사체/광선/궤도체 업데이트 및 충돌
 import { G, rand } from './state.js';
 import { WEAPONS } from '../data/weapons.js';
-import { fx, glow } from '../core/assets.js';
+import { fx, glow, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { hitEnemy } from './enemies.js';
 import { spawnHazard } from './hazards.js';
 import { sparks, petals, embers, shake } from './effects.js';
-import { healPlayer } from './player.js';
+import { healPlayer, triggerPlayerShot } from './player.js';
 
 export function createWeapon(id, slot) {
     return { id, slot, level: 1, evolved: false, cd: 0.4, activeT: 0, angle: 0, burst: 0, burstT: 0, trailT: 0, follow: null };
@@ -75,7 +76,8 @@ function shoot(w, s, dirX, dirY, opts) {
     sh.kind = 'bullet';
     sh.weapon = w.id;
     sh.slot = w.slot;
-    sh.x = p.x + dirX * 16; sh.y = p.y - 22 + dirY * 10;
+    const muzzle = images.playerFire ? firingMuzzle(p, G.clock, dirX) : { x: p.x + dirX * 16, y: p.y - 22 + dirY * 10 };
+    sh.x = muzzle.x; sh.y = muzzle.y;
     sh.vx = dirX * s.speed; sh.vy = dirY * s.speed;
     sh.angle = Math.atan2(dirY, dirX);
     sh.dmg = s.dmg; sh.pierce = s.pierce; sh.life = s.duration;
@@ -123,6 +125,7 @@ const FIRE = {
     shotgun(w, s) {
         const t = nearestEnemy(G.player.x, G.player.y, 420);
         const [dx, dy] = aimAt(w, t);
+        triggerPlayerShot(dx);
         const base = Math.atan2(dy, dx);
         const n = s.amount;
         for (let i = 0; i < n; i++) {
@@ -130,7 +133,7 @@ const FIRE = {
             const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: w.evolved ? fx.bossShot : fx.pellet, radius: 4, knock: 90 });
             sh.vx *= rand(0.85, 1.1); sh.vy *= rand(0.85, 1.1);
         }
-        sparks(G.player.x + dx * 22, G.player.y - 22 + dy * 10, 5, '#ffcf6b', 140);
+        if (!images.playerFire) sparks(G.player.x + dx * 22, G.player.y - 22 + dy * 10, 5, '#ffcf6b', 140);
         shake(1.5);
         audio.sfx('shot');
     },
@@ -141,6 +144,7 @@ const FIRE = {
     rifle(w, s) {
         const t = nearestEnemy(G.player.x, G.player.y, 700);
         const [dx, dy] = aimAt(w, t);
+        triggerPlayerShot(dx);
         const base = Math.atan2(dy, dx);
         for (let i = 0; i < s.amount; i++) {
             const a = base + (i === 0 ? 0 : rand(-0.35, 0.35));
@@ -203,9 +207,11 @@ const FIRE = {
 };
 
 function fireBeam(w, s, angle) {
+    triggerPlayerShot(Math.cos(angle));
     const p = G.player;
     const b = G.beams.spawn();
-    b.x = p.x; b.y = p.y - 22;
+    const muzzle = images.playerFire ? firingMuzzle(p, G.clock, Math.cos(angle)) : { x: p.x, y: p.y - 22 };
+    b.x = muzzle.x; b.y = muzzle.y;
     b.angle = angle;
     b.len = s.length * Math.sqrt(s.area);
     b.width = s.width * s.area;
@@ -252,6 +258,7 @@ export function updateWeapons(dt) {
                 const side = (w.burst % 2 ? 1 : -1) * 0.06;
                 const a = Math.atan2(dy, dx) + side;
                 shoot(w, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: 5, knock: 50 });
+                triggerPlayerShot(dx);
                 audio.sfx('shot');
                 w.burst--;
             }

@@ -1,41 +1,83 @@
-// 메타 진행(영구 강화, 골드, 해금) 저장
-const KEY = 'kfp.save.v1';
+import { awardCharacterXP } from './character-progression.js';
+import { SHOP } from '../data/shop.js';
+import { createGuestAdapter, itemLevel, purchase, validateProgress, openRelicChest, purchaseRelic } from './progression-store.js';
+export { SHOP };
+let storage;
+try { storage = globalThis.localStorage; } catch { /* Private-mode storage may be inaccessible. */ }
+const adapter = createGuestAdapter(storage);
+export const save = adapter.load();
+export let lastSaveError = null;
+function commit(next) {
+    const result = adapter.commit(next);
+    lastSaveError = result.ok ? null : result.code;
+    if (result.ok) Object.assign(save, next);
+    return result.ok;
+}
+export function persist() { return commit(validateProgress(save)); }
+export function upgradeLevel(id) { return itemLevel(save, id); }
+export function buyUpgrade(id, expectedLevel = upgradeLevel(id), requestId = `buy:${id}:${expectedLevel}`) {
+    const result = purchase(save, { itemId: id, expectedLevel, requestId });
+    if (!result.ok) { lastSaveError = result.code; return false; }
+    return result.duplicate || commit(result.state);
+}
+export function equipPet(id) {
+    if (id !== null && !save.inventory.includes(id)) return false;
+    return commit({ ...save, equippedPet: id, revision: save.revision + 1 });
+}
+// Local guest reward only. A deployed service must validate a server-owned run/event.
+export function earnCoins(amount, eventId) {
+    if (!Number.isSafeInteger(amount) || amount < 0 || amount > 1_000_000) return false;
+    if (eventId !== undefined && (typeof eventId !== 'string' || !eventId.length || eventId.length > 160)) return false;
+    if (eventId && save.receipts.includes(eventId)) return true;
+    return commit({ ...save, gold: Math.min(1_000_000_000, save.gold + amount), revision: save.revision + 1,
+        receipts: eventId ? [...save.receipts, eventId].slice(-128) : save.receipts });
+}
+// Non-repeatable chest/result rewards can wait in memory while disk storage is blocked.
+// These are not durable until retry succeeds; the UI must disclose this explicitly.
+const pendingRewards = new Map();
+export function queueCoins(amount, eventId) {
+    if (!Number.isSafeInteger(amount) || amount < 0 || amount > 1_000_000 || typeof eventId !== 'string' || !eventId.length || eventId.length > 160) return false;
+    if (pendingRewards.has(eventId) && pendingRewards.get(eventId) !== amount) { lastSaveError = 'REWARD_ID_CONFLICT'; return false; }
+    if (earnCoins(amount, eventId)) { pendingRewards.delete(eventId); return true; }
+    pendingRewards.set(eventId, amount);
+    return false;
+}
+export function retryPendingCoins() {
+    for (const [id, amount] of pendingRewards) if (earnCoins(amount, id)) pendingRewards.delete(id);
+    return pendingRewards.size === 0;
+}
+export function pendingCoinTotal() { return [...pendingRewards.values()].reduce((sum, amount) => sum + amount, 0); }
 
-export const SHOP = [
-    { id: 'maxHp', name: '썩지 않는 심장', desc: '최대 HP +10', cost: [100, 200, 350, 550, 800], max: 5 },
-    { id: 'might', name: '피 묻은 개머리판', desc: '모든 피해 +5%', cost: [150, 300, 500, 750, 1100], max: 5 },
-    { id: 'speed', name: '도망자의 발굽', desc: '이동 속도 +4%', cost: [120, 240, 420], max: 3 },
-    { id: 'magnet', name: '굶주린 코', desc: '획득 범위 +10%', cost: [80, 160, 300], max: 3 },
-    { id: 'reroll', name: '찢어진 부적', desc: '레벨업 리롤 +1', cost: [250, 600], max: 2 },
-    { id: 'greed', name: '탐욕', desc: '골드 획득 +10%', cost: [100, 250, 500], max: 3 },
-];
-
-const DEFAULT = { gold: 0, upgrades: {}, maxStage: 1, bestTime: 0, kills: 0, seenStory: {} };
-
-function load() {
-    try {
-        const raw = localStorage.getItem(KEY);
-        if (raw) return { ...DEFAULT, ...JSON.parse(raw) };
-    } catch { /* ignore */ }
-    return structuredClone(DEFAULT);
+export function openChest(expectedCount = save.chestCount, requestId = `chest:${expectedCount}`) {
+    const result = openRelicChest(save, { expectedCount, requestId });
+    if (!result.ok) { lastSaveError = result.code; return result; }
+    if (!result.duplicate && !commit(result.state)) return { ok: false, code: lastSaveError };
+    return { ok: true, duplicate: !!result.duplicate, reward: result.reward };
+}
+export function buyRelic(itemId, requestId = `relic:${itemId}`) {
+    const result = purchaseRelic(save, { itemId, requestId });
+    if (!result.ok) { lastSaveError = result.code; return false; }
+    return result.duplicate || commit(result.state);
 }
 
-export const save = load();
-
-export function persist() {
-    try { localStorage.setItem(KEY, JSON.stringify(save)); } catch { /* ignore */ }
+// Permanent XP is awarded at stage settlement, never per frame or idle time.
+const pendingCharacterRewards = new Map();
+export function queueCharacterXP(amount, eventId, expectedCount) {
+    const prior = pendingCharacterRewards.get(eventId);
+    expectedCount ??= prior?.expectedCount ?? (save.lastCharacterReward?.requestId === eventId ? save.lastCharacterReward.sequence : save.characterRewardCount + pendingCharacterRewards.size);
+    if (prior && (prior.amount !== amount || prior.expectedCount !== expectedCount)) { lastSaveError = 'REWARD_ID_CONFLICT'; return false; }
+    const intent = prior || { amount, requestId: eventId, expectedCount };
+    if (expectedCount > save.characterRewardCount && pendingCharacterRewards.size > 0) {
+        if (!Number.isSafeInteger(amount) || amount < 0 || amount > 10000 || typeof eventId !== 'string' || !eventId.length || eventId.length > 160) return false;
+        pendingCharacterRewards.set(eventId, intent); lastSaveError = 'PENDING_CHARACTER_REWARD'; return false;
+    }
+    const result = awardCharacterXP(save, intent);
+    if (!result.ok) { lastSaveError = result.code; return false; }
+    if (result.duplicate || commit(result.state)) { pendingCharacterRewards.delete(eventId); return true; }
+    pendingCharacterRewards.set(eventId, intent); return false;
 }
-
-export function upgradeLevel(id) { return save.upgrades[id] || 0; }
-
-export function buyUpgrade(id) {
-    const item = SHOP.find(s => s.id === id);
-    const lv = upgradeLevel(id);
-    if (!item || lv >= item.max) return false;
-    const cost = item.cost[lv];
-    if (save.gold < cost) return false;
-    save.gold -= cost;
-    save.upgrades[id] = lv + 1;
-    persist();
-    return true;
+export function retryPendingCharacterXP() {
+    for (const [id, intent] of pendingCharacterRewards) queueCharacterXP(intent.amount, id, intent.expectedCount);
+    return pendingCharacterRewards.size === 0;
 }
+export function pendingCharacterXP() { return [...pendingCharacterRewards.values()].reduce((sum, intent) => sum + intent.amount, 0); }
