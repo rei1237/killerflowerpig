@@ -58,13 +58,14 @@ test('signatures preserve their full warning and release attack poses only at th
  }
 });
 
-test('machine gun locks one corridor, remains stationary and always exposes a reload opening',()=>{
- for(const phase of [0,2]) {
-  const b=reset(2,phase);begin(b);const angles=hazards().map(h=>h.angle);
-  G.player.y=220;advance(b,1.151);assert.equal(G.enemyShots.count,3);
-  assert.ok(shots().every(s=>Math.abs(Math.atan2(s.vy,s.vx)-angles[0])<1e-9));
+test('machine gun locks its corridor, stays stationary, escalates per phase and always exposes a reload opening',()=>{
+ for(const phase of [0,1,2]) {
+  const b=reset(2,phase);begin(b);const angles=hazards().map(h=>h.angle),fan=phase?3:1;
+  assert.equal(hazards().length,3+phase+(phase===2?6:0),'mutation adds a shot, frenzy adds two telegraphed flank corridors');
+  G.player.y=220;advance(b,1.151);assert.equal(G.enemyShots.count,3*fan);
+  assert.ok(shots().every(s=>Math.abs(Math.atan2(s.vy,s.vx)-angles[0])<=.14+1e-9),'fan stays inside the locked corridor cone');
   while(b.task) advance(b,.01);
-  close(b.x,0);close(b.y,0);assert.equal(G.enemyShots.count,3*(3+phase));assert.ok(b.attackT>=1.8);
+  close(b.x,0);close(b.y,0);assert.equal(G.enemyShots.count,3*fan*(3+phase)+(phase===2?12:0));assert.ok(b.attackT>=1.8);
  }
 });
 
@@ -112,10 +113,11 @@ test('assassin crossing cuts lock both paths, strike in order and cannot hit bey
  const hp=G.player.hp;G.player.iframes=0;const h=marks[0];G.player.x=h.x-Math.cos(h.angle);G.player.y=h.y-Math.sin(h.angle);b.lineHit(h);assert.equal(G.player.hp,hp);
 });
 
-test('psychic echoes use two origins, staggered release and a wide missing sector per wave',()=>{
- const b=reset(8,2);begin(b);const marks=hazards().map(h=>({...h}));assert.equal(marks.length,2);assert.notEqual(marks[0].x,marks[1].x);
+test('psychic echoes use separate origins, staggered release and a wide missing sector per wave',()=>{
+ assert.equal((reset(8,0),begin(G.boss),hazards().length),2);
+ const b=reset(8,2);begin(b);const marks=hazards().map(h=>({...h}));assert.equal(marks.length,3);assert.equal(new Set(marks.map(m=>`${m.x},${m.y}`)).size,3);
  advance(b,1.205);assert.equal(G.enemyShots.count,20);assert.ok(shots().every(s=>s.x===marks[0].x&&s.y===marks[0].y));
- advance(b,1);assert.equal(G.enemyShots.count,40);
+ advance(b,.8);assert.equal(G.enemyShots.count,40);advance(b,.8);assert.equal(G.enemyShots.count,60);
  for(const h of marks) {
   const angles=shots().filter(s=>s.x===h.x&&s.y===h.y).map(s=>(Math.atan2(s.vy,s.vx)+Math.PI*2)%(Math.PI*2)).sort((a,b)=>a-b);
   const gaps=angles.map((a,i)=>(angles[(i+1)%angles.length]-a+Math.PI*2)%(Math.PI*2));
@@ -160,7 +162,7 @@ test('each final-phase signature completes with bounded hazards/projectiles and 
  for(let stage=2;stage<=10;stage++) {
   const b=reset(stage,2);begin(b);let maxHazards=0,maxShots=0;
   for(let t=0;b.task&&t<6;t+=.01) {advance(b,.01);maxHazards=Math.max(maxHazards,G.hazards.count);maxShots=Math.max(maxShots,G.enemyShots.count);}
-  assert.equal(b.task,null,`stage ${stage}: stuck task`);assert.ok(b.attackT>=1.25);assert.ok(maxHazards<=7);assert.ok(maxShots<=40);
+  assert.equal(b.task,null,`stage ${stage}: stuck task`);assert.ok(b.attackT>=1.25);assert.ok(maxHazards<=12,`stage ${stage}: ${maxHazards} hazards`);assert.ok(maxShots<=72,`stage ${stage}: ${maxShots} shots`);
   assert.ok(Number.isFinite(b.x)&&Number.isFinite(b.y));
  }
 });
@@ -170,4 +172,18 @@ test('hourglass marker is draw-only and pooled hazards reset it on reuse',()=>{
  const paths=[];const ctx=new Proxy({globalAlpha:1,moveTo:(...args)=>paths.push(args)},{get:(o,k)=>k in o?o[k]:()=>{},set:(o,k,v)=>(o[k]=v,true)});
  drawHazards(ctx);assert.equal(JSON.stringify(mark),snapshot);assert.ok(paths.some(([x,y])=>x===mark.x-11&&y===mark.y-11));
  G.hazards.clear();const plain=spawnHazard('tcircle',0,0,{delay:1});assert.equal(plain.symbol,null);
+});
+
+test('every boss mixes a bullet pattern after mutation and its signature escalates through mutation and frenzy',()=>{
+ for(let stage=1;stage<=10;stage++) {
+  const def=BOSSES[stage];
+  assert.ok(!def.phases[0].some(k=>k==='ring'||k==='aimed')||stage===1,`${stage}: opening phase stays a pure signature read`);
+  assert.ok(def.phases[2].some(k=>k==='ring'||k==='aimed'),`${stage}: frenzy mixes a bullet pattern`);
+  // Hunter's 2 → 3 → off-beat 3 combo is verified with a moving player in hunter-speed.mjs.
+  if(stage<2||stage===3) continue;
+  const threat=phase=>{const b=reset(stage,phase);const task=begin(b);let warnings=hazards().length,shotsMax=0,locks=0;
+   for(let t=0;b.task&&t<8;t+=.01){advance(b,.01);shotsMax=Math.max(shotsMax,G.enemyShots.count);warnings=Math.max(warnings,hazards().filter(h=>h.onFire).length);locks=Math.max(locks,task.strike??task.next??0);}
+   return warnings+shotsMax/10+locks;};
+  assert.ok(threat(2)>threat(0),`stage ${stage}: frenzy signature is harder than the opening`);
+ }
 });
