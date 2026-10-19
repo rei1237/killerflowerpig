@@ -1,0 +1,67 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { G, clearWorld } from '../src/game/state.js';
+import { atlases, fx } from '../src/core/assets.js';
+import { ENEMIES, ENEMY_TOUGHNESS_MULTIPLIER } from '../src/data/enemies.js';
+import { spawnEnemy, updateEnemies, flushExplosions, hitEnemy, fireEnemyShot, drawEnemy, drawEnemyShots } from '../src/game/enemies.js';
+function reset(stage=6) {
+ fx.splats={red:[{}],green:[{}]}; clearWorld(); G.stage=stage; G.time=0; G.clock=0; G.events={}; G.godMode=false;
+ G.view={w:1000,h:600}; G.caps={enemies:420,particles:0,texts:0,gems:500,decalScale:1};
+ G.player={x:0,y:0,vx:0,vy:0,radius:12,hp:100,maxHp:100,iframes:0,stats:{crit:0,armor:0}};
+ for(const name of ['rabbit1','rabbit2','rabbit3']) atlases[name]={walkH:112,frameCount:()=>8};
+}
+test('all spawn routes gate new roles and ranged mobs, original atlas identities and toughness survive',()=>{
+ reset(4); for(const id of ['suicider','gunner','spitter']) assert.equal(spawnEnemy(id,100,0,{force:true,elite:true}),null);
+ reset(5); assert.ok(spawnEnemy('suicider',100,0)); assert.equal(spawnEnemy('gunner',100,0),null); assert.ok(spawnEnemy('spitter',100,0));
+ reset(6); assert.ok(spawnEnemy('gunner',100,0)); assert.equal(ENEMY_TOUGHNESS_MULTIPLIER,1.62);
+ assert.equal(ENEMIES.shambler.sheet,'rabbit1'); assert.equal(ENEMIES.brute.sheet,'rabbit2'); assert.equal(ENEMIES.hulk.sheet,'rabbit3');
+});
+test('suicide charge warns, locks direction, gives final fuse and can be killed safely',()=>{
+ reset(); const e=spawnEnemy('suicider',150,0,{lineX:-1,lineY:0});
+ updateEnemies(.1); assert.equal(e.rolePhase,'warning'); assert.equal(e.x,150); const aim=e.aimY;
+ G.player.y=100; updateEnemies(.2); assert.equal(e.aimY,aim); assert.equal(G.player.hp,100);
+ updateEnemies(.51); assert.equal(e.rolePhase,'warning'); updateEnemies(.1); assert.equal(e.rolePhase,'dash'); updateEnemies(.56); updateEnemies(.01); assert.equal(e.rolePhase,'fuse'); assert.equal(G.player.hp,100);
+ hitEnemy(e,1e6,{silent:true}); flushExplosions(); assert.equal(G.player.hp,100); assert.equal(G.hazards.count,0);
+});
+test('overlapping armed detonations respect normal iframes and absolute damage cap, with no toxic field',()=>{
+ reset(10); const a=spawnEnemy('suicider',0,0), b=spawnEnemy('suicider',0,0);
+ for(const e of [a,b]) {e.rolePhase='fuse'; e.roleT=.01;}
+ updateEnemies(.02); assert.equal(G.player.hp,100); flushExplosions();
+ assert.equal(G.player.hp,70); assert.equal(G.player.iframes,.5); assert.equal(G.hazards.count,0);
+ assert.equal(a.alive,false); assert.equal(b.alive,false);
+});
+test('gunner telegraphs one aimed bullet and cannot retarget during warning',()=>{
+ reset(); const e=spawnEnemy('gunner',200,0); e.shootT=0;
+ updateEnemies(.01); assert.equal(G.enemyShots.count,0); assert.equal(e.shotWarning,.7); const aim=e.aimY;
+ G.player.y=150; updateEnemies(.3); assert.equal(G.enemyShots.count,0); assert.equal(e.aimY,aim);
+ updateEnemies(.41); assert.equal(G.enemyShots.count,1); const s=G.enemyShots.items[0]; assert.equal(s.kind,'bullet'); assert.equal(s.radius,5); assert.equal(s.vy,aim*255);
+});
+test('pooled ordinary shots do not inherit boss acceleration',()=>{
+ reset(); const s=fireEnemyShot(0,0,1,0,100,5); s.accel=9; G.enemyShots.clear(); const next=fireEnemyShot(0,0,1,0,100,5,'bullet'); assert.equal(next.accel,0);
+});
+
+test('role warning circle matches blast geometry and optional generated art preserves atlas fallback',()=>{
+ reset(); const e=spawnEnemy('suicider',100,20); e.rolePhase='fuse'; e.roleT=.3;
+ const arcs=[], calls=[];
+ const ctx=new Proxy({}, {get:(target,key)=>target[key] || ((...args)=>{if(key==='arc')arcs.push(args);}),set:(target,key,value)=>(target[key]=value,true)});
+ e.atlas.draw=()=>calls.push('original'); drawEnemy(ctx,e);
+ assert.equal(arcs[0][2],ENEMIES.suicider.charge.radius); assert.deepEqual(calls,['original']);
+ atlases.enemyRole_suicider={draw:()=>calls.push('generated')}; drawEnemy(ctx,e);
+ assert.deepEqual(calls,['original','generated']); delete atlases.enemyRole_suicider;
+ fireEnemyShot(10,20,1,0,255,9,'bullet',5); drawEnemyShots(ctx,{});
+ assert.ok(arcs.some(a=>a[0]===10 && a[1]===20 && a[2]===5));
+});
+
+test('long frames preserve fresh warning/fuse, bound dash travel, and sweep player collision',()=>{
+ reset(); const e=spawnEnemy('suicider',240,0);
+ updateEnemies(4); assert.equal(e.rolePhase,'warning'); assert.equal(e.roleT,.8); assert.equal(e.x,240);
+ updateEnemies(4); assert.equal(e.rolePhase,'dash'); assert.equal(e.roleT,.55); assert.equal(e.x,240);
+ G.player.y=400; updateEnemies(4); assert.equal(e.rolePhase,'dash'); assert.equal(e.roleT,0);
+ assert.ok(Math.abs(e.x-75)<1e-8,'dash is at most 165px despite four-second frame');
+ updateEnemies(4); assert.equal(e.rolePhase,'fuse'); assert.equal(e.roleT,.6); assert.equal(e.alive,true);
+ hitEnemy(e,1e6,{silent:true}); flushExplosions();
+ reset(); const near=spawnEnemy('suicider',100,0);
+ updateEnemies(4); updateEnemies(4); updateEnemies(4);
+ assert.ok(Math.abs(near.x-38)<1e-8,'sweep stops at activation distance instead of tunneling');
+ assert.equal(G.player.hp,100); updateEnemies(4); assert.equal(near.rolePhase,'fuse'); assert.equal(near.roleT,.6);
+});

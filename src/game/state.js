@@ -36,6 +36,8 @@ export const G = {
 
     player: null,
     boss: null,
+    encirclement: null,
+    encirclementNextAt: 0,
     weapons: [],      // 런타임 무기 인스턴스
     passives: {},     // id -> level
     level: 1,
@@ -95,6 +97,8 @@ export function clearWorld() {
     G.decalHead = 0;
     G.grid.reset();
     G.boss = null;
+    G.encirclement = null;
+    G.encirclementNextAt = 0;
     G.hitstop = 0;
     G.flash = 0;
     G.shake = 0;

@@ -33,7 +33,7 @@ test('ten encounters advertise ten different executable signatures and concise K
   assert.equal(typeof b[`task_${def.signature}`],'function');assert.match(def.signatureHint,/[가-힣]/);assert.ok(def.signatureHint.length<65);
   for(const phase of def.phases) assert.ok(phase.includes(def.signature));
   close(b.radius,112*def.scale*.32);
-  if(stage>1) for(const field of ['speed','dmg']) assert.equal(def[field],baseline.bosses[stage][field],`${stage}:${field}`);
+  if(stage>1) for(const field of ['speed','dmg']) assert.equal(def[field],stage===3&&field==='speed'?118:baseline.bosses[stage][field],`${stage}:${field}`);
   b.startPattern();assert.equal(b.lastPattern,def.signature,'opening cannot randomly skip identity');
  }
 });
@@ -49,10 +49,10 @@ test('stage 1 keeps its generous charge warning, speed and long recovery in ever
  } } finally { Math.random=old; }
 });
 
-test('all new signatures wait at least 1.05s and release real attack poses only at their gameplay event',()=>{
+test('signatures preserve their full warning and release attack poses only at their gameplay event',()=>{
  for(let stage=2;stage<=10;stage++) for(const phase of [0,2]) {
   const b=reset(stage,phase);begin(b);const first=Math.min(...hazards().map(h=>h.delay));
-  assert.ok(first>=1.05,`${stage}: phase cannot shorten the warning`);
+  assert.ok(first>=(stage===3?.65:1.05),`${stage}: phase cannot shorten the warning`);
   advance(b,first-.005);assert.equal(bossSpriteFrame(b),BOSS_FRAMES.windup,`${stage}: premature attack`);assert.equal(G.enemyShots.count,0);
   advance(b,.01);assert.equal(bossSpriteFrame(b),BOSS_FRAMES.attack,`${stage}: release pose`);
  }
@@ -68,12 +68,15 @@ test('machine gun locks one corridor, remains stationary and always exposes a re
  }
 });
 
-test('hunter makes one marked short leap then a perpendicular retreat, without an unmarked ring',()=>{
- const b=reset(3);const task=begin(b);advance(b,1.049);close(b.x,0);close(b.y,0);
- while(task.phase<2) advance(b,.01);
- close(b.x,300);close(b.y,0);assert.equal(b.motionState,'recover');
- while(b.task) advance(b,.01);
- close(b.x,300);close(Math.abs(b.y),105);assert.equal(G.enemyShots.count,0);assert.ok(b.attackT>=1.35);
+test('hunter separately locks two capped dashes and holds a stationary recovery without unmarked shots',()=>{
+ const b=reset(3),task=begin(b);advance(b,.649);close(b.x,0);close(b.y,0);
+ G.player.y=200;while(task.strike===0)advance(b,.01);
+ close(b.x,300);close(b.y,0);assert.equal(task.phase,'warning');assert.equal(hazards()[0].delay,.5);
+ G.player.x=-400;G.player.y=-400;
+ while(b.task===task)advance(b,.01);
+ assert.equal(b.task.phase,'recover');const position=[b.x,b.y];advance(b,1.24);assert.deepEqual([b.x,b.y],position);
+ while(b.task)advance(b,.01);
+ assert.equal(G.enemyShots.count,0);assert.ok(b.attackT>=1.35);
 });
 
 test('sniper acquires two independent locks and freezes each line for at least .55s',()=>{
@@ -135,7 +138,7 @@ test('financier contract fixes the debt mark, fires coins first and settles afte
 });
 
 test('death and phase changes cancel owned warning callbacks without removing unrelated hazards',()=>{
- for(const stage of [2,4,5,6,7,8,9,10]) for(const interruption of ['phase','death']) {
+ for(const stage of [2,3,4,5,6,7,8,9,10]) for(const interruption of ['phase','death']) {
   const b=reset(stage);begin(b);const callbacks=hazards().map(h=>[h.onFire,{...h}]);
   const friendly=spawnHazard('gas',1000,1000,{radius:20,duration:5});
   if(interruption==='phase') b.enterPhase(1);else b.die();

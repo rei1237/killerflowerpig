@@ -523,3 +523,41 @@ test('absolute recipe UI consumes three evolved ingredients and reveals three-to
  assert.equal(reveal.querySelector('.fusion-reveal-ingredients').children.length,3);assert.match(reveal.querySelector('.fusion-reveal-slots').textContent,/3개.*2칸/);
  reveal.querySelector('.fusion-reveal-skip').click();reveal.querySelector('.fusion-reveal-confirm').click();assert.equal(G.paused,false);
 });
+
+test('new and restarted runs apply the modest mob HP increase once without raising player HP', async () => {
+    const { spawnEnemy } = await import('../src/game/enemies.js');
+    const { onPlayerDeath, retryStage } = await import('../src/game/game.js');
+    freshRun();
+    const playerMax = G.player.maxHp;
+    const first = spawnEnemy('shambler', 400, 0);
+    assert.ok(Math.abs(first.hp - 13.77) < 1e-9);
+    onPlayerDeath(); retryStage();
+    const second = spawnEnemy('shambler', 400, 0);
+    assert.ok(Math.abs(second.hp - 13.77) < 1e-9, 'retry does not compound mob toughness');
+    assert.equal(G.stage, 1);
+    assert.equal(G.player.maxHp, playerMax);
+    assert.equal(G.player.hp, playerMax);
+});
+
+test('real game step freezes enclosure on pause and releases on lifecycle transitions', async () => {
+ const { startEncirclement } = await import('../src/game/encirclement.js');
+ const { startStage, beginStageClear, onPlayerDeath, continueRun, loadRun } = await import('../src/game/game.js');
+ freshRun(); startStage(5); G.pendingLevelUps=0; G.hitstop=0; assert.equal(startEncirclement(),true);
+ G.paused=true; step(2); assert.equal(G.encirclement.age,0); G.paused=false;
+ step(1); step(1); assert.equal(G.encirclement.phase,'active');
+ G.player.x=10000; step(.01); assert.ok(Math.hypot(G.player.x,G.player.y)<=G.encirclement.radius-G.player.radius+.001);
+ beginStageClear(); assert.equal(G.encirclement,null);
+ startStage(5); startEncirclement(); const snap=loadRun(); continueRun(snap); assert.equal(G.encirclement,null);
+ startEncirclement(); onPlayerDeath(); assert.equal(G.encirclement,null);
+ freshRun(); startStage(5); startEncirclement(); G.mode='idle'; step(0); assert.equal(G.encirclement,null);
+ freshRun();
+});
+
+test('main menu bestiary opens its real modal and Escape restores launcher focus',async()=>{
+ const {isBestiaryOpen}=await import('../src/ui/bestiary.js');
+ freshRun();showTitle();const launcher=node('btn-bestiary');launcher.focus();launcher.click();
+ assert.equal(isBestiaryOpen(),true);assert.equal(topModalId(),'bestiary');assert.equal(node('bestiary').hidden,false);
+ window.dispatch('keydown',{code:'Escape',key:'Escape',target:document.activeElement});
+ assert.equal(isBestiaryOpen(),false);assert.equal(topModalId(),null);assert.equal(document.activeElement,launcher);
+ launcher.click();showTitle();assert.equal(isBestiaryOpen(),false);
+});

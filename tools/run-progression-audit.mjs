@@ -9,6 +9,7 @@ import { STARTING_WEAPON, WEAPONS, MAX_WEAPONS, MAX_PASSIVES } from '../src/data
 import { STAGES } from '../src/data/stages.js';
 import { FUSION_RECIPES } from '../src/data/fusions.js';
 import { resetSpawner, updateSpawner } from '../src/game/spawner.js';
+import { updateEncirclement } from '../src/game/encirclement.js';
 import { hitEnemy, flushExplosions } from '../src/game/enemies.js';
 import { resetBuild, addXP, xpForLevel, rollChoices, applyChoice, beginChoiceSession,
     consumeChoiceReroll, finishChoiceSession, rollBossChest } from '../src/game/progression.js';
@@ -32,7 +33,7 @@ export function seeded(seed) {
 }
 function world() {
     clearWorld(); resetBuild(); createPlayer();
-    Object.assign(G, { mode: 'play', stage: 1, time: 0, clock: 0, gold: 0, kills: 0,
+    Object.assign(G, { mode: 'play', paused: false, stage: 1, time: 0, clock: 0, gold: 0, kills: 0,
         events: {}, damageBy: {}, lowQ: false, stageStartTime: 0,
         view: { w: 1000, h: 600 }, caps: { enemies: 252, particles: 0, texts: 0, gems: 500, decalScale: 0 } });
 }
@@ -48,7 +49,7 @@ export function estimateWaveXP({ residency = 16, seed = 7, lowQ = false, dt = .1
             resetSpawner(); const expires = new Map(); let xp = 0, peak = 0, eliteKills = 0;
             G.events.kill = e => { if (e.elite) eliteKills++; };
             for (let frame = 0; frame < Math.ceil(STAGES[stage].duration / dt); frame++) {
-                G.time = G.clock = frame * dt; updateSpawner(dt);
+                G.time = G.clock = frame * dt; updateEncirclement(dt); updateSpawner(dt);
                 peak = Math.max(peak, G.enemies.count);
                 for (let i = G.enemies.count - 1; i >= 0; i--) {
                     const e = G.enemies.items[i];
@@ -197,6 +198,33 @@ export function runAudit({ seeds = 200 } = {}) {
                     summarizePlans(Array.from({ length: seeds }, (_, i) => simulatePlan({ rows, collection: s.collection, mode, seed: i + 1 }))) ])) };
         }) };
 }
+export function makeBossBuildFixtures() {
+    const rows = estimateWaveXP({ residency: 16, seed: 7 });
+    const specs = [['mid invested/evolved build', 'planned', 1, 5], ['late two-final build', 'twoFinal', 101, 10],
+        ['late three-final build', 'planned', 101, 10], ['late absolute plus one final', 'absolute', 101, 10]];
+    return { method: 'Actual rollChoices/rollBossChest; 16s ordinary/48s elite synthetic residency, 85% collected XP, spawn seed7, chest before boss XP, no permanent purchases. Pre-boss snapshots.',
+        builds: specs.map(([name, mode, seed, stage]) => ({ name, mode, seed, stage, distance: 130,
+            ...simulatePlan({ rows, collection: .85, mode, seed }).stages[stage - 1].beforeBoss })) };
+}
+export function runSensitivity({ seeds = 100 } = {}) {
+    const result = { spawnSensitivity: [] };
+    for (const residency of [8, 16, 24]) {
+        const totals = Array.from({ length: 10 }, (_, i) => estimateWaveXP({ residency, seed: i + 1 }).reduce((n, r) => n + r.waveXP + r.bossXP, 0));
+        result.spawnSensitivity.push({ residency, min: Math.min(...totals), max: Math.max(...totals) });
+    }
+    for (const lowQ of [false, true]) {
+        const rows = estimateWaveXP({ lowQ });
+        result[lowQ ? 'lowQuality' : 'highQuality'] = { totalXP: rows.reduce((n, r) => n + r.waveXP + r.bossXP, 0) * .85,
+            ...summarizePlans(Array.from({ length: seeds }, (_, i) => simulatePlan({ rows, seed: i + 1 }))) };
+    }
+    const rows = estimateWaveXP();
+    result.chestXPFirst = summarizePlans(Array.from({ length: seeds }, (_, i) => simulatePlan({ rows, seed: i + 1, chestFirst: false })));
+    return result;
+}
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-    console.log(JSON.stringify(runAudit({ seeds: Number(process.argv[2]) || 200 }), null, 2));
+    const flags = new Set(process.argv.slice(2));
+    const seeds = Number(process.argv.slice(2).find(s => /^\d+$/.test(s))) || 200;
+    const result = flags.has('--fixtures') ? makeBossBuildFixtures()
+        : flags.has('--sensitivity') ? { audit: runAudit({ seeds }), sensitivity: runSensitivity() } : runAudit({ seeds });
+    console.log(JSON.stringify(result, flags.has('--compact') ? (key, value) => key === 'representative' ? undefined : value : null, 2));
 }

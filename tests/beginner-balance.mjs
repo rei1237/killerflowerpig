@@ -48,13 +48,13 @@ function runEvent(stage, type, occurrence = 0) {
 }
 
 test('stage 1 and 2 have bounded density and refill; stage 1 introduces enemy types gradually', () => {
-    assert.deepEqual(STAGES[1].density, [5, 22]);
-    assert.deepEqual(STAGES[2].density, [8, 34]);
+    assert.deepEqual(STAGES[1].density, [4, 19]);
+    assert.deepEqual(STAGES[2].density, [7, 30]);
     assert.equal(currentWeights(STAGES[1], 54.999).runner, undefined);
     assert.equal(currentWeights(STAGES[1], 55).runner, 1);
     assert.equal(currentWeights(STAGES[1], 114.999).brute, undefined);
     assert.equal(currentWeights(STAGES[1], 115).brute, 1);
-    for (const [stage, count] of [[1, 3], [2, 4]]) {
+    for (const [stage, count] of [[1, 2], [2, 4]]) {
         reset(stage);
         updateSpawner(1);
         assert.equal(G.enemies.count, count);
@@ -85,7 +85,7 @@ test('opening speed and damage remain forgiving while tougher enemies retain bas
 }));
 
 test('early caps apply to ordinary, forced, event and boss-summoned enemies', () => {
-    for (const [stage, cap] of [[1, 29], [2, 43]]) {
+    for (const [stage, cap] of [[1, 26], [2, 38]]) {
         reset(stage);
         assert.equal(STAGES[stage].enemyCap, cap);
         fillEnemies(cap);
@@ -116,12 +116,12 @@ test('stage 1 leaves a 70-second learning window and smaller events run only onc
         { t: 70, type: 'ring' }, { t: 90, type: 'elite' },
         { t: 115, type: 'swarm' }, { t: 140, type: 'ring' },
     ]);
-    assert.equal(runEvent(1, 'ring').length, 6);
+    assert.equal(runEvent(1, 'ring').length, 5);
     updateSpawner(0);
-    assert.equal(G.enemies.count, 6);
-    assert.equal(runEvent(2, 'ring').length, 10);
-    assert.equal(runEvent(1, 'swarm').length, 7);
-    assert.equal(runEvent(2, 'swarm').length, 12);
+    assert.equal(G.enemies.count, 5);
+    assert.equal(runEvent(2, 'ring').length, 9);
+    assert.equal(runEvent(1, 'swarm').length, 6);
+    assert.equal(runEvent(2, 'swarm').length, 11);
     withFixedRandom(() => {
         for (const [stage, multiplier] of [[1, 1.15], [2, 1.3], [3, 1.5]]) {
             const swarm = runEvent(stage, 'swarm');
@@ -185,8 +185,9 @@ test('later-stage damage, speed, event timing and legacy charges remain while po
     for (let stage = 3; stage <= 10; stage++) {
         const { duration, weights, density } = STAGES[stage];
         const old = baseline.stages[stage];
-        assert.deepEqual({ duration, weights }, { duration: old.duration, weights: old.weights });
-        assert.deepEqual(density, old.density.map(count => Math.round(count * 0.6)));
+        assert.equal(duration, old.duration);
+        assert.deepEqual(weights.map(([t, w]) => [t, Object.fromEntries(Object.entries(w).filter(([id]) => !['suicider','gunner'].includes(id)))]), old.weights);
+        assert.deepEqual(density, old.density.map(count => Math.round(Math.round(count * 0.6) * .88)));
         assert.ok(STAGES[stage].enemyCap > density[1]);
         assert.equal(STAGES[stage].events, undefined);
         for (const t of [0, duration / 2, duration, duration + 10]) {
@@ -202,8 +203,8 @@ test('later-stage damage, speed, event timing and legacy charges remain while po
     for (let stage = 2; stage <= 10; stage++) {
         const { speed, dmg } = BOSSES[stage];
         const old = baseline.bosses[stage];
-        // Signatures and requested boss HP changed; damage and speed did not.
-        assert.deepEqual({ speed, dmg }, { speed: old.speed, dmg: old.dmg });
+        // Requested Hunter speed is the only later movement exception.
+        assert.deepEqual({ speed, dmg }, { speed: stage === 3 ? 118 : old.speed, dmg: old.dmg });
         assert.equal(BOSSES[stage].pacing, undefined);
         reset(stage);
         const boss = new Boss(stage);
@@ -223,7 +224,7 @@ test('later-stage damage, speed, event timing and legacy charges remain while po
     }
     reset(3);
     updateSpawner(1);
-    assert.equal(G.enemies.count, 16, 'later director also stops at its reduced target during long frames');
-    assert.equal(runEvent(3, 'ring').length, 16);
-    assert.equal(runEvent(3, 'swarm').length, 21);
+    assert.equal(G.enemies.count, 14, 'later director also stops at its reduced target during long frames');
+    assert.equal(runEvent(3, 'ring').length, 14);
+    assert.equal(runEvent(3, 'swarm').length, 18);
 }));

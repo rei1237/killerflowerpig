@@ -5,6 +5,7 @@ import { STAGES, EVENTS } from '../data/stages.js';
 import { spawnEnemy, edgePosition } from './enemies.js';
 import { audio } from '../core/audio.js';
 import { floatText } from './effects.js';
+import { startEncirclement } from './encirclement.js';
 
 let spawnAcc = 0;
 
@@ -16,8 +17,9 @@ export function resetSpawner() {
 export function currentWeights(st, t) {
     let w = st.weights[0][1];
     for (const [time, table] of st.weights) if (t >= time) w = table;
-    if(st.bossId < RANGED_UNLOCK_STAGE) return Object.fromEntries(Object.entries(w).filter(([id])=>!ENEMIES[id]?.ranged));
-    return w;
+    return Object.fromEntries(Object.entries(w).filter(([id]) =>
+        st.bossId >= (ENEMIES[id]?.unlockStage || 1) &&
+        (st.bossId >= RANGED_UNLOCK_STAGE || !ENEMIES[id]?.ranged)));
 }
 
 function aliveCount() {
@@ -30,7 +32,7 @@ function aliveCount() {
 export function spawnRate(st, target, alive) {
     return st.spawn
         ? Math.min(st.spawn.maxRate, st.spawn.baseRate + (target - alive) * st.spawn.gapRate)
-        : 2.4 + (target - alive) * 1.5;
+        : 2.112 + (target - alive) * 1.5;
 }
 
 export function updateSpawner(dt) {
@@ -80,7 +82,8 @@ function runEvent(type, st, t) {
         floatText(p.x, p.y - 90, '⚠ 엘리트 변이체', '#ff2244', 1.6);
         audio.sfx('warn');
     } else if (type === 'ring') {
-        // 포위 링: 플레이어를 원형으로 둘러싸며 조여옴
+        // Late rings have a timed, visible poison boundary; early rings stay escapable.
+        if (G.stage >= 5) startEncirclement();
         const n = st.eventTuning?.ringCount ?? 18 + G.stage * 3;
         const R = Math.min(G.view.w, G.view.h) * 0.62;
         for (let i = 0; i < n; i++) {
@@ -97,10 +100,10 @@ function runEvent(type, st, t) {
         const sx = p.x - dx * r, sy = p.y - dy * r;
         const n = st.eventTuning?.swarmCount ?? 26 + G.stage * 3;
         for (let i = 0; i < n; i++) {
-            const off = (i % 7 - 3) * 22, back = Math.floor(i / 7) * 34;
-            spawnEnemy('runner', sx - dy * off - dx * back, sy + dx * off - dy * back, { force: true, lineX: dx, lineY: dy, speedMul: st.eventTuning?.swarmSpeed ?? 1.5 });
+            const off = (i % 3 - 1) * (G.stage >= 5 ? 80 : 22), back = Math.floor(i / 3) * (G.stage >= 5 ? 115 : 34);
+            spawnEnemy(G.stage >= 5 ? 'suicider' : 'runner', sx - dy * off - dx * back, sy + dx * off - dy * back, { force: true, lineX: dx, lineY: dy, speedMul: st.eventTuning?.swarmSpeed ?? 1.5 });
         }
-        floatText(p.x, p.y - 90, '군체 러시!', '#ff2244', 1.4);
+        floatText(p.x, p.y - 90, G.stage >= 5 ? '⚠ 자폭 돌격대 · 예고선 밖으로!' : '군체 러시!', '#ff2244', 1.4);
         audio.sfx('warn');
     }
     emit('event', type);

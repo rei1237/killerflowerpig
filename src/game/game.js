@@ -1,3 +1,4 @@
+import { updateEncirclement, clearEncirclement, constrainEncirclementPlayer } from './encirclement.js';
 import { resetPets, updatePets } from './pets.js';
 // 게임 흐름 제어: 런 시작/스테이지 시작/스텝 업데이트/보스·클리어·사망 전환
 import { G, clearWorld, configureCaps, emit } from './state.js';
@@ -118,6 +119,7 @@ export function startStage(stage, restored = false) {
 }
 
 export function step(dt) {
+    if (G.mode !== 'play' || G.player?.dead) clearEncirclement();
     if (G.mode === 'idle' || G.paused) return;
     if (G.hitstop > 0) {
         G.hitstop -= dt;
@@ -133,6 +135,7 @@ export function step(dt) {
     G.clock += dt;
     if (G.mode === 'play') G.time += dt;
 
+    updateEncirclement(dt);
     updatePlayer(dt);
     if (G.mode !== 'dead') updatePets(dt);
     if (G.mode === 'play' || G.mode === 'boss') updateSpawner(dt);
@@ -144,6 +147,7 @@ export function step(dt) {
     updateHazards(dt);
     if (G.mode !== 'dead') updatePickups(dt);
     if (G.boss) G.boss.update(dt);
+    constrainEncirclementPlayer();
     updateEffects(dt);
 
     // 레벨업 대기열 → UI
@@ -154,6 +158,7 @@ export function step(dt) {
     }
 
     if (G.mode === 'play' && G.time >= STAGES[G.stage].duration) {
+        clearEncirclement();
         G.mode = 'boss';
         spawnBoss();
         audio.setBGMRate(1.08);
@@ -178,6 +183,7 @@ export function step(dt) {
 // 보스 상자를 열고 난 뒤 호출 → 남은 젬 흡수 후 클리어
 export function beginStageClear() {
     if (G.player?.dead || deadRuns.has(G.runId)) return false;
+    clearEncirclement();
     G.mode = 'clearing';
     clearTimer = 0;
     magnetAll();
@@ -191,6 +197,7 @@ export function beginStageClear() {
 
 export function onPlayerDeath() {
     if (G.mode === 'dead') return;
+    clearEncirclement();
     invalidateDeadRun();
     G.mode = 'dead';
     G.deadT = 0;

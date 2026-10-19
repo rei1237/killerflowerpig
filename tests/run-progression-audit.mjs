@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { estimateWaveXP, simulatePlan, summarizePlans } from '../tools/run-progression-audit.mjs';
+import { estimateWaveXP, simulatePlan, summarizePlans, makeBossBuildFixtures } from '../tools/run-progression-audit.mjs';
 import { FUSION_RECIPES } from '../src/data/fusions.js';
 import { WEAPONS } from '../src/data/weapons.js';
 
@@ -19,6 +19,7 @@ test('XP estimates use ten real stages, include boss gems separately and reprodu
 });
 
 test('boss benchmark snapshots are reproduced by actual rolls and fit the six plus six slot contract', () => {
+    assert.deepEqual(makeBossBuildFixtures(), fixture, 'the documented --fixtures command reproduces the complete artifact');
     for (const f of fixture.builds) {
         const run = simulatePlan({ rows, collection: .85, mode: f.mode, seed: f.seed });
         const snapshot = run.stages[f.stage - 1].beforeBoss;

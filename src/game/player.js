@@ -1,3 +1,4 @@
+import { constrainEncirclementPlayer } from './encirclement.js';
 import { accessoryStats, activeAccessory, accessoryEquipHP } from '../core/accessories.js';
 // 플레이어(연이): 8방향 이동, 피격/무적, 재생, 패시브·영구강화 반영 스탯
 import { G, emit } from './state.js';
@@ -67,6 +68,7 @@ export function updatePlayer(dt) {
     if (p.dead) return;
     const s = p.stats;
     advancePlayerMovement(p, input.move, dt);
+    constrainEncirclementPlayer();
 
     if (p.iframes > 0) p.iframes -= dt;
     if (p.hurtT > 0) p.hurtT -= dt;

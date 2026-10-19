@@ -126,3 +126,19 @@ if (process.env.RENDER_BENCHMARK) {
         setSetting('quality', 'auto'); configureCaps();
     });
 }
+
+if (!process.env.RENDER_BENCHMARK) test('active enclosure keeps mobile fog wall visible and tap transform accurate at every edge', async () => {
+ const {startEncirclement,updateEncirclement,clearEncirclement}=await moduleAt('game/encirclement.js');
+ seedScene(); G.player.radius=10; assert.equal(startEncirclement(),true); updateEncirclement(2); G.shake=100;
+ for(const [x,y] of [[220,0],[-220,0],[0,220],[0,-220]]) {
+  G.player.x=x; G.player.y=y; G.clock+=.016; renderer.render(.016);
+  assert.equal(G.camera.x,0); assert.equal(G.camera.y,0);
+  const {zoom,worldTx,worldTy,cssW,cssH}=renderer.screen;
+  const extent=G.encirclement.radius+31;
+  assert.ok(worldTx-extent*zoom>=0 && worldTx+extent*zoom<=canvas.width);
+  assert.ok(worldTy-extent*zoom>=0 && worldTy+extent*zoom<=canvas.height);
+  const point=renderer.clientToWorld((x*zoom+worldTx)/canvas.width*cssW,(y*zoom+worldTy)/canvas.height*cssH);
+  assert.ok(Math.abs(point.x-x)<1e-8 && Math.abs(point.y-y)<1e-8);
+ }
+ clearEncirclement();
+});

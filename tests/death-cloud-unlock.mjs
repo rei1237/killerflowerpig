@@ -128,7 +128,7 @@ test('all other enemy death types retain their loot and do not gain poison cloud
         for (const type of Object.keys(ENEMIES).filter(type => type !== 'bloater')) {
             reset(stage);
             const enemy = spawnEnemy(type, 500, 0);
-            if (!enemy) { assert.ok(ENEMIES[type].ranged && stage < 5); continue; }
+            if (!enemy) { assert.ok((ENEMIES[type].ranged && stage < 5) || stage < (ENEMIES[type].unlockStage || 1)); continue; }
             const xp = enemy.xp;
             hitEnemy(enemy, enemy.hp + 1, { silent: true });
             flushExplosions();

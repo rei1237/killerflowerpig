@@ -21,7 +21,7 @@ Only visible HP increases. No hidden resistance, damage cap, damage increase, sh
 
 ## Historical reason for the HP pass
 
-The paragraph below records the earlier economy/HP decision. The XP curve was subsequently raised to `8 + 7 × (level−1) + 10 × max(0,level−20) + 16 × max(0,level−40)`; do not use the old 20% easing statement as the current progression contract. Current reachability is audited in [run-progression-audit.md](run-progression-audit.md).
+The paragraph below records the earlier economy/HP decision. The XP curve was subsequently raised to `8 + 7 × (level−1) + 10 × max(0, level−20) + 16 × max(0, level−40)`; do not use the old 20% easing statement as the current progression contract. Current reachability is audited in [run-progression-audit.md](run-progression-audit.md).
 
 The economy reduces run XP requirements by 20% and makes permanent damage upgrades easier to obtain. Permanent damage adds up to 25 percentage points, the strongest wing adds 15, and the late crown adds 25. Boss rewards also accelerate weapon levels. At fixed maximum whetstone (+50 percentage points), the equipment comparison is might 1.50 → 2.15, or about 43% more uncapped damage. Accessories occupy one slot; their bonuses are not all stacked together in this audit.
 
@@ -31,14 +31,14 @@ Stages 2–10 receive progressively larger relative adjustments. Stage 1 has a s
 
 Run `node tools/boss-damage-bench.mjs`. The old stage-5 three-final and stage-10 six-final samples were removed. They assumed implausible investment and their old DPS numbers no longer described the inherited-core combat implementation.
 
-Later fixtures are exact pre-boss snapshots produced by actual choice rolls and boss rewards, with no purchases. See `tests/fixtures/planned-boss-builds.json`; regression tests reproduce their levels, evolutions, six passive slots and stats from the ten-stage planner. Stage 5 uses seed 1; late examples seed 101. The XP assumptions are 16-second ordinary / 48-second elite residency and 85% collection, not a measured human clear rate.
+Later fixtures are exact pre-boss snapshots produced by actual choice rolls and boss rewards, with no purchases. See `tests/fixtures/planned-boss-builds.json`; regression tests reproduce their levels, evolutions, six passive slots and stats from the ten-stage planner. Stage 5 uses seed 1; late examples seed 101. Fixtures were refreshed after the subsequent 12% density reduction and new late enemy roles. The XP assumptions are 16-second ordinary / 48-second elite residency and 85% collection, not a measured human clear rate.
 
 | Build | Measured stationary DPS | Current HP / DPS | Live encounter min / median / max |
 | --- | ---: | ---: | ---: |
 | Stage 1: retained strong three-weapon stress fixture | 179.1 | 7.82 s | See early check below |
-| Stage 5: shotgun/thorns/gas evolved 8; rifle 5, cannon 4, molotov 6 | 881.1 | 14.47 s | 14.67 / 17.67 / 25.17 s |
+| Stage 5: shotgun/thorns evolved 8; gas 8, rifle 8, cannon 5, molotov 1 | 958.6 | 13.30 s | 13.92 / 16.92 / 23.02 s |
 | Stage 10: scatter rail 8 + lotus bloom 8 | 6,709.2 | 10.02 s | 11.08 / 12.15 / 15.88 s |
-| Stage 10: scatter rail 8 + lotus bloom 8 + plague fire 8 | 11,281.5 | 5.96 s | 10.02 / 10.93 / 14.03 s |
+| Stage 10: scatter rail 8 + lotus bloom 5 + plague fire 8 | 11,182.7 | 6.01 s | 10.38 / 11.02 / 14.12 s |
 | Stage 10: absolute bloom 8 + scatter rail 8 | 14,706.5 | 4.57 s | 7.22 / 7.77 / 11.18 s |
 
 Stationary samples hold the target still at high test HP for 30 seconds. Live samples use real movement, phase transitions, summons, projectile collisions, hazard ticks, `Boss.hurt` and hitstop: 12 seeds × three distances (100/300/500) per build. All 144 mid/late cases began a real attack pattern before dying. This asserts pattern start, not that every pattern completed.

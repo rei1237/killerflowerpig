@@ -1,3 +1,5 @@
+import { initBestiary, openBestiary, closeBestiary } from './bestiary.js';
+import { clearEncirclement } from '../game/encirclement.js';
 // DOM UI: 타이틀/스토리/레벨업/상자/일시정지/설정/상점/결과 화면
 import { G } from '../game/state.js';
 import { STAGES, STAGE_COUNT } from '../data/stages.js';
@@ -137,6 +139,8 @@ function banner(main, sub) {
 
 // ─────────────────────────── 타이틀 ───────────────────────────
 export function showTitle() {
+    closeBestiary();
+    clearEncirclement();
     cancelStory();
     cancelPractice();
     closeLoadoutExchange();
@@ -669,7 +673,7 @@ function renderRelicShop() {
 function renderBossArchive() {
     const list = $('boss-archive');
     list.replaceChildren();
-    for (const [stage, boss] of Object.entries(BOSSES)) {
+    for (const [stage, boss] of Object.entries(BOSSES).filter(([stage]) => Number(stage) <= 9)) {
         const card = document.createElement('article');
         const img = document.createElement('img');
         img.src = `asset/bosses/boss-${String(stage).padStart(2,'0')}.webp`;
@@ -783,6 +787,8 @@ export function initUI() {
     G.events.loadoutExchanged = markLoadoutExchangeSpent;
     G.events.runSaveError = () => toast('도전 기록을 저장하지 못했습니다. 종료한 도전은 다시 시작해야 합니다. 브라우저 저장 공간을 확인하세요.', 6000);
     const click = (id, fn) => $(id).addEventListener('click', () => { audio.unlock(); audio.sfx('click'); fn(); });
+    initBestiary({ onOpen: () => { resetInput(); openModal('bestiary'); }, onClose: () => { closeModal('bestiary'); resetInput(); } });
+    click('btn-bestiary', openBestiary);
     initTutorial({ onOpen: () => { resetInput(); openModal('tutorial'); }, onClose: () => { closeModal('tutorial'); resetInput(); } });
     initLoadoutExchange({ onOpen: () => { resetInput(); openModal('loadout-exchange'); }, onClose: () => { closeModal('loadout-exchange'); resetInput(); } });
     initFusionReveal({ onOpen: () => { resetInput(); openModal('fusion-reveal'); }, onClose: () => { closeModal('fusion-reveal'); resetInput(); } });

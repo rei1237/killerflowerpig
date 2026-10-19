@@ -1,3 +1,4 @@
+import { drawEncirclement, updateEncirclementCamera } from './encirclement.js';
 import { drawPets } from './pets.js';
 // 월드 렌더링. 캔버스 1장, 레이어 순서로 그리며 화면 밖 객체는 컬링.
 import { G, VIEW_H, setVisualTier } from './state.js';
@@ -141,10 +142,9 @@ export function render(dt) {
     ensureGround();
 
     // 카메라 (부드럽게 추적 + 흔들림)
-    const k = Math.min(1, dt * 10);
-    cam.x += (p.x - cam.x) * k;
-    cam.y += (p.y - 20 - cam.y) * k;
-    const sh = G.shake;
+    const enclosed = updateEncirclementCamera(dt);
+    // A fixed active camera must not shake the far fog edge outside mobile view.
+    const sh = enclosed ? 0 : G.shake;
     const sx = sh ? (Math.random() - 0.5) * sh : 0;
     const sy = sh ? (Math.random() - 0.5) * sh : 0;
     const z = screen.zoom;
@@ -162,6 +162,7 @@ export function render(dt) {
     // 2~4. 데칼, 장판, 젬
     drawDecals(ctx, vx0, vy0, vx1, vy1);
     drawHazards(ctx);
+    drawEncirclement(ctx);
     drawPickups(ctx, vx0, vy0, vx1, vy1);
 
     // 5. 그림자 (한 번의 path 로 일괄)

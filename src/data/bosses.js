@@ -1,4 +1,5 @@
-// 성장 경제 보정: HP만 조정: 1단계는 실제 돌진 노출 검증 1400, 이후 +40~60%. 예고·피해·이동·회복 시간은 유지.
+export const HUNTER_TUNING = Object.freeze({ warning: .65, secondWarning: .5, dashSpeed: 650, phaseSpeedStep: .08, dashRange: 350, recovery: 1.25 });
+// 이전 성장 경제 보정은 HP만 조정(1단계1400, 이후+40~60%). 헌터는 별도 요청으로 빠른 추적·2연속 돌진 적용.
 // 보스 정의. phases[i] = HP 구간별 패턴 목록 (100-60%, 60-25%, 25-0%)
 // 패턴: charge(돌진), ring(원형탄), spiral(나선탄), aimed(조준 부채꼴), summon(소환),
 //       각 보스의 signature는 이동·안전 지대·공격 순서가 다른 고유 패턴이다.
@@ -11,8 +12,8 @@ export const BOSSES = {
     2: { name: '엘리트 청토끼', title: '전투 머신이 다가온다...', sheet: 'boss1', tint: 'elite', scale: 0.64, hp: 2240, speed: 66, dmg: 16,
         signature: 'barrage', signatureHint: '고정된 사격선 옆으로 빠지고 재장전 중 공격하세요.',
         phases: [['barrage'], ['barrage'], ['barrage']] },
-    3: { name: '헌터 청토끼', title: '냄새를 맡았다...', sheet: 'boss1', tint: 'shadow', scale: 0.64, hp: 4930, speed: 72, dmg: 18, stealth: true,
-        signature: 'hunt', signatureHint: '사냥 도약을 옆으로 피하고 착지 후 옆걸음을 따라가세요.',
+    3: { name: '헌터 청토끼', title: '냄새를 맡았다...', sheet: 'boss1', tint: 'shadow', scale: 0.64, hp: 4930, speed: 118, dmg: 18, stealth: true,
+        signature: 'hunt', signatureHint: '두 번의 돌진 예고선을 각각 옆으로 피하고, 멈춰 숨을 고를 때 공격하세요.',
         phases: [['hunt'], ['hunt'], ['hunt']] },
     4: { name: '프레데터 알파', title: '저격이다!', sheet: 'boss1', tint: 'toxic', scale: 0.66, hp: 8120, speed: 60, dmg: 20,
         signature: 'lockshot', signatureHint: '조준선이 멈추면 방향을 바꿔 두 번째 저격도 피하세요.',

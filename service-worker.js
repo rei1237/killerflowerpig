@@ -1,9 +1,14 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v9-absolute-roguelike';
+const VERSION = 'v11-late-rabbit-siege';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
 const PRECACHE = [
+    './src/data/bestiary.js',
+    './src/ui/bestiary.js',
+    './src/ui/bestiary.css',
+    './asset/enemies/rabbit-suicider.png',
+    './asset/enemies/rabbit-gunner.png',
     './',
     './index.html',
     './style.css',

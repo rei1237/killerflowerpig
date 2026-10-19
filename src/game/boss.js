@@ -3,7 +3,7 @@ import { prepareBossSheets, getBossSheet } from './boss-sheets.js';
 import { recordFusionHit } from './weapon-vfx.js';
 // 보스: 3페이즈, 예고(텔레그래프) 기반 패턴, 페이즈 전환 연출, 처치 시 관 상자
 import { G, rand, emit, pickWeighted } from './state.js';
-import { BOSSES, PHASE_THRESHOLDS } from '../data/bosses.js';
+import { BOSSES, PHASE_THRESHOLDS, HUNTER_TUNING } from '../data/bosses.js';
 import { STAGES } from '../data/stages.js';
 import { currentWeights } from './spawner.js';
 import { atlases, images } from '../core/assets.js';
@@ -89,6 +89,7 @@ export class Boss {
         if (this.def.phaseSummons) this.patternSummon(6 + n * 3);
         else setBossMotion(this, 'recover', .35);
         this.speed = this.def.speed * (1 + n * 0.18);
+        if (this.def.signature === 'hunt') this.task = this.hunterRecoveryTask();
         emit('bossPhase', n);
     }
 
@@ -117,6 +118,11 @@ export class Boss {
     }
 
     update(dt) {
+        // A discarded Hunter must not release its second lock into a new stage
+        // or a replacement player. Other boss lifecycles are unchanged.
+        if (this.def.signature === 'hunt' && (G.stage !== this.stage || this.task?.target && this.task.target !== G.player)) {
+            this.cancelPatternWarnings(); this.task = null; return;
+        }
         updateBossMotion(this, dt);
         this.animT += dt;
         if (!this.alive) {
@@ -136,14 +142,22 @@ export class Boss {
             this.task.step(dt, this.task);
         } else {
             // 추적
-            this.x += (dx / dist) * this.speed * dt;
-            this.y += (dy / dist) * this.speed * dt;
+            if (this.def.signature === 'hunt') {
+                const side = this.signatureCount % 2 ? 1 : -1;
+                const forward = dist < 160 ? .35 : 1, lateral = .6 * side;
+                const norm = Math.hypot(forward, lateral);
+                this.x += (dx * forward - dy * lateral) / dist / norm * this.speed * dt;
+                this.y += (dy * forward + dx * lateral) / dist / norm * this.speed * dt;
+            } else {
+                this.x += (dx / dist) * this.speed * dt;
+                this.y += (dy / dist) * this.speed * dt;
+            }
             if (Math.abs(dx) > 4) this.flip = dx < 0;
             this.attackT -= dt;
             if (this.attackT <= 0 && this.invuln <= 0) this.startPattern();
         }
         // 화면 밖으로 너무 멀어지면 빠르게 복귀
-        if (dist > Math.max(G.view.w, G.view.h) * 0.9) {
+        if (this.def.signature !== 'hunt' && dist > Math.max(G.view.w, G.view.h) * 0.9) {
             this.x += (dx / dist) * 300 * dt;
             this.y += (dy / dist) * 300 * dt;
         }
@@ -153,7 +167,11 @@ export class Boss {
         else if (this.def.stealth && !this.task) this.alpha += ((dist < 160 ? 1 : 0.18) - this.alpha) * Math.min(1, dt * 4);
         else this.alpha += (1 - this.alpha) * Math.min(1, dt * 6);
 
-        if (dist < this.radius + p.radius + 6) damagePlayer(this.dmg, this.x, this.y);
+        if (this.def.signature === 'hunt') {
+            // Active dashes use their swept collision below. Windups and the
+            // guaranteed stationary recovery are safe to punish at close range.
+            if (!this.task && Math.hypot(p.x - this.x, p.y - this.y) < this.radius + p.radius + 6) damagePlayer(this.dmg, this.x, this.y);
+        } else if (dist < this.radius + p.radius + 6) damagePlayer(this.dmg, this.x, this.y);
 
         const fd = this.state === 'attack' ? 0.09 : 0.13;
         if (this.animT > fd) {
@@ -267,29 +285,62 @@ export class Boss {
         return this.signatureTask(last + .32, 2.5, 1.8);
     }
 
-    // 3: a shorter hunting leap, followed by a visible lateral retreat.
-    // Unlike the brute's straight charge it never emits an unmarked ring.
-    task_hunt() {
-        setBossMotion(this, 'windup');
-        const a = Math.atan2(G.player.y - this.y, G.player.x - this.x);
-        const length = Math.min(330, Math.max(150, Math.hypot(G.player.x - this.x, G.player.y - this.y)));
-        const warning = 1.05, speed = 460, side = this.signatureCount % 2 ? 1 : -1;
-        this.warn('tline', this.x, this.y, { angle: a, len: length, width: this.radius * 2, delay: warning, color: '#caa9ec' });
-        audio.sfx('warn');
-        return { t: 0, phase: 0, dash: 0, retreat: 0, step: (dt, s) => {
-            if (s.phase === 0 && s.t >= warning) { s.phase = 1; setBossMotion(this, 'attack'); }
-            if (s.phase === 1) {
-                const d = Math.min(speed * dt, length - s.dash);
-                this.x += Math.cos(a) * d; this.y += Math.sin(a) * d; s.dash += d;
-                this.flip = Math.cos(a) < 0;
-                if (s.dash >= length) { s.phase = 2; setBossMotion(this, 'recover', .55); }
-            } else if (s.phase === 2) {
-                const d = Math.min(210 * dt, 105 - s.retreat);
-                this.x += Math.cos(a + side * Math.PI / 2) * d;
-                this.y += Math.sin(a + side * Math.PI / 2) * d; s.retreat += d;
-                if (s.retreat >= 105) { this.endTask(2.1); this.attackT = Math.max(1.35, this.attackT); }
-            }
+    hunterRecoveryTask() {
+        setBossMotion(this, 'recover');
+        this.alpha = 1;
+        return { t: 0, phase: 'recover', target: G.player, step: (dt, s) => {
+            if (s.t < HUNTER_TUNING.recovery) return;
+            this.endTask(1.8); this.attackT = Math.max(1.35, this.attackT);
+            setBossMotion(this, 'walk');
         } };
+    }
+
+    // 3: fast lateral pursuit, then two independently locked, visible dashes.
+    // Each tell gets a rendered state of its own, even after a long frame.
+    task_hunt() {
+        const task = { t: 0, elapsed: 0, phase: 'warning', strike: 0, dash: 0,
+            target: G.player, speed: HUNTER_TUNING.dashSpeed * (1 + this.phase * HUNTER_TUNING.phaseSpeedStep), lane: null };
+        const lock = s => {
+            const p = G.player, a = Math.atan2(p.y - this.y, p.x - this.x);
+            const length = Math.min(HUNTER_TUNING.dashRange, Math.max(160, Math.hypot(p.x - this.x, p.y - this.y)));
+            const radius = this.radius + p.radius + 6, warning = s.strike ? HUNTER_TUNING.secondWarning : HUNTER_TUNING.warning;
+            // The rectangle conservatively encloses the entire swept capsule,
+            // including contact radius at both ends. No invisible wider hit.
+            s.lane = { angle: a, length, radius, warning };
+            s.elapsed = 0; s.dash = 0; s.phase = 'warning';
+            const onFire = () => {}; onFire.bossOwner = this;
+            spawnHazard('tline', this.x - Math.cos(a) * radius, this.y - Math.sin(a) * radius,
+                { angle: a, len: length + radius * 2, width: radius * 2, delay: warning, color: '#caa9ec', onFire });
+            setBossMotion(this, 'windup'); this.alpha = 1;
+            audio.sfx('warn');
+        };
+        const recover = () => { this.cancelPatternWarnings(); this.task = this.hunterRecoveryTask(); };
+        task.step = (dt, s) => {
+            if (G.stage !== this.stage || G.player !== s.target || !this.alive) { this.cancelPatternWarnings(); this.task = null; return; }
+            if (s.phase === 'warning') {
+                s.elapsed += dt;
+                if (s.elapsed + 1e-9 >= s.lane.warning) {
+                    this.cancelPatternWarnings(); s.phase = 'dash'; setBossMotion(this, 'attack');
+                }
+                return;
+            }
+            const { angle, length, radius } = s.lane;
+            const d = Math.min(s.speed * dt, length - s.dash), ux = Math.cos(angle), uy = Math.sin(angle);
+            const ox = this.x - G.player.x, oy = this.y - G.player.y;
+            const projection = ox * ux + oy * uy, c = ox * ox + oy * oy - radius * radius;
+            const discriminant = projection * projection - c;
+            const contact = c <= 0 ? 0 : discriminant >= 0 ? -projection - Math.sqrt(discriminant) : Infinity;
+            const hit = contact >= 0 && contact <= d;
+            const move = hit ? contact : d;
+            this.x += ux * move; this.y += uy * move; s.dash += move;
+            this.flip = ux < 0;
+            if (hit) { damagePlayer(this.dmg, this.x, this.y); recover(); return; }
+            if (s.dash + 1e-9 < length) return;
+            if (s.strike === 0) { s.strike = 1; lock(s); }
+            else recover();
+        };
+        lock(task);
+        return task;
     }
 
     // 4: two separately acquired locks. Each follows briefly then stays

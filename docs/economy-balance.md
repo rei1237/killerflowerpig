@@ -59,3 +59,7 @@ This supersedes the previous unchanged-price recommendation. All permanent upgra
 Ordinary enemies still drop3 coins with15% probability (0.45 expected coins/kill). Elites now give guaranteed8 coins and XP only, with no gear chest or battlefield supply roll. Boss defeats retain their guaranteed boss chest; ordinary healing/magnet supply rules remain separate. At100 ordinary kills +1 elite, expected dropped gold is53 (previous scarce-gold pass85, original guaranteed pass540), before boss/clear bonuses or greed. Cheapest8-coin upgrade is about18 ordinary kills in expectation, speed12 about27 and pet28 about63; one elite funds the cheapest starter. Chance means these are not guaranteed kill counts.
 
 Regression coverage includes10000 actual elite kills with no gear/supply, exact80000 combined elite coins, nonduplicate death rewards, actual boss defeat producing exactly one boss chest, immutable/idempotent purchases, insufficient funds, and lower-price persistence through reload. Normal coin RNG remains independent from XP/healing/magnet randomness.
+
+## Hunter update durability follow-up
+
+Ordinary toughness is now 1.62×, an 11.72% increase over the prior 1.45×. This follow-up changes no density, XP, gold or shop values. Historical throughput proxies above describe the earlier 1.45× revision.

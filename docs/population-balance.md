@@ -2,56 +2,41 @@
 
 This tuning follows the request to reduce crowds while making each enemy sturdier. It replaces the previous population/HP values in `beginner-balance.md`. Boss durability is documented separately in `boss-durability.md`.
 
-## Population before and after
+## Current population revision
 
-Target counts interpolate across each stage; values below show stage start–end before quality/boss relief factors. Endpoints are approximately 40% lower (37.5–42.9%, allowing whole-enemy rounding).
+The follow-up reduces the prior target endpoints and hard stage caps by another 12%, rounded to whole enemies. The first-stage minimum goes from 5 to 4 because of rounding. Normal enemy identities and rewards are retained; late specialist waves use fewer, more distinct threats.
 
-| Stage | Previous target | New target | New hard stage cap | Ring before → after | Rush before → after |
+| Stage | Previous target | Current target | Current cap | Ring count | Rush count |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 8–36 | 5–22 | 29 | 10 → 6 | 12 → 7 |
-| 2 | 14–56 | 8–34 | 43 | 16 → 10 | 20 → 12 |
-| 3 | 26–100 | 16–60 | 84 | 27 → 16 | 35 → 21 |
-| 4 | 32–125 | 19–75 | 100 | 30 → 18 | 38 → 23 |
-| 5 | 38–150 | 23–90 | 116 | 33 → 20 | 41 → 25 |
-| 6 | 45–175 | 27–105 | 132 | 36 → 22 | 44 → 26 |
-| 7 | 52–200 | 31–120 | 148 | 39 → 23 | 47 → 28 |
-| 8 | 60–225 | 36–135 | 164 | 42 → 25 | 50 → 30 |
-| 9 | 68–250 | 41–150 | 180 | 45 → 27 | 53 → 32 |
-| 10 | 76–280 | 46–168 | 196 | 48 → 29 | 56 → 34 |
+| 1 | 5–22 | 4–19 | 26 | 5 | 6 runners |
+| 2 | 8–34 | 7–30 | 38 | 9 | 11 runners |
+| 3 | 16–60 | 14–53 | 74 | 14 | 18 runners |
+| 4 | 19–75 | 17–66 | 88 | 16 | 20 runners |
+| 5 | 23–90 | 20–79 | 102 | 18 | 6 suiciders |
+| 6 | 27–105 | 24–92 | 116 | 19 | 7 suiciders |
+| 7 | 31–120 | 27–106 | 130 | 20 | 8 suiciders |
+| 8 | 36–135 | 32–119 | 144 | 22 | 9 suiciders |
+| 9 | 41–150 | 36–132 | 158 | 24 | 10 suiciders |
+| 10 | 46–168 | 40–148 | 172 | 26 | 10 suiciders |
 
-- Global enemy limits: high quality 420 → 252, low quality 260 → 156. Particle/text/gem budgets are unchanged.
-- Every route uses the minimum of the stage and global caps: ordinary, elite, forced event, boss summon and splitter offspring. `force: true` no longer bypasses a late-stage population cap.
-- Caps count retained pool slots, including corpses awaiting animation cleanup. Near the cap, a splitter may release fewer than three offspring; a wave or summon fills only available slots.
-- The normal director reserves 12 slots rather than 20, matching the 0.60 population factor. Boss relief (×0.35) and low-quality target reduction (×0.85) remain unchanged.
-- Normal spawning now stops at its current target even after a long frame in every stage. It does not accumulate failed-spawn credit behind a full cap.
-- Boss summons use 60% of their previous effective rounded counts, rounded again to whole enemies, with at least one requested summon. Central caps still apply. That change is implemented by the boss owner in `boss.js`.
+Global limits remain252/high and156/low, and all spawn routes use the stricter stage cap. Refill base rates and early max rates are also12% lower; the deficit coefficient is unchanged to avoid double reduction. Boss relief0.35 and low-quality0.85 factors remain. Long-frame refill never exceeds its target.
 
-## Refill pace
-
-Stage 1: `min(5, 2 + deficit × 0.45)` → `min(3, 1.2 + deficit × 0.45)` enemies/second.
-
-Stage 2: `min(8, 3 + deficit × 0.65)` → `min(4.8, 1.8 + deficit × 0.65)` enemies/second.
-
-Stages 3–10: `4 + deficit × 1.5` → `2.4 + deficit × 1.5` enemies/second.
-
-The deficit coefficient is deliberately retained: the target and therefore the comparable deficit are already about 60% of the previous value. Multiplying both would accidentally reduce that term to about 36%. At equal population fullness (empty, half-full and 90%-full), tested refill rates remain between 55% and 65% of their previous values in every stage.
-
-Event times and stage durations are unchanged. Stage 1 still waits until 55s for runners, 70s for the first ring and 115s for brutes. The stage 1/2 rush speed reductions and elite HP modifiers remain.
+Event times and stage durations are unchanged. Stage1 keeps its55s runner,70s ring and115s brute introduction. Stages1–4 rings stay escapable enemy formations; stage5+ rings also request the 2s-warning/7s-active poison enclosure with at least90s between triggers. Late rushes use at most10 spaced suiciders, not a dense crowd, with per-enemy warning and fuse. Per-kill XP, rare coin probabilities/amounts and shop prices are unchanged. Fewer enemies can lower total earnings; no unmeasured claim of equal payout is made.
 
 ## Individual durability and TTK proxies
 
-`ENEMY_TOUGHNESS_MULTIPLIER = 1.45` multiplies the existing stage-scaled enemy HP. It applies once to normal/elite mobs and their summoned/split variants. Boss HP is separate. Enemy speed, contact damage, projectile damage/cooldown, sprite/tint, animation scale and collision radii do not change.
+`ENEMY_TOUGHNESS_MULTIPLIER = 1.62` multiplies existing stage-scaled HP once, up 11.72% from the previous 1.45 tuning. Normal/elite mobs and summoned/split variants use the same factor. Boss HP is separate. Density, rewards, speed, damage, artwork and collision radii are unchanged by this adjustment.
 
-Examples use a shambler at stage start with no random elite modifier:
+Examples at stage start (shambler, no elite modifier):
 
-| Stage | Previous HP | New HP | 9-damage hits before → after | Fixed 40-DPS time before → after |
-| --- | --- | --- | --- | --- |
-| 1 | 8.500 | 12.325 | 1 → 2 | 0.213s → 0.308s |
-| 2 | 16.781 | 24.332 | 2 → 3 | 0.420s → 0.608s |
-| 5 | 53.040 | 76.908 | 6 → 9 | 1.326s → 1.923s |
-| 10 | 144.640 | 209.728 | 17 → 24 | 3.616s → 5.243s |
+| Stage | Previous 1.45 HP | New 1.62 HP | 9-damage hits before → after |
+| --- | --- | --- | --- |
+| 1 | 12.325 | 13.770 | 2 → 2 |
+| 2 | 24.332 | 27.185 | 3 → 4 |
+| 5 | 76.908 | 85.925 | 9 → 10 |
+| 10 | 209.728 | 234.317 | 24 → 27 |
 
-The fixed-damage tests apply real `hitEnemy` calls until death. The 40-DPS values are HP/DPS proxies, not measured weapon or human clear times; pellets, overkill, pierce, movement and build choices change real TTK. The same target with constant DPS takes 45% longer. At an exact 0.60 density factor, the crowd's combined HP proxy is 0.60 × 1.45 = 0.87 of the former value.
+Constant-DPS time rises 11.72% against the same target. These are HP/DPS proxies, not human completion times. The first-stage starter's basic hit breakpoint remains two 9-damage hits. Existing beginner multipliers and stage durations are retained. At the approximate 0.528 density, combined crowd HP is 0.528 × 1.62 = 0.85536 of the original pre-density-reduction baseline.
 
 ## Rewards and support compensation
 

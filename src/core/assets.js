@@ -433,6 +433,19 @@ export async function loadAssets(onProgress, { signal, timeoutMs = 20000 } = {})
     for (let stage = 1; stage <= 10; stage++) {
         add(`bossArt${stage}`, BOSS_ART[stage].src, img => { images[`bossArt${stage}`] = img; });
     }
+    // Optional dedicated role art: keep the original rabbit atlases as a safe fallback.
+    for (const role of ['suicider', 'gunner']) {
+        add(`enemyRole_${role}`, `asset/enemies/rabbit-${role}.png`, img => {
+            const key = `enemyRole_${role}`;
+            if (!img) { delete atlases[key]; return; }
+            const h = 112, w = Math.max(1, Math.round(img.width * h / img.height));
+            const canvas = makeCanvas(w, h);
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            const frame = () => ({ sx: 0, sy: 0, sw: w, sh: h, ox: w / 2 });
+            atlases[key] = new Atlas(canvas, { w, h, walkH: h, anims: { walk: [frame()], attack: [frame()], dead: [frame()] } });
+            for (const tint of ['normal', 'flash', 'elite', 'hallu']) atlases[key].variant(tint);
+        });
+    }
     add('petYeongnyang', 'asset/items/pet-yeongnyang.png', img => { images.petYeongnyang = img; });
     add('playerFire', 'asset/sprites/player-fire.png', (img) => {
         if (!img) return;

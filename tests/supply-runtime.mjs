@@ -115,7 +115,7 @@ test('ranged audit: boss summons cannot introduce ranged enemies before stage5; 
 test('ranged audit: stage5+ tables, forced/elite spawns and projectile timing retain the late-game values', () => withRandom(0.5, () => {
     const before = JSON.stringify(STAGES);
     for (let stage = 5; stage <= 10; stage++) {
-        for (const [time, table] of STAGES[stage].weights) assert.equal(currentWeights(STAGES[stage], time), table);
+        for (const [time, table] of STAGES[stage].weights) assert.deepEqual(currentWeights(STAGES[stage], time), table);
         for (const opts of [{}, { force: true }, { elite: true }, { force: true, elite: true }]) {
             reset(stage);
             const spitter = spawnEnemy('spitter', 100, 0, opts);
