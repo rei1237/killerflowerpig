@@ -205,7 +205,7 @@ export function updateEnemies(dt) {
         if (e.bleedT > 0) {
             e.bleedT -= dt;
             e.hp -= e.bleed * dt * 4;
-            if (Math.random() < dt * 6) blood(e.x, e.y - e.radius, 1);
+            if (Math.random() < dt * 2) blood(e.x, e.y - e.radius, 1);
             if (e.hp <= 0) { killEnemy(e, {}); continue; }
         }
 

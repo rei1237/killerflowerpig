@@ -109,8 +109,8 @@ export const WEAPONS = {
 export const PASSIVES = {
     magazine: { name: '탄창 확장', icon: '📦', desc: '모든 무기 투사체 수 증가', per: '투사체 +1 (Lv1·3·5)' },
     focus: { name: '집중', icon: '👁️', desc: '치명타 확률 +7% (피해 2배)', per: '치명타 +7%' },
-    sap: { name: '회전 수액', icon: '🧪', desc: '무기 지속 시간 +12%', per: '지속 +12%' },
-    scope: { name: '조준경', icon: '🔭', desc: '투사체 속도·사거리 +12%', per: '속도 +12%' },
+    sap: { name: '회전 수액', icon: '🧪', desc: '경험치 획득 +8%', per: '경험치 +8%' },
+    scope: { name: '조준경', icon: '🔭', desc: '관통 투사체의 관통 +1 (Lv1·3·5) · 탄속 +5%', per: '관통 +1 (Lv1·3·5) · 탄속 +5%' },
     spread: { name: '확산', icon: '🫧', desc: '공격 범위 +10%', per: '범위 +10%' },
     pollen: { name: '꽃가루', icon: '🌼', desc: '재사용 대기시간 -7%', per: '쿨타임 -7%' },
     whet: { name: '날 연마', icon: '🪓', desc: '모든 피해 +10%', per: '피해 +10%' },

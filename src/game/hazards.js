@@ -31,6 +31,17 @@ export function spawnHazard(kind, x, y, o = {}) {
     return h;
 }
 
+// 화면 정리: 같은 무기의 장판이 max개 이상이면 가장 오래된 것부터 0.4초 안에 사라지게 한다.
+export function limitFriendlyFields(kind, weapon, max) {
+    const pool = G.hazards, live = [];
+    for (let i = 0; i < pool.count; i++) {
+        const h = pool.items[i];
+        if (h.alive && h.kind === kind && h.weapon === weapon && !h.follow && h.duration - h.t > .4) live.push(h);
+    }
+    live.sort((a, b) => b.t - a.t);
+    for (let i = 0; i <= live.length - max; i++) live[i].t = live[i].duration - .4;
+}
+
 const list = [];
 function releaseAt(pool, i, h) {
     if (i < pool.count && pool.items[i] === h) { pool.release(i); return; }
