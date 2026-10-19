@@ -1,0 +1,59 @@
+import { mountItemArt } from './item-art.js';
+let root, hooks = {}, opened = false, timer = null, onDone, returnFocus, isolated = [];
+const el = (tag, cls, text) => { const n = document.createElement(tag); n.className = cls; if (text) n.textContent = text; return n; };
+function reveal() {
+    if (!opened) return;
+    clearTimeout(timer); timer = null;
+    root.dataset.phase = 'result';
+    root.querySelector('.fusion-reveal-result').hidden = false;
+    root.querySelector('.fusion-reveal-skip').hidden = true;
+    const confirm = root.querySelector('.fusion-reveal-confirm'); confirm.hidden = false; confirm.focus();
+}
+export function initFusionReveal(options = {}) {
+    hooks = options;
+    if (root) return;
+    root = el('section', 'fusion-reveal'); root.id = 'fusion-reveal'; root.hidden = true;
+    root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.setAttribute('aria-labelledby', 'fusion-reveal-heading');
+    const panel = el('div', 'fusion-reveal-panel');
+    const heading = el('h2', '', '새로운 아이템 탄생!'); heading.id = 'fusion-reveal-heading';
+    const ingredients = el('div', 'fusion-reveal-ingredients');
+    const result = el('div', 'fusion-reveal-result'); result.setAttribute('aria-live', 'polite');
+    const skip = el('button', 'fusion-reveal-skip', '즉시 보기'); skip.type = 'button'; skip.addEventListener('click', reveal);
+    const confirm = el('button', 'fusion-reveal-confirm', '확인'); confirm.type = 'button'; confirm.addEventListener('click', closeFusionReveal);
+    panel.append(el('p', 'fusion-reveal-eyebrow', 'FUSION COMPLETE'), heading, ingredients, result, skip, confirm); root.append(panel); document.body.append(root);
+    window.addEventListener('keydown', e => {
+        if (!opened) return;
+        e.stopImmediatePropagation();
+        if (e.code === 'Escape') { e.preventDefault(); closeFusionReveal(); }
+        if (e.code === 'Tab') { e.preventDefault(); root.querySelector(root.dataset.phase === 'result' ? '.fusion-reveal-confirm' : '.fusion-reveal-skip').focus(); }
+    }, true);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) reveal(); });
+}
+export function openFusionReveal({ ingredients, output, statText = '', onDone: done } = {}) {
+    if (opened || !Array.isArray(ingredients) || ingredients.length !== 2 || !output?.id) return false;
+    if (!root) initFusionReveal(hooks);
+    const source = root.querySelector('.fusion-reveal-ingredients'); source.replaceChildren();
+    for (const item of ingredients) {
+        const card = el('div', 'fusion-reveal-source'), art = el('div', 'fusion-reveal-art');
+        mountItemArt(art, item.id, 'weapon', item.name || item.id);
+        card.append(art, el('span', '', `${item.name || item.id} · Lv.${item.level || 5}`)); source.append(card);
+    }
+    const result = root.querySelector('.fusion-reveal-result'), art = el('div', 'fusion-reveal-output-art');
+    mountItemArt(art, output.id, 'weapon', output.name || output.id);
+    result.replaceChildren(art, el('h3', '', `${output.name || output.id} · Lv.1`), el('p', '', output.desc || ''), el('p', 'fusion-reveal-stats', statText), el('p', 'fusion-reveal-slots', '재료 2개 → 새 아이템 1개 · 무기 슬롯 1칸 확보'));
+    result.hidden = true; root.querySelector('.fusion-reveal-confirm').hidden = true; root.querySelector('.fusion-reveal-skip').hidden = false;
+    returnFocus = document.activeElement; isolated = Array.from(document.body.children).filter(n => n !== root).map(n => [n, n.inert]);
+    isolated.forEach(([n]) => { n.inert = true; });
+    opened = true; onDone = done; root.dataset.phase = 'bloom'; root.hidden = false; hooks.onOpen?.();
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || document.hidden) reveal();
+    else { root.querySelector('.fusion-reveal-skip').focus(); timer = setTimeout(reveal, 900); }
+    return true;
+}
+export function closeFusionReveal() {
+    if (!opened) return false;
+    clearTimeout(timer); timer = null; opened = false; root.hidden = true;
+    isolated.forEach(([n, inert]) => { n.inert = inert; }); isolated = [];
+    const done = onDone; onDone = null;
+    if (returnFocus?.isConnected) returnFocus.focus();
+    hooks.onClose?.(); done?.(); return true;
+}

@@ -1,11 +1,12 @@
 {
-  "name": "Yeon the killer of blue zombie",
-  "short_name": "Yeon Zombie",
+  "name": "꽃돼지 · 푸른 밤의 수호자",
+  "short_name": "꽃돼지",
+  "description": "꽃돼지와 함께 청토끼 좀비를 물리치는 서바이벌 슈터",
   "start_url": "./",
-  "display": "standalone",
-  "background_color": "#0a0a0c",
-  "theme_color": "#0a0a0c",
-  "orientation": "landscape",
+  "display": "fullscreen",
+  "background_color": "#101f32",
+  "theme_color": "#101f32",
+  "orientation": "any",
   "icons": [
     {
       "src": "asset/%EA%BD%83%EB%8F%BC%EC%A7%80%20the%20killer%20of%20zombie.png",

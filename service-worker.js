@@ -1,63 +1,104 @@
-const CACHE_NAME = "yeon-blue-zombie-v8";
-const ASSETS = [
-  "./",
-  "./index.html",
-  "./style.css",
-  "./game.js",
-  "./manifest.webmanifest"
+// 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
+const VERSION = 'v8-survival-training-fusion-bosses';
+const CODE_CACHE = `kfp-code-${VERSION}`;
+const ASSET_CACHE = `kfp-assets-${VERSION}`;
+
+const PRECACHE = [
+    './',
+    './index.html',
+    './style.css',
+    './blue-night.css',
+    './src/ui/tutorial.css',
+    './src/ui/practice.css',
+    './src/ui/fusion-reveal.css',
+    './src/ui/fusion-reveal.js',
+    './src/ui/practice.js',
+    './src/game/practice.js',
+    './src/game/targeting.js',
+    './src/game/player-motion.js',
+    './asset/tutorial/field-guide.webp',
+    './asset/tutorial/moon-hat.webp',
+    './asset/tutorial/yeongnyang.webp',
+    './manifest.webmanifest',
+    './src/main.js',
+    './src/core/shop-access.js',
+    './src/game/fusion.js',
+    './src/game/loadout-exchange.js',
+    './src/ui/loadout-exchange.js',
+    './src/ui/loadout-exchange.css',
+    './src/ui/item-choice-info.js',
+    './src/ui/story-pacing.js',
+    './src/ui/loading.js',
+    './src/ui/loading.css',
+    './src/core/accessories.js',
+    './src/data/accessories.js',
+    './src/data/fusions.js',
+    './src/data/boss-rewards.js',
+    './src/game/boss-appearance.js',
+    './src/game/boss-sheets.js',
+    './src/game/weapon-vfx.js',
+    './src/game/supply-drops.js',
+    './src/game/pet-sprite.js',
+    './asset/sprites/pet-yeongnyang.json',
+    './asset/sprites/pet-yeongnyang.webp',
+    './asset/sprites/pet-yeongnyang-attack.webp',
+    './asset/sprites/pet-yeongnyang-heal.webp',
+    './asset/sprites/player.webp',
+    './asset/sprites/rabbit1.webp',
+    './asset/ui/title.webp',
+    './asset/ui-flowerpig.png',
+    './asset/ui/menu-yeoni.webp',
+    './asset/ui-rabbit.png',
 ];
 
-// Install: 새 캐시 생성 및 에셋 저장
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
-  self.skipWaiting();
+self.addEventListener('install', (event) => {
+    event.waitUntil(caches.open(CODE_CACHE).then((c) => c.addAll(PRECACHE)).catch(() => {}));
+    self.skipWaiting();
 });
 
-// Activate: 이전 캐시 모두 삭제
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
-    )
-  );
-  self.clients.claim();
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((keys) => Promise.all(
+            keys.filter((k) => k !== CODE_CACHE && k !== ASSET_CACHE).map((k) => caches.delete(k)),
+        )),
+    );
+    self.clients.claim();
 });
 
-// Fetch: 네트워크 우선 전략 (항상 최신 버전)
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-  
-  // 쿼리 파라미터가 있는 요청은 캐시하지 않음 (버전 쿼리)
-  const url = new URL(event.request.url);
-  if (url.search) {
-    event.respondWith(fetch(event.request));
-    return;
-  }
-  
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // 성공적으로 가져오면 캐시 업데이트
-        if (response.status === 200) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, copy);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // 네트워크 실패 시 캐시에서 제공
-        return caches.match(event.request).then((cached) => {
-          if (cached) return cached;
-          return caches.match("./index.html");
-        });
-      })
-  );
+function isAsset(url) {
+    return /\.(webp|png|jpg|mp3|woff2?|ttf)$/i.test(url.pathname) || url.hostname.includes('gstatic.com');
+}
+
+self.addEventListener('fetch', (event) => {
+    const req = event.request;
+    if (req.method !== 'GET') return;
+    const url = new URL(req.url);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+    // 오디오 Range 요청은 브라우저에 맡김
+    if (req.headers.has('range')) return;
+
+    if (isAsset(url)) {
+        event.respondWith(
+            caches.open(ASSET_CACHE).then(async (cache) => {
+                const hit = await cache.match(req);
+                if (hit) return hit;
+                const res = await fetch(req);
+                if (res.ok || res.type === 'opaque') cache.put(req, res.clone());
+                return res;
+            }),
+        );
+        return;
+    }
+
+    event.respondWith(
+        fetch(req)
+            .then((res) => {
+                if (res.ok && url.origin === location.origin) {
+                    const copy = res.clone();
+                    caches.open(CODE_CACHE).then((c) => c.put(req, copy));
+                }
+                return res;
+            })
+            .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html'))),
+    );
 });

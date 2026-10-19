@@ -1,212 +1,294 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Yeon the killer of blue zombie</title>
-    
-    <!-- 캐시 방지 메타 태그 -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    
-    <!-- 모바일/앱 설정 -->
-    <meta name="theme-color" content="#0a0a0c">
+    <title>꽃돼지 · BLUE NIGHT SURVIVAL</title>
+    <meta name="description" content="꽃돼지와 함께 청토끼 좀비를 물리치는 서바이벌 슈터">
+    <meta name="theme-color" content="#101f32">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Yeon Zombie">
+    <meta name="apple-mobile-web-app-title" content="꽃돼지">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Yeon Zombie">
-    
-    <!-- 링크 -->
-    <link rel="manifest" href="manifest.webmanifest?v=3">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3">
-    
-    <!-- PWA 캐시 초기화 스크립트 -->
-    <script>
-        // Service Worker 업데이트 강제
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(registrations => {
-                registrations.forEach(registration => {
-                    registration.update();
-                });
-            });
-        }
-    </script>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@500;600&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="preload" href="asset/sprites/player.webp" as="image">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="blue-night.css">
+    <link rel="stylesheet" href="src/ui/tutorial.css">
+    <link rel="stylesheet" href="src/ui/practice.css">
+    <link rel="stylesheet" href="src/ui/fusion-reveal.css">
+    <link rel="stylesheet" href="src/ui/loadout-exchange.css">
+    <link rel="stylesheet" href="src/ui/loading.css">
 </head>
-
 <body>
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-        <!-- 메인 화면 UI 버튼들 - 개별 위치 조정 -->
-        <div id="main-menu-ui" class="main-menu-ui">
-            <!-- 메인 메뉴 버튼 및 UI 요소들 -->
+    <div id="app">
+        <canvas id="game"></canvas>
 
-            <div id="start-btn-container" class="btn-container start-container" hidden>
-                <button id="start-btn" type="button" class="pixel-btn primary">START GAME</button>
+        <!-- 로딩 -->
+        <section id="loading" class="screen" aria-labelledby="loading-title" aria-busy="true" data-state="loading">
+            <div class="loading-shell">
+                <header class="loading-signal"><span>FLOWERPIG / BLUE NIGHT</span><span><i aria-hidden="true"></i>SURVIVOR SIGNAL</span></header>
+                <div class="loading-visual">
+                    <img id="loading-art" src="asset/ui/menu-yeoni.webp" width="900" height="900" alt="연꽃과 보라색 스카프를 한 꽃돼지 생존자" fetchpriority="high" decoding="async">
+                    <div id="loading-art-fallback" hidden aria-label="꽃돼지 생존자 표식"><span aria-hidden="true">✿</span>FLOWERPIG<br>LAST SURVIVOR</div>
+                </div>
+                <div class="loading-copy">
+                    <p class="loading-eyebrow">ENTERING THE QUARANTINE ZONE</p>
+                    <h1 id="loading-title">다음 새벽을 향해</h1>
+                    <p id="loading-status" role="status" aria-live="polite">꽃돼지의 장비와 감염 구역을 불러오고 있어요.</p>
+                    <div class="loading-meter-label" aria-hidden="true"><span>OPERATION PREPARATION</span><span id="loading-text">0%</span></div>
+                    <div id="loading-progress" role="progressbar" aria-label="게임 준비 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="loading-fill"></div></div>
+                    <p id="loading-count" aria-hidden="true">준비 항목 확인 중</p>
+                    <p class="loading-tip"><strong>SURVIVAL NOTE / 01</strong>적에게 둘러싸이지 않도록 움직이세요. 조준과 사격은 자동입니다.</p>
+                    <p id="loading-error" role="alert" hidden></p>
+                    <button id="loading-retry" type="button" hidden>다시 시도</button>
+                </div>
+                <footer class="loading-footer"><span>작은 영웅, 끝나지 않은 밤.</span><span>10 SECTORS · ONE SURVIVOR</span></footer>
             </div>
-            <div id="install-btn-container" class="btn-container install-container" hidden>
-                <button id="install-btn" type="button" class="pixel-btn install" hidden>
-                    <span class="btn-icon">📲</span> INSTALL GAME
-                </button>
-            </div>
-            <!-- 패스워드 입력 UI - 2D 도트 RPG 스타일 -->
-            <div id="password-container" class="btn-container password-container" hidden>
-                <div id="password-panel" class="password-panel collapsed">
-                    <div class="password-header">
-                        <div class="password-icon">🔐</div>
-                        <div class="password-title">SECRET CODE</div>
-                        <div class="password-subtitle">연이의 생년월일 6자리</div>
+        </section>
+
+        <!-- 타이틀 -->
+        <section id="title" class="screen" hidden>
+            <div class="title-wrap">
+                <header class="menu-brand"><span class="brand-mark" aria-hidden="true">✿</span> FLOWERPIG <span class="edition">BLUE NIGHT / SURVIVAL</span></header>
+                <div class="menu-copy">
+                    <p class="eyebrow"><span></span> QUARANTINE ZONE · 청토끼 감염 지대</p>
+                    <h1>꽃돼지<span>작은 영웅, 끝나지 않은 밤.</span></h1>
+                    <p class="menu-description">푸른 감염이 도시를 삼켰다.<br>꽃돼지와 함께 장비를 모으고, 10개의 구역을 되찾으세요.</p>
+                    <div class="mission-tags"><span>AUTO FIRE</span><span>10개 작전 구역</span><span>무기 진화</span></div>
+                </div>
+                <div class="hero-scene" aria-label="연꽃과 보라 스카프를 한 꽃돼지 생존자">
+                    <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+                    <span class="scene-petal petal-one">FIELD UNIT / YEONI</span><span class="scene-petal petal-two">SURVIVOR<br>YEONI / 01</span>
+                    <img class="menu-hero" src="asset/ui/menu-yeoni.webp" alt="겹연꽃과 보라 스카프를 하고 소총을 든 꽃돼지 연이" width="900" height="900">
+                    <div class="hero-caption"><span class="hero-dot"></span> YEONI <small>생존자 기록 / 작전 준비 완료</small></div>
+                </div>
+                <div class="menu-bottom">
+                    <div class="menu-launch">
+                        <button id="btn-new" class="btn btn-blood" type="button"><span class="launch-copy"><small>DEPLOYMENT / 01</small>새 작전 시작</span><span class="launch-arrow" aria-hidden="true">→</span></button>
+                        <button id="btn-continue" class="btn" type="button" hidden>이어하기</button>
                     </div>
-                    <div class="password-input-wrapper">
-                        <div class="password-dots" id="password-dots">
-                            <span class="dot"></span>
-                            <span class="dot"></span>
-                            <span class="dot"></span>
-                            <span class="dot"></span>
-                            <span class="dot"></span>
-                            <span class="dot"></span>
+                    <div class="how-to"><span class="how-label">HOW TO PLAY</span><p>자동 사격으로 생존하고, 적을 짧게 눌러 집중 조준하세요.</p><small>이동 WASD / 방향키 / 드래그 · 같은 적 다시 탭하면 조준 해제 · Esc 일시정지</small></div>
+                </div>
+                <nav class="menu-utility" aria-label="작전 준비 메뉴">
+                    <button id="btn-shop" class="btn btn-ghost menu-card menu-card-shop" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 11h24v17H4zM9 11V6h14v5M4 18h24M14 15h4v6h-4z"/></svg></span><strong>장비 보급소</strong><small>보급 · 강화 · 동행 펫</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
+                    <button id="btn-practice" class="btn btn-ghost menu-card" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 3v7m0 12v7M3 16h7m12 0h7M9 9a10 10 0 1 1-1 13M12 16h8m-4-4v8"/></svg></span><strong>조작 연습</strong><small>이동 · 집중 조준 · 강화 선택</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
+                    <button id="btn-tutorial" class="btn btn-ghost menu-card menu-card-tutorial" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 6h10l2 3 2-3h10v21H18l-2-3-2 3H4zM16 9v15M8 12h4m-4 5h4m8-5h4m-4 5h4"/></svg></span><strong>생존 가이드</strong><small>조작 · 아이템 · 조합</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
+                    <button id="btn-intel" class="btn btn-ghost menu-card menu-card-intel" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 3l13 25H3zM16 11v8m0 4v1"/></svg></span><strong>보스 위협 기록</strong><small>구역별 표적과 전투 정보</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
+                    <details id="secret" class="secret terminal-card">
+                        <summary><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 7h22v18H5zM10 12l4 4-4 4m8 0h5"/></svg></span><strong>비밀 코드</strong><small>특수 작전 터미널</small><span class="menu-arrow" aria-hidden="true">＋</span></summary><p class="terminal-caption">접근 코드를 입력해 로컬 작전 설정을 여세요.</p>
+                        <div class="secret-body">
+                            <input id="secret-input" aria-label="비밀 코드 6자리" type="password" inputmode="numeric" maxlength="6" placeholder="6자리 접근 코드" autocomplete="off">
+                            <button id="secret-submit" class="btn btn-small" type="button">코드 확인</button>
+                            <div id="secret-error" class="error-text" hidden>코드가 틀렸습니다</div>
                         </div>
-                        <input type="password" id="stage-password" class="password-input-hidden" maxlength="6" autocomplete="off">
-                    </div>
-                    <button id="password-submit" type="button" class="password-unlock-btn">
-                        <span class="btn-icon">⚔️</span> UNLOCK
-                    </button>
-                    <div id="password-error" class="password-error" hidden>
-                        <span class="error-icon">❌</span> 코드가 틀렸습니다
-                    </div>
-                </div>
+                        <div id="dev-panel" class="dev-panel" hidden>
+                            <div class="small-text">스테이지 선택</div>
+                            <div id="stage-grid" class="stage-grid"></div>
+                            <label class="check"><input id="dev-god" type="checkbox" checked> 무적 모드</label>
+                        </div>
+                    </details>
+                </nav>
+                <footer class="menu-footer"><div id="title-record" class="small-text record"></div><nav class="menu-system" aria-label="시스템 메뉴"><button id="btn-settings" class="btn btn-ghost" type="button">설정 <span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></svg></span></button><button id="btn-install" class="btn btn-ghost" type="button" hidden>홈 화면에 설치 <span aria-hidden="true">↓</span></button></nav></footer>
             </div>
-        </div>
-        <!-- 스테이지 선택 UI (패스워드 입력 후 표시) -->
-        <div id="stage-select-container" class="btn-container stage-select-container" hidden>
-            <div class="stage-select-label">🎮 STAGE SELECT</div>
-            <div class="stage-buttons">
-                <button class="stage-btn" data-stage="1">1</button>
-                <button class="stage-btn" data-stage="2">2</button>
-                <button class="stage-btn" data-stage="3">3</button>
-                <button class="stage-btn" data-stage="4">4</button>
-                <button class="stage-btn" data-stage="5">5</button>
-                <button class="stage-btn" data-stage="6">6</button>
-                <button class="stage-btn" data-stage="7">7</button>
-                <button class="stage-btn" data-stage="8">8</button>
-                <button class="stage-btn" data-stage="9">9</button>
-                <button class="stage-btn" data-stage="10">10</button>
-            </div>
-            <button id="stage-select-close" type="button" class="pixel-btn secondary close-btn">CLOSE</button>
-        </div>
-        <!-- 게임 오버 버튼들 - 2D 도트 스타일, 화면 가리지 않도록 하단 배치 -->
-        <div id="gameover-buttons" class="btn-container gameover-container" hidden>
-            <div class="gameover-panel">
-                <div class="gameover-title">☠️ GAME OVER ☠️</div>
-                <div class="gameover-stats" id="gameover-stats"></div>
-                <div class="gameover-actions">
-                    <button id="retry-btn" type="button" class="pixel-btn gameover-btn retry-btn">
-                        <span class="btn-icon">⚔️</span> 부활하여 재출격
-                    </button>
-                    <button id="quit-btn" type="button" class="pixel-btn gameover-btn quit-btn">
-                        <span class="btn-icon">👣</span> 전선에서 후퇴
-                    </button>
-                </div>
-            </div>
-        </div>
-        <!-- 설치 가이드 모달 -->
-        <div id="install-guide" class="modal-overlay" hidden>
-            <div class="modal-content">
-                <h2>📲 INSTALL GAME</h2>
-                <div id="install-mobile-guide" hidden>
-                    <div id="ios-guide">
-                        <p>🍎 <strong>iPhone / iPad</strong></p>
-                        <ol>
-                            <li>Tap <strong>Share</strong> () button in Safari</li>
-                            <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
-                            <li>Tap <strong>Add</strong></li>
-                        </ol>
-                    </div>
-                    <div id="android-guide">
-                        <p>🤖 <strong>Android</strong></p>
-                        <ol>
-                            <li>Tap <strong>⋮ Menu</strong> in Chrome</li>
-                            <li>Select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong></li>
-                            <li>Tap <strong>Install</strong></li>
-                        </ol>
-                    </div>
-                </div>
-                <div id="install-desktop-guide" hidden>
-                    <p>💻 <strong>Desktop Chrome/Edge</strong></p>
-                    <ol>
-                        <li>Click <strong>➕</strong> icon in address bar</li>
-                        <li>Or press <strong>Ctrl+Shift+S</strong> (Chrome)</li>
-                        <li>Click <strong>Install</strong></li>
-                    </ol>
-                </div>
-                <div id="install-installed-msg" hidden>
-                    <p>✅ <strong>Already Installed!</strong></p>
-                    <p>Check your home screen or app launcher.</p>
-                </div>
-                <button id="close-install-guide" class="pixel-btn secondary">CLOSE</button>
-            </div>
-        </div>
+        </section>
 
-        <!-- 전체화면 오버레이: 스테이지 클리어 -->
-        <div id="overlay-stage-clear" class="fullscreen-overlay" hidden>
-            <div class="victory-neon-frame">
-                <img src="asset/꽃돼지 승리.png" alt="Victory" class="victory-img">
+        <section id="intel" class="modal" hidden>
+            <div class="modal-box intel-box">
+                <p class="eyebrow">INFECTED ARCHIVE</p><h2 class="modal-title">보스 위협 기록</h2>
+                <p class="panel-caption">구역마다 다른 보스를 상대하세요. 공격 예고를 확인하고 안전한 틈으로 이동하세요.</p>
+                <div id="boss-archive" class="intel-grid"></div>
+                <article class="boss-dossier"><img src="asset/bosses/boss-10.webp" alt="금화와 모래시계를 든 청토끼"><div><p class="eyebrow">FINAL THREAT / SECTOR 10</p><h3>청토끼 · 시간의 채권자</h3><p>금화와 모래시계, 보랏빛 예복. 마지막 구역에서 기다리는 계약의 주인.</p><small>코드 데스티니 청토끼를 바탕으로 한 게임 각색</small></div></article>
+                <p class="panel-caption">처치한 일반 개체는 3코인, 엘리트는 24코인을 떨어뜨립니다. 가까이 가서 회수하세요.</p>
+                <div class="modal-actions"><button id="btn-intel-close" class="btn btn-blood" type="button">기록 닫기</button></div>
             </div>
-            <h1 class="overlay-title gold" id="stage-clear-title">STAGE CLEAR!</h1>
-            <p class="overlay-desc" id="stage-clear-desc">좀비 무리를 물리쳤습니다.</p>
-            <button id="stage-clear-epilogue-btn" type="button" class="pixel-btn primary win-btn" style="display:none; margin-top:24px;">에필로그 보기</button>
-        </div>
+        </section>
+        <!-- 스토리 -->
+        <section id="story" class="screen story-screen" hidden>
+            <div class="story-panel panel">
+                <div class="story-visual"><div id="story-visual-backdrop" class="story-backdrop" aria-hidden="true"></div><img id="story-art" alt=""><div class="story-image-shade"></div><span id="story-location" class="story-location"></span></div>
+                <div class="story-copy">
+                <div id="story-head" class="story-head"></div>
+                <div id="story-text" class="story-text" tabindex="0"></div>
+                <div class="story-actions">
+                    <button id="story-skip" class="btn btn-ghost btn-small" type="button">건너뛰기</button>
+                    <button id="story-next" class="btn btn-blood btn-small" type="button">계속 ▶</button>
+                </div></div>
+            </div>
+        </section>
 
-        <!-- 전체화면 오버레이: 게임 올 클리어 (Win) -->
-        <div id="overlay-win" class="fullscreen-overlay" hidden>
-            <div class="victory-neon-frame">
-                <img src="asset/꽃돼지 승리.png" alt="All Clear" class="victory-img">
-            </div>
-            <h1 class="overlay-title neon-blue">ALL CLEAR!</h1>
-            <p class="overlay-desc">연이가 모든 좀비를 멸종시켰습니다.</p>
-            <div class="win-score-box">
-                FINAL SCORE: <span id="win-score-text">0</span>
-            </div>
-            <div class="win-actions" style="display: flex; gap: 15px; margin-top: 20px;">
-                <button id="win-retry-btn" type="button" class="pixel-btn primary win-btn">다시 게임하기</button>
-                <button id="win-quit-btn" type="button" class="pixel-btn secondary win-btn">게임 종료</button>
-            </div>
+        <div id="battle-hud" class="battle-hud" hidden>
+            <div class="guardian-card"><img src="asset/ui/menu-yeoni.webp" alt="" width="1254" height="1254"><div class="guardian-vitals">
+                <div class="vitals-label"><strong>꽃돼지 <span id="hud-level">Lv.1</span></strong><span id="hud-hp-text"></span></div>
+                <div id="hud-hp-track" class="vital-track" role="progressbar" aria-label="체력" aria-valuemin="0" aria-valuemax="100"><div id="hud-hp"></div></div>
+                <div id="hud-xp-track" class="xp-track" role="progressbar" aria-label="경험치" aria-valuemin="0" aria-valuemax="100"><div id="hud-xp"></div></div>
+            </div></div>
+            <div class="mission-card"><span id="hud-stage"></span><strong id="hud-time">0:00</strong><small id="hud-score"></small></div>
+            <div class="operation-progress"><span id="hud-countdown"></span><div><i id="hud-stage-progress"></i></div></div>
+            <div id="hud-build" class="hud-build" aria-label="현재 장비"></div>
+            <div id="hud-boss" class="hud-boss" hidden><img id="hud-boss-portrait" alt=""><span id="hud-boss-name"></span><div class="boss-track"><div id="hud-boss-hp"></div></div></div>
+            <button id="btn-fusion" class="fusion-hud btn" type="button">아이템 조합 <span>레시피 확인</span></button>
+            <div class="movement-hint">✥ 드래그 / WASD로 이동 <span>적을 탭해 집중 조준 · 다시 탭해 해제</span></div>
         </div>
+        <!-- 인게임 버튼 -->
+        <button id="btn-pause" class="pause-btn" type="button" aria-label="일시정지" hidden>❚❚</button>
+        <div id="banner" class="banner" hidden></div>
 
-        <!-- 인게임 DOM UI (HUD 및 컨트롤러) -->
-        <div id="in-game-ui" class="in-game-ui" hidden>
-            <!-- 좌상단 HUD -->
-            <div id="hud-container" class="hud-container">
-                <div class="hud-profile">
-                    <img src="asset/꽃돼지 총.png" alt="Profile" class="profile-img">
-                </div>
-                <div class="hud-stats">
-                    <div class="hp-bar-bg">
-                        <div id="dom-hp-bar" class="hp-bar-fill"></div>
-                    </div>
-                    <div id="dom-score" class="score-text">000000</div>
+        <!-- 레벨업 -->
+        <section id="levelup" class="modal" hidden>
+            <div class="modal-box levelup-box">
+                <h2 class="modal-title drip">생존 장비 선택 <small id="levelup-lv">LV 2</small></h2>
+                <p id="choice-capacity" class="panel-caption">하나를 선택해 전력을 보강하세요. 전투는 잠시 멈춥니다.</p>
+                <div id="cards" class="cards"></div>
+                <div class="modal-actions">
+                    <button id="btn-levelup-fusion" class="btn btn-small" type="button">아이템 조합</button>
+                    <button id="btn-reroll" class="btn btn-small" type="button">🎲 리롤</button>
+                    <button id="btn-skip" class="btn btn-ghost btn-small" type="button">넘기기 (+골드)</button>
                 </div>
             </div>
-            
-            <!-- 하단 컨트롤 센터 (가로 모드: 좌우 조이패드 / 세로 모드: 하단 바) -->
-            <div id="control-center" class="control-center">
-                <div id="dpad-container" class="dpad-container">
-                    <div class="dpad-joystick" id="virtual-joystick">
-                        <div class="dpad-knob" id="joystick-knob"></div>
-                    </div>
-                </div>
-                <div id="action-container" class="action-container">
-                    <button id="btn-bomb" class="action-btn bomb-btn">
-                        <span class="btn-icon">💣</span>
-                    </button>
+        </section>
+
+        <section id="fusion" class="modal" hidden>
+            <div class="modal-box fusion-box">
+                <p class="eyebrow">EQUIPMENT WORKBENCH</p><h2 class="modal-title">아이템 조합</h2>
+                <p class="panel-caption">이번 작전에서 아이템 레벨을 올려 두 장점을 합치세요. 조합하면 재료 2개를 소모하고 새 아이템 Lv.1 하나를 얻습니다. 장비는 다음 구역 시작 때 저장됩니다.</p>
+                <p id="fusion-summary" class="fusion-summary"></p><div id="fusion-recipes" class="fusion-recipes"></div>
+                <p id="fusion-status" class="shop-status" role="status" aria-live="polite"></p>
+                <div class="modal-actions"><button id="btn-fusion-close" class="btn btn-blood" type="button">돌아가기</button></div>
+            </div>
+        </section>
+
+        <!-- 관 상자 -->
+        <section id="chest" class="modal" hidden>
+            <div class="modal-box chest-box">
+                <h2 class="modal-title drip" id="chest-title">회수 물자</h2><p id="chest-description" class="panel-caption chest-description"></p>
+                <div id="coffin" class="coffin"><img src="asset/items/salvage-cache.png" alt="봉인된 회수 물자 상자"></div>
+                <div id="rewards" class="rewards"></div>
+                <div class="modal-actions">
+                    <button id="btn-chest" class="btn btn-blood" type="button">열기</button>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- 일시정지 -->
+        <section id="pause" class="modal" hidden>
+            <div class="modal-box small-box">
+                <p class="eyebrow">TACTICAL PAUSE</p><h2 class="modal-title drip">전술 점검</h2><p class="panel-caption">전투 일시정지. 장비 조합과 다음 생존 전략을 확인하세요.</p>
+                <div id="pause-build" class="pause-build"></div>
+                <div class="menu-buttons">
+                    <button id="btn-resume" class="btn btn-blood" type="button">계속하기</button>
+                    <button id="btn-pause-loadout" class="btn" type="button">장비 교체 · 진화 조건</button>
+                    <button id="btn-pause-fusion" class="btn" type="button">아이템 조합</button>
+                    <button id="btn-pause-practice" class="btn" type="button">조작 연습</button>
+                    <button id="btn-pause-tutorial" class="btn" type="button">생존 가이드</button>
+                    <button id="btn-pause-settings" class="btn" type="button">설정</button>
+                    <button id="btn-quit" class="btn btn-ghost" type="button">타이틀로</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 설정 -->
+        <section id="settings" class="modal" hidden>
+            <div class="modal-box small-box">
+                <h2 class="modal-title drip">설정</h2>
+                <div class="settings-list">
+                    <div class="setting-row">
+                        <span>고어 수위</span>
+                        <div class="seg" data-key="gore">
+                            <button type="button" data-v="off">끔</button>
+                            <button type="button" data-v="normal">보통</button>
+                            <button type="button" data-v="max">최대</button>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <span>그래픽 품질</span>
+                        <div class="seg" data-key="quality">
+                            <button type="button" data-v="auto">자동</button>
+                            <button type="button" data-v="high">높음</button>
+                            <button type="button" data-v="low">낮음</button>
+                        </div>
+                    </div>
+                    <label class="setting-row"><span>화면 흔들림</span><input type="checkbox" data-key="shake"></label>
+                    <label class="setting-row"><span>번쩍임 효과</span><input type="checkbox" data-key="flash"></label>
+                    <label class="setting-row"><span>데미지 숫자</span><input type="checkbox" data-key="damageNumbers"></label>
+                    <label class="setting-row"><span>배경음</span><input type="range" min="0" max="1" step="0.05" data-key="bgm"></label>
+                    <label class="setting-row"><span>효과음</span><input type="range" min="0" max="1" step="0.05" data-key="sfx"></label>
+                </div>
+                <div class="modal-actions">
+                    <button id="btn-settings-close" class="btn btn-blood btn-small" type="button">닫기</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 상점 -->
+        <section id="shop" class="modal" hidden>
+            <div class="modal-box shop-box">
+                <h2 class="modal-title drip">강화 상점 <small id="shop-gold">● 0</small></h2>
+                <p id="shop-character" class="character-record"></p><p id="shop-status" class="shop-status" role="status"></p><div id="shop-list" class="shop-list"></div>
+                <p id="pet-redemption-note" class="panel-caption"></p><button class="btn btn-small" type="button" disabled>영냥이 특별 초대 · 준비 중</button><section class="relic-section"><p class="eyebrow">CELESTIAL RELICS</p><h3>날개 유물 · 더 빠른 생존</h3><p class="panel-caption">가장 높은 등급 하나의 효과만 적용됩니다. 원하는 유물은 확정 구매할 수 있어요.</p><div id="relic-list" class="relic-list"></div></section>
+                <section class="accessory-section"><p class="eyebrow">YEONGNYANG'S ARMORY</p><h3>고급 장신구</h3><p class="panel-caption">한 번에 1개 장착 · 구매하면 자동 장착 · 다음 작전부터 적용됩니다. 다른 장신구와 효과가 중첩되지 않습니다.</p><p id="accessory-equipped" class="accessory-equipped" role="status"></p><div id="accessory-list" class="accessory-list"></div></section>
+                <section class="coin-cache-panel"><div class="cache-heading"><img src="asset/items/salvage-cache.png" alt="별빛 보급 상자"><div><p class="eyebrow">EARNED COINS ONLY</p><h3>별빛 보급 상자</h3><p>플레이로 모은 코인으로 유물 1개를 얻습니다.</p></div></div><p id="cache-rates" class="cache-rates"></p><p id="cache-pity" class="panel-caption"></p><button id="btn-coin-cache" class="btn" type="button">상자 열기</button><div id="cache-result" class="cache-result" role="status" aria-live="polite" hidden></div><p class="cache-note">현금 구매·환전은 없습니다. 확정 구매로도 같은 유물을 얻을 수 있어요.</p></section>
+                <div class="modal-actions">
+                    <button id="btn-shop-close" class="btn btn-blood btn-small" type="button">닫기</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 게임 오버 -->
+        <section id="gameover" class="screen result-screen" hidden>
+            <div class="result-panel panel gameover-panel">
+                <div class="gameover-visual"><img src="asset/ui/gameover-survival.webp" alt="폐허 속에서 다시 일어설 준비를 하는 꽃돼지"></div><div class="gameover-copy">
+                <p class="eyebrow">MISSION REPORT</p><h2 class="died-title">작전 종료</h2>
+
+                <p id="gameover-lore" class="lore"></p>
+                <div id="gameover-stats" class="stats"></div>
+                <div class="menu-buttons row">
+                    <button id="btn-retry" class="btn btn-blood" type="button">⚔ 이 스테이지 재도전</button>
+                    <button id="btn-gameover-title" class="btn btn-ghost" type="button">타이틀로</button>
+                </div></div>
+            </div>
+        </section>
+
+        <!-- 스테이지 클리어 -->
+        <section id="clear" class="screen result-screen" hidden>
+            <div class="result-panel panel">
+                <img class="result-hero" src="asset/ui/menu-yeoni.webp" alt="정원을 지킨 꽃돼지" width="1254" height="1254">
+                <h2 id="clear-title" class="result-title">STAGE 1 CLEAR</h2>
+                <div id="clear-stats" class="stats"></div>
+                <div class="menu-buttons row">
+                    <button id="btn-next" class="btn btn-blood" type="button">다음 구역으로 →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 엔딩 -->
+        <section id="ending" class="screen result-screen" hidden>
+            <div class="result-panel panel">
+                <img class="result-hero" src="asset/ui/menu-yeoni.webp" alt="모든 정원을 지켜 낸 꽃돼지" width="1254" height="1254">
+                <h2 class="result-title gold">감염 지대 정화 완료</h2>
+                <div id="ending-stats" class="stats"></div>
+                <div class="menu-buttons row">
+                    <button id="btn-ending-title" class="btn btn-blood" type="button">타이틀로</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 설치 안내 -->
+        <section id="install" class="modal" hidden>
+            <div class="modal-box small-box">
+                <h2 class="modal-title">📲 앱 설치</h2>
+                <div id="install-body" class="install-body"></div>
+                <div class="modal-actions">
+                    <button id="btn-install-close" class="btn btn-small" type="button">닫기</button>
+                </div>
+            </div>
+        </section>
+
+        <div id="toast" class="toast" hidden></div>
     </div>
-    <script src="game.js?v=5"></script>
+    <script type="module" src="src/main.js"></script>
 </body>
-
 </html>

@@ -1,0 +1,44 @@
+/* Critical boot UI stays useful before fonts, art or game images are ready. */
+#loading{z-index:40;position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;overscroll-behavior:contain;padding:max(24px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));background:radial-gradient(ellipse at 20% 35%,#28444780,transparent 55%),linear-gradient(120deg,#080f15,#111e26 65%,#091117);color:#e8e8df;font-family:'Noto Sans KR','Apple SD Gothic Neo',system-ui,sans-serif}
+#loading[hidden]{display:none!important}
+.loading-shell{width:min(980px,100%);min-width:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"signal signal" "art copy" "footer footer";column-gap:40px;row-gap:22px;margin:auto 0}
+.loading-signal{grid-area:signal;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;border-bottom:1px solid #70958940;padding-bottom:18px;color:#9db3ad;font:10px/1.7 ui-monospace,monospace;letter-spacing:.12em}
+.loading-signal>span:first-child{color:#d7cba7;font-weight:700}.loading-signal i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#9fcaaf;margin-right:8px;box-shadow:0 0 12px #8bbf9a80}
+.loading-visual{grid-area:art;position:relative;display:grid;place-items:center;min-width:0;height:380px;background:radial-gradient(ellipse at 50% 60%,#4c6a5a35,transparent 65%);isolation:isolate}
+.loading-visual::before{content:"";position:absolute;inset:9% 4%;border:1px solid #718d7a35;border-radius:50%;transform:rotate(-15deg);z-index:-1}
+.loading-visual::after{content:"";position:absolute;left:12%;right:12%;bottom:5%;height:14%;background:radial-gradient(ellipse,#0007,transparent 70%);z-index:-1}
+#loading-art{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 16px 18px #0007)}
+#loading-art[hidden],#loading-art-fallback[hidden]{display:none}
+#loading-art-fallback{color:#d9bccd;text-align:center;display:flex;flex-direction:column;gap:18px;font:11px/1.7 ui-monospace,monospace;letter-spacing:.14em}
+#loading-art-fallback>span{font-size:94px;line-height:1;color:#c9a6bb}
+.loading-copy{grid-area:copy;align-self:center;min-width:0;padding:18px 0}
+.loading-eyebrow{color:#a9bfab;font:10px/1.8 ui-monospace,monospace;letter-spacing:.14em;margin-bottom:14px}
+#loading-title{font:750 clamp(29px,4vw,43px)/1.35 'Noto Sans KR','Apple SD Gothic Neo',system-ui,sans-serif;letter-spacing:-.05em;color:#edeee4;margin:0 0 14px;word-break:keep-all}
+#loading-status{color:#a9bdbf;font-size:14px;line-height:1.9;word-break:keep-all;min-height:3.8em}
+.loading-meter-label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:28px 0 12px;font:10px/1.6 ui-monospace,monospace;letter-spacing:.12em;color:#afbfad}
+#loading-text{font:500 20px/1 ui-monospace,monospace;letter-spacing:0;color:#e4ddc5}
+#loading-progress{height:6px;background:#30433f;border-radius:3px;overflow:hidden}
+#loading-fill{height:100%;width:0;background:linear-gradient(90deg,#6c9d85,#c9d6aa);border-radius:3px}
+#loading-count{font:10px/1.8 'Noto Sans KR',system-ui,sans-serif;color:#8eaaa5;margin-top:10px;min-height:18px}
+.loading-tip{margin-top:28px;border-left:2px solid #978367;padding:1px 0 1px 14px;color:#bcc4ba;font-size:12px;line-height:1.8;word-break:keep-all}
+.loading-tip>strong{display:block;font:9px/1.8 ui-monospace,monospace;letter-spacing:.12em;color:#d1bd91;margin-bottom:4px}
+#loading-error{margin:18px 0 12px;padding:12px 14px;border:1px solid #bc8a7355;border-radius:7px;background:#3d28274d;color:#e6c9b8;font-size:13px;line-height:1.8;word-break:keep-all}
+#loading-retry{min-width:120px;min-height:48px;border:1px solid #a7c1a3;border-radius:7px;background:#afc0a3;color:#13221c;padding:12px 20px;font:700 14px/1.6 'Noto Sans KR',system-ui,sans-serif;cursor:pointer;touch-action:manipulation}
+#loading-retry:focus-visible{outline:3px solid #dae8cf;outline-offset:4px}#loading-retry:hover{background:#c2cfb8}
+.loading-footer{grid-area:footer;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:18px;border-top:1px solid #70958930;color:#78918e;font:9px/1.8 ui-monospace,monospace;letter-spacing:.08em}
+#loading[data-state="error"] .loading-signal i{background:#d2a18b;box-shadow:none}
+@media(max-width:640px){
+ #loading{padding:18px max(18px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))}
+ .loading-shell{grid-template-columns:minmax(0,1fr);grid-template-areas:"signal" "art" "copy" "footer";row-gap:14px;margin:0;max-width:440px}
+ .loading-signal{font-size:9px;letter-spacing:.07em;padding-bottom:12px}.loading-visual{height:clamp(145px,29dvh,270px)}
+ .loading-copy{padding:0}.loading-eyebrow{margin-bottom:8px}#loading-title{font-size:30px;margin-bottom:9px}#loading-status{font-size:13px;min-height:0;line-height:1.8}
+ .loading-meter-label{margin-top:20px}.loading-tip{margin-top:20px;font-size:11px}.loading-footer{padding-top:12px;font-size:8px}
+}
+@media(max-height:520px) and (orientation:landscape){
+ #loading{padding:16px max(20px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left))}
+ .loading-shell{max-width:900px;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);grid-template-areas:"signal signal" "art copy" "footer footer";gap:12px 28px;margin:0}
+ .loading-visual{height:230px}.loading-copy{padding:0}.loading-signal{padding-bottom:8px}.loading-eyebrow{margin-bottom:6px}#loading-title{font-size:27px;margin-bottom:8px}#loading-status{font-size:12px;min-height:0}
+ .loading-meter-label{margin:16px 0 9px}.loading-tip{margin-top:14px;font-size:10px}.loading-footer{padding-top:8px}
+}
+@media(max-height:380px){.loading-visual{height:180px}.loading-tip{margin-top:12px}.loading-footer{padding-top:8px}}
+@media(prefers-reduced-motion:reduce){#loading *,#loading *::before,#loading *::after{animation:none!important;transition:none!important}}
