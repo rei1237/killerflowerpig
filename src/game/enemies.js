@@ -1,4 +1,4 @@
-import { rollSupplies } from './supply-drops.js';
+import { rollSupplies, KILL_OPPORTUNITY } from './supply-drops.js';
 import { playerBody } from './player-motion.js';
 // 적 시스템: 스폰, 추적 이동 + 상호 밀어내기(그리드), 원거리 공격, 상태이상, 피격/사망 처리
 import { G, rand, emit } from './state.js';
@@ -9,8 +9,9 @@ import { audio } from '../core/audio.js';
 import { goreProfile } from '../core/settings.js';
 import { blood, gibs, decal, damageText, sparks, smoke, shake, hitstop } from './effects.js';
 import { damagePlayer } from './player.js';
-import { dropGem, dropPickup, dropCoin } from './pickups.js';
+import { dropGem, dropPickup, dropCoin, pruneFieldSupplies } from './pickups.js';
 import { spawnHazard } from './hazards.js';
+import { recordFusionHit } from './weapon-vfx.js';
 
 let nextId = 1;
 const explosionQueue = [];
@@ -21,9 +22,9 @@ export function liveEnemyCount() { return G.enemies.count; }
 
 export function spawnEnemy(typeId, x, y, opts = {}) {
     const st = STAGES[G.stage];
-    // 초반 인원 제한은 이벤트/보스의 force 소환에도 적용한다.
-    if (st.enemyCap && G.enemies.count >= st.enemyCap) return null;
-    if (G.enemies.count >= G.caps.enemies && !opts.force) return null;
+    // Every route shares the population budget, including force/elite/summon/split.
+    const cap = Math.min(st.enemyCap ?? Infinity, G.caps.enemies ?? Infinity);
+    if (G.enemies.count >= cap) return null;
     const def = ENEMIES[typeId];
     if (!def || (def.ranged && G.stage < RANGED_UNLOCK_STAGE)) return null;
     const sc = stageScaling(G.stage, G.time, st.duration);
@@ -81,6 +82,7 @@ export function hitEnemy(e, dmg, opts = {}) {
     if (opts.execute && !e.elite && e.hp - amount < e.maxHp * opts.execute) amount = e.hp;
     e.hp -= amount;
     e.flash = 0.08;
+    if (amount > 0) recordFusionHit(e, opts.weapon, G.clock, opts.slow || 0);
     if (opts.kx !== undefined) {
         const kb = (opts.knock ?? 60) / e.mass;
         e.kx += opts.kx * kb; e.ky += opts.ky * kb;
@@ -112,10 +114,11 @@ function killEnemy(e, opts) {
     gibs(e.x, e.y - e.radius, e.elite ? 10 : 3);
     if (e.elite) { shake(6); hitstop(0.06); }
 
-    dropGem(e.x, e.y, e.xp);
-    dropCoin(e.x, e.y, e.elite ? 24 : 3);
+    dropGem(e.x, e.y, e.xp * KILL_OPPORTUNITY);
+    dropCoin(e.x, e.y, e.elite ? 40 : 5);
     if (e.elite) dropPickup('chest', e.x, e.y);
     else {
+        pruneFieldSupplies();
         let healingOnField=0,magnetsOnField=0;
         for(let i=0;i<G.pickups.count;i++){
             if(G.pickups.items[i].kind==='meat')healingOnField++;
@@ -324,6 +327,11 @@ export function drawEnemyShots(ctx, fxImgs) {
     const pool = G.enemyShots;
     for (let i = 0; i < pool.count; i++) {
         const s = pool.items[i];
+        if(s.kind === 'coin'){
+            ctx.save();ctx.translate(s.x,s.y);ctx.fillStyle='#e5bd64';ctx.strokeStyle='#fff0b0';ctx.lineWidth=1.5;
+            ctx.beginPath();ctx.arc(0,0,s.radius,0,Math.PI*2);ctx.fill();ctx.stroke();
+            ctx.strokeStyle='#725222';ctx.beginPath();ctx.moveTo(0,-s.radius*.55);ctx.lineTo(0,s.radius*.55);ctx.stroke();ctx.restore();continue;
+        }
         const img = s.kind === 'boss' ? fxImgs.bossShot : fxImgs.enemyShot;
         const r = s.radius * 1.6;
         ctx.drawImage(img, s.x - r, s.y - r, r * 2, r * 2);

@@ -1,3 +1,4 @@
+import { accessoryStats, activeAccessory, accessoryEquipHP } from '../core/accessories.js';
 // 플레이어(연이): 8방향 이동, 피격/무적, 재생, 패시브·영구강화 반영 스탯
 import { G, emit } from './state.js';
 import { input } from '../core/input.js';
@@ -8,7 +9,7 @@ import { upgradeLevel, save } from '../core/save.js';
 import { MAGAZINE_TABLE } from '../data/weapons.js';
 import { blood, flash, shake, damageText, hitstop } from './effects.js';
 
-import { shotFrame, firingDrawRect, markPlayerShot, PLAYER_HIT_RADIUS, playerBob } from './player-motion.js';
+import { shotFrame, firingDrawRect, markPlayerShot, PLAYER_HIT_RADIUS, playerBob, advancePlayerMovement } from './player-motion.js';
 
 const BASE = { hp: 100, speed: 135, magnet: 70, radius: PLAYER_HIT_RADIUS };
 
@@ -48,10 +49,15 @@ export function recomputeStats(fullHeal = false) {
         greed: 1 + upgradeLevel('greed') * 0.1,
     };
     Object.assign(s, relicStats(s, save));
+    Object.assign(s, accessoryStats(s, save));
+    const accessoryId = activeAccessory(save)?.id || null;
+    const accessoryChanged = accessoryId !== (p.accessoryId || null);
+    p.accessoryId = accessoryId;
     const oldMax = p.maxHp;
     p.stats = s;
     p.maxHp = s.maxHp;
     if (fullHeal) p.hp = p.maxHp;
+    else if (accessoryChanged) p.hp = accessoryEquipHP(p.hp, p.maxHp);
     else if (p.maxHp > oldMax) p.hp += p.maxHp - oldMax;
     p.hp = Math.min(p.hp, p.maxHp);
 }
@@ -60,20 +66,7 @@ export function updatePlayer(dt) {
     const p = G.player;
     if (p.dead) return;
     const s = p.stats;
-    const mx = input.move.x, my = input.move.y;
-    p.vx = mx * s.speed;
-    p.vy = my * s.speed;
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-    const moving = mx !== 0 || my !== 0;
-    if (moving) {
-        const l = Math.hypot(mx, my);
-        p.facingX = mx / l; p.facingY = my / l;
-        if (Math.abs(mx) > 0.15) p.flip = mx < 0;
-    }
-    p.animT += dt;
-    const frameDur = moving ? 0.09 : 0.16;
-    if (p.animT > frameDur) { p.animT = 0; p.anim = (p.anim + 1) % 8; }
+    advancePlayerMovement(p, input.move, dt);
 
     if (p.iframes > 0) p.iframes -= dt;
     if (p.hurtT > 0) p.hurtT -= dt;

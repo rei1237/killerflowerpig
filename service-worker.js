@@ -1,5 +1,5 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v7-profile-boss-animation';
+const VERSION = 'v8-survival-training-fusion-bosses';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
@@ -9,6 +9,13 @@ const PRECACHE = [
     './style.css',
     './blue-night.css',
     './src/ui/tutorial.css',
+    './src/ui/practice.css',
+    './src/ui/fusion-reveal.css',
+    './src/ui/fusion-reveal.js',
+    './src/ui/practice.js',
+    './src/game/practice.js',
+    './src/game/targeting.js',
+    './src/game/player-motion.js',
     './asset/tutorial/field-guide.webp',
     './asset/tutorial/moon-hat.webp',
     './asset/tutorial/yeongnyang.webp',
@@ -16,14 +23,26 @@ const PRECACHE = [
     './src/main.js',
     './src/core/shop-access.js',
     './src/game/fusion.js',
+    './src/game/loadout-exchange.js',
+    './src/ui/loadout-exchange.js',
+    './src/ui/loadout-exchange.css',
     './src/ui/item-choice-info.js',
+    './src/ui/story-pacing.js',
+    './src/ui/loading.js',
+    './src/ui/loading.css',
+    './src/core/accessories.js',
+    './src/data/accessories.js',
     './src/data/fusions.js',
+    './src/data/boss-rewards.js',
     './src/game/boss-appearance.js',
     './src/game/boss-sheets.js',
+    './src/game/weapon-vfx.js',
     './src/game/supply-drops.js',
     './src/game/pet-sprite.js',
     './asset/sprites/pet-yeongnyang.json',
     './asset/sprites/pet-yeongnyang.webp',
+    './asset/sprites/pet-yeongnyang-attack.webp',
+    './asset/sprites/pet-yeongnyang-heal.webp',
     './asset/sprites/player.webp',
     './asset/sprites/rabbit1.webp',
     './asset/ui/title.webp',

@@ -113,6 +113,9 @@ globalThis.setTimeout = (fn, delay = 0) => { const id = ++timerId; timers.set(id
 globalThis.clearTimeout = id => timers.delete(id);
 globalThis.setInterval = (fn, delay) => { const id = ++timerId; timers.set(id, { fn, due: now + delay, interval: delay }); return id; };
 globalThis.clearInterval = globalThis.clearTimeout;
+globalThis.Image = class { complete=false; naturalWidth=0; };
+globalThis.requestAnimationFrame = fn => setTimeout(() => fn(now),16);
+globalThis.cancelAnimationFrame = clearTimeout;
 function advanceTime(ms) {
     now += ms;
     for (const [id, t] of [...timers]) if (t.due <= now) {
@@ -132,7 +135,8 @@ const { drawHUD } = await import('../src/ui/hud.js');
 const { WEAPONS, PASSIVES } = await import('../src/data/weapons.js');
 const { dropPickup, updatePickups } = await import('../src/game/pickups.js');
 const { initInput, input } = await import('../src/core/input.js');
-const { initUI, showFusion, showTitle, showChest, showLevelUp, showGameOver, showStageClear, togglePause, openModal, closeModal, topModalId, isAnyModalOpen } = await import('../src/ui/screens.js');
+const { initUI, playStory, showFusion, showTitle, showChest, showLevelUp, showGameOver, showStageClear, togglePause, openModal, closeModal, topModalId, isAnyModalOpen } = await import('../src/ui/screens.js');
+const { openPractice, closePractice, isPracticeOpen } = await import('../src/ui/practice.js');
 const { openTutorial, closeTutorial, isTutorialOpen } = await import('../src/ui/tutorial.js');
 const node = id => document.getElementById(id);
 initUI(); initInput(node('game')); input.onPause = togglePause;
@@ -141,7 +145,7 @@ for (const id of ['pellet', 'bullet', 'rail', 'bossShot']) fx[id] = { width: 14,
 
 function freshRun() { showTitle(); newRun(); G.hitstop = 0; }
 function takeChest() { node('btn-chest').click(); advanceTime(901); node('btn-chest').click(); }
-test.afterEach(() => { if (isTutorialOpen()) closeTutorial(); showTitle(); timers.clear(); clearWorld(); });
+test.afterEach(() => { if (isTutorialOpen()) closeTutorial(); if (isPracticeOpen()) closePractice(); showTitle(); timers.clear(); clearWorld(); });
 
 test('shot phase uses fixed-size cells and an invariant foot anchor', () => {
     assert.deepEqual([shotFrame(-1), shotFrame(Infinity), shotFrame(0), shotFrame(.05), shotFrame(.115), shotFrame(.2)], [0, 0, 1, 2, 3, 0]);
@@ -233,7 +237,8 @@ test('returning to title invalidates an unfinished chest animation', () => {
 
 test('first new game optionally offers the guide before entering the stage story', () => {
     showTitle(); node('btn-new').click(); assert.equal(isTutorialOpen(), true); assert.equal(topModalId(), 'tutorial');
-    closeTutorial(); assert.equal(topModalId(), null); assert.equal(node('story').hidden, false);
+    closeTutorial(); assert.equal(topModalId(), 'practice'); assert.equal(isPracticeOpen(), true);
+    closePractice(); assert.equal(topModalId(), null); assert.equal(node('story').hidden, false);
     node('story-skip').click(); assert.equal(G.mode, 'play'); assert.equal(G.paused, false);
 });
 
@@ -341,7 +346,10 @@ test('every fusion resumes real update/render frames after UI confirmation and c
   showLevelUp();showFusion();
   const button=node('fusion-recipes').children[index].querySelector('button');button.click();button.click();
   assert.equal(G.weapons.filter(w=>w.id===recipe.output).length,1);
-  closeModal('fusion');assert.equal(topModalId(),'levelup');
+  assert.equal(topModalId(),'fusion-reveal');
+  node('fusion-reveal').querySelector('.fusion-reveal-skip').click();
+  node('fusion-reveal').querySelector('.fusion-reveal-confirm').click();
+  assert.equal(topModalId(),'levelup');
   node('cards').querySelector('.choice-select').click();
   while(topModalId())closeModal(topModalId());
   assert.equal(G.paused,false);const clock=G.clock,x=G.player.x;input.move.x=1;
@@ -363,4 +371,112 @@ test('upgrade cards show live current levels and all recipe details without sele
  const event=details.dispatch('click');assert.equal(event.stopped,true);assert.equal(G.weapons[0].level,5);assert.equal(topModalId(),'levelup');
  card.querySelector('.choice-select').click();assert.equal(G.weapons[0].level,6);
  showLevelUp();assert.match(node('cards').children[0].querySelector('.card-lv').textContent,/Lv.6 → Lv.7/);
+});
+
+
+test('story is slow, manual, double-tap safe and cancelled on title/reopen',()=>{
+ freshRun();let completed=0;playStory('읽기 테스트','안녕. 천천히 읽어요.\n다음 줄입니다.',()=>completed++,1);
+ const clock=G.clock;step(1);assert.equal(G.clock,clock);assert.equal(G.paused,true);
+ advanceTime(100);assert.ok(node('story-text').textContent.length<10);
+ node('story-next').click();assert.match(node('story-text').textContent,/다음 줄입니다/);
+ node('story-next').click();assert.equal(completed,0);
+ advanceTime(601);assert.equal(completed,0,'completion is never automatic');node('story-next').click();assert.equal(completed,1);node('story-next').click();assert.equal(completed,1);
+ playStory('이전','오래 읽을 이전 이야기',()=>completed++,2);showTitle();advanceTime(10000);assert.equal(completed,1);
+ playStory('새 장','새로운 장입니다.',()=>completed++,3);node('story-skip').click();node('story-skip').click();assert.equal(completed,2);
+});
+
+test('premium accessory shop shows six actual items with ownership, locks and repeat-safe purchase/equip',async()=>{
+ const {save,earnCoins}=await import('../src/core/save.js');
+ showTitle();save.maxClearedStage=9;earnCoins(10000,'accessory-ui-test');node('btn-shop').click();
+ assert.equal(node('accessory-list').children.length,6);
+ const card=node('accessory-list').children[0],button=card.querySelector('button'),gold=save.gold;
+ assert.match(card.textContent,/450/);assert.match(card.textContent,/최대 HP \+40/);assert.match(card.textContent,/미보유/);
+ button.click();button.click();assert.equal(save.gold,gold-450);assert.equal(save.equippedAccessory,'moon_guard');assert.match(node('accessory-equipped').textContent,/달빛 수호 망토/);
+ node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,null);assert.equal(save.gold,gold-450);
+ node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,'moon_guard');assert.equal(save.gold,gold-450);
+ closeModal('shop');save.maxClearedStage=0;node('btn-shop').click();assert.equal(node('accessory-list').children[1].querySelector('button').disabled,true);
+});
+
+test('field boxes explain one existing upgrade while boss boxes disclose stronger odds and named premium reward',()=>{
+ freshRun();showChest('elite');assert.match(node('chest-description').textContent,/보유 장비 1회 강화/);takeChest();
+ showChest('boss');assert.match(node('chest-description').textContent,/기본 강화 2개 확정/);assert.match(node('chest-description').textContent,/20%/);assert.match(node('chest-description').textContent,/100코인/);
+ const rng=Math.random;Math.random=()=>.01;
+ try{node('btn-chest').click();advanceTime(901);}finally{Math.random=rng;}
+ assert.equal(node('rewards').children.length,3);const premium=node('rewards').children[2];assert.match(premium.textContent,/연꽃 정밀 강화재/);assert.match(premium.textContent,/최대 8/);assert.match(premium.querySelector('img').src,/violet-orb/);
+ const levels=G.weapons.map(w=>w.level);node('btn-chest').click();showChest('boss');node('btn-chest').click();advanceTime(901);assert.deepEqual(G.weapons.map(w=>w.level),levels,'repeated boss event cannot grant twice');
+});
+
+test('practice reopened over pause returns to paused combat without a reward or movement leak', () => {
+    freshRun(); togglePause(); const gold=G.gold, x=G.player.x; node('btn-pause-practice').click();
+    assert.equal(topModalId(),'practice'); assert.equal(G.paused,true); closePractice();
+    assert.equal(topModalId(),'pause'); assert.equal(G.paused,true); assert.equal(G.gold,gold); assert.equal(G.player.x,x);
+});
+
+test('next stage story selects that exact stage artwork and never defaults to the final chapter', () => {
+    freshRun(); G.stage=2; node('btn-next').click();
+    assert.equal(node('story-art').src,'asset/story/stage-03.webp');
+    assert.match(node('story-location').textContent,/SECTOR 03/);
+    assert.equal(G.paused,true);
+});
+
+test('leaving fusion celebration cancels its animation and cannot restart play after title navigation', () => {
+    freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>w.level=5);
+    showFusion();node('fusion-recipes').children[0].querySelector('button').click();
+    assert.equal(topModalId(),'fusion-reveal');showTitle();advanceTime(1800);
+    assert.equal(topModalId(),null);assert.equal(node('fusion-reveal').hidden,true);assert.equal(G.mode,'idle');
+});
+
+test('each new selection refills rerolls, while duplicate events and reopen do not; stale cards cannot select', () => {
+    freshRun();showLevelUp({choiceSessionId:'choice:1'});
+    assert.equal(G.rerolls,1);assert.match(node('btn-reroll').textContent,/이번 선택 1\/1회/);
+    const stale=node('cards').querySelector('.choice-select'),before=JSON.stringify(G.weapons);
+    node('btn-reroll').click();node('btn-reroll').click();assert.equal(G.rerolls,0);
+    stale.click();assert.equal(JSON.stringify(G.weapons),before);assert.equal(topModalId(),'levelup');
+    const choices=JSON.stringify(G.choiceSession.choices);
+    showLevelUp({choiceSessionId:'choice:1'});closeModal('levelup');showLevelUp();
+    assert.equal(G.rerolls,0);assert.equal(JSON.stringify(G.choiceSession.choices),choices);
+    node('cards').querySelector('.choice-select').click();assert.equal(topModalId(),null);
+    showLevelUp({choiceSessionId:'choice:2'});assert.equal(G.rerolls,1);
+    node('btn-skip').click();showLevelUp({choiceSessionId:'choice:1'});assert.equal(topModalId(),null);
+});
+
+test('restored active choice reopens with the same cards and spent reroll budget', async () => {
+    const {snapshotBuild}=await import('../src/game/progression.js');
+    freshRun();showLevelUp({choiceSessionId:'choice:1'});node('btn-reroll').click();
+    const snap=snapshotBuild(),cards=JSON.stringify(snap.choiceSession.choices);
+    showTitle();localStorage.setItem('kfp.run.v1',JSON.stringify(snap));node('btn-continue').click();
+    assert.equal(topModalId(),'levelup');assert.equal(G.paused,true);assert.equal(G.rerolls,0);
+    assert.equal(JSON.stringify(G.choiceSession.choices),cards);
+});
+
+test('loadout exchange pause UI discloses loss, cancels safely, confirms once and restores paused focus', async()=>{
+ const {openLoadoutExchange}=await import('../src/ui/loadout-exchange.js');
+ freshRun();G.weapons=['cannon','thorns','rifle','pistols','gas','saw'].map((id,i)=>Object.assign(createWeapon(id,i),{level:5}));
+ togglePause();node('btn-pause-loadout').focus();node('btn-pause-loadout').click();const modal=node('loadout-exchange');
+ assert.equal(topModalId(),'loadout-exchange');assert.equal(G.paused,true);assert.equal(openLoadoutExchange(),false);
+ assert.match(modal.textContent,/무기 Lv.8.*Lv.1 이상/);assert.match(modal.textContent,/현재 5/);
+ const items=()=>modal.querySelectorAll('.loadout-item');const select=(role,id)=>items().find(b=>b.dataset.role===role&&b.dataset.item===id).click();
+ const before=JSON.stringify(G.weapons);select('source','rifle');select('target','shotgun');
+ assert.match(modal.querySelector('.loadout-exchange-loss').textContent,/강화 레벨과 진화는 사라지고/);
+ modal.querySelector('.loadout-exchange-cancel').click();assert.equal(JSON.stringify(G.weapons),before);
+ select('source','rifle');select('target','shotgun');const confirm=modal.querySelector('.loadout-exchange-confirm');confirm.click();confirm.click();
+ assert.equal(G.weapons.length,6);assert.equal(G.weapons.find(w=>w.id==='shotgun').level,1);assert.ok(!G.weapons.some(w=>w.id==='rifle'));
+ const after=JSON.stringify(G.weapons);modal.querySelector('.loadout-exchange-close').click();
+ assert.equal(topModalId(),'pause');assert.equal(G.paused,true);assert.equal(document.activeElement,node('btn-pause-loadout'));
+ node('btn-pause-loadout').click();confirm.click();assert.equal(JSON.stringify(G.weapons),after);assert.equal(modal.querySelector('.loadout-exchange-confirm'),null);
+ window.dispatch('keydown',{code:'Escape'});assert.equal(topModalId(),'pause');assert.equal(modal.hidden,true);
+});
+test('loadout stale confirmation refuses changed inventory and detached buttons cannot confirm a new preview',()=>{
+ freshRun();G.weapons=['cannon','thorns','rifle','pistols','gas','saw'].map((id,i)=>createWeapon(id,i));togglePause();node('btn-pause-loadout').click();
+ const modal=node('loadout-exchange'),select=(role,id)=>modal.querySelectorAll('.loadout-item').find(b=>b.dataset.role===role&&b.dataset.item===id).click();
+ select('source','rifle');select('target','shotgun');const old=modal.querySelector('.loadout-exchange-confirm');G.weapons[0].level++;
+ old.click();assert.ok(G.weapons.some(w=>w.id==='rifle'));assert.match(modal.querySelector('.loadout-exchange-status').textContent,/상태가 바뀌었습니다/);
+ select('source','rifle');select('target','shotgun');const before=JSON.stringify(G.weapons);old.disabled=false;old.click();assert.equal(JSON.stringify(G.weapons),before);
+ modal.querySelector('.loadout-exchange-confirm').click();assert.ok(G.weapons.some(w=>w.id==='shotgun'));
+});
+test('loadout evolution helper describes fused maxima and CSS retains mobile readable touch controls',async()=>{
+ const {appendEvolutionInfo}=await import('../src/ui/loadout-exchange.js');const box=document.createElement('div');
+ appendEvolutionInfo(box,'lotus_bloom');assert.match(box.textContent,/Lv.8까지 강화.*별도 진화 없음/);
+ const css=fs.readFileSync(new URL('../src/ui/loadout-exchange.css',import.meta.url),'utf8');
+ assert.match(css,/min-height:44px/);assert.match(css,/overflow:auto/);assert.match(css,/@media\(max-width:600px\)/);assert.match(css,/focus-visible/);assert.match(css,/\[hidden\]/);
 });

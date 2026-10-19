@@ -315,3 +315,26 @@ button:focus-visible,input:focus-visible,summary:focus-visible,.card:focus-visib
 .vitals-card{border:1px solid #8b9d9366;box-shadow:0 4px 18px #0008,inset 0 1px #ffffff0c;background:linear-gradient(120deg,#15242bf5,#0c161ff5)}
 .vitals-label strong{letter-spacing:.02em}.vital-track{border:1px solid #95b2a455;background:#090f15}.vital-track>div{background:linear-gradient(90deg,#608d79,#a0c7a1);box-shadow:inset 0 1px #e6ffda77}
 .mission-card{border-left:2px solid #c7aa72;background:#0c1720e8}.mission-card strong{font-variant-numeric:tabular-nums;color:#f5ead4}.operation-progress{color:#d0d9d4}.hud-boss{background:#19151feb;border:1px solid #a8788588;box-shadow:0 4px 20px #0008}
+/* Quiet equipment selection: full-width levels, restrained rose accents. */
+.choice-card{background:linear-gradient(145deg,#1b272f,#142129);border:1px solid #52636b88;border-radius:10px;box-shadow:0 8px 24px #0002}
+.choice-card:hover{transform:none;background:#1c2b32;border-color:#9aa99b99}
+.choice-select{padding:19px 18px 18px;min-height:205px}
+.choice-select .card-head{display:grid;grid-template-columns:52px minmax(0,1fr) 18px;align-items:center;gap:12px;margin:0 0 14px}
+.choice-select .card-icon{width:52px!important;height:52px!important;min-width:0;flex-basis:52px;border:0!important;background:#0e191f80!important;padding:3px!important;border-radius:8px!important}
+.choice-select .card-name{font-size:16px;line-height:1.45;font-weight:750;word-break:keep-all;color:#e0e5e4}
+.card-key{align-self:start;color:#73848d;border-bottom:1px solid #62707966;font:11px/20px ui-monospace,monospace;text-align:center}
+.choice-select .card-lv{font:750 17px/1.4 var(--font-body,sans-serif);letter-spacing:.01em;color:#e2bdcb;background:none;padding:0;margin:0 0 11px;white-space:normal;word-break:keep-all}
+.choice-select .card-desc{font-size:13px;line-height:1.65;color:#aebcc4;margin:0;min-height:2.8em}
+.choice-select .stamp{display:none}.choice-recipes{background:#101c23;border-top:1px solid #52636b55}
+.choice-recipes summary{font-size:11px;line-height:1.7;color:#c8bb9c;padding:12px 15px;font-weight:600}
+.choice-recipe-detail strong{font-size:12px;color:#becfbf}.choice-recipe-detail p{font-size:12px;color:#aebdc4}.choice-recipe-detail small{font-size:11px;color:#8f9fa9}
+@media(max-width:600px){.choice-select{min-height:0;padding:16px}.choice-select .card-head{grid-template-columns:48px minmax(0,1fr) 18px;gap:12px;margin-bottom:10px}.choice-select .card-name{font-size:16px}.choice-select .card-lv{font-size:17px;margin-bottom:8px}.choice-select .card-desc{min-height:0}.choice-recipes summary{min-height:44px}}
+.accessory-section{margin:28px 0;padding-top:24px;border-top:1px solid #53666b66}.accessory-section h3{font-size:20px;color:#e4dfd1;margin:6px 0}.accessory-equipped{padding:12px 14px;background:#233129;border-left:2px solid #b5bf9d;color:#d7dfd1;font-size:12px;line-height:1.7}
+.accessory-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.accessory-card{display:grid;grid-template-columns:86px minmax(0,1fr);align-items:start;gap:12px;padding:16px;background:#14222b;border:1px solid #45586188;border-radius:8px}.accessory-card.equipped{border-color:#aebc8d99}.accessory-card>img{width:86px;height:100px;object-fit:contain}.accessory-copy small{font-size:10px;color:#a2ad9a}.accessory-copy h4{font-size:15px;line-height:1.5;margin:5px 0;color:#e2e6e2}.accessory-copy p{font-size:12px;line-height:1.65;color:#acbcc5;margin:7px 0}.accessory-copy strong{display:block;color:#d4bf8c;font-size:11px;font-weight:600}.accessory-copy button{margin-top:12px;min-height:44px;width:100%;white-space:normal}
+@media(max-width:650px){.accessory-list{grid-template-columns:1fr}.accessory-card{grid-template-columns:74px minmax(0,1fr);padding:14px}.accessory-card>img{width:74px;height:88px}}
+.card-shared-note{font-size:11px;line-height:1.65;color:#95aaa4;margin:12px 0 0;padding-top:10px;border-top:1px solid #566b6344}
+.chest-description{white-space:pre-line;text-align:center;line-height:1.75;max-width:650px;margin:0 auto 16px}.premium-reward{border:1px solid #b8a074!important;background:linear-gradient(110deg,#342c3e,#1e2731)!important}.premium-reward .r-name{color:#e5cda1!important}
+
+/* Five preparation roles retain balanced columns and reachable mobile rows. */
+.menu-utility{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:760px){.menu-utility{grid-template-columns:repeat(2,minmax(0,1fr))}.menu-utility .terminal-card{grid-column:1/-1}}

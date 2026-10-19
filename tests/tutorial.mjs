@@ -15,7 +15,7 @@ class Element {
 const body=new Element('body'), launcher=new Element('button'), oldInert=new Element('div');oldInert.inert=true;body.append(launcher,oldInert);
 globalThis.document={body,activeElement:launcher,createElement:t=>new Element(t)};
 const listeners=[];globalThis.window={addEventListener:(type,callback,capture)=>listeners.push({type,callback,capture})};
-const storage=new Map([['kfp.save.v1','preserve-me']]);let fail=false;
+const storage=new Map([['kfp.save.v1','preserve-me'],['kfp.tutorial.v1','done']]);let fail=false;
 globalThis.localStorage={getItem:k=>{if(fail)throw Error('blocked');return storage.get(k)||null;},setItem:(k,v)=>{if(fail)throw Error('quota');storage.set(k,v);}};
 const guide=await import('../src/ui/tutorial.js');
 let events=[];const hooks={onOpen:()=>events.push('open'),onClose:()=>events.push('close')};guide.initTutorial(hooks);
@@ -52,8 +52,19 @@ test('storage failures do not break first-run offer, skip, or session-level dism
  assert.equal(fresh.shouldOfferTutorial(),true);assert.equal(fresh.openTutorial(),true);assert.equal(fresh.closeTutorial(),true);assert.equal(fresh.shouldOfferTutorial(),false);
  assert.equal(fresh.openTutorial(),true);fresh.closeTutorial();fail=false;
 });
-test('all six steps use real local illustrations and focus/reduced-motion styling exists',()=>{
- const root=path.resolve(import.meta.dirname,'..');assert.equal(guide.TUTORIAL_STEPS.length,6);
+test('all seven steps use real local illustrations and focus/reduced-motion styling exists',()=>{
+ const root=path.resolve(import.meta.dirname,'..');assert.equal(guide.TUTORIAL_STEPS.length,7);
  for(const step of guide.TUTORIAL_STEPS)assert.ok(fs.existsSync(path.join(root,'asset/tutorial',step.image)),step.image);
  const css=fs.readFileSync(path.join(root,'src/ui/tutorial.css'),'utf8');assert.match(css,/focus-visible/);assert.match(css,/prefers-reduced-motion/);assert.match(css,/max-width: 580px/);
+});
+
+test('versioned offer preserves old guide/save keys and explains actual field-box flow',()=>{
+ assert.equal(guide.TUTORIAL_KEY,'kfp.tutorial.v2');
+ assert.equal(storage.get('kfp.tutorial.v1'),'done');
+ assert.equal(storage.get('kfp.save.v1'),'preserve-me');
+ const box=guide.TUTORIAL_STEPS.find(s=>s.visual==='fieldbox');
+ assert.ok(box);assert.match(box.image,/salvage-cache/);assert.match(box.text,/열기 → 보상 확인 → 받기/);
+ assert.match(box.text,/진화/);assert.match(box.text,/보유 아이템 \+1레벨/);assert.match(box.text,/코인/);
+ assert.match(box.tip,/상점 전용/);assert.doesNotMatch(JSON.stringify(guide.TUTORIAL_STEPS),/조각|파편/);
+ const all=JSON.stringify(guide.TUTORIAL_STEPS);assert.match(all,/나중에 얻은 무기와 조합 무기/);assert.match(all,/STAGE 3 클리어/);assert.match(all,/1개만 장착/);
 });

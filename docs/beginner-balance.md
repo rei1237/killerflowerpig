@@ -1,5 +1,7 @@
 # Beginner difficulty curve
 
+The initial tuning below is historical. The latest requested crowd/HP changes and reward compensation are documented in [population-balance.md](population-balance.md); current boss durability is in [boss-durability.md](boss-durability.md). The ranged-stage correction later in this document supersedes the earlier stage-3 spitter note.
+
 This pass makes the first two stages more forgiving while preserving the later spawn/stat curve. A subsequent change defers enemy death-cloud hazards until stage 5. These are initial tuning passes, verified by executable regression checks, not measured human completion-rate claims.
 
 ## Ordinary enemies and director

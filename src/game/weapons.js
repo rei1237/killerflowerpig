@@ -1,4 +1,5 @@
 import { firingMuzzle } from './player-motion.js';
+import { createWeaponVfxFrame, drawWeaponProjectile, drawWeaponOrbit, drawWeaponBeam, drawBeamHitAccents, drawFusionResidues, drawFusionHitAccents } from './weapon-vfx.js';
 // 무기 런타임: 쿨다운 → 발사 패턴, 플레이어 투사체/광선/궤도체 업데이트 및 충돌
 import { G, rand } from './state.js';
 import { WEAPONS } from '../data/weapons.js';
@@ -8,6 +9,7 @@ import { hitEnemy } from './enemies.js';
 import { spawnHazard } from './hazards.js';
 import { sparks, petals, embers, shake } from './effects.js';
 import { healPlayer, triggerPlayerShot } from './player.js';
+import { preferredTarget } from './targeting.js';
 
 export function createWeapon(id, slot) {
     return { id, slot, level: 1, evolved: false, cd: 0.4, activeT: 0, angle: 0, burst: 0, burstT: 0, trailT: 0, follow: null };
@@ -36,7 +38,8 @@ export function weaponStats(w) {
         crit: ev.crit || 0, execute: ev.execute || 0, bleed: ev.bleed || 0,
         lifesteal: ev.lifesteal || 0, permanent: !!ev.permanent, trail: !!ev.trail, follow: !!ev.follow,
         spread: b.spread || 0, radius: b.radius || 0, tick: b.tick || 0.3, hitCd: b.hitCd || 0.3,
-        length: b.length || 0, width: b.width || 0,
+        length: (b.length || 0) * ps.projSpeed, width: b.width || 0,
+        bonusAmount: ps.amount, durationScale: ps.duration,
     };
     if (def.fusionOnly) {
         result.dmg = Math.min(220, result.dmg); result.cd = Math.max(0.5, result.cd);
@@ -50,6 +53,8 @@ export function weaponStats(w) {
 // 가장 가까운 적 (그리드 반경 확장 탐색)
 const near = [];
 export function nearestEnemy(x, y, maxR = 480) {
+    const focused = preferredTarget(x, y, maxR);
+    if (focused) return focused;
     let best = null, bd = maxR * maxR;
     for (let r = 120; r <= maxR; r *= 2) {
         const list = G.grid.query(x, y, r, near);
@@ -129,17 +134,17 @@ function randomEnemyNear(maxR) {
 }
 
 export function orbitStats(w, s) {
-    if (w.id === 'orbit_saw') return { ...s, dmg: s.dmg * 0.6, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3)), radius: 78, duration: 2.8, permanent: false };
-    return w.id === 'lotus_bloom' ? { ...s, dmg: s.dmg * 0.28, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3)), radius: 90, duration: 2.8, permanent: false } : s;
+    if (w.id === 'orbit_saw') return { ...s, dmg: s.dmg * 0.6, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3) + (s.bonusAmount || 0)), radius: 78, duration: Math.min(4.5, 2.8 * (s.durationScale || 1)), permanent: false };
+    return w.id === 'lotus_bloom' ? { ...s, dmg: s.dmg * 0.28, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3) + (s.bonusAmount || 0)), radius: 90, duration: Math.min(4.5, 2.8 * (s.durationScale || 1)), permanent: false } : s;
 }
-export function emberFieldStats(s) { return { ...s, dmg: s.dmg * 0.16, amount: Math.min(2, s.amount), duration: 3, radius: 54, tick: 0.3 }; }
+export function emberFieldStats(s) { return { ...s, dmg: s.dmg * 0.16, amount: Math.min(2, s.amount), duration: Math.min(6, 3 * (s.durationScale || 1)), radius: 54, tick: 0.3 }; }
 const FIRE = {
     burst_rail(w, s) { FIRE.pistols(w, s); },
     venom_saw(w, s) { FIRE.saw(w, s); },
     toxic_scatter(w, s) { FIRE.shotgun(w, s); },
     ember_lance(w, s) { FIRE.cannon(w, s); FIRE.molotov(w, emberFieldStats(s)); },
-    orbit_saw(w, s) { FIRE.saw(w, s); w.activeT = 2.8; },
-    lotus_bloom(w, s) { FIRE.cannon(w, s); w.activeT = 2.8; },
+    orbit_saw(w, s) { FIRE.saw(w, s); w.activeT = orbitStats(w, s).duration; },
+    lotus_bloom(w, s) { FIRE.cannon(w, s); w.activeT = orbitStats(w, s).duration; },
     scatter_rail(w, s) { FIRE.shotgun(w, s); },
     plague_fire(w, s) {
         for (let i = 0; i < s.amount; i++) {
@@ -192,12 +197,13 @@ const FIRE = {
     cannon(w, s) {
         const p = G.player;
         let base;
-        const t = nearestEnemy(p.x, p.y, 520);
-        if (p.vx || p.vy || !t) base = Math.atan2(p.facingY, p.facingX);
+        const focused = preferredTarget(p.x, p.y, 520);
+        const t = focused || nearestEnemy(p.x, p.y, 520);
+        if (!focused && (p.vx || p.vy || !t)) base = Math.atan2(p.facingY, p.facingX);
         else { const [dx, dy] = aimAt(w, t); base = Math.atan2(dy, dx); }
         const n = s.amount;
         for (let i = 0; i < n; i++) {
-            const a = base + (i / n) * Math.PI * 2 + (w.evolved ? G.clock * 0.6 : 0);
+            const a = base + (i / n) * Math.PI * 2 + (w.evolved && !focused ? G.clock * 0.6 : 0);
             fireBeam(w, s, a);
         }
         shake(4);
@@ -209,7 +215,7 @@ const FIRE = {
             if (!w.follow || !w.follow.alive) {
                 w.follow = spawnHazard('gas', p.x, p.y, { radius: s.radius * s.area, duration: 9999, dmg: s.dmg, tick: s.tick, slow: s.slow, weapon: w.id, follow: true });
             } else {
-                w.follow.radius = 70 * s.area; w.follow.dmg = s.dmg; w.follow.slow = s.slow;
+                w.follow.radius = s.radius * s.area; w.follow.dmg = s.dmg; w.follow.slow = s.slow;
             }
             return;
         }
@@ -432,72 +438,26 @@ export function updateShots(dt) {
 }
 
 export function drawShots(ctx) {
-    const pool = G.shots;
-    for (let i = 0; i < pool.count; i++) {
-        const sh = pool.items[i];
-        if (sh.kind === 'lob') {
-            ctx.save();
-            ctx.translate(sh.x, sh.y);
-            ctx.rotate(sh.spin);
-            if (sh.hazard === 'fire' || sh.hazard === 'firegas') ctx.drawImage(fx.bomb, -11, -11, 22, 22);
-            else { ctx.fillStyle = '#3b6b1a'; ctx.fillRect(-6, -8, 12, 16); ctx.fillStyle = '#7dff4a'; ctx.fillRect(-3, -11, 6, 4); }
-            ctx.restore();
-            continue;
-        }
-        const img = sh.img;
-        if (sh.kind === 'saw') {
-            const s = sh.radius * 2.4;
-            ctx.save();
-            ctx.translate(sh.x, sh.y);
-            ctx.rotate(sh.spin);
-            ctx.drawImage(img, -s / 2, -s / 2, s, s);
-            ctx.restore();
-        } else {
-            const w = img.width * (sh.radius / 5), h = img.height * (sh.radius / 5);
-            ctx.save();
-            ctx.translate(sh.x, sh.y);
-            ctx.rotate(sh.angle);
-            ctx.drawImage(img, -w / 2, -h / 2, w, h);
-            ctx.restore();
-        }
+    const frame = createWeaponVfxFrame(G.lowQ, G.clock, G.visuals), cam = G.camera;
+    const hw = G.view.w / 2 + 80, hh = G.view.h / 2 + 80;
+    ctx.save();
+    const bounds = { x0: cam.x-hw, x1: cam.x+hw, y0: cam.y-hh, y1: cam.y+hh };
+    drawFusionResidues(ctx, G.hazards, frame, bounds);
+    for (let i = 0; i < G.shots.count; i++) {
+        const sh = G.shots.items[i];
+        if (Math.abs(sh.x - cam.x) > hw + (sh.radius || 12) || Math.abs(sh.y - cam.y) > hh + (sh.radius || 12)) continue;
+        drawWeaponProjectile(ctx, sh, frame);
     }
-    // 연꽃 가시
     for (const w of G.weapons) {
         if (!['thorns', 'lotus_bloom', 'orbit_saw'].includes(w.id) || !w.s || !(w.activeT > 0 || w.s.permanent)) continue;
-        const s = orbitStats(w, w.s), p = G.player;
-        const n = s.amount, R = s.radius * s.area, size = 26 * s.area;
-        const img = w.evolved ? fx.petalBlood : fx.petal;
-        for (let i = 0; i < n; i++) {
-            const a = w.angle + (i / n) * Math.PI * 2;
-            const ox = p.x + Math.cos(a) * R, oy = p.y - 20 + Math.sin(a) * R * 0.8;
-            ctx.save();
-            ctx.translate(ox, oy);
-            ctx.rotate(a * 2);
-            ctx.drawImage(img, -size / 2, -size / 2, size, size);
-            ctx.restore();
-        }
+        drawWeaponOrbit(ctx, w, orbitStats(w, w.s), G.player, frame);
     }
-    // 꽃잎 광선
-    const beams = G.beams;
-    if (beams.count) {
-        ctx.globalCompositeOperation = 'lighter';
-        for (let i = 0; i < beams.count; i++) {
-            const b = beams.items[i];
-            const k = b.life / b.max;
-            ctx.save();
-            ctx.translate(b.x, b.y);
-            ctx.rotate(b.angle);
-            ctx.globalAlpha = k;
-            const w = b.width * (0.6 + 0.4 * k);
-            ctx.fillStyle = b.evolved ? '#ff2a6a' : '#ff69b4';
-            ctx.fillRect(0, -w / 2, b.len, w);
-            ctx.fillStyle = '#ffe0f0';
-            ctx.fillRect(0, -w / 6, b.len, w / 3);
-            const g = glow('#ff69b4', 40);
-            ctx.drawImage(g, -40, -40);
-            ctx.restore();
-        }
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < G.beams.count; i++) {
+        const b = G.beams.items[i], bound = b.len + b.width;
+        if (Math.abs(b.x - cam.x) > hw + bound || Math.abs(b.y - cam.y) > hh + bound) continue;
+        drawWeaponBeam(ctx, b, frame);
     }
+    drawFusionHitAccents(ctx, G.enemies, G.boss, frame, bounds);
+    drawBeamHitAccents(ctx, G.beams, G.enemies, G.boss, frame);
+    ctx.restore();
 }

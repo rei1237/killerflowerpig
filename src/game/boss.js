@@ -1,5 +1,6 @@
 import { drawBossArtwork, drawBossSpriteSheet, initBossMotion, setBossMotion, hitBossMotion, recoverBossMotion, updateBossMotion } from './boss-appearance.js';
 import { prepareBossSheets, getBossSheet } from './boss-sheets.js';
+import { recordFusionHit } from './weapon-vfx.js';
 // 보스: 3페이즈, 예고(텔레그래프) 기반 패턴, 페이즈 전환 연출, 처치 시 관 상자
 import { G, rand, emit, pickWeighted } from './state.js';
 import { BOSSES, PHASE_THRESHOLDS } from '../data/bosses.js';
@@ -40,6 +41,8 @@ export class Boss {
         this.attackT = def.pacing?.opening ?? 2.2;
         this.task = null;      // 진행 중인 패턴
         this.lastPattern = null;
+        this.patternEpoch = 0;
+        this.signatureCount = 0;
         this.invuln = 0;
         this.deadT = 0;
         this.hits = {};
@@ -57,6 +60,7 @@ export class Boss {
         if (cc && Math.random() < cc) { amount *= 2; crit = true; }
         this.hp -= amount;
         this.flash = 0.06;
+        if (amount > 0) recordFusionHit(this, opts.weapon, G.clock);
         hitBossMotion(this);
         if (opts.weapon) G.damageBy[opts.weapon] = (G.damageBy[opts.weapon] || 0) + amount;
         if (!opts.silent) damageText(this.x + rand(-20, 20), this.y - this.radius * 2.5, amount, crit);
@@ -68,6 +72,7 @@ export class Boss {
     }
 
     enterPhase(n) {
+        this.cancelPatternWarnings();
         this.phase = n;
         this.invuln = 1.0;
         this.task = null;
@@ -81,12 +86,14 @@ export class Boss {
         gibs(this.x, this.y - this.radius, 12);
         floatText(this.x, this.y - this.radius * 3, n === 1 ? '변이가 가속된다!' : '★ 광폭화 ★', '#ff2244', 1.6);
         if (this.def.hallucinate) G.hallucinate = 1;
-        this.patternSummon(6 + n * 3);
+        if (this.def.phaseSummons) this.patternSummon(6 + n * 3);
+        else setBossMotion(this, 'recover', .35);
         this.speed = this.def.speed * (1 + n * 0.18);
         emit('bossPhase', n);
     }
 
     die() {
+        this.cancelPatternWarnings();
         this.alive = false;
         this.state = 'dead';
         setBossMotion(this, 'dead');
@@ -157,12 +164,16 @@ export class Boss {
     }
 
     startPattern() {
+        this.cancelPatternWarnings();
         const list = this.def.phases[this.phase];
         const weights = {};
         for (const k of list) weights[k] = k === this.lastPattern ? 0.3 : 1;
-        const name = pickWeighted(weights);
+        // Every encounter opens with its defining move. Secondary moves never
+        // replace the signature twice in a row, even after a phase transition.
+        const name = this.lastPattern !== this.def.signature ? this.def.signature : pickWeighted(weights);
         this.lastPattern = name;
         this.state = 'attack'; this.anim = 0;
+        this.signatureCount++;
         this.task = this[`task_${name}`]();
         this.task.t = 0;
     }
@@ -181,6 +192,244 @@ export class Boss {
             const a = offset + (i / n) * Math.PI * 2;
             fireEnemyShot(this.x, this.bodyY(), Math.cos(a), Math.sin(a), speed * this.phaseMul ** 0.5, this.dmg * 0.6, 'boss', size);
         }
+    }
+
+    // ---- 고유 패턴 공통 안전 장치 ----
+    cancelPatternWarnings() {
+        this.patternEpoch++;
+        // Own the callback, not the pooled hazard object: reused acid/friendly
+        // hazards cannot accidentally inherit ownership from an old warning.
+        for (let i = G.hazards.count - 1; i >= 0; i--) {
+            const h = G.hazards.items[i];
+            if (h.onFire?.bossOwner === this) { h.alive = false; G.hazards.release(i); }
+        }
+    }
+
+    warn(kind, x, y, options, release) {
+        const epoch = this.patternEpoch;
+        const onFire = h => {
+            if (!this.alive || this.patternEpoch !== epoch) return;
+            setBossMotion(this, 'attack', .2);
+            release?.(h);
+        };
+        onFire.bossOwner = this;
+        return spawnHazard(kind, x, y, { ...options, onFire });
+    }
+
+    signatureTask(duration, rest = 2, minimumRest = 1.25) {
+        return { t: 0, step: (dt, s) => {
+            if (s.t >= duration) {
+                this.endTask(rest);
+                this.attackT = Math.max(minimumRest, this.attackT);
+            }
+        } };
+    }
+
+    fan(x, y, angle, count, spread, speed, kind = 'boss', size = 8) {
+        setBossMotion(this, 'attack', .2);
+        this.flip = Math.cos(angle) < 0;
+        for (let i = 0; i < count; i++) {
+            const a = angle + (count === 1 ? 0 : (i / (count - 1) - .5) * spread);
+            fireEnemyShot(x, y, Math.cos(a), Math.sin(a), speed, this.dmg * .6, kind, size);
+        }
+    }
+
+    circleHit(h, multiplier = .85) {
+        const dx = G.player.x - h.x, dy = G.player.y - h.y;
+        if (dx * dx + dy * dy / .49 < h.radius * h.radius) damagePlayer(this.dmg * multiplier, h.x, h.y);
+        sparks(h.x, h.y, 12, h.color, 160);
+    }
+
+    lineHit(h, multiplier = .85) {
+        const dx = G.player.x - h.x, dy = G.player.y - h.y;
+        const along = dx * Math.cos(h.angle) + dy * Math.sin(h.angle);
+        const across = -dx * Math.sin(h.angle) + dy * Math.cos(h.angle);
+        // Footpoint checks match the drawn rectangle exactly; no invisible
+        // expansion outside the telegraph, and no new collision body radius.
+        if (along >= 0 && along <= h.len && Math.abs(across) <= h.width / 2) damagePlayer(this.dmg * multiplier, h.x, h.y);
+        for (let i = 0; i < 5; i++) sparks(h.x + Math.cos(h.angle) * h.len * i / 4, h.y + Math.sin(h.angle) * h.len * i / 4, 3, h.color, 110);
+    }
+
+    // 2: stationary, locked firing cone. Sidestepping the first sight line
+    // defeats the entire burst; the long reload is a guaranteed opening.
+    task_barrage() {
+        setBossMotion(this, 'windup');
+        const x = this.x, y = this.bodyY();
+        const a = Math.atan2(G.player.y - 18 - y, G.player.x - x);
+        const shots = 3 + this.phase, last = 1.15 + (shots - 1) * .24;
+        for (let i = 0; i < shots; i++) {
+            this.warn('tline', x, y, { angle: a, len: 760, width: 20, delay: 1.15 + i * .24, color: '#ffc35b' }, () => {
+                for (const speed of [270, 315, 360]) this.fan(x, y, a, 1, 0, speed, 'boss', 7);
+                audio.sfx('shot');
+            });
+        }
+        audio.sfx('warn');
+        return this.signatureTask(last + .32, 2.5, 1.8);
+    }
+
+    // 3: a shorter hunting leap, followed by a visible lateral retreat.
+    // Unlike the brute's straight charge it never emits an unmarked ring.
+    task_hunt() {
+        setBossMotion(this, 'windup');
+        const a = Math.atan2(G.player.y - this.y, G.player.x - this.x);
+        const length = Math.min(330, Math.max(150, Math.hypot(G.player.x - this.x, G.player.y - this.y)));
+        const warning = 1.05, speed = 460, side = this.signatureCount % 2 ? 1 : -1;
+        this.warn('tline', this.x, this.y, { angle: a, len: length, width: this.radius * 2, delay: warning, color: '#caa9ec' });
+        audio.sfx('warn');
+        return { t: 0, phase: 0, dash: 0, retreat: 0, step: (dt, s) => {
+            if (s.phase === 0 && s.t >= warning) { s.phase = 1; setBossMotion(this, 'attack'); }
+            if (s.phase === 1) {
+                const d = Math.min(speed * dt, length - s.dash);
+                this.x += Math.cos(a) * d; this.y += Math.sin(a) * d; s.dash += d;
+                this.flip = Math.cos(a) < 0;
+                if (s.dash >= length) { s.phase = 2; setBossMotion(this, 'recover', .55); }
+            } else if (s.phase === 2) {
+                const d = Math.min(210 * dt, 105 - s.retreat);
+                this.x += Math.cos(a + side * Math.PI / 2) * d;
+                this.y += Math.sin(a + side * Math.PI / 2) * d; s.retreat += d;
+                if (s.retreat >= 105) { this.endTask(2.1); this.attackT = Math.max(1.35, this.attackT); }
+            }
+        } };
+    }
+
+    // 4: two separately acquired locks. Each follows briefly then stays
+    // completely fixed for .55s, rewarding a direction change after lock-on.
+    task_lockshot() {
+        setBossMotion(this, 'windup');
+        const task = { t: 0, locks: [], next: 0, step: (dt, s) => {
+            while (s.next < 2 && s.t >= s.next * 1.35) {
+                const start = s.next * 1.35;
+                const h = this.warn('tline', this.x, this.bodyY(), { angle: 0, len: 1000, width: 20, delay: 1.15, color: '#f58a98' }, line => {
+                    this.fan(line.x, line.y, line.angle, 1, 0, 690, 'boss', 8);
+                    audio.sfx('zap');
+                });
+                s.locks.push({ h, start }); s.next++;
+                audio.sfx('warn');
+            }
+            for (const lock of s.locks) {
+                if (s.t - lock.start <= .6) lock.h.angle = Math.atan2(G.player.y - 18 - lock.h.y, G.player.x - lock.h.x);
+            }
+            if (s.t > 2.85) { this.endTask(2.1); this.attackT = Math.max(1.35, this.attackT); }
+        } };
+        task.step(0, task);
+        return task;
+    }
+
+    // 5: a ground battery walks forward through three marked impact circles.
+    // The flank/back stays open. Later phases add an offset return impact.
+    task_artillery() {
+        setBossMotion(this, 'windup');
+        const a = Math.atan2(G.player.y - this.y, G.player.x - this.x), count = this.phase === 2 ? 4 : 3;
+        for (let i = 0; i < count; i++) {
+            const distance = i < 3 ? 110 + i * 115 : 225, side = i < 3 ? 0 : 100;
+            const x = this.x + Math.cos(a) * distance - Math.sin(a) * side;
+            const y = this.y + Math.sin(a) * distance + Math.cos(a) * side;
+            this.warn('tcircle', x, y, { radius: 66, delay: 1.1 + i * .3, color: '#efae67' }, h => {
+                this.circleHit(h); shake(5); audio.sfx('explode');
+            });
+        }
+        audio.sfx('warn');
+        return this.signatureTask(1.1 + (count - 1) * .3 + .35, 2.4, 1.4);
+    }
+
+    // 6: a horseshoe of acid, not random pools. Two missing sectors create
+    // a wide permanent exit; phase changes rotate that opening, not its size.
+    task_toxicTide() {
+        setBossMotion(this, 'windup');
+        const x = G.player.x, y = G.player.y, gap = Math.atan2(y - this.y, x - this.x) + this.phase * .35;
+        for (let i = 2; i <= 6; i++) {
+            const a = gap + i * Math.PI / 4;
+            this.warn('tcircle', x + Math.cos(a) * 132, y + Math.sin(a) * 92.4, { radius: 48, delay: 1.2, color: '#b5df56' }, h => {
+                this.circleHit(h, .55);
+                spawnHazard('acid', h.x, h.y, { radius: h.radius, duration: 2.8, dmg: this.dmg * .23, tick: .4 });
+            });
+        }
+        audio.sfx('warn');
+        return this.signatureTask(1.55, 2.5, 1.6);
+    }
+
+    // 7: two locked crossing slashes. The queen relocates to the advertised
+    // lane's beginning, leaving two large safe quadrants throughout.
+    task_crosscut() {
+        setBossMotion(this, 'windup');
+        const x = G.player.x, y = G.player.y, angle = this.signatureCount % 2 ? Math.PI / 4 : -Math.PI / 4;
+        for (let i = 0; i < 2; i++) {
+            const a = angle + i * Math.PI / 2, len = 440;
+            const sx = x - Math.cos(a) * len / 2, sy = y - Math.sin(a) * len / 2;
+            this.warn('tline', sx, sy, { angle: a, len, width: 46, delay: 1.05 + i * .8, color: '#c68cff' }, h => {
+                this.x = h.x; this.y = h.y; this.alpha = 1; this.flip = Math.cos(h.angle) < 0;
+                this.lineHit(h); audio.sfx('zap');
+            });
+        }
+        audio.sfx('warn');
+        return this.signatureTask(2.2, 2.2, 1.4);
+    }
+
+    // 8: two spatially separate echoes, each with a broad missing wedge.
+    // The second is delayed and has a different escape bearing.
+    task_echo() {
+        setBossMotion(this, 'windup');
+        const targetX = G.player.x, targetY = G.player.y;
+        for (let i = 0; i < 2; i++) {
+            const x = this.x + (i ? 115 : -115), y = this.bodyY() + (i ? 45 : -45);
+            const gap = Math.atan2(targetY - 18 - y, targetX - x) + (i ? 1.2 : -.4);
+            this.warn('tcircle', x, y, { radius: 32, delay: 1.2 + i * 1.0, color: '#ba9af2' }, h => {
+                // A 90-degree empty wedge remains even in the final phase.
+                const n = 16 + this.phase * 2;
+                for (let j = 0; j < n; j++) {
+                    const a = gap + Math.PI / 4 + (j / (n - 1)) * Math.PI * 1.5;
+                    fireEnemyShot(h.x, h.y, Math.cos(a), Math.sin(a), 145, this.dmg * .55, 'boss', 7);
+                }
+                sparks(h.x, h.y, 10, '#ba9af2', 90);
+            });
+        }
+        audio.sfx('warn');
+        return this.signatureTask(2.55, 2.1, 1.35);
+    }
+
+    // 9: outer fault lines hit first; the center is safe, then the delayed
+    // hammer splits that center. The warning footprints are the damage test.
+    task_faultline() {
+        setBossMotion(this, 'windup');
+        const x = G.player.x, y = G.player.y, a = Math.atan2(y - this.y, x - this.x);
+        for (const offset of [-86, 86, 0]) {
+            const sx = x - Math.cos(a) * 240 - Math.sin(a) * offset;
+            const sy = y - Math.sin(a) * 240 + Math.cos(a) * offset;
+            this.warn('tline', sx, sy, { angle: a, len: 480, width: 58, delay: offset === 0 ? 2.0 : 1.05, color: offset === 0 ? '#ffd08b' : '#ee825e' }, h => {
+                this.lineHit(h, 1); shake(7); audio.sfx('explode');
+            });
+        }
+        audio.sfx('warn');
+        return this.signatureTask(2.4, 2.5, 1.5);
+    }
+
+    // 10: a contract snapshots your position. Coin interest is paid first;
+    // the hourglass settles only after a full 2-second, nontracking countdown.
+    task_contract() {
+        setBossMotion(this, 'windup');
+        const x = G.player.x, y = G.player.y;
+        const angle = Math.atan2(y - 18 - this.bodyY(), x - this.x);
+        for (let i = 0; i < 5; i++) {
+            const a = angle + (i / 4 - .5) * .5;
+            this.warn('tline', this.x, this.bodyY(), { angle: a, len: 860, width: 16, delay: 1.05, color: '#f2d383' }, h => {
+                this.fan(h.x, h.y, h.angle, 1, 0, 210, 'coin', 8);
+            });
+        }
+        const marks = this.phase === 2 ? 2 : 1;
+        for (let i = 0; i < marks; i++) {
+            const mx = x + (i ? Math.cos(angle + Math.PI / 2) * 135 : 0);
+            const my = y + (i ? Math.sin(angle + Math.PI / 2) * 135 : 0);
+            this.warn('tcircle', mx, my, { radius: 64, delay: 2.0 + i * .65, color: '#f2d383', symbol: 'hourglass' }, h => {
+                this.circleHit(h, 1);
+                // Settlement coins travel outward: leaving the contract early
+                // is safer than returning to the old position after the volley.
+                this.fan(h.x, h.y, angle + Math.PI, 7, Math.PI * 1.5, 135, 'coin', 7);
+                audio.sfx('pickup');
+            });
+        }
+        floatText(this.x, this.y - this.radius * 3, '계약 · 2초 후 결산', '#f2d383', 1.4);
+        audio.sfx('warn');
+        return this.signatureTask(2.35 + (marks - 1) * .65, 2.4, 1.5);
     }
 
     // ---- 패턴 ----
@@ -271,7 +520,7 @@ export class Boss {
 
     patternSummon(count) {
         setBossMotion(this, 'attack', .22);
-        count = Math.ceil(count * (this.def.pacing?.summons ?? 1));
+        count = Math.max(1, Math.round(Math.ceil(count * (this.def.pacing?.summons ?? 1)) * .60));
         const st = STAGES[G.stage];
         const table = currentWeights(st, st.duration);
         for (let i = 0; i < count; i++) {
@@ -298,16 +547,15 @@ export class Boss {
         for (let i = 0; i < n; i++) {
             const x = p.x + (i === 0 ? 0 : rand(-170, 170));
             const y = p.y + (i === 0 ? 0 : rand(-120, 120));
-            spawnHazard('tcircle', x, y, {
+            this.warn('tcircle', x, y, {
                 radius: 48, delay: 1.0 + i * 0.08, color: '#7dff4a',
-                onFire: (h) => {
+            }, (h) => {
                     setBossMotion(this, 'attack', .16);
                     const pl = G.player;
                     const dx = pl.x - h.x, dy = pl.y - h.y;
                     if (dx * dx + (dy * dy) / 0.49 < h.radius * h.radius) damagePlayer(this.dmg * 0.8, h.x, h.y);
                     spawnHazard('acid', h.x, h.y, { radius: h.radius, duration: 4, dmg: this.dmg * 0.25, tick: 0.4 });
                     blood(h.x, h.y, 8, 0, 0, '#3f8a1a');
-                },
             });
         }
         audio.sfx('warn');
@@ -317,9 +565,9 @@ export class Boss {
     task_slam() {
         setBossMotion(this, 'windup');
         const R = 150 + this.phase * 20;
-        spawnHazard('tcircle', this.x, this.y, {
+        this.warn('tcircle', this.x, this.y, {
             radius: R, delay: 1.0, color: '#ff1a3a',
-            onFire: (h) => {
+        }, (h) => {
                 const pl = G.player;
                 const dx = pl.x - h.x, dy = pl.y - h.y;
                 if (dx * dx + (dy * dy) / 0.49 < R * R) damagePlayer(this.dmg * 1.3, h.x, h.y);
@@ -328,7 +576,6 @@ export class Boss {
                 sparks(h.x, h.y, 20, '#ff6a3a', 300);
                 for (let i = 0; i < 5; i++) decal(h.x + rand(-R / 2, R / 2), h.y + rand(-R / 3, R / 3), 'dark', 1.3);
                 this.radial(16 + this.phase * 4, 0, 230, 8);
-            },
         });
         audio.sfx('warn');
         return { step: (dt, s) => { if (s.t > 1.3) this.endTask(1.8); } };

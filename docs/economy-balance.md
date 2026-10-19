@@ -31,3 +31,13 @@ No wallet gifts, resets, currency migration, hidden compensation or repeated set
 `node --test tests/economy-balance.mjs tests/pet-economy.mjs tests/progression-store.mjs tests/relic-economy.mjs`
 
 Covers starter affordability, drop source values, XP thresholds, coin/gem attraction, magnet coin sweep without premature credit, overshoot prevention, negative-return duplicate refunds, durable wallet behavior, repeated purchase protection, rates/pity and ownership.
+
+## Lower-population compensation (supersedes per-kill values above)
+
+Regular refill rates/density and event counts are now approximately 0.60×, ordinary HP1.45× (mob-curve change). Kill-time coins change from3→5 ordinary and24→40 elite. Gem XP is multiplied by5/3 without rounding, preserving relative enemy XP values and avoiding inflated rewards from rounding every low-value gem. No prices, wallet grants, chest contents or elite-chest schedules change.
+
+Spawn-limited opportunity proxy: 60 old ordinary kills (180coins,60×baseXP) becomes36 kills (180coins,36×baseXP×5/3). Damage-limited throughput proxy1/1.45 combined with5/3 gives1.149× prior XP/coin opportunity, a roughly15% cushion. These are arithmetic proxies, not measured player completion times; harder targeting and movement may change real outcomes.
+
+Supply rolls use1−(1−old probability)^(5/3), preserving no-drop probability per equivalent spawn opportunity. Wounded >40% HP:4%→6.5774%; lowHP≤40%:10%→16.1047%; magnet1.5%→2.4875%; bomb0.15%→0.249875%. FullHP still suppresses healing. Drought counters retain old opportunity units, advancing5/3 per eligible ordinary kill. Guarantees become18 wounded kills (old30),8 lowHP kills (old12),36 magnet kills (old60). LowHP rounding gives13.333 old-opportunity units versus12, within one new kill. Existing integer save counters retain their original progress; fractional counters survive JSON snapshots and validation. Floating comparison epsilon prevents missing exact18/36 thresholds.
+
+Regression tests exercise actual kill rewards, exact guarantee boundaries, probability boundaries, fullHP suppression, field cap recovery, pet/bleed kills, and fractional/legacy reloads.

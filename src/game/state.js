@@ -5,6 +5,14 @@ import { isLowQuality } from '../core/settings.js';
 
 export const VIEW_H = 600; // 화면에 보이는 월드 높이(단위). 기기와 무관하게 난이도 일정.
 
+// Draw-only budgets. Never use these for collision, attack timing, spawns or pools.
+// In particular, adaptive rendering must not call configureCaps().
+const VISUAL_TIERS = Object.freeze([
+    Object.freeze({ tier: 0, maxDpr: 2, particleDraws: 650, decalDraws: 320, additiveParticles: true, projectileGlow: true, playerGlow: true }),
+    Object.freeze({ tier: 1, maxDpr: 1, particleDraws: 160, decalDraws: 72, additiveParticles: false, projectileGlow: false, playerGlow: false }),
+    Object.freeze({ tier: 2, maxDpr: 0.75, particleDraws: 90, decalDraws: 36, additiveParticles: false, projectileGlow: false, playerGlow: false }),
+]);
+
 export const G = {
     stage: 1,
     time: 0,          // 스테이지 경과(초)
@@ -21,6 +29,7 @@ export const G = {
     godMode: false,
     lowQ: false,
     caps: null,
+    visuals: VISUAL_TIERS[0],
 
     camera: { x: 0, y: 0, zoom: 1, ox: 0, oy: 0 },
     view: { w: 1000, h: VIEW_H },
@@ -33,7 +42,8 @@ export const G = {
     xp: 0,
     xpNext: 5,
     pendingLevelUps: 0,
-    rerolls: 2,
+    rerolls: 0,
+    choiceEventSerial: 0, choiceClosedThrough: 0, choiceSession: null, choiceAbsence: {},
     banished: new Set(),
     damageBy: {},     // 무기별 누적 피해 (결과 화면)
 
@@ -62,8 +72,13 @@ export function emit(name, ...args) {
 export function configureCaps() {
     G.lowQ = isLowQuality();
     G.caps = G.lowQ
-        ? { enemies: 260, particles: 260, texts: 36, gems: 300, decalScale: 0.6 }
-        : { enemies: 420, particles: 650, texts: 64, gems: 500, decalScale: 1 };
+        ? { enemies: 156, particles: 260, texts: 36, gems: 300, decalScale: 0.6 }
+        : { enemies: 252, particles: 650, texts: 64, gems: 500, decalScale: 1 };
+    setVisualTier(G.lowQ ? 1 : 0);
+}
+
+export function setVisualTier(tier) {
+    G.visuals = VISUAL_TIERS[Math.max(0, Math.min(2, Math.trunc(tier) || 0))];
 }
 
 export function clearWorld() {

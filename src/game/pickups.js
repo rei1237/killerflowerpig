@@ -7,6 +7,7 @@ import { healPlayer } from './player.js';
 import { flash, shake, floatText } from './effects.js';
 import { earnCoins } from '../core/save.js';
 import { hitEnemy } from './enemies.js';
+import { SUPPLY_RULES } from './supply-drops.js';
 
 export const PICKUP_ASSIST = Object.freeze({ gemMultiplier: 1.2, coinMultiplier: 1.5 });
 
@@ -26,6 +27,18 @@ export function dropGem(x, y, value) {
     g.value = value; g.tier = tierOf(value);
     g.pull = false; g.speed = 0;
     g.phase = Math.random() * 6.28;
+}
+
+// Abandoned supplies must not permanently occupy bounded field budgets.
+export function pruneFieldSupplies() {
+    const p = G.player;
+    if (!p) return;
+    const range = Math.max(900, (G.view.w || 0) + (G.view.h || 0));
+    for (let i = G.pickups.count - 1; i >= 0; i--) {
+        const it = G.pickups.items[i];
+        const offscreen = Math.abs(it.x-p.x) > (G.view.w || 0)/2+48 || Math.abs(it.y-p.y) > (G.view.h || 0)/2+48;
+        if ((it.kind === 'meat' || it.kind === 'magnet') && ((offscreen && it.t >= SUPPLY_RULES.supplyLifetime) || Math.hypot(it.x-p.x,it.y-p.y) > range)) G.pickups.release(i);
+    }
 }
 
 export function dropPickup(kind, x, y) {
@@ -86,7 +99,9 @@ function collect(item) {
             floatText(G.player.x, G.player.y - 44, `+${value}`, '#ffd877');
             break;
         }
-        case 'meat': healPlayer(30); audio.sfx('heal'); break;
+        case 'meat':
+            if (G.player.dead || G.player.hp >= G.player.maxHp) return false;
+            healPlayer(30); audio.sfx('heal'); break;
         case 'magnet': magnetAll(); audio.sfx('pickup'); floatText(G.player.x, G.player.y - 60, '굶주림!', '#ff8fa3'); break;
         case 'bomb': detonate(); break;
         case 'chest': audio.sfx('chest'); emit('chest', item.boss ? 'boss' : 'elite'); break;
@@ -96,9 +111,11 @@ function collect(item) {
 }
 
 export function updatePickups(dt) {
+    pruneFieldSupplies();
     const p = G.player;
     const mr = p.stats.magnet;
-    const mr2 = (mr * PICKUP_ASSIST.gemMultiplier) ** 2;
+    const collection = Math.max(1, Math.min(1.25, p.stats.pickupMultiplier || 1));
+    const mr2 = (mr * PICKUP_ASSIST.gemMultiplier * collection) ** 2;
     const pool = G.gems;
     const py = p.y - 14;
     for (let i = pool.count - 1; i >= 0; i--) {
@@ -125,7 +142,8 @@ export function updatePickups(dt) {
         it.t += dt;
         const dx = p.x - it.x, dy = py - it.y;
         const d = Math.hypot(dx, dy) || 1;
-        if (!it.pull && d < (it.kind === 'coin' ? mr * PICKUP_ASSIST.coinMultiplier : Math.max(40, mr * 0.6))) it.pull = true;
+        if (it.kind === 'meat' && (p.dead || p.hp >= p.maxHp)) { it.pull = false; it.speed = 0; continue; }
+        if (!it.pull && d < (it.kind === 'coin' ? mr * PICKUP_ASSIST.coinMultiplier * collection : Math.max(40, mr * 0.6))) it.pull = true;
         // 보스 관은 잠시 후 플레이어에게 끌려옴 (놓치지 않게)
         if (!it.pull && it.boss && it.t > 1.6) it.pull = true;
         if (it.pull) {
@@ -165,6 +183,11 @@ export function drawPickups(ctx, vx0, vy0, vx1, vy1) {
         }
         const img = it.kind === 'meat' ? fx.meat : it.kind === 'magnet' ? fx.magnet : it.kind === 'bomb' ? fx.bomb : fx.chest;
         const bob = Math.sin(t * 3 + i) * 2;
+        if (it.kind === 'meat') {
+            ctx.save(); ctx.strokeStyle = '#71ffae'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.ellipse(it.x, it.y-4, 19, 9, 0, 0, Math.PI*2); ctx.stroke();
+            ctx.fillStyle = '#c3ffdf'; ctx.fillRect(it.x-2,it.y-43+bob,4,12); ctx.fillRect(it.x-6,it.y-39+bob,12,4); ctx.restore();
+        }
         if (it.kind === 'chest') {
             ctx.globalCompositeOperation = 'lighter';
             const gl = glow('#ff2244', 40);
@@ -173,6 +196,6 @@ export function drawPickups(ctx, vx0, vy0, vx1, vy1) {
             ctx.globalAlpha = 1;
             ctx.globalCompositeOperation = 'source-over';
         }
-        ctx.drawImage(img, it.x - img.width / 2, it.y - img.height + bob);
+        if (img) ctx.drawImage(img, it.x - img.width / 2, it.y - img.height + bob);
     }
 }

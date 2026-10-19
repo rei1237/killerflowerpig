@@ -1,12 +1,13 @@
 // Optional field guide. Own storage key; never reads or rewrites player saves.
-export const TUTORIAL_KEY = 'kfp.tutorial.v1';
+export const TUTORIAL_KEY = 'kfp.tutorial.v2';
 const ART = 'asset/tutorial/';
 export const TUTORIAL_STEPS = [
     { label: '이동', title: '움직이면, 길이 열려요', text: '꽃돼지를 움직여 적 사이의 빈틈으로 빠져나가세요. 멈추기보다 넓게 돌아가는 것이 안전해요.', tip: 'PC · WASD / 방향키   |   모바일 · 화면을 누른 채 드래그', image: 'field-guide.webp', alt: '달리며 연꽃 총을 쏘는 꽃돼지', visual: 'move' },
-    { label: '자동 공격', title: '공격은 꽃돼지에게 맡겨요', text: '무기는 자동으로 공격해요. 공격 버튼을 누를 필요 없이, 적과 거리를 두고 이동에 집중하세요.', tip: '잠깐 쉬려면 일시정지 버튼 · PC에서는 Esc / P', image: 'field-guide.webp', alt: '민트색 연꽃 총을 발사하는 꽃돼지', visual: 'fire' },
-    { label: '아이템 조합', title: '두 장비의 장점을 하나로', text: '꽃잎포도 다른 무기처럼 획득하고 강화하는 자동 공격 아이템이에요. 레시피에 맞는 두 아이템을 필요한 레벨까지 키운 다음, 아이템 조합 화면에서 결과를 확인하고 직접 조합하세요.', tip: '조합하면 재료 두 개가 새 아이템 하나로 바뀌어요. 확인 전에는 소모되지 않아요.', image: 'field-guide.webp', alt: '연꽃 무기를 든 꽃돼지', visual: 'fire' },
-    { label: '수집과 성장', title: '젬은 성장, 코인은 준비', text: '파란 경험치 젬을 모으면 아이템을 선택할 수 있어요. 새 무기를 얻거나 보유 아이템의 레벨을 올려 이번 전투를 강화하세요. 금빛 코인은 상점에서 사용해요.', tip: '아이템 가까이 다가가면 자동으로 끌려와요', image: 'field-guide.webp', alt: '꽃돼지 주위의 파란 경험치 젬과 금빛 코인', visual: 'collect' },
-    { label: '상점', title: '다음 전투를 더 든든하게', text: '메뉴의 상점에서 모은 코인으로 영구 강화를 구매하세요. 체력, 공격력, 이동 속도를 키우고 날개 유물을 확정 구매할 수 있어요. 코인 상자는 공개된 확률로 유물 1개를 줍니다.', tip: '상자 확률·중복 보상을 먼저 확인하세요. 현금 구매는 없어요', image: 'moon-hat.webp', alt: '영냥이의 초승달 모자 강화 아이템', visual: 'shop' },
+    { label: '자동 공격', title: '공격은 꽃돼지에게 맡겨요', text: '무기는 자동으로 공격해요. 적을 짧게 클릭하거나 탭하면 사거리 안에서 그 적을 우선 조준해요. 같은 적을 다시 누르면 집중 조준을 해제해요.', tip: '드래그는 이동, 짧은 탭은 조준이에요. 적이 죽거나 너무 멀어지면 자동 조준으로 돌아와요.', image: 'field-guide.webp', alt: '민트색 연꽃 총을 발사하는 꽃돼지', visual: 'fire' },
+    { label: '아이템 조합', title: '두 장비의 장점을 하나로', text: '꽃잎포도 다른 무기처럼 획득하고 강화하는 자동 공격 아이템이에요. 레시피에 맞는 두 아이템을 필요한 레벨까지 키운 다음, 아이템 조합 화면에서 결과를 확인하고 직접 조합하세요.', tip: '전역 패시브 효과는 나중에 얻은 무기와 조합 무기에도 적용돼요. 조합은 확인한 뒤 재료를 소모해요.', image: 'field-guide.webp', alt: '연꽃 무기를 든 꽃돼지', visual: 'fire' },
+    { label: '수집과 성장', title: '젬 · 코인 · 상자는 달라요', text: '파란 경험치 젬은 레벨업에 필요해요. 레벨이 오르면 새 아이템이나 보유 아이템 강화를 선택하세요. 금빛 코인은 상점용 재화, 필드 상자는 이번 전투의 강화 보상이에요.', tip: '새 선택마다 다시 뽑기 1회와 상점 추가 횟수를 받아요. 자동 회복은 보조 아이템으로, 다친 동안 조금씩 회복해요.', image: 'field-guide.webp', alt: '꽃돼지 주위의 파란 경험치 젬과 금빛 코인', visual: 'collect' },
+    { label: '필드 상자', title: '주워서 열고, 보상을 받아요', text: '정예 적이 떨어뜨린 상자를 주우면 전투가 멈추고 회수 물자가 열려요. 열기 → 보상 확인 → 받기 순서로 진행하세요. 진화 조건을 갖추면 진화, 아니면 보유 아이템 +1레벨, 강화할 것이 없으면 코인을 받아요.', tip: '보스 상자는 더 많은 강화와 확률형 고급 강화재를 줘요. 상점 전용 펫·유물·장신구는 나오지 않아요.', image: '../items/salvage-cache.png', alt: '전투 중 정예 적에게서 얻는 회수 물자 상자', visual: 'fieldbox' },
+    { label: '상점', title: '다음 전투를 더 든든하게', text: '모은 코인으로 영구 강화와 유물을 구매하세요. STAGE 3 클리어 후에는 고급 장신구를 구매해 1개만 장착할 수 있어요. 상점의 코인 상자는 공개된 확률로 유물 1개를 줘요.', tip: '필드 상자와 상점 코인 상자는 보상이 달라요. 가격·확률·중복 보상을 확인하세요. 현금 구매는 없어요', image: 'moon-hat.webp', alt: '영냥이의 초승달 모자 강화 아이템', visual: 'shop' },
     { label: '동행 펫', title: '영냥이와 함께 출발!', text: '상점에서 영냥이를 구매하면 자동으로 동행해요. 가까운 코인을 끌어당기고, 주변 적 최대 3마리를 공격하며 체력을 회복해 줘요. STAGE 2를 클리어하면 상점에서 구매할 수 있어요.', tip: '이 안내는 메뉴와 일시정지 화면에서 다시 볼 수 있어요', image: 'yeongnyang.webp', alt: '초승달 모자를 쓴 하얀 고양이 영냥이', visual: 'pet' },
 ];
 let root, hooks = {}, index = 0, opened = false, returnFocus, doneCallback;

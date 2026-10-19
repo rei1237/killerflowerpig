@@ -15,7 +15,6 @@ import { prepareBossSheets } from './boss-sheets.js';
 import { resetBuild, snapshotBuild, restoreBuild, xpForLevel } from './progression.js';
 import { invalidateStageVisuals } from './render.js';
 import { audio } from '../core/audio.js';
-import { upgradeLevel } from '../core/save.js';
 
 const RUN_KEY = 'kfp.run.v1';
 let clearTimer = 0;
@@ -35,7 +34,7 @@ export function newRun(stage = 1) {
     G.gold = 0;
     G.kills = 0;
     G.damageBy = {};
-    G.rerolls = 2 + upgradeLevel('reroll');
+    G.rerolls = 0;
     createPlayer();
     G.weapons.push(createWeapon(STARTING_WEAPON, 0));
     // 스테이지 선택으로 중간부터 시작하면 그에 맞는 레벨 보정
@@ -120,7 +119,7 @@ export function step(dt) {
     // 레벨업 대기열 → UI
     if (G.pendingLevelUps > 0 && G.mode !== 'dead') {
         G.pendingLevelUps--;
-        emit('levelUp');
+        emit('levelUp', { choiceSessionId: `choice:${++G.choiceEventSerial}` });
         return;
     }
 

@@ -31,3 +31,23 @@ export function firingMuzzle(player, clock, dx) {
     const bob = playerBob(player,clock), s = FIRING_SPRITE;
     return { x: player.x + (flip ? -1 : 1) * (312-s.anchorX)*s.scale, y: player.y + (148-s.anchorY)*s.scale - bob };
 }
+
+// Shared by live play and the disposable guided practice scene.
+export function advancePlayerMovement(p, move, dt) {
+    const s = p.stats;
+    const mx = move.x, my = move.y;
+    p.vx = mx * s.speed;
+    p.vy = my * s.speed;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    const moving = mx !== 0 || my !== 0;
+    if (moving) {
+        const l = Math.hypot(mx, my);
+        p.facingX = mx / l; p.facingY = my / l;
+        if (Math.abs(mx) > 0.15) p.flip = mx < 0;
+    }
+    p.animT += dt;
+    const frameDur = moving ? 0.09 : 0.16;
+    if (p.animT > frameDur) { p.animT = 0; p.anim = (p.anim + 1) % 8; }
+
+}

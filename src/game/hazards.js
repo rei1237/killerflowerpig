@@ -27,6 +27,7 @@ export function spawnHazard(kind, x, y, o = {}) {
     h.len = o.len || 0;
     h.width = o.width || 0;
     h.color = o.color || '#ff1a3a';
+    h.symbol = o.symbol || null; // cosmetic only; reset on pooled reuse
     return h;
 }
 
@@ -139,6 +140,13 @@ export function drawHazards(ctx) {
             // Existing countdown only; this renderer never postpones damage.
             ctx.globalAlpha = 0.45 + k * 0.3;ctx.strokeStyle = h.color;ctx.lineWidth = 1;
             ctx.setLineDash(DASH_WARNING);ellipsePath(ctx, h, h.radius * (0.25 + k * 0.65));ctx.stroke();ctx.setLineDash(NO_DASH);
+            if (h.symbol === 'hourglass') {
+                // Financier contract: a fixed sandglass, never a flashing overlay.
+                const x = h.x, y = h.y, r = Math.min(11, h.radius * .2);
+                ctx.globalAlpha = .9;ctx.strokeStyle = '#fff0c4';ctx.lineWidth = 1.7;
+                ctx.beginPath();ctx.moveTo(x-r,y-r);ctx.lineTo(x+r,y-r);ctx.lineTo(x-r,y+r);ctx.lineTo(x+r,y+r);ctx.lineTo(x-r,y-r);ctx.stroke();
+                ctx.fillStyle = h.color;ctx.fillRect(x-r*.65,y+r-2-r*.55*k,r*1.3,2+r*.55*k);
+            }
             continue;
         }
         if (h.kind === 'tline') {

@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { G, clearWorld } from '../src/game/state.js';
-import { atlases } from '../src/core/assets.js';
+import { atlases, fx } from '../src/core/assets.js';
 import { ENEMIES, RANGED_UNLOCK_STAGE } from '../src/data/enemies.js';
 import { STAGES } from '../src/data/stages.js';
 import { supplyState } from '../src/game/supply-drops.js';
 import { spawnEnemy, hitEnemy, updateEnemies } from '../src/game/enemies.js';
-import { dropPickup, updatePickups } from '../src/game/pickups.js';
+import { dropPickup, updatePickups, drawPickups } from '../src/game/pickups.js';
 import { resetBuild, snapshotBuild, restoreBuild } from '../src/game/progression.js';
 import { currentWeights } from '../src/game/spawner.js';
 import { Boss } from '../src/game/boss.js';
@@ -15,7 +15,7 @@ const active = pool => pool.items.slice(0, pool.count);
 const field = kind => active(G.pickups).filter(pickup => pickup.kind === kind);
 const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
 
-function reset(stage = 1, hp = 100) {
+function reset(stage = 1, hp = 80) {
     clearWorld();
     G.stage = stage; G.time = 0; G.clock = 0; G.kills = 0; G.gold = 0;
     G.supplyDrought = supplyState(); G.lowQ = false; G.godMode = false;
@@ -51,120 +51,43 @@ function kill(elite = false) {
     G.enemies.release(index);
 }
 
-test('real ordinary kills carry drought to healthy heal30 and magnet60 without duplicate death rewards', () => withRandom(0.99, () => {
-    reset();
-    let killEvents = 0;
-    G.events.kill = () => killEvents++;
-    for (let count = 1; count <= 60; count++) {
-        kill();
-        assert.equal(field('meat').length, Math.floor(count / 30));
-        assert.equal(field('magnet').length, count === 60 ? 1 : 0);
-        assert.equal(field('chest').length, 0);
-        assert.equal(field('bomb').length, 0);
-        assert.equal(G.supplyDrought.heal, count % 30);
-        assert.equal(G.supplyDrought.magnet, count % 60);
-    }
-    assert.equal(G.kills, 60);
-    assert.equal(killEvents, 60);
-    assert.equal(G.gems.count, 60);
-    assert.equal(field('coin').reduce((total, coin) => total + coin.value, 0), 180);
+test('real kill compensation produces18/36 guarantees with exact coin and XP totals',()=>withRandom(.99,()=>{
+ reset();let xp=0;
+ for(let count=1;count<=36;count++){
+  const prior=G.gems.count;kill();xp+=G.gems.items[prior].value;
+  assert.equal(field('meat').length,Math.floor(count/18));
+  assert.equal(field('magnet').length,count===36?1:0);
+ }
+ assert.equal(G.kills,36);assert.equal(field('coin').reduce((n,c)=>n+c.value,0),180);
+ assert.ok(xp>0);close(G.gems.items[0].value,ENEMIES.shambler.xp*5/3);
 }));
 
-test('real low-HP kills guarantee healing at12 and recovery resets only the low-HP drought', () => withRandom(0.99, () => {
-    reset(1, 40);
-    for (let count = 1; count <= 11; count++) kill();
-    assert.deepEqual(G.supplyDrought, { heal: 11, low: 11, magnet: 11 });
-    assert.equal(field('meat').length, 0);
-    G.player.hp = 41;
-    kill();
-    assert.deepEqual(G.supplyDrought, { heal: 12, low: 0, magnet: 12 });
-    G.player.hp = 40;
-    for (let count = 1; count <= 11; count++) kill();
-    assert.equal(field('meat').length, 0);
-    kill();
-    assert.equal(field('meat').length, 1);
-    assert.deepEqual(G.supplyDrought, { heal: 0, low: 0, magnet: 24 });
+test('low HP real kills guarantee at8; elites retain their separate chest and40 coins',()=>withRandom(.99,()=>{
+ reset(1,20);for(let n=0;n<7;n++)kill();assert.equal(field('meat').length,0);
+ kill();assert.equal(field('meat').length,1);
+ const before={...G.supplyDrought};kill(true);assert.deepEqual(G.supplyDrought,before);
+ assert.equal(field('chest').length,1);assert.equal(field('coin').at(-1).value,40);
 }));
 
-test('one real ordinary kill can drop healing and magnet independently while elite kills leave drought untouched', () => {
-    reset();
-    withRandom(0.01, () => kill());
-    assert.equal(field('meat').length, 1);
-    assert.equal(field('magnet').length, 1);
-    assert.equal(field('bomb').length, 0);
-    assert.deepEqual(G.supplyDrought, { heal: 0, low: 0, magnet: 0 });
-    G.supplyDrought = { heal: 29, low: 11, magnet: 59 };
-    const drought = G.supplyDrought;
-    withRandom(0, () => kill(true));
-    assert.equal(G.supplyDrought, drought, 'elite kills do not even replace the ordinary drought state');
-    assert.deepEqual(G.supplyDrought, { heal: 29, low: 11, magnet: 59 });
-    assert.equal(field('meat').length, 1);
-    assert.equal(field('magnet').length, 1);
-    assert.equal(field('bomb').length, 0);
-    assert.equal(field('chest').length, 1);
-    assert.equal(field('coin').reduce((total, coin) => total + coin.value, 0), 27);
-});
-
-test('real field caps retain pending supplies and collection releases one slot of each kind', () => withRandom(0.99, () => {
-    reset(1, 20);
-    for (let count = 0; count < 3; count++) dropPickup('meat', 700 + count * 20, 0);
-    for (let count = 0; count < 2; count++) dropPickup('magnet', 800 + count * 20, 0);
-    G.supplyDrought = { heal: 30, low: 12, magnet: 60 };
-    for (let count = 0; count < 5; count++) kill();
-    assert.equal(field('meat').length, 3);
-    assert.equal(field('magnet').length, 2);
-    assert.deepEqual(G.supplyDrought, { heal: 30, low: 12, magnet: 60 });
-    const meat = field('meat')[0], magnet = field('magnet')[0];
-    meat.x = magnet.x = G.player.x;
-    meat.y = magnet.y = G.player.y - 14;
-    updatePickups(0);
-    assert.equal(G.player.hp, 50, 'the actual healing pickup is collected');
-    assert.equal(field('meat').length, 2);
-    assert.equal(field('magnet').length, 1);
-    assert.ok(active(G.gems).every(gem => gem.pull), 'the actual magnet pickup activates');
-    assert.deepEqual(G.supplyDrought, { heal: 30, low: 12, magnet: 60 }, 'collection does not lose pending drought');
-    kill();
-    assert.equal(field('meat').length, 3);
-    assert.equal(field('magnet').length, 2);
-    assert.deepEqual(G.supplyDrought, { heal: 0, low: 0, magnet: 0 });
+test('field cap retains pending guarantees and useful collection releases slots',()=>withRandom(.99,()=>{
+ reset(1,20);for(let n=0;n<3;n++)dropPickup('meat',700+n*20,0);
+ for(let n=0;n<2;n++)dropPickup('magnet',800+n*20,0);
+ G.supplyDrought={heal:30,low:12,magnet:60};kill();
+ assert.deepEqual(G.supplyDrought,{heal:30,low:12,magnet:60});
+ const meat=field('meat')[0],magnet=field('magnet')[0];meat.x=magnet.x=0;meat.y=magnet.y=-14;
+ updatePickups(0);assert.equal(G.player.hp,50);kill();
+ assert.equal(field('meat').length,3);assert.equal(field('magnet').length,2);
+ assert.deepEqual(G.supplyDrought,{heal:0,low:0,magnet:0});
 }));
 
-test('run snapshots clone supply drought, restore it independently and reset it for a fresh build', () => withRandom(0.99, () => {
-    reset();
-    for (let count = 0; count < 17; count++) kill();
-    const original = G.supplyDrought;
-    const snapshot = snapshotBuild();
-    assert.deepEqual(snapshot.supplyDrought, { heal: 17, low: 0, magnet: 17 });
-    assert.notEqual(snapshot.supplyDrought, original);
-    original.heal = 29;
-    assert.equal(snapshot.supplyDrought.heal, 17);
-    const persisted = JSON.parse(JSON.stringify(snapshot));
-    resetBuild();
-    assert.deepEqual(G.supplyDrought, { heal: 0, low: 0, magnet: 0 });
-    restoreBuild(persisted);
-    assert.deepEqual(G.supplyDrought, { heal: 17, low: 0, magnet: 17 });
-    assert.notEqual(G.supplyDrought, persisted.supplyDrought);
-    persisted.supplyDrought.heal = 30;
-    assert.equal(G.supplyDrought.heal, 17);
-    // A loaded run continues its guarantee rather than restarting the count.
-    G.pickups.clear();
-    for (let count = 0; count < 12; count++) kill();
-    assert.equal(field('meat').length, 0);
-    kill();
-    assert.equal(field('meat').length, 1);
-    assert.deepEqual(G.supplyDrought, { heal: 0, low: 0, magnet: 30 });
+test('JSON build reload retains fractional and legacy drought opportunity units',()=>withRandom(.99,()=>{
+ reset();for(let n=0;n<7;n++)kill();const snapshot=JSON.parse(JSON.stringify(snapshotBuild()));
+ close(snapshot.supplyDrought.heal,35/3);resetBuild();restoreBuild(snapshot);
+ close(G.supplyDrought.heal,35/3);G.player.hp=G.player.maxHp*.8;
+ for(let n=0;n<10;n++)kill();assert.equal(field('meat').length,0);kill();assert.equal(field('meat').length,1);
+ restoreBuild({...snapshot,supplyDrought:{heal:17,low:0,magnet:17}});assert.equal(G.supplyDrought.heal,17);
+ delete snapshot.supplyDrought;restoreBuild(snapshot);assert.deepEqual(G.supplyDrought,{heal:0,low:0,magnet:0});
 }));
-
-test('legacy and malformed run snapshots normalize drought without inheriting another run', () => {
-    reset();
-    const snapshot = snapshotBuild();
-    delete snapshot.supplyDrought;
-    G.supplyDrought = { heal: 29, low: 11, magnet: 59 };
-    restoreBuild(snapshot);
-    assert.deepEqual(G.supplyDrought, { heal: 0, low: 0, magnet: 0 });
-    restoreBuild({ ...snapshot, supplyDrought: { heal: 999, low: -1, magnet: NaN } });
-    assert.deepEqual(G.supplyDrought, { heal: 30, low: 0, magnet: 0 });
-});
 
 test('ranged audit: boss summons cannot introduce ranged enemies before stage5; later summons retain them', () => {
     assert.equal(RANGED_UNLOCK_STAGE, 5);
@@ -182,7 +105,7 @@ test('ranged audit: boss summons cannot introduce ranged enemies before stage5; 
             const boss = new Boss(stage);
             boss.patternSummon(10);
         });
-        assert.equal(G.enemies.count, stage === 1 ? 6 : 10);
+        assert.equal(G.enemies.count, stage === 1 ? 4 : 6);
         assert.ok(active(G.enemies).every(enemy => stage < 5 ? !enemy.def.ranged : enemy.type === 'spitter'));
     }
 });
@@ -206,4 +129,101 @@ test('ranged audit: stage5+ tables, forced/elite spawns and projectile timing re
         }
     }
     assert.equal(JSON.stringify(STAGES), before, 'table filtering and summons cannot rewrite stage data');
+}));
+
+test('walking away from three old heals cannot block a guaranteed heal near the player', () => withRandom(0.99, () => {
+    reset(1, 20);
+    for(let i=0;i<3;i++) dropPickup('meat', -4000-i*20, 0);
+    G.supplyDrought={heal:29,low:11,magnet:0};
+    kill();
+    assert.ok(field('meat').some(it=>it.x===500), 'next real kill must produce reachable healing');
+    assert.ok(field('meat').length<=3);
+}));
+
+test('full-health overlap preserves meat until it can actually heal', () => {
+    reset(1,100);
+    dropPickup('meat',0,-14);
+    updatePickups(0);
+    assert.equal(field('meat').length,1);
+    G.player.hp=65;
+    updatePickups(0);
+    assert.equal(G.player.hp,95);
+    assert.equal(field('meat').length,0);
+});
+
+
+test('guaranteed real-kill healing is drawn and collected after movement, including a restored drought', () => withRandom(0.99, () => {
+    reset(1,20);
+    for(let i=0;i<7;i++)kill();
+    const saved=JSON.parse(JSON.stringify(snapshotBuild()));
+    resetBuild();restoreBuild(saved);
+    G.player.hp=20;G.player.maxHp=100;
+    kill();
+    const meat=field('meat')[0];assert.ok(meat);
+    const calls=[];
+    const image={width:30,height:30};fx.meat=image;fx.gems=[image,image,image];
+    const ctx=new Proxy({}, {get:(o,k)=>o[k]||((...args)=>calls.push([k,...args])),set:(o,k,v)=>(o[k]=v,true)});
+    drawPickups(ctx,-500,-300,500,300);
+    assert.ok(calls.some(call=>call[0]==='drawImage'&&call[1]===image));
+    assert.ok(calls.some(call=>call[0]==='stroke'), 'healing has a distinct green ring');
+    G.player.x=meat.x;G.player.y=meat.y+14;
+    updatePickups(0);
+    assert.equal(G.player.hp,50);
+    assert.equal(field('meat').length,0);
+}));
+
+test('old visible heals remain useful while expired offscreen heals release the cap', () => withRandom(0.99, () => {
+    reset(1,80);
+    const visible=dropPickup('meat',100,0);visible.t=100;
+    for(let i=0;i<2;i++){const old=dropPickup('meat',800+i*20,0);old.t=100;}
+    G.supplyDrought={heal:29,low:0,magnet:0};kill();
+    assert.ok(field('meat').includes(visible));
+    assert.equal(field('meat').length,2);
+    assert.ok(field('meat').some(it=>it.x===500));
+}));
+
+test('damage-over-time kills feed the same healing guarantee', () => withRandom(0.99, () => {
+    reset(1,20);G.supplyDrought={heal:29,low:11,magnet:0};
+    const enemy=spawnEnemy('shambler',200,0);
+    enemy.hp=1;enemy.bleedT=1;enemy.bleed=100;
+    updateEnemies(.1);
+    assert.equal(enemy.alive,false);assert.equal(field('meat').length,1);
+    updateEnemies(.01);assert.equal(field('meat').length,1);
+}));
+
+test('full-health real kills cannot create healing even with winning rolls and pending pity',()=>withRandom(.01,()=>{
+ reset(1,100);G.supplyDrought={heal:30,low:12,magnet:0};
+ for(let i=0;i<40;i++)kill();
+ assert.equal(field('meat').length,0);
+ G.player.hp=20;kill();assert.equal(field('meat').length,1);
+}));
+
+test('actual companion kills use the same low-HP supply guarantee', async () => {
+    const {save}=await import('../src/core/save.js');
+    const {resetPets,updatePets}=await import('../src/game/pets.js');
+    const previous={inventory:save.inventory,equippedPet:save.equippedPet};
+    try {
+        save.inventory=['pet_yeongnyang'];save.equippedPet='pet_yeongnyang';
+        withRandom(.99,()=>{
+            reset(1,20);resetPets();G.player.stats.might=1;
+            G.supplyDrought={heal:29,low:11,magnet:0};
+            const enemy=spawnEnemy('shambler',50,0);enemy.hp=1;
+            updatePets(.7);
+            assert.equal(enemy.alive,false);assert.equal(field('meat').length,1);
+            assert.equal(G.damageBy.pet_yeongnyang>0,true);
+        });
+    } finally {Object.assign(save,previous);resetPets();}
+});
+
+test('abandoned magnet cap releases its exact36-kill guarantee while visible old magnets remain',()=>withRandom(.99,()=>{
+ reset(1,80);
+ dropPickup('magnet',-4000,0);dropPickup('magnet',-4020,0);
+ for(let i=0;i<35;i++)kill();
+ assert.equal(field('magnet').length,0);
+ kill();assert.equal(field('magnet').length,1);
+ const visible=field('magnet')[0];visible.x=100;visible.t=100;
+ const old=dropPickup('magnet',800,0);old.t=100;
+ G.supplyDrought.magnet=59;kill();
+ assert.equal(field('magnet').length,2);assert.ok(field('magnet').includes(visible));
+ assert.ok(field('magnet').some(it=>it.x===500));
 }));

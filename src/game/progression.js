@@ -1,3 +1,6 @@
+import { FUSION_RECIPES } from '../data/fusions.js';
+import { upgradeLevel } from '../core/save.js';
+import { bossRewardTier } from '../data/boss-rewards.js';
 import { supplyState } from './supply-drops.js';
 // 경험치/레벨업, 레벨업 카드 생성, 무기·패시브 적용, 진화, 상자 보상
 import { G, emit } from './state.js';
@@ -5,6 +8,71 @@ import { WEAPONS, PASSIVES, MAX_WEAPONS, MAX_PASSIVES, WEAPON_MAX_LEVEL, PASSIVE
 import { recomputeStats, healPlayer } from './player.js';
 import { createWeapon } from './weapons.js';
 import { audio } from '../core/audio.js';
+
+function copyChoiceSession(session) {
+    const copy = { ...session };
+    for (const key of ['eligibleIds', 'offeredIds']) if (Array.isArray(session[key])) copy[key] = [...new Set(session[key].filter(id => WEAPONS[id] || PASSIVES[id]))];
+    if (Array.isArray(session.choices)) copy.choices = session.choices.slice(0, 3).filter(c => c && (
+        (c.kind === 'weapon' && WEAPONS[c.id] && Number.isSafeInteger(c.level) && c.level >= 1 && c.level <= WEAPON_MAX_LEVEL) ||
+        (c.kind === 'passive' && PASSIVES[c.id] && Number.isSafeInteger(c.level) && c.level >= 1 && c.level <= PASSIVE_MAX_LEVEL) ||
+        (c.kind === 'heal' && c.id === 'meat') || (c.kind === 'gold' && c.id === 'gold')
+    )).map(c => {
+        const card = { kind: c.kind, id: c.id };
+        if (Number.isSafeInteger(c.level)) card.level = c.level;
+        for (const key of ['name', 'icon', 'desc', 'evoHint']) if (typeof c[key] === 'string') card[key] = c[key].slice(0, 500);
+        if (c.isNew) card.isNew = true;
+        if (Number.isFinite(c.weight)) card.weight = c.weight;
+        return card;
+    });
+    return copy;
+}
+
+// Session budget is run-local. Reopening and replaying an event never replenish it.
+export function beginChoiceSession(requestId) {
+    if (G.choiceSession && !G.choiceSession.closed) return !requestId || requestId === G.choiceSession.id ? copyChoiceSession(G.choiceSession) : null;
+    const id = requestId ?? `choice:${(G.choiceEventSerial || 0) + 1}`;
+    const serial = /^choice:([1-9]\d*)$/.exec(id)?.[1];
+    if (!serial || !Number.isSafeInteger(Number(serial))) return null;
+    const n = Number(serial);
+    if (n <= (G.choiceClosedThrough || 0)) return { id, closed: true, remaining: 0, revision: 0, budget: 0 };
+    G.choiceEventSerial = Math.max(G.choiceEventSerial || 0, n);
+    const budget = 1 + upgradeLevel('reroll');
+    G.choiceSession = { id, revision: 0, budget, remaining: budget, closed: false };
+    G.rerolls = budget;
+    return copyChoiceSession(G.choiceSession);
+}
+export function consumeChoiceReroll(id, revision) {
+    const s = G.choiceSession;
+    if (!s || s.closed || s.id !== id || s.revision !== revision || s.remaining <= 0) return { ok: false };
+    s.remaining--; s.revision++; G.rerolls = s.remaining;
+    return { ok: true, session: copyChoiceSession(s) };
+}
+export function finishChoiceSession(id) {
+    const s = G.choiceSession;
+    if (!s || s.closed || s.id !== id) return false;
+    const offered = new Set(s.offeredIds || []);
+    for (const itemId of s.eligibleIds || []) {
+        if (weaponOf(itemId) || G.passives[itemId]) { delete G.choiceAbsence[itemId]; continue; }
+        G.choiceAbsence[itemId] = offered.has(itemId) ? 0 : Math.min(5, (G.choiceAbsence[itemId] || 0) + 1);
+    }
+    s.closed = true;
+    G.choiceClosedThrough = Math.max(G.choiceClosedThrough || 0, Number(id.split(':')[1]));
+    return true;
+}
+function restoreChoiceState(value) {
+    G.choiceAbsence = {};
+    for (const [id, misses] of Object.entries(value.choiceAbsence || {})) {
+        if ((WEAPONS[id] && !WEAPONS[id].fusionOnly || PASSIVES[id]) && Number.isSafeInteger(misses)) G.choiceAbsence[id] = Math.max(0, Math.min(5, misses));
+    }
+    G.choiceEventSerial = Math.max(0, Number.isSafeInteger(value.choiceEventSerial) ? value.choiceEventSerial : 0);
+    G.choiceClosedThrough = Math.min(G.choiceEventSerial, Math.max(0, Number.isSafeInteger(value.choiceClosedThrough) ? value.choiceClosedThrough : 0));
+    G.choiceSession = null;
+    const s = value.choiceSession;
+    if (s && /^choice:[1-9]\d*$/.test(s.id) && Number(s.id.split(':')[1]) <= G.choiceEventSerial && Number.isSafeInteger(s.budget) && s.budget >= 1 && Number.isSafeInteger(s.remaining) && s.remaining >= 0 && s.remaining <= s.budget && Number.isSafeInteger(s.revision) && s.revision >= 0) {
+        G.choiceSession = copyChoiceSession({ ...s, id:s.id, budget:s.budget, remaining:s.remaining, revision:s.revision, closed:!!s.closed || Number(s.id.split(':')[1]) <= G.choiceClosedThrough });
+    }
+    G.rerolls = G.choiceSession?.remaining ?? 0;
+}
 
 export function xpForLevel(lv) {
     return Math.round(4 + (lv - 1) * 4 + Math.max(0, lv - 20) * 7 + Math.max(0, lv - 40) * 12);
@@ -61,12 +129,20 @@ function candidates() {
             if (!w.evolved && WEAPONS[w.id].evolve?.with === c.id) { c.weight += 2; c.evoHint = WEAPONS[w.id].evolve.name; }
         }
     }
+    for (const c of out) {
+        if (c.kind === 'weapon' && WEAPONS[c.id].fusionOnly) { c.weight *= 0.25; continue; }
+        if (!c.isNew) continue;
+        c.weight *= 1.6 * (1 + 0.15 * Math.min(5, Math.max(0, G.choiceAbsence?.[c.id] || 0)));
+        if (c.kind === 'weapon' && FUSION_RECIPES.some(recipe => !weaponOf(recipe.output) && recipe.inputs.some(input => input.id === c.id) && recipe.inputs.some(input => input.id !== c.id && weaponOf(input.id)))) c.weight *= 1.35;
+    }
     return out;
 }
 
 export function rollChoices(n = 3) {
     const pool = candidates();
     const picks = [];
+    const session = G.choiceSession && !G.choiceSession.closed ? G.choiceSession : null;
+    if (session) session.eligibleIds = [...new Set([...(session.eligibleIds || []), ...pool.filter(c => c.isNew).map(c => c.id)])];
     // 세 번째 레벨업(Lv.4)에는 미보유 연꽃 가시를 한 자리 보장한다.
     // 한 번에 여러 레벨이 올라도 현재 처리 중인 선택 화면의 레벨을 사용한다.
     // 후보 풀 안에서만 고르므로 금지·최대 레벨·무기 슬롯 제한을 우회하지 않는다.
@@ -74,6 +150,23 @@ export function rollChoices(n = 3) {
     if (n > 0 && choiceLevel === 4) {
         const thorns = pool.findIndex(c => c.id === 'thorns' && c.isNew);
         if (thorns >= 0) picks.push(pool.splice(thorns, 1)[0]);
+    }
+    // Offer automatic regeneration before early passive slots fill. This is an
+    // offer guarantee only: never bypass bans, slot limits, max level or ownership.
+    const regenProtected = choiceLevel === 3 || (choiceLevel >= 5 && choiceLevel % 5 === 0) || Object.keys(G.passives).length === MAX_PASSIVES - 1;
+    if (picks.length < n && regenProtected) {
+        const regen = pool.findIndex(c => c.kind === 'passive' && c.id === 'regen' && c.isNew);
+        if (regen >= 0) picks.push(pool.splice(regen, 1)[0]);
+    }
+    // Three-card screens retain a normal growth route alongside discovery.
+    // Guaranteed thorns/regen occupy at most two slots; fused upgrades stay rare.
+    if (n >= 3 && picks.length < n) {
+        const growth = pool.filter(c => !c.isNew && (c.kind === 'passive' || c.kind === 'weapon' && !WEAPONS[c.id].fusionOnly));
+        if (growth.length) {
+            let r = Math.random() * growth.reduce((sum, c) => sum + c.weight, 0);
+            const chosen = growth.find(c => (r -= c.weight) < 0) || growth[growth.length - 1];
+            picks.push(pool.splice(pool.indexOf(chosen), 1)[0]);
+        }
     }
     while (picks.length < n && pool.length) {
         let total = 0;
@@ -87,6 +180,7 @@ export function rollChoices(n = 3) {
         picks.push({ kind: 'heal', id: 'meat', name: '야전 응급 키트', icon: '🍖', desc: '체력 50 회복' });
         picks.push({ kind: 'gold', id: 'gold', name: '피 묻은 금화', icon: '🪙', desc: '골드 +40' });
     }
+    if (session) session.offeredIds = [...new Set([...(session.offeredIds || []), ...picks.map(c => c.id)])];
     return picks;
 }
 
@@ -97,7 +191,11 @@ export function applyChoice(c) {
         if (w) { if (w.level >= WEAPON_MAX_LEVEL || c.level !== w.level + 1) return false; w.level++; }
         else { if (G.weapons.length >= MAX_WEAPONS || WEAPONS[c.id].fusionOnly || c.level !== 1) return false; G.weapons.push(createWeapon(c.id, G.weapons.length)); }
     } else if (c.kind === 'passive') {
-        G.passives[c.id] = (G.passives[c.id] || 0) + 1;
+        if (!PASSIVES[c.id]) return false;
+        const level = G.passives[c.id] || 0;
+        if (level >= PASSIVE_MAX_LEVEL || c.level !== level + 1) return false;
+        if (!level && Object.keys(G.passives).length >= MAX_PASSIVES) return false;
+        G.passives[c.id] = level + 1;
         recomputeStats();
     } else if (c.kind === 'heal') {
         healPlayer(50);
@@ -105,6 +203,7 @@ export function applyChoice(c) {
         G.gold += 40;
     }
     audio.sfx('levelup');
+    return true;
 }
 
 export function evolvable() {
@@ -112,7 +211,7 @@ export function evolvable() {
 }
 
 // 상자 보상: 진화 우선 → 보유 아이템 레벨업 → 골드
-export function rollChest(count) {
+export function rollChest(count, random = Math.random) {
     const rewards = [];
     for (let i = 0; i < count; i++) {
         const evo = evolvable().filter(w => !rewards.some(r => r.id === w.id && r.kind === 'evolve'));
@@ -125,9 +224,10 @@ export function rollChest(count) {
         }
         const ups = candidates().filter(c => !c.isNew);
         if (ups.length) {
-            const c = ups[(Math.random() * ups.length) | 0];
+            const c = ups[(random() * ups.length) | 0];
+            const fromLevel = c.level - 1;
             applyChoice(c);
-            rewards.push({ ...c, desc: `Lv.${c.level} — ${c.desc}` });
+            rewards.push({ ...c, fromLevel, levelsGained: 1, desc: `Lv.${c.level} — ${c.desc}` });
         } else {
             const g = 30 + G.stage * 10;
             G.gold += g;
@@ -137,7 +237,39 @@ export function rollChest(count) {
     return rewards;
 }
 
+// The UI gives one stable ID to an opened boss chest. Retrying that session
+// returns its original result without rolling, upgrading or adding coins again.
+const bossRewardReceipts = new Map();
+export function rollBossChest(requestId, random = Math.random) {
+    if (typeof requestId !== 'string' || !requestId.length || requestId.length > 160) return { ok: false, code: 'INVALID_REQUEST' };
+    if (bossRewardReceipts.has(requestId)) return { ...JSON.parse(JSON.stringify(bossRewardReceipts.get(requestId))), duplicate: true };
+    const tier = bossRewardTier(G.stage);
+    const premiumWon = random() < tier.premiumChance;
+    const rewards = rollChest(tier.guaranteedCount, random);
+    if (premiumWon) {
+        const eligible = G.weapons.filter(w => WEAPONS[w.id] && w.level < WEAPON_MAX_LEVEL && !G.banished.has(w.id));
+        if (eligible.length) {
+            const w = eligible[Math.min(eligible.length - 1, Math.floor(random() * eligible.length))];
+            const fromLevel = w.level;
+            w.level = Math.min(WEAPON_MAX_LEVEL, w.level + tier.premiumLevels);
+            const def = WEAPONS[w.id], name = w.evolved && def.evolve ? def.evolve.name : def.name;
+            rewards.push({ kind: 'weapon', id: w.id, name, icon: def.icon, fromLevel, level: w.level,
+                levelsGained: w.level - fromLevel, premium: true, rewardName: '연꽃 정밀 강화재', rewardIconId: 'premium_upgrade',
+                desc: `${name} Lv.${fromLevel} → Lv.${w.level} · +${w.level - fromLevel} 강화, 최대 8` });
+        } else {
+            G.gold += tier.premiumFallbackCoins;
+            rewards.push({ kind: 'gold', id: 'gold', name: '만렙 회수금', rewardName: '만렙 회수금', rewardIconId: 'gold', icon: '🪙', premium: true,
+                amount: tier.premiumFallbackCoins, desc: `강화 가능한 무기 없음 · 골드 +${tier.premiumFallbackCoins}` });
+        }
+    }
+    const result = { ok: true, rewards, tier, premiumWon, duplicate: false };
+    bossRewardReceipts.set(requestId, JSON.parse(JSON.stringify(result)));
+    return result;
+}
+
 export function resetBuild() {
+    restoreChoiceState({});
+    bossRewardReceipts.clear();
     G.supplyDrought = supplyState();
     G.fusionRevision = (G.fusionRevision || 0) + 1;
     G.weapons = [];
@@ -152,6 +284,9 @@ export function resetBuild() {
 // 스테이지 시작 시점의 빌드 스냅샷 (사망 시 해당 스테이지 재도전용 / 이어하기 저장)
 export function snapshotBuild() {
     return {
+        choiceAbsence: { ...G.choiceAbsence },
+        choiceEventSerial: G.choiceEventSerial, choiceClosedThrough: G.choiceClosedThrough,
+        choiceSession: G.choiceSession ? copyChoiceSession(G.choiceSession) : null,
         supplyDrought: supplyState(G.supplyDrought),
         stage: G.stage,
         level: G.level, xp: G.xp,
@@ -171,9 +306,13 @@ export function restoreBuild(s) {
     G.xp = s.xp;
     G.xpNext = xpForLevel(s.level);
     G.weapons = s.weapons.filter(w => WEAPONS[w.id]).slice(0, MAX_WEAPONS).map((w, i) => Object.assign(createWeapon(w.id, i), { level: Math.max(1, Math.min(WEAPON_MAX_LEVEL, Number.isSafeInteger(w.level) ? w.level : 1)), evolved: !!w.evolved && !!WEAPONS[w.id].evolve }));
-    G.passives = { ...s.passives };
+    G.passives = {};
+    for (const id of Object.keys(PASSIVES)) {
+        const level = s.passives?.[id];
+        if (Number.isSafeInteger(level) && level > 0 && Object.keys(G.passives).length < MAX_PASSIVES) G.passives[id] = Math.min(PASSIVE_MAX_LEVEL, level);
+    }
     G.gold = s.gold;
-    G.rerolls = s.rerolls;
+    restoreChoiceState(s);
     G.kills = s.kills || 0;
     G.pendingLevelUps = 0;
     recomputeStats(true);

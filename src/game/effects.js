@@ -94,6 +94,7 @@ export function damageText(x, y, value, crit = false, color) {
     t.x = x + rand(-6, 6); t.y = y - 10; t.vy = -45;
     t.text = String(Math.round(value));
     t.life = crit ? 0.8 : 0.55; t.max = t.life;
+    t.big = false; // Pooled floatText objects must not retain their larger font.
     t.crit = crit; t.color = color || (crit ? '#ff2a4a' : '#ffffff');
 }
 
@@ -155,24 +156,35 @@ export function updateEffects(dt) {
 export function drawDecals(ctx, vx0, vy0, vx1, vy1) {
     const ds = G.decals;
     const now = G.clock;
-    for (let i = 0; i < ds.length; i++) {
-        const d = ds[i];
+    let drawn = 0;
+    for (let i = 0; i < ds.length && drawn < G.visuals.decalDraws; i++) {
+        const d = ds[(G.decalHead - 1 - i + ds.length * 2) % ds.length];
         const w = d.img.width * d.s, h = d.img.height * d.s;
         if (d.x + w < vx0 || d.x - w > vx1 || d.y + h < vy0 || d.y - h > vy1) continue;
         const age = now - d.born;
         ctx.globalAlpha = age < 0.15 ? age / 0.15 : (age > 40 ? Math.max(0.25, 1 - (age - 40) / 40) : 0.9);
         ctx.drawImage(d.img, d.x - w / 2, d.y - h / 2, w, h);
+        drawn++;
     }
     ctx.globalAlpha = 1;
 }
 
+const normalParticles = [], lightParticles = [];
 export function drawParticles(ctx, vx0, vy0, vx1, vy1) {
     const ps = G.particles;
+    normalParticles.length = lightParticles.length = 0;
+    // Pick the newest visible decorations once. Their lifetime and simulation
+    // stay untouched, and the reusable lists allocate no per-frame objects.
+    let selected = 0;
+    for (let i = ps.count - 1; i >= 0 && selected < G.visuals.particleDraws; i--) {
+        const p = ps.items[i], margin = p.size * 4, py = p.y - (p.z || 0);
+        if (p.x + margin < vx0 || p.x - margin > vx1 || py + margin < vy0 || py - margin > vy1) continue;
+        (p.kind === P_SPARK || p.kind === P_EMBER ? lightParticles : normalParticles).push(p);
+        selected++;
+    }
     // 1) 피/살점/연기 (일반 합성)
-    for (let i = 0; i < ps.count; i++) {
-        const p = ps.items[i];
-        if (p.kind === P_SPARK || p.kind === P_EMBER) continue;
-        if (p.x < vx0 || p.x > vx1 || p.y < vy0 || p.y > vy1) continue;
+    for (let i = 0; i < normalParticles.length; i++) {
+        const p = normalParticles[i];
         const a = p.life / p.max;
         ctx.fillStyle = p.color;
         if (p.kind === P_SMOKE) {
@@ -187,21 +199,24 @@ export function drawParticles(ctx, vx0, vy0, vx1, vy1) {
         }
     }
     // 2) 불꽃/잉걸 (가산 합성, 사전 렌더 글로우)
-    ctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < ps.count; i++) {
-        const p = ps.items[i];
-        if (p.kind !== P_SPARK && p.kind !== P_EMBER) continue;
-        if (p.x < vx0 || p.x > vx1 || p.y < vy0 || p.y > vy1) continue;
+    ctx.globalCompositeOperation = G.visuals.additiveParticles ? 'lighter' : 'source-over';
+    for (let i = 0; i < lightParticles.length; i++) {
+        const p = lightParticles[i];
         ctx.globalAlpha = p.life / p.max;
-        const g = glow(p.color, 16);
-        const s = p.size * 4;
-        ctx.drawImage(g, p.x - s, p.y - s, s * 2, s * 2);
+        if (G.visuals.additiveParticles) {
+            const g = glow(p.color, 16);
+            const s = p.size * 4;
+            ctx.drawImage(g, p.x - s, p.y - s, s * 2, s * 2);
+        } else {
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
+        }
     }
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
 }
 
-export function drawTexts(ctx) {
+export function drawTexts(ctx, vx0 = -Infinity, vy0 = -Infinity, vx1 = Infinity, vy1 = Infinity) {
     const ts = G.texts;
     if (!ts.count) return;
     ctx.textAlign = 'center';
@@ -211,6 +226,8 @@ export function drawTexts(ctx) {
     let lastFont = '';
     for (let i = 0; i < ts.count; i++) {
         const t = ts.items[i];
+        const halfWidth = String(t.text).length * (t.big ? 8 : t.crit ? 7 : 5);
+        if (t.x + halfWidth < vx0 || t.x - halfWidth > vx1 || t.y + 16 < vy0 || t.y - 16 > vy1) continue;
         const a = Math.min(1, (t.life / t.max) * 2);
         const font = t.big ? 'bold 15px "Press Start 2P", monospace' : (t.crit ? 'bold 13px "Press Start 2P", monospace' : '9px "Press Start 2P", monospace');
         if (font !== lastFont) { ctx.font = font; lastFont = font; }

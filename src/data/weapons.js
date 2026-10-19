@@ -82,7 +82,7 @@ export const WEAPONS = {
     gas: {
         name: '독가스 수류탄', icon: '☣️', color: '#7dff4a',
         desc: '독구름이 적을 느리게 하고 녹인다.',
-        base: { dmg: 3, cd: 4.5, amount: 1, speed: 1, duration: 4, area: 1, radius: 70, tick: 0.4, slow: 0.4 },
+        base: { dmg: 3, cd: 4.5, amount: 1, speed: 1, duration: 4, area: 1, radius: 98, tick: 0.4, slow: 0.4 },
         levels: [
             { area: 0.15, t: '범위 +15%' }, { dmg: 2, t: '피해 +2' }, { duration: 0.25, t: '지속 +25%' },
             { amount: 1, t: '수류탄 +1' }, { slow: 0.1, t: '둔화 +10%' }, { cd: -0.15, t: '재사용 -15%' },
@@ -115,7 +115,7 @@ export const PASSIVES = {
     pollen: { name: '꽃가루', icon: '🌼', desc: '재사용 대기시간 -7%', per: '쿨타임 -7%' },
     whet: { name: '날 연마', icon: '🪓', desc: '모든 피해 +10%', per: '피해 +10%' },
     heart: { name: '썩은 심장', icon: '🫀', desc: '최대 체력 +20', per: '최대 HP +20' },
-    regen: { name: '재생하는 살점', icon: '🩸', desc: '초당 체력 +0.3 회복', per: '재생 +0.3/s' },
+    regen: { name: '자동 회복 · 재생하는 살점', icon: '🩸', desc: '전투 중 초당 체력 +0.3 자동 회복 (최대 Lv.5)' , per: '재생 +0.3/s' },
     nose: { name: '자석 코', icon: '🐽', desc: '경험치 획득 범위 +30%', per: '범위 +30%' },
     madness: { name: '광기', icon: '🌀', desc: '이동 속도 +7%', per: '이속 +7%' },
     hide: { name: '철갑 피부', icon: '🛡️', desc: '받는 피해 -1 (방어)', per: '방어 +1' },

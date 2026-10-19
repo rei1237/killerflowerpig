@@ -1,9 +1,9 @@
 import { drawPets } from './pets.js';
 // 월드 렌더링. 캔버스 1장, 레이어 순서로 그리며 화면 밖 객체는 컬링.
-import { G, VIEW_H } from './state.js';
+import { G, VIEW_H, setVisualTier } from './state.js';
 import { STAGES } from '../data/stages.js';
 import { images, fx, makeCanvas, makeGroundTile, vignette, hurtEdge, glow } from '../core/assets.js';
-import { goreProfile } from '../core/settings.js';
+import { settings, goreProfile, onSettingsChange } from '../core/settings.js';
 import { input } from '../core/input.js';
 import { drawDecals, drawParticles, drawTexts } from './effects.js';
 import { drawHazards } from './hazards.js';
@@ -12,33 +12,86 @@ import { drawEnemy, drawEnemyShots } from './enemies.js';
 import { drawPlayer } from './player.js';
 import { drawShots } from './weapons.js';
 import { drawHUD } from '../ui/hud.js';
+import { focusedTarget, tapFocusAt } from './targeting.js';
 
 let canvas, ctx;
 let backdrop = null;
 let groundPattern = null;
 let groundStage = 0;
-export const screen = { w: 0, h: 0, pr: 1, zoom: 1, cssW: 0, cssH: 0 };
+let frameValid = false, framePlayer = null, frameClock = -1, frameMode = '', frameStage = -1, frameJoy = false, frameVisuals;
+let costStart = 0, costSum = 0, costSamples = 0, slowWindows = 0, fastWindows = 0, lastTierChange = -Infinity;
+export const screen = { w: 0, h: 0, pr: 1, zoom: 1, cssW: 0, cssH: 0, worldTx: 0, worldTy: 0 };
+
+onSettingsChange(() => { frameValid = false; costStart = costSum = costSamples = slowWindows = fastWindows = 0; });
+
+// Caller measures only render CPU time. Conservative auto-mode fallback with
+// separate degradation/recovery windows; no inference about actual display FPS.
+export function observeRenderCost(renderMs, nowMs = performance.now()) {
+    if (settings.quality !== 'auto' || G.paused || G.mode === 'idle' || document.hidden || !Number.isFinite(renderMs) || renderMs < 0) {
+        costStart = costSum = costSamples = slowWindows = fastWindows = 0;
+        return;
+    }
+    if (!costSamples) costStart = nowMs;
+    costSum += Math.min(renderMs, 100);
+    costSamples++;
+    if (nowMs - costStart < 1000 || costSamples < 30) return;
+    const mean = costSum / costSamples;
+    costStart = costSum = costSamples = 0;
+    slowWindows = mean > 12 ? slowWindows + 1 : 0;
+    fastWindows = mean < 5 ? fastWindows + 1 : 0;
+    if (nowMs - lastTierChange < 8000) return;
+    const base = G.lowQ ? 1 : 0;
+    const tier = G.visuals.tier;
+    const next = slowWindows >= 2 ? Math.min(2, tier + 1) : fastWindows >= 5 ? Math.max(base, tier - 1) : tier;
+    if (next === tier) return;
+    setVisualTier(next);
+    lastTierChange = nowMs;
+    slowWindows = fastWindows = 0;
+    resize();
+}
 
 export function initRender(c) {
     canvas = c;
     ctx = canvas.getContext('2d', { alpha: false });
     resize();
+    input.onTap = (x, y) => {
+        const point = clientToWorld(x, y);
+        if (!point || !input.enabled) return;
+        tapFocusAt(point.x, point.y, 8 / (screen.zoom / screen.pr));
+        frameValid = false;
+    };
+}
+
+// Invert the exact last rendered world transform, including camera/shake and
+// CSS scaling. Client coordinates are CSS pixels; DPR must never be counted twice.
+export function clientToWorld(clientX, clientY) {
+    if (!canvas || !screen.zoom) return null;
+    const rect = canvas.getBoundingClientRect?.() || { left: 0, top: 0, width: screen.cssW, height: screen.cssH };
+    if (!rect.width || !rect.height) return null;
+    return { x: ((clientX - rect.left) * canvas.width / rect.width - screen.worldTx) / screen.zoom,
+        y: ((clientY - rect.top) * canvas.height / rect.height - screen.worldTy) / screen.zoom };
 }
 
 export function resize() {
-    const cssW = window.innerWidth, cssH = window.innerHeight;
+    if (!canvas) return;
+    const cssW = Math.max(1, window.innerWidth), cssH = Math.max(1, window.innerHeight);
     const dpr = window.devicePixelRatio || 1;
-    const pr = G.lowQ ? Math.min(dpr, 1) : Math.min(dpr, 2);
+    const pr = Math.min(dpr, G.visuals.maxDpr);
     screen.cssW = cssW; screen.cssH = cssH; screen.pr = pr;
     screen.w = canvas.width = Math.round(cssW * pr);
     screen.h = canvas.height = Math.round(cssH * pr);
     canvas.style.width = cssW + 'px';
     canvas.style.height = cssH + 'px';
     // 짧은 변 기준으로 월드 600 단위가 보이도록 → 가로/세로·기기와 무관하게 비슷한 난이도
-    screen.zoom = Math.min(screen.w, screen.h) / VIEW_H;
-    G.view.w = screen.w / screen.zoom;
-    G.view.h = screen.h / screen.zoom;
+    // Logical view stays identical when raster resolution changes.
+    const logicalZoom = Math.min(cssW, cssH) / VIEW_H;
+    screen.zoom = logicalZoom * pr;
+    G.view.w = cssW / logicalZoom;
+    G.view.h = cssH / logicalZoom;
+    screen.worldTx = (G.view.w / 2 - G.camera.x) * screen.zoom;
+    screen.worldTy = (G.view.h / 2 - G.camera.y) * screen.zoom;
     backdrop = null;
+    frameValid = false;
 }
 
 function buildBackdrop() {
@@ -67,23 +120,25 @@ function ensureGround() {
     groundStage = G.stage;
 }
 
-export function invalidateStageVisuals() { backdrop = null; groundPattern = null; }
+export function invalidateStageVisuals() { backdrop = null; groundPattern = null; frameValid = false; }
 
 const drawList = [];
 const byY = (a, b) => a.y - b.y;
 
 export function render(dt) {
-    if (!ctx) return;
+    if (!ctx || document.hidden) return;
     const cam = G.camera;
     const p = G.player;
-    if (!backdrop) buildBackdrop();
-    ensureGround();
+    const frozen = G.paused || G.mode === 'idle';
+    if (frozen && frameValid && framePlayer === p && frameClock === G.clock && frameMode === G.mode && frameStage === G.stage && frameJoy === input.joy.active && frameVisuals === G.visuals) return;
+    frameValid = true; framePlayer = p; frameClock = G.clock; frameMode = G.mode; frameStage = G.stage; frameJoy = input.joy.active; frameVisuals = G.visuals;
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
     // 플레이 중에는 불투명 바닥이 화면 전체를 덮으므로 배경 그림은 생략 (전체 화면 합성 1회 절약)
-    if (!p) { ctx.drawImage(backdrop, 0, 0); return; }
+    if (!p) { if (!backdrop) buildBackdrop(); ctx.drawImage(backdrop, 0, 0); return; }
+    ensureGround();
 
     // 카메라 (부드럽게 추적 + 흔들림)
     const k = Math.min(1, dt * 10);
@@ -96,7 +151,9 @@ export function render(dt) {
     const hw = G.view.w / 2, hh = G.view.h / 2;
     const vx0 = cam.x - hw - 60, vx1 = cam.x + hw + 60;
     const vy0 = cam.y - hh - 60, vy1 = cam.y + hh + 120;
-    ctx.setTransform(z, 0, 0, z, (hw - cam.x + sx) * z, (hh - cam.y + sy) * z);
+    screen.worldTx = (hw - cam.x + sx) * z;
+    screen.worldTy = (hh - cam.y + sy) * z;
+    ctx.setTransform(z, 0, 0, z, screen.worldTx, screen.worldTy);
 
     // 1. 바닥
     ctx.fillStyle = groundPattern;
@@ -144,20 +201,24 @@ export function render(dt) {
     drawPets(ctx, images.petYeongnyang);
 
     // 7. 투사체
-    drawEnemyShots(ctx, fx);
     drawShots(ctx);
+    // Hostile projectiles stay legible above friendly beam effects.
+    drawEnemyShots(ctx, fx);
 
     // 8~9. 파티클, 숫자
     drawParticles(ctx, vx0, vy0, vx1, vy1);
-    drawTexts(ctx);
+    drawTexts(ctx, vx0, vy0, vx1, vy1);
+    drawFocusMarker(vx0, vy0, vx1, vy1);
 
     // 플레이어 주변 약한 빛 (가산)
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = 0.12;
-    const lg = glow('#ff8fb0', 64);
-    ctx.drawImage(lg, p.x - 110, p.y - 120, 220, 200);
-    ctx.globalAlpha = 1;
-    ctx.globalCompositeOperation = 'source-over';
+    if (G.visuals.playerGlow) {
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.12;
+        const lg = glow('#ff8fb0', 64);
+        ctx.drawImage(lg, p.x - 110, p.y - 120, 220, 200);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+    }
 
     // ---- 화면 공간 ----
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -195,6 +256,23 @@ export function render(dt) {
 
     drawHUD(ctx, screen);
     drawJoystick();
+}
+
+function drawFocusMarker(vx0, vy0, vx1, vy1) {
+    const target = focusedTarget();
+    if (!target || target.x < vx0 || target.x > vx1 || target.y < vy0 || target.y > vy1) return;
+    const unit = screen.pr / screen.zoom;
+    const radius = Math.max(12, target.radius || 16) + 4 * unit;
+    const label = `집중 · ${(target.def?.name || (target === G.boss ? '보스' : '적')).slice(0, 18)}`;
+    ctx.save(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = '#ffe5a3'; ctx.lineWidth = 2 * unit;
+    ctx.beginPath(); ctx.ellipse(target.x, target.y, radius, radius * 0.42, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.font = `bold ${11 * unit}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const width = ctx.measureText(label).width + 12 * unit;
+    const top = target.y - (target.radius || 16) * 2 - 18 * unit;
+    ctx.fillStyle = '#11172ee8'; ctx.fillRect(target.x - width / 2, top - 8 * unit, width, 16 * unit);
+    ctx.fillStyle = '#ffe5a3'; ctx.fillText(label, target.x, top);
+    ctx.restore();
 }
 
 function drawJoystick() {

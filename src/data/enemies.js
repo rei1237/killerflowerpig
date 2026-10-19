@@ -20,6 +20,9 @@ export const DEATH_CLOUD_UNLOCK_STAGE = 5;
 // All ordinary ranged spawn routes, including elite/forced/summoned mobs.
 export const RANGED_UNLOCK_STAGE = 5;
 
+// Fewer bodies, sturdier individual enemies; movement/contact damage are unchanged.
+export const ENEMY_TOUGHNESS_MULTIPLIER = 1.45;
+
 const BEGINNER_SCALING = {
     1: { hp: 0.85, speed: 0.85, dmg: 0.7 },
     2: { hp: 0.92, speed: 0.92, dmg: 0.85 },
@@ -32,7 +35,7 @@ export function stageScaling(stage, t, duration) {
     // 첫 두 스테이지만 완만하게. 경험치와 3스테이지 이후 성장 곡선은 유지한다.
     const beginner = BEGINNER_SCALING[stage] || STANDARD_SCALING;
     return {
-        hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * 0.5) * beginner.hp,
+        hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * 0.5) * beginner.hp * ENEMY_TOUGHNESS_MULTIPLIER,
         speed: (1 + (stage - 1) * 0.035) * beginner.speed,
         dmg: (1 + (stage - 1) * 0.24) * beginner.dmg,
         xp: 1 + (stage - 1) * 0.15,

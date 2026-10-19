@@ -1,20 +1,23 @@
+import { normalizeAccessories } from './accessories.js';
+import { ACCESSORIES } from '../data/accessories.js';
 import { shopAccess } from './shop-access.js';
 import { RELICS, RELIC_CHEST, rollRelic } from '../data/relics.js';
 import { SHOP, CATALOG_VERSION } from '../data/shop.js';
 import { CHARACTER_XP_CAP } from './character-progression.js';
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 export const LEGACY_KEY = 'kfp.save.v1';
 const MAX = 1_000_000_000;
 const integer = (v, fallback = 0, max = MAX) => Number.isSafeInteger(v) && v >= 0 ? Math.min(v, max) : fallback;
 const clone = v => JSON.parse(JSON.stringify(v));
 const object = v => v && typeof v === 'object' && !Array.isArray(v);
 export function defaultProgress() {
-    return { characterXP: 0, characterRewardCount: 0, lastCharacterReward: null, maxClearedStage: 0, version: SAVE_VERSION, revision: 0, catalogVersion: CATALOG_VERSION, gold: 0, upgrades: {}, inventory: [], equippedPet: null, maxStage: 1, bestTime: 0, kills: 0, seenStory: {}, receipts: [], relics: [], chestPity: 0, chestCount: 0, relicDuplicates: 0, lastChest: null };
+    return { accessoryInventory: [], equippedAccessory: null, characterXP: 0, characterRewardCount: 0, lastCharacterReward: null, maxClearedStage: 0, version: SAVE_VERSION, revision: 0, catalogVersion: CATALOG_VERSION, gold: 0, upgrades: {}, inventory: [], equippedPet: null, maxStage: 1, bestTime: 0, kills: 0, seenStory: {}, receipts: [], relics: [], chestPity: 0, chestCount: 0, relicDuplicates: 0, lastChest: null };
 }
 export function validateProgress(raw) {
     if (!object(raw)) throw new Error('INVALID_PROGRESS');
-    if (raw.version != null && raw.version !== 1 && raw.version !== 2 && raw.version !== 3 && raw.version !== SAVE_VERSION) throw new Error('UNSUPPORTED_SAVE_VERSION');
+    if (raw.version != null && raw.version !== 1 && raw.version !== 2 && raw.version !== 3 && raw.version !== 4 && raw.version !== SAVE_VERSION) throw new Error('UNSUPPORTED_SAVE_VERSION');
     const s = defaultProgress();
+    Object.assign(s, normalizeAccessories(raw));
     for (const key of ['gold', 'revision', 'kills', 'bestTime']) s[key] = integer(raw[key]);
     s.characterXP = integer(raw.characterXP, 0, CHARACTER_XP_CAP);
     s.characterRewardCount = integer(raw.characterRewardCount);
@@ -93,7 +96,7 @@ export function purchaseRelic(state, { itemId, requestId }) {
 }
 export function createGuestAdapter(storage, { profile = 'guest' } = {}) {
     if (!/^[a-zA-Z0-9_-]{1,80}$/.test(profile)) throw new Error('INVALID_PROFILE');
-    const key = `kfp.progress.v4.${profile}`;
+    const key = `kfp.progress.v5.${profile}`;
     let writable = true;
     let storedRevision = 0;
     return {
@@ -106,7 +109,7 @@ export function createGuestAdapter(storage, { profile = 'guest' } = {}) {
                 catch { writable = false; return defaultProgress(); } // Never overwrite unknown/corrupt saves.
             }
             try {
-                for (const version of [3, 2]) {
+                for (const version of [4, 3, 2]) {
                     const previous = storage?.getItem(`kfp.progress.v${version}.${profile}`);
                     if (previous) return validateProgress(JSON.parse(previous));
                 }
@@ -150,6 +153,14 @@ export function createServerAdapter({ baseUrl, fetchImpl = globalThis.fetch } = 
     }
     const validIntent = ({ expectedRevision, requestId }) => Number.isSafeInteger(expectedRevision) && expectedRevision >= 0 && typeof requestId === 'string' && requestId.length > 0 && requestId.length <= 160;
     return { mode: 'server', load: () => request('/progress'),
+        buyAccessory: intent => {
+            if (!validIntent(intent) || !ACCESSORIES.some(item => item.id === intent.itemId)) throw new Error('INVALID_REQUEST');
+            return request('/accessory-purchases', { itemId: intent.itemId, expectedRevision: intent.expectedRevision, requestId: intent.requestId, catalogVersion: CATALOG_VERSION });
+        },
+        equipAccessory: intent => {
+            if (!validIntent(intent) || (intent.itemId !== null && !ACCESSORIES.some(item => item.id === intent.itemId))) throw new Error('INVALID_REQUEST');
+            return request('/accessory-equipment', { itemId: intent.itemId, expectedRevision: intent.expectedRevision, requestId: intent.requestId });
+        },
         openChest: intent => {
             if (!validIntent(intent)) throw new Error('INVALID_REQUEST');
             return request('/relic-chests', { expectedRevision: intent.expectedRevision, requestId: intent.requestId, catalogVersion: CATALOG_VERSION });

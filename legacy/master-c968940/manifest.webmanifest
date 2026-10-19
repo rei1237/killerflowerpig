@@ -1,0 +1,17 @@
+{
+  "name": "Yeon the killer of blue zombie",
+  "short_name": "Yeon Zombie",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0a0a0c",
+  "theme_color": "#0a0a0c",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "asset/%EA%BD%83%EB%8F%BC%EC%A7%80%20the%20killer%20of%20zombie.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -7,10 +7,10 @@ import { PICKUP_ASSIST } from '../src/game/pickups.js';
 import { xpForLevel } from '../src/game/progression.js';
 const price = id => SHOP.find(i=>i.id===id).cost[0];
 test('short starter kill budget buys useful permanent upgrades without clearing a stage',()=>{
- const coinsForTwentyKills=20*3;
+ const coinsForTwentyKills=20*5;
  assert.ok(price('magnet')<=coinsForTwentyKills);assert.ok(price('speed')<=coinsForTwentyKills);assert.ok(price('maxHp')<=coinsForTwentyKills);
- assert.equal(Math.ceil(price('magnet')/3),14);assert.equal(Math.ceil((price('magnet')+price('speed'))/3),34);
- assert.match(fs.readFileSync(new URL('../src/game/enemies.js',import.meta.url),'utf8'),/dropCoin\(e.x, e.y, e.elite \? 24 : 3\)/);
+ assert.equal(Math.ceil(price('magnet')/5),8);assert.equal(Math.ceil((price('magnet')+price('speed'))/5),20);
+ assert.match(fs.readFileSync(new URL('../src/game/enemies.js',import.meta.url),'utf8'),/dropCoin\(e.x, e.y, e.elite \? 40 : 5\)/);
 });
 test('coin and XP collection are friendlier without expanding chest/bomb activation radius',()=>{
  assert.equal(70*PICKUP_ASSIST.coinMultiplier,105);assert.equal(70*PICKUP_ASSIST.gemMultiplier,84);

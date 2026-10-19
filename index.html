@@ -18,17 +18,35 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="blue-night.css">
     <link rel="stylesheet" href="src/ui/tutorial.css">
+    <link rel="stylesheet" href="src/ui/practice.css">
+    <link rel="stylesheet" href="src/ui/fusion-reveal.css">
+    <link rel="stylesheet" href="src/ui/loadout-exchange.css">
+    <link rel="stylesheet" href="src/ui/loading.css">
 </head>
 <body>
     <div id="app">
         <canvas id="game"></canvas>
 
         <!-- 로딩 -->
-        <section id="loading" class="screen">
-            <div class="loading-box">
-                <div class="drip-title">장비와 작전 구역을 준비하는 중...</div>
-                <div class="flesh-bar"><div id="loading-fill" class="flesh-fill"></div></div>
-                <div id="loading-text" class="small-text">0%</div>
+        <section id="loading" class="screen" aria-labelledby="loading-title" aria-busy="true" data-state="loading">
+            <div class="loading-shell">
+                <header class="loading-signal"><span>FLOWERPIG / BLUE NIGHT</span><span><i aria-hidden="true"></i>SURVIVOR SIGNAL</span></header>
+                <div class="loading-visual">
+                    <img id="loading-art" src="asset/ui/menu-yeoni.webp" width="900" height="900" alt="연꽃과 보라색 스카프를 한 꽃돼지 생존자" fetchpriority="high" decoding="async">
+                    <div id="loading-art-fallback" hidden aria-label="꽃돼지 생존자 표식"><span aria-hidden="true">✿</span>FLOWERPIG<br>LAST SURVIVOR</div>
+                </div>
+                <div class="loading-copy">
+                    <p class="loading-eyebrow">ENTERING THE QUARANTINE ZONE</p>
+                    <h1 id="loading-title">다음 새벽을 향해</h1>
+                    <p id="loading-status" role="status" aria-live="polite">꽃돼지의 장비와 감염 구역을 불러오고 있어요.</p>
+                    <div class="loading-meter-label" aria-hidden="true"><span>OPERATION PREPARATION</span><span id="loading-text">0%</span></div>
+                    <div id="loading-progress" role="progressbar" aria-label="게임 준비 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="loading-fill"></div></div>
+                    <p id="loading-count" aria-hidden="true">준비 항목 확인 중</p>
+                    <p class="loading-tip"><strong>SURVIVAL NOTE / 01</strong>적에게 둘러싸이지 않도록 움직이세요. 조준과 사격은 자동입니다.</p>
+                    <p id="loading-error" role="alert" hidden></p>
+                    <button id="loading-retry" type="button" hidden>다시 시도</button>
+                </div>
+                <footer class="loading-footer"><span>작은 영웅, 끝나지 않은 밤.</span><span>10 SECTORS · ONE SURVIVOR</span></footer>
             </div>
         </section>
 
@@ -53,10 +71,11 @@
                         <button id="btn-new" class="btn btn-blood" type="button"><span class="launch-copy"><small>DEPLOYMENT / 01</small>새 작전 시작</span><span class="launch-arrow" aria-hidden="true">→</span></button>
                         <button id="btn-continue" class="btn" type="button" hidden>이어하기</button>
                     </div>
-                    <div class="how-to"><span class="how-label">HOW TO PLAY</span><p>이동에 집중하세요. 조준과 사격은 자동.</p><small>이동 WASD / 방향키 / 터치 · 자동 공격 · 일시정지 Esc</small></div>
+                    <div class="how-to"><span class="how-label">HOW TO PLAY</span><p>자동 사격으로 생존하고, 적을 짧게 눌러 집중 조준하세요.</p><small>이동 WASD / 방향키 / 드래그 · 같은 적 다시 탭하면 조준 해제 · Esc 일시정지</small></div>
                 </div>
                 <nav class="menu-utility" aria-label="작전 준비 메뉴">
                     <button id="btn-shop" class="btn btn-ghost menu-card menu-card-shop" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 11h24v17H4zM9 11V6h14v5M4 18h24M14 15h4v6h-4z"/></svg></span><strong>장비 보급소</strong><small>보급 · 강화 · 동행 펫</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
+                    <button id="btn-practice" class="btn btn-ghost menu-card" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 3v7m0 12v7M3 16h7m12 0h7M9 9a10 10 0 1 1-1 13M12 16h8m-4-4v8"/></svg></span><strong>조작 연습</strong><small>이동 · 집중 조준 · 강화 선택</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
                     <button id="btn-tutorial" class="btn btn-ghost menu-card menu-card-tutorial" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 6h10l2 3 2-3h10v21H18l-2-3-2 3H4zM16 9v15M8 12h4m-4 5h4m8-5h4m-4 5h4"/></svg></span><strong>생존 가이드</strong><small>조작 · 아이템 · 조합</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
                     <button id="btn-intel" class="btn btn-ghost menu-card menu-card-intel" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 3l13 25H3zM16 11v8m0 4v1"/></svg></span><strong>보스 위협 기록</strong><small>구역별 표적과 전투 정보</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
                     <details id="secret" class="secret terminal-card">
@@ -112,7 +131,7 @@
             <div id="hud-build" class="hud-build" aria-label="현재 장비"></div>
             <div id="hud-boss" class="hud-boss" hidden><img id="hud-boss-portrait" alt=""><span id="hud-boss-name"></span><div class="boss-track"><div id="hud-boss-hp"></div></div></div>
             <button id="btn-fusion" class="fusion-hud btn" type="button">아이템 조합 <span>레시피 확인</span></button>
-            <div class="movement-hint">✥ 드래그 / WASD로 이동 <span>AUTO AIM · AUTO FIRE</span></div>
+            <div class="movement-hint">✥ 드래그 / WASD로 이동 <span>적을 탭해 집중 조준 · 다시 탭해 해제</span></div>
         </div>
         <!-- 인게임 버튼 -->
         <button id="btn-pause" class="pause-btn" type="button" aria-label="일시정지" hidden>❚❚</button>
@@ -122,7 +141,7 @@
         <section id="levelup" class="modal" hidden>
             <div class="modal-box levelup-box">
                 <h2 class="modal-title drip">생존 장비 선택 <small id="levelup-lv">LV 2</small></h2>
-                <p class="panel-caption">하나를 선택해 전력을 보강하세요. 전투는 잠시 멈춥니다.</p>
+                <p id="choice-capacity" class="panel-caption">하나를 선택해 전력을 보강하세요. 전투는 잠시 멈춥니다.</p>
                 <div id="cards" class="cards"></div>
                 <div class="modal-actions">
                     <button id="btn-levelup-fusion" class="btn btn-small" type="button">아이템 조합</button>
@@ -145,7 +164,7 @@
         <!-- 관 상자 -->
         <section id="chest" class="modal" hidden>
             <div class="modal-box chest-box">
-                <h2 class="modal-title drip" id="chest-title">회수 물자</h2>
+                <h2 class="modal-title drip" id="chest-title">회수 물자</h2><p id="chest-description" class="panel-caption chest-description"></p>
                 <div id="coffin" class="coffin"><img src="asset/items/salvage-cache.png" alt="봉인된 회수 물자 상자"></div>
                 <div id="rewards" class="rewards"></div>
                 <div class="modal-actions">
@@ -161,7 +180,9 @@
                 <div id="pause-build" class="pause-build"></div>
                 <div class="menu-buttons">
                     <button id="btn-resume" class="btn btn-blood" type="button">계속하기</button>
+                    <button id="btn-pause-loadout" class="btn" type="button">장비 교체 · 진화 조건</button>
                     <button id="btn-pause-fusion" class="btn" type="button">아이템 조합</button>
+                    <button id="btn-pause-practice" class="btn" type="button">조작 연습</button>
                     <button id="btn-pause-tutorial" class="btn" type="button">생존 가이드</button>
                     <button id="btn-pause-settings" class="btn" type="button">설정</button>
                     <button id="btn-quit" class="btn btn-ghost" type="button">타이틀로</button>
@@ -208,6 +229,7 @@
                 <h2 class="modal-title drip">강화 상점 <small id="shop-gold">● 0</small></h2>
                 <p id="shop-character" class="character-record"></p><p id="shop-status" class="shop-status" role="status"></p><div id="shop-list" class="shop-list"></div>
                 <p id="pet-redemption-note" class="panel-caption"></p><button class="btn btn-small" type="button" disabled>영냥이 특별 초대 · 준비 중</button><section class="relic-section"><p class="eyebrow">CELESTIAL RELICS</p><h3>날개 유물 · 더 빠른 생존</h3><p class="panel-caption">가장 높은 등급 하나의 효과만 적용됩니다. 원하는 유물은 확정 구매할 수 있어요.</p><div id="relic-list" class="relic-list"></div></section>
+                <section class="accessory-section"><p class="eyebrow">YEONGNYANG'S ARMORY</p><h3>고급 장신구</h3><p class="panel-caption">한 번에 1개 장착 · 구매하면 자동 장착 · 다음 작전부터 적용됩니다. 다른 장신구와 효과가 중첩되지 않습니다.</p><p id="accessory-equipped" class="accessory-equipped" role="status"></p><div id="accessory-list" class="accessory-list"></div></section>
                 <section class="coin-cache-panel"><div class="cache-heading"><img src="asset/items/salvage-cache.png" alt="별빛 보급 상자"><div><p class="eyebrow">EARNED COINS ONLY</p><h3>별빛 보급 상자</h3><p>플레이로 모은 코인으로 유물 1개를 얻습니다.</p></div></div><p id="cache-rates" class="cache-rates"></p><p id="cache-pity" class="panel-caption"></p><button id="btn-coin-cache" class="btn" type="button">상자 열기</button><div id="cache-result" class="cache-result" role="status" aria-live="polite" hidden></div><p class="cache-note">현금 구매·환전은 없습니다. 확정 구매로도 같은 유물을 얻을 수 있어요.</p></section>
                 <div class="modal-actions">
                     <button id="btn-shop-close" class="btn btn-blood btn-small" type="button">닫기</button>

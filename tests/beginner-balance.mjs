@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { STAGES, EVENTS } from '../src/data/stages.js';
 import { BOSSES } from '../src/data/bosses.js';
-import { ENEMIES, ELITE, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, stageScaling } from '../src/data/enemies.js';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
 import { spawnEnemy } from '../src/game/enemies.js';
@@ -48,13 +48,13 @@ function runEvent(stage, type, occurrence = 0) {
 }
 
 test('stage 1 and 2 have bounded density and refill; stage 1 introduces enemy types gradually', () => {
-    assert.deepEqual(STAGES[1].density, [8, 36]);
-    assert.deepEqual(STAGES[2].density, [14, 56]);
+    assert.deepEqual(STAGES[1].density, [5, 22]);
+    assert.deepEqual(STAGES[2].density, [8, 34]);
     assert.equal(currentWeights(STAGES[1], 54.999).runner, undefined);
     assert.equal(currentWeights(STAGES[1], 55).runner, 1);
     assert.equal(currentWeights(STAGES[1], 114.999).brute, undefined);
     assert.equal(currentWeights(STAGES[1], 115).brute, 1);
-    for (const [stage, count] of [[1, 5], [2, 8]]) {
+    for (const [stage, count] of [[1, 3], [2, 4]]) {
         reset(stage);
         updateSpawner(1);
         assert.equal(G.enemies.count, count);
@@ -70,12 +70,12 @@ test('stage 1 and 2 have bounded density and refill; stage 1 introduces enemy ty
     assert.equal(G.enemies.count, 0, 'retry resets fractional spawn credit');
 });
 
-test('opening contact threats are weaker while per-enemy XP remains unchanged', () => withFixedRandom(() => {
+test('opening speed and damage remain forgiving while tougher enemies retain base XP values', () => withFixedRandom(() => {
     for (const [stage, multipliers] of [[1, [0.85, 0.85, 0.7]], [2, [0.92, 0.92, 0.85]]]) {
         reset(stage, STAGES[stage].duration / 2);
         const enemy = spawnEnemy('shambler', 400, 0);
         const oldHp = (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * 1.25;
-        close(enemy.hp, ENEMIES.shambler.hp * oldHp * multipliers[0]);
+        close(enemy.hp, ENEMIES.shambler.hp * oldHp * multipliers[0] * ENEMY_TOUGHNESS_MULTIPLIER);
         close(enemy.speed, ENEMIES.shambler.speed * (1 + (stage - 1) * 0.035) * multipliers[1]);
         close(enemy.dmg, ENEMIES.shambler.dmg * (1 + (stage - 1) * 0.24) * multipliers[2]);
         close(enemy.xp, ENEMIES.shambler.xp * (1 + (stage - 1) * 0.15));
@@ -85,7 +85,7 @@ test('opening contact threats are weaker while per-enemy XP remains unchanged', 
 }));
 
 test('early caps apply to ordinary, forced, event and boss-summoned enemies', () => {
-    for (const [stage, cap] of [[1, 48], [2, 72]]) {
+    for (const [stage, cap] of [[1, 29], [2, 43]]) {
         reset(stage);
         assert.equal(STAGES[stage].enemyCap, cap);
         fillEnemies(cap);
@@ -104,7 +104,7 @@ test('early caps apply to ordinary, forced, event and boss-summoned enemies', ()
     G.caps.enemies = 2;
     fillEnemies(2);
     assert.equal(spawnEnemy('runner', 0, 0), null);
-    assert.ok(spawnEnemy('runner', 0, 0, { force: true }), 'later forced-event behavior is preserved');
+    assert.equal(spawnEnemy('runner', 0, 0, { force: true }), null, 'later forced events also respect the global cap');
 });
 
 test('stage 1 leaves a 70-second learning window and smaller events run only once', () => {
@@ -116,12 +116,12 @@ test('stage 1 leaves a 70-second learning window and smaller events run only onc
         { t: 70, type: 'ring' }, { t: 90, type: 'elite' },
         { t: 115, type: 'swarm' }, { t: 140, type: 'ring' },
     ]);
-    assert.equal(runEvent(1, 'ring').length, 10);
+    assert.equal(runEvent(1, 'ring').length, 6);
     updateSpawner(0);
-    assert.equal(G.enemies.count, 10);
-    assert.equal(runEvent(2, 'ring').length, 16);
-    assert.equal(runEvent(1, 'swarm').length, 12);
-    assert.equal(runEvent(2, 'swarm').length, 20);
+    assert.equal(G.enemies.count, 6);
+    assert.equal(runEvent(2, 'ring').length, 10);
+    assert.equal(runEvent(1, 'swarm').length, 7);
+    assert.equal(runEvent(2, 'swarm').length, 12);
     withFixedRandom(() => {
         for (const [stage, multiplier] of [[1, 1.15], [2, 1.3], [3, 1.5]]) {
             const swarm = runEvent(stage, 'swarm');
@@ -137,10 +137,10 @@ test('stage 1 leaves a 70-second learning window and smaller events run only onc
     });
 });
 
-test('first boss has less health and slower, visibly matched charge warnings in every phase', () => withFixedRandom(() => {
+test('first boss keeps slower, visibly matched charge warnings after the requested HP increase', () => withFixedRandom(() => {
     reset(1);
     const boss = new Boss(1);
-    assert.equal(boss.hp, 520);
+    assert.equal(boss.hp, 1400);
     assert.equal(boss.speed, 48);
     assert.equal(boss.dmg, 10);
     assert.equal(boss.attackT, 3);
@@ -167,29 +167,32 @@ test('first boss phase transitions and summons allow time to recover', () => {
     const boss = new Boss(1);
     boss.enterPhase(1);
     assert.equal(boss.attackT, 2.2);
-    assert.equal(G.enemies.count, 6);
+    assert.equal(G.enemies.count, 4);
     G.enemies.clear();
     boss.enterPhase(2);
     assert.equal(boss.attackT, 2.2);
-    assert.equal(G.enemies.count, 8);
+    assert.equal(G.enemies.count, 5);
     G.enemies.clear();
     boss.phase = 0;
     const task = boss.task_summon();
     task.t = 0.61;
     task.step(0.01, task);
-    assert.equal(G.enemies.count, 4);
+    assert.equal(G.enemies.count, 2);
 });
 
-test('later-stage data, events, scaling and boss timing keep the previous curve exactly', () => withFixedRandom(() => {
+test('later-stage damage, speed, event timing and legacy charges remain while population and HP are rebalanced', () => withFixedRandom(() => {
     assert.deepEqual(EVENTS, baseline.events);
     for (let stage = 3; stage <= 10; stage++) {
         const { duration, weights, density } = STAGES[stage];
-        assert.deepEqual({ duration, weights, density }, baseline.stages[stage]);
-        for (const field of ['enemyCap', 'spawn', 'eventTuning', 'events']) assert.equal(STAGES[stage][field], undefined);
+        const old = baseline.stages[stage];
+        assert.deepEqual({ duration, weights }, { duration: old.duration, weights: old.weights });
+        assert.deepEqual(density, old.density.map(count => Math.round(count * 0.6)));
+        assert.ok(STAGES[stage].enemyCap > density[1]);
+        assert.equal(STAGES[stage].events, undefined);
         for (const t of [0, duration / 2, duration, duration + 10]) {
             const prog = Math.min(1, t / duration);
             assert.deepEqual(stageScaling(stage, t, duration), {
-                hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * 0.5),
+                hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * 0.5) * ENEMY_TOUGHNESS_MULTIPLIER,
                 speed: 1 + (stage - 1) * 0.035,
                 dmg: 1 + (stage - 1) * 0.24,
                 xp: 1 + (stage - 1) * 0.15,
@@ -197,8 +200,10 @@ test('later-stage data, events, scaling and boss timing keep the previous curve 
         }
     }
     for (let stage = 2; stage <= 10; stage++) {
-        const { hp, speed, dmg, phases } = BOSSES[stage];
-        assert.deepEqual({ hp, speed, dmg, phases }, baseline.bosses[stage]);
+        const { speed, dmg } = BOSSES[stage];
+        const old = baseline.bosses[stage];
+        // Signatures and requested boss HP changed; damage and speed did not.
+        assert.deepEqual({ speed, dmg }, { speed: old.speed, dmg: old.dmg });
         assert.equal(BOSSES[stage].pacing, undefined);
         reset(stage);
         const boss = new Boss(stage);
@@ -214,11 +219,11 @@ test('later-stage data, events, scaling and boss timing keep the previous curve 
         G.enemies.clear();
         boss.enterPhase(1);
         assert.equal(boss.attackT, 1.4);
-        assert.equal(G.enemies.count, 9);
+        assert.equal(G.enemies.count, BOSSES[stage].phaseSummons ? 5 : 0);
     }
     reset(3);
     updateSpawner(1);
-    assert.equal(G.enemies.count, 43, 'later director keeps original refill formula');
-    assert.equal(runEvent(3, 'ring').length, 27);
-    assert.equal(runEvent(3, 'swarm').length, 35);
+    assert.equal(G.enemies.count, 16, 'later director also stops at its reduced target during long frames');
+    assert.equal(runEvent(3, 'ring').length, 16);
+    assert.equal(runEvent(3, 'swarm').length, 21);
 }));

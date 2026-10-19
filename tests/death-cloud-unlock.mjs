@@ -46,10 +46,10 @@ function killBloater(stage, elite = false) {
     assert.equal(G.hazards.count, 0, 'death queues the explosion before hazard creation');
     assert.deepEqual({ tint: enemy.tint, scale: enemy.scale, radius: enemy.radius }, appearance);
     assert.equal(G.gems.count, 1);
-    close(G.gems.items[0].value, ENEMIES.bloater.xp * stageScaling(stage, 0, STAGES[stage].duration).xp * (elite ? ELITE.xp : 1));
+    close(G.gems.items[0].value, ENEMIES.bloater.xp * stageScaling(stage, 0, STAGES[stage].duration).xp * (elite ? ELITE.xp : 1) * (5 / 3));
     assert.deepEqual(active(G.pickups).map(({ kind, value }) => ({ kind, value })), elite
-        ? [{ kind: 'coin', value: 24 }, { kind: 'chest', value: 0 }]
-        : [{ kind: 'coin', value: 3 }]);
+        ? [{ kind: 'coin', value: 40 }, { kind: 'chest', value: 0 }]
+        : [{ kind: 'coin', value: 5 }]);
     flushExplosions();
     const blastDamage = ENEMIES.bloater.explode.dmg * (1 + (stage - 1) * 0.16);
     close(G.player.hp, 1000 - blastDamage, 'immediate explosion remains unchanged');
@@ -117,7 +117,7 @@ test('death-cloud gate preserves direct splash and chain explosions against enem
         assert.equal(outside.hp, outsideBefore);
         assert.equal(G.hazards.count, stage < 5 ? 0 : 2);
         assert.equal(G.gems.count, 2);
-        assert.equal(active(G.pickups).filter(p => p.kind === 'coin').reduce((total, p) => total + p.value, 0), 6);
+        assert.equal(active(G.pickups).filter(p => p.kind === 'coin').reduce((total, p) => total + p.value, 0), 10);
     }
 }));
 
@@ -132,8 +132,8 @@ test('all other enemy death types retain their loot and do not gain poison cloud
             flushExplosions();
             assert.equal(G.hazards.count, 0, `${type} in stage ${stage}`);
             assert.equal(G.gems.count, 1);
-            assert.equal(G.gems.items[0].value, xp);
-            assert.deepEqual(active(G.pickups).map(({ kind, value }) => ({ kind, value })), [{ kind: 'coin', value: 3 }]);
+            assert.equal(G.gems.items[0].value, xp * (5 / 3));
+            assert.deepEqual(active(G.pickups).map(({ kind, value }) => ({ kind, value })), [{ kind: 'coin', value: 5 }]);
             assert.equal(active(G.enemies).filter(e => e.alive).length, type === 'splitter' ? 3 : 0);
         }
     }

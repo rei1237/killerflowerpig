@@ -15,7 +15,7 @@ export function previewFusion(recipeId) {
     const stats = weaponStats(candidate);
     if (['lotus_bloom', 'orbit_saw'].includes(recipe.output)) {
         const orbit = orbitStats(candidate, stats);
-        Object.assign(stats, { orbitDamage: orbit.dmg, orbitAmount: orbit.amount, orbitRadius: orbit.radius * orbit.area, orbitDuration: 2.8 });
+        Object.assign(stats, { orbitDamage: orbit.dmg, orbitAmount: orbit.amount, orbitRadius: orbit.radius * orbit.area, orbitDuration: orbit.duration });
     }
     if (recipe.output === 'ember_lance') {
         const field = emberFieldStats(stats);

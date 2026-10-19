@@ -8,12 +8,28 @@ import { BOSS_ART } from '../game/boss-appearance.js';
 export const images = {};
 export const atlases = {};
 
-function loadImage(src) {
-    return new Promise((resolve) => {
+export function loadImage(src, { signal, timeoutMs = 20000 } = {}) {
+    return new Promise((resolve, reject) => {
         const img = new Image();
+        let settled = false;
+        let timeout;
+        const finish = (image, aborted = false) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeout);
+            img.onload = img.onerror = null;
+            signal?.removeEventListener('abort', abort);
+            if (!image) img.removeAttribute?.('src');
+            if (aborted) reject(new DOMException('Asset loading was cancelled', 'AbortError'));
+            else resolve(image);
+        };
+        const abort = () => finish(null, true);
+        if (signal?.aborted) return abort();
         img.decoding = 'async';
-        img.onload = () => resolve(img);
-        img.onerror = () => { console.warn('[assets] failed', src); resolve(null); };
+        img.onload = () => finish(img);
+        img.onerror = () => finish(null);
+        signal?.addEventListener('abort', abort, { once: true });
+        timeout = setTimeout(() => finish(null), Math.max(1, Math.min(60000, timeoutMs || 20000)));
         img.src = src;
     });
 }
@@ -402,12 +418,12 @@ export function makeGroundTile(seed, base, stain, crack) {
 
 export const fx = {};
 
-export async function loadAssets(onProgress) {
+export async function loadAssets(onProgress, { signal, timeoutMs = 20000 } = {}) {
     const jobs = [];
-    const add = (key, src, store) => jobs.push(loadImage(src).then((img) => { store(img); onProgress?.(key); }));
+    const add = (key, src, store, required = false) => jobs.push({ key, src, store, required });
 
     for (const [id, meta] of Object.entries(SPRITES)) {
-        add(id, meta.image, (img) => { if (img) atlases[id] = new Atlas(img, meta); });
+        add(id, meta.image, (img) => { if (img) atlases[id] = new Atlas(img, meta); else delete atlases[id]; }, true);
     }
     for (const n of [1, 3, 5, 7, 9]) add(`bg${n}`, `asset/bg/stage${n}.webp`, (img) => { images[`bg${n}`] = img; });
     for (const n of ['title', 'victory', 'gameover', 'clear']) add(n, `asset/ui/${n}.webp`, (img) => { images[n] = img; });
@@ -429,10 +445,29 @@ export async function loadAssets(onProgress) {
         g.fillRect(0, 0, img.width, img.height);
         images.playerFireFlash = flash;
     });
-    const total = jobs.length;
+    // The final unit is real work too: building the procedural rendering caches.
+    // Never report completion merely because all image requests have settled.
+    const total = jobs.length + 1;
     let done = 0;
-    await Promise.all(jobs.map(j => j.then(() => { done++; onProgress?.(null, done / total); })));
+    const failed = [];
+    onProgress?.(null, 0, { done, total, phase: 'images' });
+    await Promise.all(jobs.map(async ({ key, src, store, required }) => {
+        const img = await loadImage(src, { signal, timeoutMs });
+        if (signal?.aborted) throw new DOMException('Asset loading was cancelled', 'AbortError');
+        if (!img) failed.push({ key, src, required });
+        store(img);
+        done++;
+        onProgress?.(key, done / total, { done, total, phase: 'images' });
+    }));
+    if (signal?.aborted) throw new DOMException('Asset loading was cancelled', 'AbortError');
+    if (failed.some(job => job.required)) {
+        const error = new Error('Required game images could not be loaded');
+        error.code = 'ASSET_LOAD_FAILED';
+        error.failed = failed.filter(job => job.required).map(job => job.key);
+        throw error;
+    }
 
+    onProgress?.(null, done / total, { done, total, phase: 'prepare' });
     buildFx();
     for (const [key, target, size] of [['cacheArt','chest',44],['medArt','meat',30],['magnetArt','magnet',30]]) {
         const img = images[key];
@@ -442,6 +477,9 @@ export async function loadAssets(onProgress) {
         g.drawImage(img,(size-img.width*scale)/2,(size-img.height*scale)/2,img.width*scale,img.height*scale);
         fx[target] = c;
     }
+    done++;
+    onProgress?.(null, 1, { done, total, phase: 'ready' });
+    return { loaded: jobs.length - failed.length, optionalFailures: failed.map(job => job.key) };
 }
 
 function buildFx() {

@@ -54,7 +54,7 @@ test('scatter fusion really creates spread with piercing bullets; plague lands s
  let w=weapon('scatter_rail',1);w.cd=0;G.weapons=[w];updateWeapons(.01);
  assert.equal(G.shots.count,7);assert.ok(G.shots.items.slice(0,7).every(s=>s.pierce===6));assert.ok(new Set(G.shots.items.slice(0,7).map(s=>s.angle)).size>1);
  G.shots.clear();w=weapon('plague_fire',1);w.cd=0;G.weapons=[w];updateWeapons(.01);assert.equal(G.shots.count,2);updateShots(.6);
- assert.equal(G.hazards.count,2);assert.ok(G.hazards.items.slice(0,2).every(h=>h.kind==='fire' && h.dmg===9 && h.slow===.45 && h.radius===72));
+ assert.equal(G.hazards.count,2);assert.ok(G.hazards.items.slice(0,2).every(h=>h.kind==='fire' && h.dmg===9 && h.slow===.45 && h.radius===100));
 });
 test('fused loadout and item levels survive run snapshot restore without touching wallet/archive',()=>{
  G.weapons=[weapon('lotus_bloom',6),weapon('pistols',3,1)];G.rerolls=2;G.gold=10;G.kills=3;

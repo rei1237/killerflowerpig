@@ -27,6 +27,12 @@ function aliveCount() {
     return n;
 }
 
+export function spawnRate(st, target, alive) {
+    return st.spawn
+        ? Math.min(st.spawn.maxRate, st.spawn.baseRate + (target - alive) * st.spawn.gapRate)
+        : 2.4 + (target - alive) * 1.5;
+}
+
 export function updateSpawner(dt) {
     const st = STAGES[G.stage];
     const t = G.time;
@@ -34,22 +40,19 @@ export function updateSpawner(dt) {
     let target = st.density[0] + (st.density[1] - st.density[0]) * prog;
     if (G.boss) target *= 0.35;
     if (G.lowQ) target *= 0.85;
-    target = Math.min(target, G.caps.enemies - 20);
+    target = Math.min(target, Math.max(0, G.caps.enemies - 12), st.enemyCap ?? Infinity);
 
     const alive = aliveCount();
     if (alive < target) {
         // 부족분에 비례한 투입 속도 (한 번에 몰아서 생성하지 않도록 누적기 사용)
-        const rate = st.spawn
-            ? Math.min(st.spawn.maxRate, st.spawn.baseRate + (target - alive) * st.spawn.gapRate)
-            : 4 + (target - alive) * 1.5;
-        spawnAcc += dt * rate;
+        spawnAcc += dt * spawnRate(st, target, alive);
         const table = currentWeights(st, t);
-        let budget = st.spawn ? Math.ceil(target) - alive : Infinity;
+        let budget = Math.ceil(target) - alive;
         while (spawnAcc >= 1 && budget > 0) {
             spawnAcc -= 1;
             const pos = edgePosition(0.6);
             const enemy = spawnEnemy(pickWeighted(table), pos.x + rand(-20, 20), pos.y + rand(-20, 20));
-            if (st.spawn && !enemy) { spawnAcc = 0; break; }
+            if (!enemy) { spawnAcc = 0; break; }
             budget--;
         }
         if (budget <= 0) spawnAcc = 0;

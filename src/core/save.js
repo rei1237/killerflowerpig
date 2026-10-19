@@ -1,3 +1,4 @@
+import { purchaseAccessory, equipAccessory } from './accessories.js';
 import { awardCharacterXP } from './character-progression.js';
 import { SHOP } from '../data/shop.js';
 import { createGuestAdapter, itemLevel, purchase, validateProgress, openRelicChest, purchaseRelic } from './progression-store.js';
@@ -81,3 +82,18 @@ export function retryPendingCharacterXP() {
     return pendingCharacterRewards.size === 0;
 }
 export function pendingCharacterXP() { return [...pendingCharacterRewards.values()].reduce((sum, intent) => sum + intent.amount, 0); }
+
+// Premium accessory actions are atomic: do not expose a grant until durable commit succeeds.
+function finishAccessoryAction(result) {
+    if (!result.ok) { lastSaveError = result.code; return { ok: false, code: result.code }; }
+    if (!result.duplicate && !commit(result.state)) return { ok: false, code: lastSaveError };
+    lastSaveError = null;
+    return { ok: true, duplicate: !!result.duplicate };
+}
+export function buyAccessory(itemId, expectedRevision = save.revision, requestId = `accessory:${itemId}`) {
+    return finishAccessoryAction(purchaseAccessory(save, { itemId, expectedRevision, requestId }));
+}
+export function setAccessory(itemId, expectedRevision = save.revision) {
+    if (expectedRevision !== save.revision) { lastSaveError = 'REVISION_CONFLICT'; return { ok: false, code: lastSaveError }; }
+    return finishAccessoryAction(equipAccessory(save, itemId));
+}

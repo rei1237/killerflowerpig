@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createPetalCharge, chargePetal, spendPetal } from '../src/game/petal-charge.js';
 import { characterProgress, petalStats, awardCharacterXP, CHARACTER_XP_CAP } from '../src/core/character-progression.js';
-import { defaultProgress, createGuestAdapter } from '../src/core/progression-store.js';
+import { defaultProgress, createGuestAdapter, SAVE_VERSION } from '../src/core/progression-store.js';
 const memory = () => { const m = new Map(); return { getItem: k => m.get(k) ?? null, setItem: (k,v) => m.set(k,v) }; };
 test('charge only real distinct kills, caps at 100 and spends exactly once', () => {
  const s=createPetalCharge(); assert.equal(spendPetal(s), false);
@@ -27,7 +27,7 @@ test('permanent XP thresholds and cannon growth have explicit caps',()=>{
 test('v3 migration preserves wallet, pets, relics and backup while adding permanent XP',()=>{
  const store=memory();const legacy={...defaultProgress(),version:3,gold:345,inventory:['pet_yeongnyang'],equippedPet:'pet_yeongnyang',relics:['star_wings'],upgrades:{might:2},chestPity:5,maxStage:5};
  delete legacy.characterXP; delete legacy.maxClearedStage; store.setItem('kfp.progress.v3.guest',JSON.stringify(legacy));
- const a=createGuestAdapter(store);let s=a.load(); assert.equal(s.version,4);assert.equal(s.gold,345);assert.equal(s.characterXP,0);assert.equal(s.equippedPet,'pet_yeongnyang');assert.deepEqual(s.relics,['star_wings']);assert.equal(s.upgrades.might,2);assert.equal(s.chestPity,5);assert.equal(s.maxClearedStage,4);
+ const a=createGuestAdapter(store);let s=a.load(); assert.equal(s.version,SAVE_VERSION);assert.equal(s.gold,345);assert.equal(s.characterXP,0);assert.equal(s.equippedPet,'pet_yeongnyang');assert.deepEqual(s.relics,['star_wings']);assert.equal(s.upgrades.might,2);assert.equal(s.chestPity,5);assert.equal(s.maxClearedStage,4);
  const r=awardCharacterXP(s,{amount:220,requestId:'run:1',expectedCount:0});assert.equal(r.ok,true);a.commit(r.state);
  s=createGuestAdapter(store).load();assert.equal(s.characterXP,220);assert.equal(characterProgress(s.characterXP).level,3);assert.deepEqual(JSON.parse(store.getItem('kfp.progress.v3.guest')),legacy);
  assert.equal(awardCharacterXP(s,{amount:220,requestId:'run:1',expectedCount:0}).duplicate,true);

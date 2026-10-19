@@ -1,11 +1,12 @@
 import { triggerPlayerShot } from './game/player.js';
 // 부트스트랩: 에셋 로딩 → UI/입력 연결 → 고정 타임스텝 루프
 import { G, configureCaps } from './game/state.js';
-import { initRender, render, resize } from './game/render.js';
+import { initRender, render, resize, observeRenderCost } from './game/render.js';
 import { step, onPlayerDeath } from './game/game.js';
 import { loadAssets } from './core/assets.js';
 import { initInput, input } from './core/input.js';
 import { audio } from './core/audio.js';
+import { createLoadingScreen } from './ui/loading.js';
 import {
     initUI, showTitle, showLevelUp, showChest, showGameOver, showStageClear, togglePause, onBossSpawn, toast,
 } from './ui/screens.js';
@@ -16,32 +17,30 @@ const MAX_STEPS = 3; // 느린 기기에서 '따라잡기' 연쇄 지연 방지 
 const canvas = document.getElementById('game');
 
 async function boot() {
-    configureCaps();
-    initRender(canvas);
-    initInput(canvas);
-    initUI();
+    const loading = createLoadingScreen();
+    // Core assets have bounded request lifetimes. Retry creates a clean attempt;
+    // game/input listeners are initialized only after a successful preparation.
+    await loading.start((progress, signal) => loadAssets(progress, { signal }), () => {
+        configureCaps();
+        initRender(canvas);
+        initInput(canvas);
+        initUI();
 
-    G.events.levelUp = showLevelUp;
-    G.events.chest = showChest;
-    G.events.death = onPlayerDeath;
-    G.events.gameOver = showGameOver;
-    G.events.stageClear = showStageClear;
-    G.events.bossSpawn = onBossSpawn;
-    G.events.saveError = () => toast('코인을 저장하지 못했습니다. 코인은 바닥에 유지됩니다. 저장 공간을 확인하세요.', 5000);
-    input.onPause = togglePause;
+        G.events.levelUp = showLevelUp;
+        G.events.chest = showChest;
+        G.events.death = onPlayerDeath;
+        G.events.gameOver = showGameOver;
+        G.events.stageClear = showStageClear;
+        G.events.bossSpawn = onBossSpawn;
+        G.events.saveError = () => toast('코인을 저장하지 못했습니다. 코인은 바닥에 유지됩니다. 저장 공간을 확인하세요.', 5000);
+        input.onPause = togglePause;
 
-    const fill = document.getElementById('loading-fill');
-    const txt = document.getElementById('loading-text');
-    await loadAssets((_, ratio) => {
-        if (ratio !== undefined) {
-            fill.style.width = `${Math.round(ratio * 100)}%`;
-            txt.textContent = `${Math.round(ratio * 100)}%`;
-        }
+        // Typography has local fallbacks; optional web fonts never hold game entry.
+        showTitle();
+        last = performance.now();
+        acc = 0;
+        requestAnimationFrame(frame);
     });
-    if (document.fonts) await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]);
-    document.getElementById('loading').hidden = true;
-    showTitle();
-    requestAnimationFrame(frame);
 }
 
 let last = performance.now();
@@ -52,6 +51,12 @@ const debug = new URLSearchParams(location.search).has('debug');
 window.__kfp = { G, perf };
 
 function frame(now) {
+    if (document.hidden) {
+        last = now;
+        acc = 0;
+        requestAnimationFrame(frame);
+        return;
+    }
     let dt = (now - last) / 1000;
     last = now;
     if (dt > 0.25) dt = 0.25; // 탭 복귀 시 순간이동 방지
@@ -67,6 +72,7 @@ function frame(now) {
     const t1 = performance.now();
     render(G.paused ? 0 : dt);
     const t2 = performance.now();
+    observeRenderCost(t2 - t1, now);
 
     perf.frames++;
     perf.t += dt;
