@@ -11,6 +11,7 @@ import { updatePickups, magnetAll } from './pickups.js';
 import { updateEffects, refreshGore } from './effects.js';
 import { updateSpawner, resetSpawner } from './spawner.js';
 import { spawnBoss } from './boss.js';
+import { prepareBossSheets } from './boss-sheets.js';
 import { resetBuild, snapshotBuild, restoreBuild, xpForLevel } from './progression.js';
 import { invalidateStageVisuals } from './render.js';
 import { audio } from '../core/audio.js';
@@ -63,6 +64,7 @@ export function retryStage() {
 
 export function startStage(stage, restored = false) {
     G.stage = stage;
+    prepareBossSheets(stage);
     clearWorld();
     resetSpawner();
     invalidateStageVisuals();

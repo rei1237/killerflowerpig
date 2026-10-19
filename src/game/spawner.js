@@ -1,5 +1,6 @@
 // 웨이브 디렉터: 시간에 따라 목표 밀도를 유지하며 적을 시야 밖에서 투입, 시간 이벤트 처리
 import { G, rand, pickWeighted, emit } from './state.js';
+import { ENEMIES, RANGED_UNLOCK_STAGE } from '../data/enemies.js';
 import { STAGES, EVENTS } from '../data/stages.js';
 import { spawnEnemy, edgePosition } from './enemies.js';
 import { audio } from '../core/audio.js';
@@ -15,6 +16,7 @@ export function resetSpawner() {
 export function currentWeights(st, t) {
     let w = st.weights[0][1];
     for (const [time, table] of st.weights) if (t >= time) w = table;
+    if(st.bossId < RANGED_UNLOCK_STAGE) return Object.fromEntries(Object.entries(w).filter(([id])=>!ENEMIES[id]?.ranged));
     return w;
 }
 

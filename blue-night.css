@@ -270,3 +270,48 @@ button:focus-visible,input:focus-visible,summary:focus-visible,.card:focus-visib
 @media(max-width:480px){.fusion-recipe{padding:12px}.fusion-ingredients strong{font-size:11px}.fusion-ingredients small{font-size:10px}.fusion-output h3{font-size:15px}.fusion-hud{right:14px;bottom:max(22px,env(safe-area-inset-bottom))}}
 
 .character-record{font-size:12px;line-height:1.7;color:#d8c8a3;margin:0 0 12px}
+/* Field-command edition: dedicated navigation roles and the profile-faithful survivor. */
+#title{background:radial-gradient(ellipse at 72% 35%,#283e4060,transparent 52%),linear-gradient(110deg,#080e13,#132027 70%,#0b141b)}
+#title::before{position:fixed;background:linear-gradient(90deg,#071017ed,#0c171cde),url('asset/story/stage-01.webp') center/cover;opacity:1}
+.menu-brand{border-color:#8aa79f35}.edition{color:#95a99f}.menu-copy h1{color:#f0ede4;text-shadow:0 2px 24px #0006}.menu-copy h1>span{color:#d5b7c2}
+.hero-scene{height:430px;border:1px solid #859b8c50;border-radius:14px;background:radial-gradient(ellipse at 50% 60%,#49605855,transparent 66%),linear-gradient(145deg,#213039b8,#0b171fdb);box-shadow:inset 0 0 50px #0004,0 24px 60px #0003}
+.menu-hero{width:92%;height:88%;left:4%;bottom:8%;object-fit:contain;filter:drop-shadow(0 14px 18px #0008)}
+.hero-orbit{opacity:.5}.hero-caption{left:18px;bottom:16px;border-color:#8ba78c60;background:#0c191ee8;color:#c2d4c8;font-size:10px}.hero-caption small{color:#a1b8ae;font:10px var(--font-body)}
+.petal-one{color:#c9b789}.petal-two{top:18px;right:18px;color:#8ca89d;font-size:8px;line-height:1.8}
+#btn-new{min-height:72px;background:linear-gradient(115deg,#c6bc91,#9daf8d);color:#142018;border:1px solid #d2d4b980;box-shadow:0 6px 22px #0003;gap:20px;padding:14px 22px}
+#btn-new:hover{background:linear-gradient(115deg,#d7cda4,#b7c6a4)}.launch-copy{font-size:18px;text-align:left;line-height:1.5}.launch-copy small{display:block;font:8px ui-monospace,monospace;letter-spacing:2px;color:#3b5143;margin-bottom:3px}.launch-arrow{font-size:26px}
+#btn-continue{background:#192e28;border-color:#8ca88b80;min-height:52px;text-align:left}
+.menu-utility{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.menu-utility .menu-card,.terminal-card{background:linear-gradient(140deg,#223039,#111f27);border:1px solid #6a81774d;border-radius:10px;position:relative;min-height:118px;box-shadow:inset 0 1px #c4d1b809}
+.menu-utility .menu-card{padding:17px 14px;text-align:left}
+.menu-utility .menu-card:hover{background:#273c3e;border-color:#b0bd9b80}
+.menu-utility .menu-card>.menu-icon,.terminal-card .menu-icon{position:static;display:block;width:28px;height:28px;color:#a4c3b2;margin-bottom:12px}
+.menu-icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.menu-utility .menu-card-shop .menu-icon{color:#d3bb7c}.menu-utility .menu-card-intel .menu-icon{color:#bd9186}
+.menu-utility .menu-card>.menu-arrow{right:14px;top:18px;font-size:14px}.menu-utility strong,.terminal-card strong{font:600 13px/1.5 var(--font-body);display:block}.menu-utility small,.terminal-card small{font:400 10px/1.7 var(--font-body);display:block;color:#93aaa8;margin-top:4px}
+.terminal-card summary{display:block;list-style:none;white-space:normal;min-height:118px;padding:17px 14px;font-family:var(--font-body);cursor:pointer}.terminal-card summary::-webkit-details-marker{display:none}.terminal-card .menu-icon{color:#bba5c6}.terminal-card .menu-arrow{position:absolute;top:18px;right:14px;color:#ad98b9}
+.terminal-card:hover{border-color:#ad98b980}.terminal-card[open]{position:relative;bottom:auto;right:auto;z-index:2;width:auto;max-height:none;padding:0;box-shadow:0 16px 40px #0005;grid-column:1/-1;display:block;background:#14232c}
+.terminal-card[open] summary{min-height:0;padding:18px 20px;display:grid;grid-template-columns:30px 1fr;column-gap:12px;align-items:center;border-bottom:1px solid #a38daf35}.terminal-card[open] .menu-icon{grid-row:1/3;margin:0}.terminal-card[open] small{margin:0}.terminal-caption{font:11px/1.8 var(--font-body);color:#a0b1b6;margin:16px 20px 8px}.terminal-card:not([open])>.terminal-caption{display:none}.terminal-card .secret-body{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 20px 20px}.terminal-card input{flex:1;min-width:150px;min-height:46px;padding:12px;font-size:14px;letter-spacing:.15em;border-color:#a38daf55}.terminal-card #secret-submit{position:static;min-height:46px;padding:12px 18px;text-align:center;background:#354347;border-color:#a7b59b66;font-size:12px}.terminal-card .error-text{flex-basis:100%;line-height:1.6}.terminal-card .dev-panel{padding:0 20px 20px}
+.menu-footer{align-items:center;gap:16px}.menu-system{display:flex;gap:8px;flex-wrap:wrap}.menu-system .btn{min-height:44px;font-size:11px;padding:10px 14px;background:#13232b;border-color:#778c8140}.menu-system .btn>span{margin-left:10px;color:#b8c8bb}
+.story-backdrop{position:absolute;inset:-24px;background-position:center;background-size:cover;filter:blur(22px) saturate(.65);opacity:.35;pointer-events:none}.story-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#101a22f5,transparent 38%,#101a2244);pointer-events:none}.story-visual>#story-art{z-index:1;filter:drop-shadow(0 8px 18px #0004)}.story-location{z-index:2;background:#102029b0;padding:8px 12px;border-radius:5px;border:1px solid #a2bca522}
+@media(max-width:760px){.hero-scene{height:310px}.menu-hero{height:90%;width:90%;left:5%;bottom:7%}.menu-utility{grid-template-columns:repeat(2,minmax(0,1fr))}.menu-utility .menu-card,.terminal-card summary{min-height:124px}.hero-caption{font-size:9px;bottom:12px}.hero-caption small{font-size:8px}.menu-footer{align-items:flex-start;flex-direction:column}.menu-system{width:100%}.menu-system .btn{flex:1}.launch-copy{font-size:17px}.story-location{padding:3px 8px}}
+@media(max-height:520px) and (orientation:landscape){.hero-scene{height:320px}.menu-utility .menu-card,.terminal-card summary{min-height:118px}.menu-hero{height:88%}}
+
+.menu-system .btn>span{display:inline-flex;vertical-align:middle;width:16px;height:16px;align-items:center;justify-content:center}.menu-system svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+
+.fusion-box{width:min(940px,94vw)}.fusion-summary{font:12px/1.8 var(--font-body);color:#bdcba7;margin:0 0 18px;padding:12px 14px;border:1px solid #a4b78240;background:#27362b50;border-radius:6px}.fusion-ready{border-color:#c3b77b;background:linear-gradient(140deg,#263831,#15222a)}
+@media(min-width:800px){.fusion-recipes{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}.fusion-recipe{display:flex;flex-direction:column}.fusion-recipe>.btn{margin-top:auto}.fusion-output h3{font-size:15px}.fusion-output{align-items:flex-start}.fusion-output .fusion-art{width:54px;height:54px}}
+/* Upgrade selection: a dedicated action and a separate, safe recipe disclosure. */
+.choice-card{padding:0!important;min-width:0;overflow:hidden;align-self:start}
+.choice-select{display:block;width:100%;min-height:44px;padding:20px 18px;text-align:left;background:transparent;border:0;color:inherit;position:relative;border-radius:0;box-shadow:none}
+.choice-select .card-lv{font:800 clamp(15px,2vw,19px)/1.45 var(--font-body,sans-serif);letter-spacing:0;color:#f4c7dc;background:#392d39;padding:7px 9px;border-radius:5px;margin-top:8px}
+.choice-recipes{border-top:1px solid #64736c66;background:#101d25;font-size:12px;line-height:1.6;text-align:left}
+.choice-recipes summary{cursor:pointer;min-height:44px;padding:12px 14px;color:#d8c08e;font-weight:700}
+.choice-recipe-detail{padding:12px 14px;border-top:1px solid #52675f44;overflow-wrap:anywhere}
+.choice-recipe-detail strong{display:block;color:#b9ddc6;font-size:13px}.choice-recipe-detail p{margin:6px 0;color:#c4ced5}.choice-recipe-detail small{display:block;color:#9faeb8;line-height:1.65}
+@media(max-width:600px){.choice-select{padding:15px}.choice-select .card-lv{font-size:17px}.choice-recipe-detail{padding:11px 14px}}
+.reward-level{font-weight:800;font-size:17px;color:#f0c7dc;grid-column:1/-1}.reward .choice-recipes{grid-column:1/-1;width:100%;margin-top:8px}
+/* Combat instrumentation, with explicit meter labels and crisp low-noise edges. */
+.vitals-card{border:1px solid #8b9d9366;box-shadow:0 4px 18px #0008,inset 0 1px #ffffff0c;background:linear-gradient(120deg,#15242bf5,#0c161ff5)}
+.vitals-label strong{letter-spacing:.02em}.vital-track{border:1px solid #95b2a455;background:#090f15}.vital-track>div{background:linear-gradient(90deg,#608d79,#a0c7a1);box-shadow:inset 0 1px #e6ffda77}
+.mission-card{border-left:2px solid #c7aa72;background:#0c1720e8}.mission-card strong{font-variant-numeric:tabular-nums;color:#f5ead4}.operation-progress{color:#d0d9d4}.hud-boss{background:#19151feb;border:1px solid #a8788588;box-shadow:0 4px 20px #0008}

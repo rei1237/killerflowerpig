@@ -1,0 +1,192 @@
+{
+  "bossId": 6,
+  "image": "boss-06.webp",
+  "width": 1024,
+  "height": 512,
+  "cellWidth": 256,
+  "cellHeight": 256,
+  "columns": 4,
+  "rows": 2,
+  "anchor": {
+    "x": 128,
+    "y": 240
+  },
+  "facing": "right",
+  "bodyHeight": 202,
+  "normalization": "uniform scale; active foot-band centered; death silhouette centered",
+  "measurements": [
+    {
+      "footBandCenterX": 128.0,
+      "bottomY": 240,
+      "visibleHeight": 201,
+      "visibleWidth": 177
+    },
+    {
+      "footBandCenterX": 128.5,
+      "bottomY": 240,
+      "visibleHeight": 202,
+      "visibleWidth": 183
+    },
+    {
+      "footBandCenterX": 128.5,
+      "bottomY": 240,
+      "visibleHeight": 202,
+      "visibleWidth": 197
+    },
+    {
+      "footBandCenterX": 128.5,
+      "bottomY": 240,
+      "visibleHeight": 185,
+      "visibleWidth": 206
+    },
+    {
+      "footBandCenterX": 128.0,
+      "bottomY": 240,
+      "visibleHeight": 193,
+      "visibleWidth": 202
+    },
+    {
+      "footBandCenterX": 128.0,
+      "bottomY": 240,
+      "visibleHeight": 196,
+      "visibleWidth": 199
+    },
+    {
+      "footBandCenterX": 128.0,
+      "bottomY": 240,
+      "visibleHeight": 162,
+      "visibleWidth": 198
+    },
+    {
+      "footBandCenterX": 128.0,
+      "bottomY": 240,
+      "visibleHeight": 118,
+      "visibleWidth": 210
+    }
+  ],
+  "type": "genuine drawn eight-pose atlas; crop/scale/pad normalization only",
+  "frames": [
+    {
+      "name": "walkA",
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 240
+      },
+      "durationMs": 140
+    },
+    {
+      "name": "walkB",
+      "index": 1,
+      "x": 256,
+      "y": 0,
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 240
+      },
+      "durationMs": 140
+    },
+    {
+      "name": "windup",
+      "index": 2,
+      "x": 512,
+      "y": 0,
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 240
+      },
+      "durationMs": 180
+    },
+    {
+      "name": "attack",
+      "index": 3,
+      "x": 768,
+      "y": 0,
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 240
+      },
+      "durationMs": 120
+    },
+    {
+      "name": "recover",
+      "index": 4,
+      "x": 0,
+      "y": 256,
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 240
+      },
+      "durationMs": 180
+    },
+    {
+      "name": "hurt",
+      "index": 5,
+      "x": 256,
+      "y": 256,
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 240
+      },
+      "durationMs": 140
+    },
+    {
+      "name": "deathA",
+      "index": 6,
+      "x": 512,
+      "y": 256,
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 240
+      },
+      "durationMs": 220
+    },
+    {
+      "name": "deathB",
+      "index": 7,
+      "x": 768,
+      "y": 256,
+      "width": 256,
+      "height": 256,
+      "anchor": {
+        "x": 128,
+        "y": 240
+      },
+      "durationMs": 800
+    }
+  ],
+  "animations": {
+    "walk": [
+      0,
+      1
+    ],
+    "attack": [
+      2,
+      3,
+      4
+    ],
+    "hurt": [
+      5
+    ],
+    "death": [
+      6,
+      7
+    ]
+  }
+}

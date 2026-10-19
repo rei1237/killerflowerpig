@@ -1,8 +1,10 @@
-import { drawBossArtwork } from './boss-appearance.js';
+import { drawBossArtwork, drawBossSpriteSheet, initBossMotion, setBossMotion, hitBossMotion, recoverBossMotion, updateBossMotion } from './boss-appearance.js';
+import { prepareBossSheets, getBossSheet } from './boss-sheets.js';
 // 보스: 3페이즈, 예고(텔레그래프) 기반 패턴, 페이즈 전환 연출, 처치 시 관 상자
 import { G, rand, emit, pickWeighted } from './state.js';
 import { BOSSES, PHASE_THRESHOLDS } from '../data/bosses.js';
 import { STAGES } from '../data/stages.js';
+import { currentWeights } from './spawner.js';
 import { atlases, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { fireEnemyShot, spawnEnemy, edgePosition } from './enemies.js';
@@ -28,6 +30,8 @@ export class Boss {
         const pos = edgePosition(0.9);
         this.x = pos.x; this.y = pos.y;
         this.alive = true;
+        initBossMotion(this);
+        prepareBossSheets(stage);
         this.phase = 0;
         this.state = 'walk';
         this.anim = 0; this.animT = 0;
@@ -53,6 +57,7 @@ export class Boss {
         if (cc && Math.random() < cc) { amount *= 2; crit = true; }
         this.hp -= amount;
         this.flash = 0.06;
+        hitBossMotion(this);
         if (opts.weapon) G.damageBy[opts.weapon] = (G.damageBy[opts.weapon] || 0) + amount;
         if (!opts.silent) damageText(this.x + rand(-20, 20), this.y - this.radius * 2.5, amount, crit);
         if (Math.random() < 0.3) blood(this.x, this.y - this.radius, 3);
@@ -84,6 +89,7 @@ export class Boss {
     die() {
         this.alive = false;
         this.state = 'dead';
+        setBossMotion(this, 'dead');
         this.anim = 0; this.animT = 0; this.deadT = 0;
         this.task = null;
         G.hallucinate = 0;
@@ -104,6 +110,7 @@ export class Boss {
     }
 
     update(dt) {
+        updateBossMotion(this, dt);
         this.animT += dt;
         if (!this.alive) {
             this.deadT += dt;
@@ -162,12 +169,14 @@ export class Boss {
 
     endTask(rest = 1.6) {
         this.task = null;
+        recoverBossMotion(this);
         this.attackT = rest / this.phaseMul * rand(0.85, 1.15) * (this.def.pacing?.recovery ?? 1);
     }
 
     bodyY() { return this.y - this.radius; }
 
     radial(n, offset = 0, speed = SHOT_SPEED, size = 9) {
+        setBossMotion(this, 'attack', .16);
         for (let i = 0; i < n; i++) {
             const a = offset + (i / n) * Math.PI * 2;
             fireEnemyShot(this.x, this.bodyY(), Math.cos(a), Math.sin(a), speed * this.phaseMul ** 0.5, this.dmg * 0.6, 'boss', size);
@@ -176,6 +185,7 @@ export class Boss {
 
     // ---- 패턴 ----
     task_charge() {
+        setBossMotion(this, 'windup');
         const p = G.player;
         const a = Math.atan2(p.y - this.y, p.x - this.x);
         const len = 420;
@@ -185,7 +195,7 @@ export class Boss {
         return {
             phase: 0, a, len, dash: 0,
             step: (dt, s) => {
-                if (s.phase === 0 && s.t > warning) { s.phase = 1; s.dash = 0; shake(4); }
+                if (s.phase === 0 && s.t > warning) { s.phase = 1; s.dash = 0; setBossMotion(this, 'attack'); shake(4); }
                 if (s.phase === 1) {
                     const sp = this.def.pacing?.chargeSpeed ?? 620;
                     this.x += Math.cos(s.a) * sp * dt;
@@ -203,6 +213,7 @@ export class Boss {
     }
 
     task_ring() {
+        setBossMotion(this, 'windup');
         return {
             n: 0,
             step: (dt, s) => {
@@ -216,12 +227,14 @@ export class Boss {
     }
 
     task_spiral() {
+        setBossMotion(this, 'windup');
         return {
             fireT: 0, ang: Math.random() * 6.28,
             step: (dt, s) => {
                 s.fireT -= dt;
                 if (s.fireT <= 0) {
                     s.fireT = 0.09;
+                    setBossMotion(this, 'attack', .13);
                     const arms = 2 + this.phase;
                     for (let i = 0; i < arms; i++) {
                         const a = s.ang + (i / arms) * Math.PI * 2;
@@ -235,12 +248,15 @@ export class Boss {
     }
 
     task_aimed() {
+        setBossMotion(this, 'windup');
         return {
             n: 0,
             step: (dt, s) => {
                 if (s.t > 0.28 * s.n + 0.35) {
                     const p = G.player;
                     const base = Math.atan2(p.y - 18 - this.bodyY(), p.x - this.x);
+                    setBossMotion(this, 'attack', .13);
+                    this.flip = Math.cos(base) < 0;
                     const fan = 5 + this.phase * 2;
                     for (let i = 0; i < fan; i++) {
                         const a = base + (i / (fan - 1) - 0.5) * 0.9;
@@ -254,9 +270,10 @@ export class Boss {
     }
 
     patternSummon(count) {
+        setBossMotion(this, 'attack', .22);
         count = Math.ceil(count * (this.def.pacing?.summons ?? 1));
         const st = STAGES[G.stage];
-        const table = st.weights[st.weights.length - 1][1];
+        const table = currentWeights(st, st.duration);
         for (let i = 0; i < count; i++) {
             const a = (i / count) * Math.PI * 2;
             const e = spawnEnemy(pickWeighted(table), this.x + Math.cos(a) * 90, this.y + Math.sin(a) * 60, { force: true, hpMul: 0.7 });
@@ -266,6 +283,7 @@ export class Boss {
     }
 
     task_summon() {
+        setBossMotion(this, 'windup');
         return {
             step: (dt, s) => {
                 if (s.t > 0.6) { this.patternSummon(6 + this.phase * 3); this.endTask(1.6); }
@@ -274,6 +292,7 @@ export class Boss {
     }
 
     task_pools() {
+        setBossMotion(this, 'windup');
         const p = G.player;
         const n = 4 + this.phase * 2;
         for (let i = 0; i < n; i++) {
@@ -282,6 +301,7 @@ export class Boss {
             spawnHazard('tcircle', x, y, {
                 radius: 48, delay: 1.0 + i * 0.08, color: '#7dff4a',
                 onFire: (h) => {
+                    setBossMotion(this, 'attack', .16);
                     const pl = G.player;
                     const dx = pl.x - h.x, dy = pl.y - h.y;
                     if (dx * dx + (dy * dy) / 0.49 < h.radius * h.radius) damagePlayer(this.dmg * 0.8, h.x, h.y);
@@ -295,6 +315,7 @@ export class Boss {
     }
 
     task_slam() {
+        setBossMotion(this, 'windup');
         const R = 150 + this.phase * 20;
         spawnHazard('tcircle', this.x, this.y, {
             radius: R, delay: 1.0, color: '#ff1a3a',
@@ -314,6 +335,7 @@ export class Boss {
     }
 
     task_snipe() {
+        setBossMotion(this, 'windup');
         const h = spawnHazard('tline', this.x, this.bodyY(), { angle: 0, len: 900, width: 10, delay: 1.1, color: '#ff2a2a' });
         audio.sfx('warn');
         return {
@@ -326,7 +348,9 @@ export class Boss {
                 }
                 if (!s.fired && s.t >= 1.1) {
                     s.fired = true;
+                    setBossMotion(this, 'attack', .2);
                     const a = s.line.angle;
+                    this.flip = Math.cos(a) < 0;
                     for (let i = 0; i < 3; i++) {
                         const sh = fireEnemyShot(this.x, this.bodyY(), Math.cos(a), Math.sin(a), 720 + i * 40, this.dmg * 0.9, 'boss', 10);
                         sh.life = 2;
@@ -340,6 +364,7 @@ export class Boss {
     }
 
     task_blink() {
+        setBossMotion(this, 'windup');
         const p = G.player;
         const a = Math.random() * Math.PI * 2;
         const tx = p.x + Math.cos(a) * 140, ty = p.y + Math.sin(a) * 100;
@@ -354,6 +379,7 @@ export class Boss {
                     this.x = s.tx; this.y = s.ty;
                     this.alpha = 1;
                     const pl = G.player;
+                    this.flip = pl.x < this.x;
                     if (Math.hypot(pl.x - this.x, pl.y - this.y) < this.radius * 1.6) damagePlayer(this.dmg, this.x, this.y);
                     this.radial(8 + this.phase * 4, Math.random(), 210);
                     blood(this.x, this.y - this.radius, 14);
@@ -369,9 +395,11 @@ export class Boss {
         if (this.alpha < 1) ctx.globalAlpha = this.alpha;
         if (!this.alive && this.deadT > 2.5) ctx.globalAlpha = Math.max(0, 1 - (this.deadT - 2.5));
         if (this.invuln > 0 && this.alive) ctx.globalAlpha = 0.6 + Math.sin(G.clock * 40) * 0.3;
-        if (!drawBossArtwork(ctx, this, G.clock, images[`bossArt${this.stage}`])) {
-            // Keep the encounter playable if a portrait fails to load.
-            this.atlas.draw(ctx, anim, this.anim, this.x, this.y, this.scale, this.flip, tint);
+        if (!drawBossSpriteSheet(ctx, this, getBossSheet(this.stage))) {
+            if (!drawBossArtwork(ctx, this, G.clock, images[`bossArt${this.stage}`])) {
+                // Keep the encounter playable if both art requests fail.
+                this.atlas.draw(ctx, anim, this.anim, this.x, this.y, this.scale, this.flip, tint);
+            }
         }
         ctx.globalAlpha = 1;
     }

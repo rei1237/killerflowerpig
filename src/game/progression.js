@@ -1,3 +1,4 @@
+import { supplyState } from './supply-drops.js';
 // 경험치/레벨업, 레벨업 카드 생성, 무기·패시브 적용, 진화, 상자 보상
 import { G, emit } from './state.js';
 import { WEAPONS, PASSIVES, MAX_WEAPONS, MAX_PASSIVES, WEAPON_MAX_LEVEL, PASSIVE_MAX_LEVEL } from '../data/weapons.js';
@@ -137,6 +138,7 @@ export function rollChest(count) {
 }
 
 export function resetBuild() {
+    G.supplyDrought = supplyState();
     G.fusionRevision = (G.fusionRevision || 0) + 1;
     G.weapons = [];
     G.passives = {};
@@ -150,6 +152,7 @@ export function resetBuild() {
 // 스테이지 시작 시점의 빌드 스냅샷 (사망 시 해당 스테이지 재도전용 / 이어하기 저장)
 export function snapshotBuild() {
     return {
+        supplyDrought: supplyState(G.supplyDrought),
         stage: G.stage,
         level: G.level, xp: G.xp,
         weapons: G.weapons.map(w => ({ id: w.id, level: w.level, evolved: w.evolved })),
@@ -161,6 +164,7 @@ export function snapshotBuild() {
 }
 
 export function restoreBuild(s) {
+    G.supplyDrought = supplyState(s.supplyDrought);
     G.fusionRevision = (G.fusionRevision || 0) + 1;
     G.stage = s.stage;
     G.level = s.level;

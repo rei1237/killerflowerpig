@@ -17,3 +17,17 @@ Normal equipped passive/shop/relic bonuses apply. Fused stats are bounded: damag
 Consumed parent shots/fields/beams are retired so they cannot continue attacking indefinitely after fusion. Surviving item slots and projectile hit channels are remapped, and hit cooldown maps are reset. `itemsFused` signals the successful transition. Build snapshots serialize output IDs and item levels; ordinary restore reconstructs correct runtime state without changing the saved wallet or archived XP. Unknown loaded item IDs are excluded and item levels are clamped to1–8.
 
 The UI owns modal pausing and whether to checkpoint immediately after fusion. The baseline game's run snapshot persists at stage boundaries, so current-stage actions otherwise follow its normal restart/continue policy. No server backend was introduced. Future authoritative fusion should receive recipe ID, item instance IDs, expected inventory revision and idempotency key, then validate levels and atomically consume/produce server-owned items.
+
+## Expanded recipe roster (eight total)
+
+The original three recipes remain unchanged. Five additional recipes also require both original weapons at Lv5; consume both into one Lv1 output; and use the same preview/signature, slot cleanup, level cap and run checkpoint rules.
+
+- `burst_rail`: pistols + rifle → 연쇄 관통권총. Three timed shots per burst (0.07 seconds apart), 17 damage and five-target piercing each, 900 projectile speed, 0.8-second flight, 1.2-second weapon cooldown. A pending burst is not overwritten when cooldown bonuses would otherwise fire the next burst early. Maximum eight rounds per burst.
+- `venom_saw`: saw + gas → 맹독 회전톱. Two bouncing saws, 14 damage per hit, 0.4-second repeat-hit cooldown, 3.2-second flight and 45% on-hit enemy slow. Maximum four saws per activation.
+- `ember_lance`: cannon + molotov → 화염 꽃잎창. A 48-damage piercing floral beam (540 length / 40 width) plus one thrown fire field (54 radius, 7.68 damage per 0.3-second tick, three-second duration), every four seconds. Field damage is 16% of the upgraded/modifier-adjusted beam damage. Maximum two beams and two fields per activation. Field/beam share area upgrades but use separate bounded durations.
+- `orbit_saw`: thorns + saw → 연꽃 톱니진. Two bouncing saws dealing 18 damage plus three close orbiting petals dealing 10.8 damage. Orbit radius78, lifetime2.8 seconds, cooldown3.8 seconds, repeat-hit cooldown0.4 seconds. Orbit damage is60% of saw damage; orbit count grows to five, saw count caps at four.
+- `toxic_scatter`: shotgun + gas → 맹독 산탄총. Six spread bullets dealing14 damage, three-target piercing, 40% on-hit enemy slow, cooldown1.3 seconds. Maximum10 pellets per activation. It does not create a lingering fog or trigger recursive explosions.
+
+Slow applies to regular enemies through existing hit handling; existing boss slow immunity is retained. Secondary effects use their fusion output ID for damage attribution, and all parent effects are retired on fusion. None of these effects spawns additional shots on hit or on kill.
+
+Preview API additionally exposes `fieldDamage`, `fieldAmount`, `fieldRadius` (already area-adjusted), `fieldDuration`, `fieldTick` for ember_lance. `orbitDamage`, `orbitAmount`, `orbitRadius` (already area-adjusted), `orbitDuration` are exposed for both lotus_bloom and orbit_saw. Generic damage/amount for orbit_saw describe its saws. `slow` is a fraction, e.g.0.45 means45%. Raw beam length is multiplied by sqrt(area), beam width and field radius by area for display and collision.

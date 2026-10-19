@@ -1,3 +1,5 @@
+import { images } from '../core/assets.js';
+import { getPetSprite, loadPetSprite, petSpriteRect, petVisualLimits } from './pet-sprite.js';
 import { G } from './state.js';
 import { save } from '../core/save.js';
 import { healPlayer } from './player.js';
@@ -11,13 +13,16 @@ export function resetPets() { pet = null; }
 export function updatePets(dt) {
     if (!G.player || G.player.dead || save.equippedPet !== 'pet_yeongnyang' || !save.inventory.includes('pet_yeongnyang')) { pet = null; return; }
     const p = G.player;
-    if (!pet) pet = { x: p.x - 32, y: p.y + 10, cd: 0.6, healCd: PET_POWER.healInterval, swipe: 0 };
+    if (!pet) pet = { x: p.x - 32, y: p.y + 10, cd: 0.6, healCd: PET_POWER.healInterval, swipe: 0, animClock: 0, attackElapsed: 99, healElapsed: 99, moving: false, flip: p.flip };
     const tx = p.x - (p.flip ? -34 : 34), ty = p.y + 8;
     if (Math.hypot(tx - pet.x, ty - pet.y) > 300) { pet.x = tx; pet.y = ty; }
+    pet.animClock += dt; pet.attackElapsed += dt; pet.healElapsed += dt;
+    pet.moving = Math.hypot(tx - pet.x, ty - pet.y) > 5 || !!(p.vx || p.vy);
+    pet.flip = p.flip;
     const blend = 1 - Math.exp(-7 * dt);
     pet.x += (tx - pet.x) * blend; pet.y += (ty - pet.y) * blend;
     pet.healCd -= dt;
-    if (pet.healCd <= 0) { healPlayer(PET_POWER.heal); pet.healCd = PET_POWER.healInterval; }
+    if (pet.healCd <= 0) { const hp = p.hp; healPlayer(PET_POWER.heal); if (p.hp > hp) pet.healElapsed = 0; pet.healCd = PET_POWER.healInterval; }
     pet.cd -= dt; pet.swipe = Math.max(0, pet.swipe - dt);
     // Coin help is local and bounded; pet never auto-collects chests or dangerous pickups.
     for (let i = 0; i < G.pickups.count; i++) {
@@ -38,7 +43,7 @@ export function updatePets(dt) {
         if (targets.length > PET_POWER.targets) targets.pop();
     }
     if (targets.length) {
-        pet.cd = PET_POWER.cooldown; pet.swipe = 0.18;
+        pet.cd = PET_POWER.cooldown; pet.swipe = 0.18; pet.attackElapsed = 0;
         pet.targetX = targets[0].enemy.x; pet.targetY = targets[0].enemy.y - targets[0].enemy.radius;
         const damage = (PET_POWER.damage + Math.min(G.level, PET_POWER.maxLevel) * PET_POWER.levelDamage) * p.stats.might;
         for (const { enemy } of targets) hitEnemy(enemy, damage, { weapon: 'pet_yeongnyang', silent: true, slow: 0.25 });
@@ -46,27 +51,41 @@ export function updatePets(dt) {
 }
 export function drawPets(ctx, image = portrait) {
     if (!pet) return;
-    const x = pet.x, y = pet.y + Math.sin(G.clock * 6) * 1.5;
+    loadPetSprite();
+    const x = pet.x, y = pet.y + Math.sin(pet.animClock * 6) * 1;
+    const limits = petVisualLimits(!!images.playerFire);
     ctx.save();
-    ctx.fillStyle = '#0006'; ctx.beginPath(); ctx.ellipse(x, y + 2, 15, 5, 0, 0, Math.PI * 2); ctx.fill();
-    if (image?.complete && image.naturalWidth) {
-        const scale = Math.min(52 / image.naturalWidth, 66 / image.naturalHeight);
-        const w = image.naturalWidth * scale, h = image.naturalHeight * scale;
-        ctx.drawImage(image, x - w / 2, y - h, w, h);
-    } else {
-        // Tiny profile-based fallback: white fluffy cat, navy crescent hat, violet orb.
-        ctx.fillStyle = '#20264e'; ctx.beginPath(); ctx.moveTo(x - 13, y); ctx.lineTo(x, y - 30); ctx.lineTo(x + 15, y); ctx.fill();
-        ctx.fillStyle = '#fff5f8'; ctx.beginPath(); ctx.ellipse(x, y - 16, 13, 11, 0, 0, Math.PI * 2); ctx.fill();
-        for (const dir of [-1, 1]) { ctx.beginPath(); ctx.moveTo(x + dir * 5, y - 22); ctx.lineTo(x + dir * 12, y - 33); ctx.lineTo(x + dir * 14, y - 17); ctx.fill(); }
-        ctx.fillStyle = '#ad78c8'; ctx.fillRect(x - 8, y - 18, 5, 2); ctx.fillStyle = '#d0a85e'; ctx.fillRect(x + 3, y - 18, 5, 2);
-        ctx.fillStyle = '#f2aec2'; ctx.fillRect(x - 1, y - 13, 3, 2);
-        ctx.fillStyle = '#20264e'; ctx.beginPath(); ctx.moveTo(x - 14, y - 25); ctx.lineTo(x + 1, y - 45); ctx.lineTo(x + 17, y - 38); ctx.lineTo(x + 8, y - 36); ctx.lineTo(x + 13, y - 25); ctx.fill();
-        ctx.fillStyle = '#f6ce73'; ctx.font = '12px serif'; ctx.fillText('☾', x - 5, y - 30);
-        ctx.fillStyle = '#b98bea'; ctx.beginPath(); ctx.arc(x, y - 3, 3, 0, Math.PI * 2); ctx.fill();
-    }
+    ctx.fillStyle = '#0006'; ctx.beginPath(); ctx.ellipse(x, y - 1, limits.width * 0.3, 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.save(); ctx.translate(x, y); if (pet.flip) ctx.scale(-1, 1);
+    const sprite = getPetSprite();
+    if (sprite) ctx.drawImage(sprite.image, ...petSpriteRect(sprite.meta, pet, !!images.playerFire).args);
+    else drawWingedFallback(ctx, image, limits);
+    ctx.restore();
     if (pet.swipe > 0) {
-        ctx.globalAlpha = pet.swipe / 0.18; ctx.strokeStyle = '#dcb6ff'; ctx.lineWidth = 2;
-        for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(x + i * 4, y - 15); ctx.lineTo(pet.targetX + i * 4, pet.targetY); ctx.stroke(); }
+        ctx.globalAlpha = pet.swipe / 0.18; ctx.strokeStyle = '#dcb6ff'; ctx.lineWidth = 1;
+        for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(x + i * 3, y - limits.height * 0.5); ctx.lineTo(pet.targetX + i * 3, pet.targetY); ctx.stroke(); }
     }
     ctx.restore();
+}
+function drawWingedFallback(ctx, image, limits) {
+    // Whole fallback, including both wings and hat, lies within x[-21,21], y[-45,0].
+    const scale = Math.min(limits.width / 42, limits.height / 45);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = '#cfd7ff';
+    for (const side of [-1, 1]) {
+        ctx.beginPath();ctx.moveTo(side*7,-9);ctx.lineTo(side*21,-29);ctx.lineTo(side*20,-15);ctx.lineTo(side*14,-6);ctx.closePath();ctx.fill();
+    }
+    if (image?.complete && image.naturalWidth) {
+        const fit = Math.min(28/image.naturalWidth,43/image.naturalHeight);
+        const w=image.naturalWidth*fit,h=image.naturalHeight*fit;
+        ctx.drawImage(image,-w/2,-h,w,h); return;
+    }
+    ctx.fillStyle = '#20264e'; ctx.beginPath(); ctx.moveTo(-13, 0); ctx.lineTo(0, -30); ctx.lineTo(15, 0); ctx.fill();
+    ctx.fillStyle = '#fff5f8'; ctx.beginPath(); ctx.ellipse(0, -16, 13, 11, 0, 0, Math.PI * 2); ctx.fill();
+    for (const dir of [-1, 1]) { ctx.beginPath(); ctx.moveTo(dir * 5, -22); ctx.lineTo(dir * 12, -33); ctx.lineTo(dir * 14, -17); ctx.fill(); }
+    ctx.fillStyle = '#ad78c8'; ctx.fillRect(-8, -18, 5, 2); ctx.fillStyle = '#d0a85e'; ctx.fillRect(3, -18, 5, 2);
+    ctx.fillStyle = '#f2aec2'; ctx.fillRect(-1, -13, 3, 2);
+    ctx.fillStyle = '#20264e'; ctx.beginPath(); ctx.moveTo(-14, -25); ctx.lineTo(1, -45); ctx.lineTo(17, -38); ctx.lineTo(8, -36); ctx.lineTo(13, -25); ctx.fill();
+    ctx.fillStyle = '#f6ce73'; ctx.font = '12px serif'; ctx.fillText('☾', -5, -30);
+    ctx.fillStyle = '#b98bea'; ctx.beginPath(); ctx.arc(0, -3, 3, 0, Math.PI * 2); ctx.fill();
 }

@@ -40,8 +40,8 @@ export function weaponStats(w) {
     };
     if (def.fusionOnly) {
         result.dmg = Math.min(220, result.dmg); result.cd = Math.max(0.5, result.cd);
-        result.amount = Math.min(w.id === 'lotus_bloom' ? 3 : w.id === 'plague_fire' ? 5 : 12, result.amount);
-        result.area = Math.min(2, result.area); result.duration = Math.min(w.id === 'lotus_bloom' ? 0.7 : 6, result.duration);
+        result.amount = Math.min(def.amountCap || (w.id === 'lotus_bloom' ? 3 : w.id === 'plague_fire' ? 5 : 12), result.amount);
+        result.area = Math.min(2, result.area); result.duration = Math.min(['lotus_bloom', 'ember_lance'].includes(w.id) ? 0.7 : 6, result.duration);
         result.pierce = Math.min(12, result.pierce); result.slow = Math.min(0.65, result.slow);
     }
     return result;
@@ -90,7 +90,7 @@ function shoot(w, s, dirX, dirY, opts) {
     sh.dmg = s.dmg; sh.pierce = s.pierce; sh.life = s.duration;
     sh.radius = (opts.radius || 5) * s.area;
     sh.img = opts.img;
-    sh.crit = s.crit; sh.execute = s.execute; sh.bleed = s.bleed;
+    sh.crit = s.crit; sh.execute = s.execute; sh.bleed = s.bleed; sh.slow = s.slow || 0;
     sh.knock = opts.knock ?? 60;
     sh.bounce = false;
     sh.spin = 0;
@@ -129,9 +129,16 @@ function randomEnemyNear(maxR) {
 }
 
 export function orbitStats(w, s) {
+    if (w.id === 'orbit_saw') return { ...s, dmg: s.dmg * 0.6, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3)), radius: 78, duration: 2.8, permanent: false };
     return w.id === 'lotus_bloom' ? { ...s, dmg: s.dmg * 0.28, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3)), radius: 90, duration: 2.8, permanent: false } : s;
 }
+export function emberFieldStats(s) { return { ...s, dmg: s.dmg * 0.16, amount: Math.min(2, s.amount), duration: 3, radius: 54, tick: 0.3 }; }
 const FIRE = {
+    burst_rail(w, s) { FIRE.pistols(w, s); },
+    venom_saw(w, s) { FIRE.saw(w, s); },
+    toxic_scatter(w, s) { FIRE.shotgun(w, s); },
+    ember_lance(w, s) { FIRE.cannon(w, s); FIRE.molotov(w, emberFieldStats(s)); },
+    orbit_saw(w, s) { FIRE.saw(w, s); w.activeT = 2.8; },
     lotus_bloom(w, s) { FIRE.cannon(w, s); w.activeT = 2.8; },
     scatter_rail(w, s) { FIRE.shotgun(w, s); },
     plague_fire(w, s) {
@@ -283,7 +290,7 @@ export function updateWeapons(dt) {
             }
         }
         // 연꽃 가시 궤도
-        if ((w.id === 'thorns' || w.id === 'lotus_bloom') && (w.activeT > 0 || s.permanent)) {
+        if (['thorns', 'lotus_bloom', 'orbit_saw'].includes(w.id) && (w.activeT > 0 || s.permanent)) {
             if (!s.permanent) w.activeT -= dt;
             w.angle += WEAPONS.thorns.base.speed * dt;
             updateOrbit(w, orbitStats(w, s));
@@ -300,6 +307,7 @@ export function updateWeapons(dt) {
         if (w.cd <= 0) {
             if (w.id === 'thorns' && s.permanent) { w.cd = 1; continue; }
             if (w.id === 'thorns' && w.activeT > 0) { w.cd = 0.1; continue; }
+            if (w.burst > 0) { w.cd = 0.07; continue; }
             w.cd = s.cd;
             FIRE[w.id](w, s);
         }
@@ -395,7 +403,7 @@ export function updateShots(dt) {
                 sh.lastHit.push(e.id);
             }
             const sp = Math.hypot(sh.vx, sh.vy) || 1;
-            hitEnemy(e, sh.dmg, { weapon: sh.weapon, kx: sh.vx / sp, ky: sh.vy / sp, knock: sh.knock, crit: sh.crit, execute: sh.execute, bleed: sh.bleed });
+            hitEnemy(e, sh.dmg, { weapon: sh.weapon, kx: sh.vx / sp, ky: sh.vy / sp, knock: sh.knock, crit: sh.crit, execute: sh.execute, bleed: sh.bleed, slow: sh.slow });
             if (--sh.pierce <= 0) dead = true;
         }
         const boss = G.boss;
@@ -455,7 +463,7 @@ export function drawShots(ctx) {
     }
     // 연꽃 가시
     for (const w of G.weapons) {
-        if ((w.id !== 'thorns' && w.id !== 'lotus_bloom') || !w.s || !(w.activeT > 0 || w.s.permanent)) continue;
+        if (!['thorns', 'lotus_bloom', 'orbit_saw'].includes(w.id) || !w.s || !(w.activeT > 0 || w.s.permanent)) continue;
         const s = orbitStats(w, w.s), p = G.player;
         const n = s.amount, R = s.radius * s.area, size = 26 * s.area;
         const img = w.evolved ? fx.petalBlood : fx.petal;

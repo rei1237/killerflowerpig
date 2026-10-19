@@ -1,6 +1,7 @@
 // 장판/예고: 화염(아군), 독가스(아군, 둔화), 산성(적), 예고 원/선 (보스 패턴용)
 import { G } from './state.js';
 import { glow } from '../core/assets.js';
+import { settings } from '../core/settings.js';
 import { hitEnemy } from './enemies.js';
 import { damagePlayer } from './player.js';
 import { embers, smoke } from './effects.js';
@@ -73,60 +74,114 @@ export function updateHazards(dt) {
     }
 }
 
-// 바닥 장판 (캐릭터 아래 레이어)
+// Draw-only styling: every boundary uses the existing radius and 0.7 Y ratio.
+// Reuse two small gradient textures; no per-frame gradients or particle objects.
+const FULL_TURN = Math.PI * 2;
+const DASH_WARNING = [6, 5], DASH_FRIENDLY = [3, 5], NO_DASH = [];
+const motionPreference = typeof window !== 'undefined' && window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+
+function ellipsePath(ctx, h, radius = h.radius, start = 0, end = FULL_TURN) {
+    ctx.beginPath();ctx.ellipse(h.x, h.y, radius, radius * 0.7, 0, start, end);
+}
+
+function outline(ctx, h, color, alpha, dashed = false) {
+    ctx.globalAlpha = alpha;
+    ctx.setLineDash(NO_DASH);ctx.strokeStyle = '#07111b';ctx.lineWidth = 5;
+    ellipsePath(ctx, h);ctx.stroke();
+    ctx.setLineDash(dashed ? DASH_FRIENDLY : NO_DASH);ctx.strokeStyle = color;ctx.lineWidth = 1.7;
+    ellipsePath(ctx, h);ctx.stroke();ctx.setLineDash(NO_DASH);
+}
+
+function mist(ctx, h, time, alpha, hostile, count) {
+    const g = glow(hostile ? '#b6db56' : '#57cfae', 64);
+    // Soft wisps stay INSIDE the damage footprint. The border is the safe edge.
+    ctx.save();ellipsePath(ctx, h);ctx.clip();
+    for (let n = 0; n < count; n++) {
+        const phase = n * 2.4 + h.x * 0.013 + h.y * 0.007;
+        const x = h.x + Math.sin(time * 0.7 + phase) * h.radius * 0.28;
+        const y = h.y + Math.cos(time * 0.55 + phase) * h.radius * 0.17;
+        const r = h.radius * (n === 0 ? 0.78 : 0.56);
+        ctx.globalAlpha = alpha * (n === 0 ? 0.28 : 0.19);
+        ctx.drawImage(g, x - r, y - r * 0.68, r * 2, r * 1.36);
+    }
+    ctx.restore();
+}
+
+function dangerMark(ctx, h, alpha) {
+    const s = Math.min(9, h.radius * 0.2), y = h.y - h.radius * 0.36;
+    ctx.globalAlpha = alpha;ctx.fillStyle = '#172519';
+    ctx.beginPath();ctx.moveTo(h.x, y - s);ctx.lineTo(h.x + s, y + s * 0.65);ctx.lineTo(h.x - s, y + s * 0.65);ctx.closePath();ctx.fill();
+    ctx.strokeStyle = '#e8ed9e';ctx.lineWidth = 1.3;ctx.stroke();
+    ctx.fillStyle = '#e8ed9e';ctx.fillRect(h.x - 0.8, y - s * 0.42, 1.6, s * 0.65);ctx.fillRect(h.x - 0.8, y + s * 0.34, 1.6, 1.6);
+}
+
+// 바닥 장판 (캐릭터 아래 레이어). State/timing/collision are never modified here.
 export function drawHazards(ctx) {
     const pool = G.hazards;
-    const t = G.clock;
+    const motion = settings.flash && !motionPreference?.matches;
+    const time = motion ? G.clock : 0;
+    const view = G.view, camera = G.camera;
+    let mistBudget = G.lowQ ? 16 : 48;
+    ctx.save();
     for (let i = 0; i < pool.count; i++) {
         const h = pool.items[i];
+        const bound = h.kind === 'tline' ? h.len + h.width : h.radius + 12;
+        if (Math.abs(h.x - camera.x) > view.w / 2 + bound + 60 || Math.abs(h.y - camera.y) > view.h / 2 + bound + 80) continue;
         if (h.kind === 'tcircle') {
-            const k = Math.min(1, h.t / h.delay);
-            ctx.globalAlpha = 0.18 + 0.2 * k;
-            ctx.fillStyle = h.color;
-            ctx.beginPath(); ctx.ellipse(h.x, h.y, h.radius, h.radius * 0.7, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.globalAlpha = 0.9;
-            ctx.strokeStyle = h.color; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.ellipse(h.x, h.y, h.radius * k, h.radius * 0.7 * k, 0, 0, Math.PI * 2); ctx.stroke();
+            const k = Math.min(1, Math.max(0, h.t / (h.delay || 0.001)));
+            ctx.setLineDash(NO_DASH);ctx.globalAlpha = 0.12 + k * 0.13;ctx.fillStyle = h.color;
+            ellipsePath(ctx, h);ctx.fill();
+            // Full footprint remains visible from the first warning frame.
+            outline(ctx, h, h.color, 0.82);
+            ctx.globalAlpha = 0.95;ctx.strokeStyle = '#fff0d4';ctx.lineWidth = 2.5;
+            ellipsePath(ctx, h, h.radius * 0.93, -Math.PI / 2, -Math.PI / 2 + FULL_TURN * k);ctx.stroke();
+            // Existing countdown only; this renderer never postpones damage.
+            ctx.globalAlpha = 0.45 + k * 0.3;ctx.strokeStyle = h.color;ctx.lineWidth = 1;
+            ctx.setLineDash(DASH_WARNING);ellipsePath(ctx, h, h.radius * (0.25 + k * 0.65));ctx.stroke();ctx.setLineDash(NO_DASH);
             continue;
         }
         if (h.kind === 'tline') {
-            const k = Math.min(1, h.t / h.delay);
-            ctx.save();
-            ctx.translate(h.x, h.y);
-            ctx.rotate(h.angle);
-            ctx.globalAlpha = 0.15 + 0.25 * k;
-            ctx.fillStyle = h.color;
-            ctx.fillRect(0, -h.width / 2, h.len, h.width);
-            ctx.globalAlpha = 0.9;
-            ctx.fillRect(0, -1, h.len * k, 2);
-            ctx.restore();
-            continue;
+            const k = Math.min(1, Math.max(0, h.t / (h.delay || 0.001)));
+            ctx.save();ctx.translate(h.x, h.y);ctx.rotate(h.angle);
+            ctx.globalAlpha = 0.18 + 0.16 * k;ctx.fillStyle = h.color;ctx.fillRect(0, -h.width / 2, h.len, h.width);
+            ctx.setLineDash(NO_DASH);ctx.globalAlpha = 0.9;ctx.strokeStyle = '#08101b';ctx.lineWidth = 4;
+            ctx.strokeRect(0, -h.width / 2, h.len, h.width);
+            ctx.strokeStyle = h.color;ctx.lineWidth = 1.3;ctx.strokeRect(0, -h.width / 2, h.len, h.width);
+            ctx.globalAlpha = 0.88;ctx.fillStyle = '#fff1d3';ctx.fillRect(0, -1, h.len * k, 2);
+            ctx.restore();continue;
         }
-        const life = Math.min(1, (h.duration - h.t) / 0.4, h.t / 0.15);
+        const fade = Math.max(0, Math.min(1, (h.duration - h.t) / 0.45));
+        const life = Math.max(0, Math.min(fade, h.t / 0.18));
         if (h.kind === 'fire') {
-            ctx.globalAlpha = 0.55 * life;
-            ctx.fillStyle = '#5a1000';
-            ctx.beginPath(); ctx.ellipse(h.x, h.y, h.radius, h.radius * 0.7, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 0.5 * life;ctx.fillStyle = '#5a1000';
+            ellipsePath(ctx, h);ctx.fill();
             ctx.globalCompositeOperation = 'lighter';
-            const g = glow('#ff5a14', 64);
-            const fl = 1 + Math.sin(t * 18 + h.x) * 0.08;
-            ctx.globalAlpha = 0.75 * life;
-            ctx.drawImage(g, h.x - h.radius * fl, h.y - h.radius * 0.75 * fl, h.radius * 2 * fl, h.radius * 1.5 * fl);
+            const g = glow('#ff5a14', 64), fl = motion ? 1 + Math.sin(time * 6 + h.x) * 0.035 : 1;
+            ctx.globalAlpha = 0.58 * life;
+            ctx.drawImage(g, h.x - h.radius * fl, h.y - h.radius * 0.7 * fl, h.radius * 2 * fl, h.radius * 1.4 * fl);
             ctx.globalCompositeOperation = 'source-over';
-        } else if (h.kind === 'gas') {
-            ctx.globalAlpha = 0.35 * life;
-            const g = glow('#5cff3a', 64);
-            const wob = 1 + Math.sin(t * 3 + h.y) * 0.06;
-            ctx.drawImage(g, h.x - h.radius * 1.2 * wob, h.y - h.radius * 0.85 * wob, h.radius * 2.4 * wob, h.radius * 1.7 * wob);
-        } else if (h.kind === 'acid') {
-            ctx.globalAlpha = 0.6 * life;
-            ctx.fillStyle = '#2f5a10';
-            ctx.beginPath(); ctx.ellipse(h.x, h.y, h.radius, h.radius * 0.7, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.globalAlpha = 0.5 * life;
-            ctx.fillStyle = '#8cff3a';
-            const bub = (Math.sin(t * 6 + h.x) + 1) * 0.5;
-            ctx.beginPath(); ctx.arc(h.x + h.radius * 0.3, h.y - 3, 2 + bub * 3, 0, Math.PI * 2); ctx.fill();
+        } else if (h.kind === 'gas' || h.kind === 'acid') {
+            const hostile = h.kind === 'acid';
+            ctx.globalAlpha = (hostile ? 0.48 : 0.2) * life;
+            ctx.fillStyle = hostile ? '#27381d' : '#16463f';ellipsePath(ctx, h);ctx.fill();
+            if (mistBudget > 0 && life > 0) {
+                const count = Math.min(mistBudget, G.lowQ ? 1 : 3);
+                mist(ctx, h, time, life, hostile, count);
+                mistBudget -= count;
+            }
+            // The fog thins out, but an active damaging edge never disappears.
+            const edge = hostile ? 0.4 + fade * 0.5 : fade * 0.5;
+            outline(ctx, h, hostile ? '#c3e66d' : '#64d7bc', edge, !hostile);
+            if (hostile) {
+                dangerMark(ctx, h, 0.35 + fade * 0.45);
+                if (!G.lowQ) {
+                    ctx.globalAlpha = 0.22 * life;ctx.strokeStyle = '#deef97';ctx.lineWidth = 1;
+                    const phase = motion ? Math.sin(time * 1.6 + h.x) : 0;
+                    ctx.beginPath();ctx.ellipse(h.x + h.radius * 0.34, h.y + h.radius * 0.14, 3 + phase * 0.5, 1.6, 0, 0, FULL_TURN);ctx.stroke();
+                }
+            }
         }
     }
-    ctx.globalAlpha = 1;
+    ctx.restore();
 }

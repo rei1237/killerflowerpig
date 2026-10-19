@@ -42,33 +42,28 @@
                     <p class="menu-description">푸른 감염이 도시를 삼켰다.<br>꽃돼지와 함께 장비를 모으고, 10개의 구역을 되찾으세요.</p>
                     <div class="mission-tags"><span>AUTO FIRE</span><span>10개 작전 구역</span><span>무기 진화</span></div>
                 </div>
-                <div class="hero-scene" aria-label="꽃돼지와 청토끼 좀비">
+                <div class="hero-scene" aria-label="연꽃과 보라 스카프를 한 꽃돼지 생존자">
                     <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
-                    <span class="scene-petal petal-one">FIELD UNIT / YEONI</span><span class="scene-petal petal-two">INFECTED<br>BLUE RABBIT</span>
-                    <img class="menu-enemy" src="asset/ui-rabbit.png" alt="푸른 청토끼 좀비" width="1254" height="1254">
-                    <img class="menu-hero" src="asset/ui-flowerpig.png" alt="꽃잎 총을 든 꽃돼지" width="1254" height="1254">
-                    <div class="hero-caption"><span class="hero-dot"></span> YEON <small>LAST SURVIVOR</small></div>
+                    <span class="scene-petal petal-one">FIELD UNIT / YEONI</span><span class="scene-petal petal-two">SURVIVOR<br>YEONI / 01</span>
+                    <img class="menu-hero" src="asset/ui/menu-yeoni.webp" alt="겹연꽃과 보라 스카프를 하고 소총을 든 꽃돼지 연이" width="900" height="900">
+                    <div class="hero-caption"><span class="hero-dot"></span> YEONI <small>생존자 기록 / 작전 준비 완료</small></div>
                 </div>
                 <div class="menu-bottom">
                     <div class="menu-launch">
-                        <button id="btn-new" class="btn btn-blood" type="button">새 작전 시작 <span aria-hidden="true">↗</span></button>
+                        <button id="btn-new" class="btn btn-blood" type="button"><span class="launch-copy"><small>DEPLOYMENT / 01</small>새 작전 시작</span><span class="launch-arrow" aria-hidden="true">→</span></button>
                         <button id="btn-continue" class="btn" type="button" hidden>이어하기</button>
                     </div>
                     <div class="how-to"><span class="how-label">HOW TO PLAY</span><p>이동에 집중하세요. 조준과 사격은 자동.</p><small>이동 WASD / 방향키 / 터치 · 자동 공격 · 일시정지 Esc</small></div>
                 </div>
-                <nav class="menu-utility" aria-label="게임 메뉴">
-                    <button id="btn-shop" class="btn btn-ghost" type="button"><strong>장비 보급소</strong><small>코인으로 영구 성장</small><span aria-hidden="true">↗</span></button>
-                    <button id="btn-tutorial" class="btn btn-ghost" type="button"><strong>생존 가이드</strong><small>이동부터 꽃잎포까지</small><span aria-hidden="true">↗</span></button>
-                    <button id="btn-intel" class="btn btn-ghost" type="button"><strong>보스 위협 기록</strong><small>10개 구역의 적을 확인</small><span aria-hidden="true">↗</span></button>
-                    <button id="btn-settings" class="btn btn-ghost" type="button">설정</button>
-                    <button id="btn-install" class="btn btn-ghost" type="button" hidden>홈 화면에 추가</button>
-                </nav>
-                <div class="menu-footer"><div id="title-record" class="small-text record"></div>
-                    <details id="secret" class="secret">
-                        <summary>비밀 코드</summary>
+                <nav class="menu-utility" aria-label="작전 준비 메뉴">
+                    <button id="btn-shop" class="btn btn-ghost menu-card menu-card-shop" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 11h24v17H4zM9 11V6h14v5M4 18h24M14 15h4v6h-4z"/></svg></span><strong>장비 보급소</strong><small>보급 · 강화 · 동행 펫</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
+                    <button id="btn-tutorial" class="btn btn-ghost menu-card menu-card-tutorial" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 6h10l2 3 2-3h10v21H18l-2-3-2 3H4zM16 9v15M8 12h4m-4 5h4m8-5h4m-4 5h4"/></svg></span><strong>생존 가이드</strong><small>조작 · 아이템 · 조합</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
+                    <button id="btn-intel" class="btn btn-ghost menu-card menu-card-intel" type="button"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 3l13 25H3zM16 11v8m0 4v1"/></svg></span><strong>보스 위협 기록</strong><small>구역별 표적과 전투 정보</small><span class="menu-arrow" aria-hidden="true">↗</span></button>
+                    <details id="secret" class="secret terminal-card">
+                        <summary><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 7h22v18H5zM10 12l4 4-4 4m8 0h5"/></svg></span><strong>비밀 코드</strong><small>특수 작전 터미널</small><span class="menu-arrow" aria-hidden="true">＋</span></summary><p class="terminal-caption">접근 코드를 입력해 로컬 작전 설정을 여세요.</p>
                         <div class="secret-body">
-                            <input id="secret-input" aria-label="비밀 코드 6자리" type="password" inputmode="numeric" maxlength="6" placeholder="연이의 생년월일 6자리" autocomplete="off">
-                            <button id="secret-submit" class="btn btn-small" type="button">해제</button>
+                            <input id="secret-input" aria-label="비밀 코드 6자리" type="password" inputmode="numeric" maxlength="6" placeholder="6자리 접근 코드" autocomplete="off">
+                            <button id="secret-submit" class="btn btn-small" type="button">코드 확인</button>
                             <div id="secret-error" class="error-text" hidden>코드가 틀렸습니다</div>
                         </div>
                         <div id="dev-panel" class="dev-panel" hidden>
@@ -76,7 +71,9 @@
                             <div id="stage-grid" class="stage-grid"></div>
                             <label class="check"><input id="dev-god" type="checkbox" checked> 무적 모드</label>
                         </div>
-                    </details></div>
+                    </details>
+                </nav>
+                <footer class="menu-footer"><div id="title-record" class="small-text record"></div><nav class="menu-system" aria-label="시스템 메뉴"><button id="btn-settings" class="btn btn-ghost" type="button">설정 <span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></svg></span></button><button id="btn-install" class="btn btn-ghost" type="button" hidden>홈 화면에 설치 <span aria-hidden="true">↓</span></button></nav></footer>
             </div>
         </section>
 
@@ -93,7 +90,7 @@
         <!-- 스토리 -->
         <section id="story" class="screen story-screen" hidden>
             <div class="story-panel panel">
-                <div class="story-visual"><img id="story-art" alt=""><div class="story-image-shade"></div><span id="story-location" class="story-location"></span></div>
+                <div class="story-visual"><div id="story-visual-backdrop" class="story-backdrop" aria-hidden="true"></div><img id="story-art" alt=""><div class="story-image-shade"></div><span id="story-location" class="story-location"></span></div>
                 <div class="story-copy">
                 <div id="story-head" class="story-head"></div>
                 <div id="story-text" class="story-text" tabindex="0"></div>
@@ -105,7 +102,7 @@
         </section>
 
         <div id="battle-hud" class="battle-hud" hidden>
-            <div class="guardian-card"><img src="asset/ui-flowerpig.png" alt="" width="1254" height="1254"><div class="guardian-vitals">
+            <div class="guardian-card"><img src="asset/ui/menu-yeoni.webp" alt="" width="1254" height="1254"><div class="guardian-vitals">
                 <div class="vitals-label"><strong>꽃돼지 <span id="hud-level">Lv.1</span></strong><span id="hud-hp-text"></span></div>
                 <div id="hud-hp-track" class="vital-track" role="progressbar" aria-label="체력" aria-valuemin="0" aria-valuemax="100"><div id="hud-hp"></div></div>
                 <div id="hud-xp-track" class="xp-track" role="progressbar" aria-label="경험치" aria-valuemin="0" aria-valuemax="100"><div id="hud-xp"></div></div>
@@ -139,7 +136,7 @@
             <div class="modal-box fusion-box">
                 <p class="eyebrow">EQUIPMENT WORKBENCH</p><h2 class="modal-title">아이템 조합</h2>
                 <p class="panel-caption">이번 작전에서 아이템 레벨을 올려 두 장점을 합치세요. 조합하면 재료 2개를 소모하고 새 아이템 Lv.1 하나를 얻습니다. 장비는 다음 구역 시작 때 저장됩니다.</p>
-                <div id="fusion-recipes" class="fusion-recipes"></div>
+                <p id="fusion-summary" class="fusion-summary"></p><div id="fusion-recipes" class="fusion-recipes"></div>
                 <p id="fusion-status" class="shop-status" role="status" aria-live="polite"></p>
                 <div class="modal-actions"><button id="btn-fusion-close" class="btn btn-blood" type="button">돌아가기</button></div>
             </div>
@@ -236,7 +233,7 @@
         <!-- 스테이지 클리어 -->
         <section id="clear" class="screen result-screen" hidden>
             <div class="result-panel panel">
-                <img class="result-hero" src="asset/ui-flowerpig.png" alt="정원을 지킨 꽃돼지" width="1254" height="1254">
+                <img class="result-hero" src="asset/ui/menu-yeoni.webp" alt="정원을 지킨 꽃돼지" width="1254" height="1254">
                 <h2 id="clear-title" class="result-title">STAGE 1 CLEAR</h2>
                 <div id="clear-stats" class="stats"></div>
                 <div class="menu-buttons row">
@@ -248,7 +245,7 @@
         <!-- 엔딩 -->
         <section id="ending" class="screen result-screen" hidden>
             <div class="result-panel panel">
-                <img class="result-hero" src="asset/ui-flowerpig.png" alt="모든 정원을 지켜 낸 꽃돼지" width="1254" height="1254">
+                <img class="result-hero" src="asset/ui/menu-yeoni.webp" alt="모든 정원을 지켜 낸 꽃돼지" width="1254" height="1254">
                 <h2 class="result-title gold">감염 지대 정화 완료</h2>
                 <div id="ending-stats" class="stats"></div>
                 <div class="menu-buttons row">

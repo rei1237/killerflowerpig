@@ -1,0 +1,215 @@
+{
+  "image": "asset/sprites/pet-yeongnyang.webp",
+  "sourceImage": "yeongnyang-winged-padded.png",
+  "frameWidth": 444,
+  "frameHeight": 444,
+  "columns": 4,
+  "rows": 2,
+  "anchor": {
+    "x": 222,
+    "y": 399.6
+  },
+  "animations": {
+    "idle": [
+      0,
+      1
+    ],
+    "follow": [
+      2,
+      3
+    ],
+    "attack": [
+      4,
+      5
+    ],
+    "heal": [
+      6,
+      7
+    ]
+  },
+  "frames": [
+    {
+      "index": 0,
+      "source": [
+        0,
+        0,
+        444,
+        444
+      ],
+      "alphaBBox": [
+        82,
+        104,
+        368,
+        399
+      ],
+      "anchor": {
+        "x": 0.5,
+        "y": 0.9
+      }
+    },
+    {
+      "index": 1,
+      "source": [
+        444,
+        0,
+        443,
+        444
+      ],
+      "alphaBBox": [
+        56,
+        102,
+        374,
+        399
+      ],
+      "anchor": {
+        "x": 0.5,
+        "y": 0.9
+      }
+    },
+    {
+      "index": 2,
+      "source": [
+        887,
+        0,
+        443,
+        444
+      ],
+      "alphaBBox": [
+        41,
+        81,
+        375,
+        393
+      ],
+      "anchor": {
+        "x": 0.5,
+        "y": 0.9
+      }
+    },
+    {
+      "index": 3,
+      "source": [
+        1330,
+        0,
+        444,
+        444
+      ],
+      "alphaBBox": [
+        56,
+        114,
+        380,
+        399
+      ],
+      "anchor": {
+        "x": 0.5,
+        "y": 0.9
+      }
+    },
+    {
+      "index": 4,
+      "source": [
+        0,
+        444,
+        444,
+        443
+      ],
+      "alphaBBox": [
+        60,
+        75,
+        397,
+        371
+      ],
+      "anchor": {
+        "x": 0.5,
+        "y": 0.9
+      }
+    },
+    {
+      "index": 5,
+      "source": [
+        444,
+        444,
+        443,
+        443
+      ],
+      "alphaBBox": [
+        32,
+        86,
+        420,
+        373
+      ],
+      "anchor": {
+        "x": 0.5,
+        "y": 0.9
+      }
+    },
+    {
+      "index": 6,
+      "source": [
+        887,
+        444,
+        443,
+        443
+      ],
+      "alphaBBox": [
+        53,
+        74,
+        388,
+        371
+      ],
+      "anchor": {
+        "x": 0.5,
+        "y": 0.9
+      }
+    },
+    {
+      "index": 7,
+      "source": [
+        1330,
+        444,
+        444,
+        443
+      ],
+      "alphaBBox": [
+        44,
+        75,
+        411,
+        371
+      ],
+      "anchor": {
+        "x": 0.5,
+        "y": 0.9
+      }
+    }
+  ],
+  "alphaThreshold": 16,
+  "originalSize": [
+    1774,
+    887
+  ],
+  "packingRecommendation": {
+    "frameWidth": 444,
+    "frameHeight": 444,
+    "atlasWidth": 1776,
+    "atlasHeight": 888,
+    "method": "Copy each source rectangle onto its corresponding transparent 444x444 cell with 0-1px padding; no artistic changes needed"
+  },
+  "renderBounds": {
+    "main": [
+      36,
+      34
+    ],
+    "legacy": [
+      23,
+      32
+    ]
+  },
+  "animationFPS": {
+    "idle": 2,
+    "follow": 7,
+    "attack": 9,
+    "heal": 4
+  },
+  "sheetWidth": 1774,
+  "sheetHeight": 887,
+  "normalization": "Alpha <=4 and detached components removed per cell; main pose and connected magic retained; no geometric resampling."
+}

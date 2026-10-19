@@ -1,7 +1,8 @@
+import { rollSupplies } from './supply-drops.js';
 import { playerBody } from './player-motion.js';
 // 적 시스템: 스폰, 추적 이동 + 상호 밀어내기(그리드), 원거리 공격, 상태이상, 피격/사망 처리
 import { G, rand, emit } from './state.js';
-import { ENEMIES, ELITE, stageScaling } from '../data/enemies.js';
+import { ENEMIES, ELITE, DEATH_CLOUD_UNLOCK_STAGE, RANGED_UNLOCK_STAGE, stageScaling } from '../data/enemies.js';
 import { STAGES } from '../data/stages.js';
 import { atlases } from '../core/assets.js';
 import { audio } from '../core/audio.js';
@@ -24,6 +25,7 @@ export function spawnEnemy(typeId, x, y, opts = {}) {
     if (st.enemyCap && G.enemies.count >= st.enemyCap) return null;
     if (G.enemies.count >= G.caps.enemies && !opts.force) return null;
     const def = ENEMIES[typeId];
+    if (!def || (def.ranged && G.stage < RANGED_UNLOCK_STAGE)) return null;
     const sc = stageScaling(G.stage, G.time, st.duration);
     const e = G.enemies.spawn();
     const elite = !!opts.elite;
@@ -112,11 +114,17 @@ function killEnemy(e, opts) {
 
     dropGem(e.x, e.y, e.xp);
     dropCoin(e.x, e.y, e.elite ? 24 : 3);
-    const r = Math.random();
     if (e.elite) dropPickup('chest', e.x, e.y);
-    else if (r < 0.006) dropPickup('meat', e.x, e.y);
-    else if (r < 0.008) dropPickup('magnet', e.x, e.y);
-    else if (r < 0.0095) dropPickup('bomb', e.x, e.y);
+    else {
+        let healingOnField=0,magnetsOnField=0;
+        for(let i=0;i<G.pickups.count;i++){
+            if(G.pickups.items[i].kind==='meat')healingOnField++;
+            if(G.pickups.items[i].kind==='magnet')magnetsOnField++;
+        }
+        const result=rollSupplies(G.supplyDrought,{hpRatio:G.player.hp/G.player.maxHp,healingOnField,magnetsOnField});
+        G.supplyDrought=result.state;
+        for(const kind of result.kinds)dropPickup(kind,e.x,e.y);
+    }
 
     const def = e.def;
     if (def.explode) explosionQueue.push({ x: e.x, y: e.y, r: def.explode.radius, dmg: def.explode.dmg * (1 + (G.stage - 1) * 0.16) });
@@ -147,7 +155,9 @@ export function flushExplosions() {
         }
         blood(ex.x, ex.y - 10, 26, 0, 0, '#5a1a6a');
         sparks(ex.x, ex.y, 10, '#c86bff', 220);
-        spawnHazard('acid', ex.x, ex.y, { radius: ex.r * 0.7, duration: 3.5, dmg: ex.dmg * 0.25 });
+        if (G.stage >= DEATH_CLOUD_UNLOCK_STAGE) {
+            spawnHazard('acid', ex.x, ex.y, { radius: ex.r * 0.7, duration: 3.5, dmg: ex.dmg * 0.25 });
+        }
         shake(4);
         audio.sfx('explode');
     }
@@ -200,7 +210,7 @@ export function updateEnemies(dt) {
         } else {
             mvx = dx / dist; mvy = dy / dist;
             const rg = e.def.ranged;
-            if (rg) {
+            if (rg && G.stage >= RANGED_UNLOCK_STAGE) {
                 if (dist < rg.range * 0.55) { mvx = -mvx; mvy = -mvy; }
                 else if (dist < rg.range) { mvx *= 0.1; mvy *= 0.1; }
                 e.shootT -= dt;

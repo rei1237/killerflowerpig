@@ -209,7 +209,7 @@ test('chapter runtime cannot restore stage-specific off-center focal crops', () 
 
 test('home illustration stays within its frame and narrow layouts put launch before artwork', () => {
     for (const viewport of viewports) {
-        for (const selector of ['.menu-hero', '.menu-enemy']) {
+        for (const selector of ['.menu-hero']) {
             const art = style(selector, viewport);
             assert.equal(art['object-fit'], 'contain', `${selector} must preserve its illustration at ${size(viewport)}`);
             const edge = selector === '.menu-hero' ? art.left : art.right;
@@ -248,4 +248,26 @@ test('title menu and story navigation preserve at least 44 px touch targets', ()
         assert.ok(/^\d+(?:\.\d+)?px$/.test(actual['min-height']) && parseFloat(actual['min-height']) >= 44,
             `${control.attrs.id || control.tag} target shrinks below 44 px at ${size(viewport)}: ${actual['min-height']}`);
     }
+});
+
+test('role-specific command cards separate system controls and keep terminal in scroll flow',()=>{
+ for(const id of ['shop','tutorial','intel']){
+  const node=one(`#btn-${id}`);assert.ok(matches(node,'.menu-utility .menu-card'));
+ }
+ assert.ok(matches(one('#btn-settings'),'.menu-system button'));
+ assert.ok(matches(one('#btn-install'),'.menu-system button'));
+ const terminal=one('#secret');terminal.attrs.open='';
+ for(const viewport of viewports){
+  const st=style('#secret',viewport);
+  assert.equal(st.position,'relative');assert.equal(st['grid-column'],'1/-1');assert.equal(st['max-height'],'none');
+ }
+ delete terminal.attrs.open;
+ assert.match(one('.menu-hero').attrs.src,/menu-yeoni.webp$/);
+ assert.equal(nodes.filter(n=>matches(n,'.menu-enemy')).length,0);
+});
+test('chapter backdrop echoes image while foreground remains uncropped',()=>{
+ assert.ok(one('#story-visual-backdrop'));
+ const source=fs.readFileSync(new URL('../src/ui/screens.js',import.meta.url),'utf8');
+ assert.match(source,/story-visual-backdrop.*backgroundImage/);
+ for(const viewport of viewports){assert.equal(style('#story-art',viewport)['object-fit'],'contain');}
 });

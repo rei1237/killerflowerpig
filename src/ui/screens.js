@@ -5,6 +5,7 @@ import { STORIES, EPILOGUE } from '../data/story.js';
 import { WEAPONS, PASSIVES } from '../data/weapons.js';
 import { BOSSES } from '../data/bosses.js';
 import { rollChoices, applyChoice, rollChest } from '../game/progression.js';
+import { choiceInfo, relatedFusionInfo } from './item-choice-info.js';
 import { FUSION_RECIPES, previewFusion, fuseItems } from '../game/fusion.js';
 import { newRun, continueRun, retryStage, startStage, beginStageClear, loadRun, clearRun } from '../game/game.js';
 import { refreshGore } from '../game/effects.js';
@@ -171,6 +172,7 @@ let storyTimer = null;
 function playStory(head, text, onDone, stage = STAGE_COUNT) {
     const art = $('story-art');
     art.src = `asset/story/stage-${String(stage).padStart(2, '0')}.webp`;
+    $('story-visual-backdrop').style.backgroundImage = `url("${art.src}")`;
     // The complete chapter illustration is contained by CSS, without focal-point cropping.
     art.style.objectPosition = 'center';
     art.alt = STAGES[stage]?.subtitle || '작전 기록';
@@ -246,12 +248,11 @@ function renderCards() {
     const wrap = $('cards');
     wrap.innerHTML = '';
     currentChoices.forEach((c, idx) => {
+        const shell = document.createElement('article');shell.className='card choice-card';
         const el = document.createElement('button');
-        el.type = 'button';
-        el.className = 'card';
-        const lvText = c.kind === 'weapon' || c.kind === 'passive'
-            ? (c.isNew ? (c.kind === 'weapon' ? '신규 무기' : '신규 패시브') : `LV ${c.level - 1} → ${c.level}`)
-            : '';
+        el.type = 'button';el.className='choice-select';
+        const info=choiceInfo(c);
+        const lvText=info.levelText;
         el.innerHTML = `
             <div class="card-head">
                 <div class="card-icon"></div>
@@ -283,8 +284,28 @@ function renderCards() {
             }
         }
         el.onclick = () => pickCard(idx);
-        wrap.appendChild(el);
+        shell.appendChild(el);
+        appendChoiceRecipes(shell,c.id);
+        wrap.appendChild(shell);
     });
+}
+
+function appendChoiceRecipes(container,id) {
+    const recipes=relatedFusionInfo(id);
+    if(!recipes.length)return;
+    const details=document.createElement('details');details.className='choice-recipes';
+    const summary=document.createElement('summary');summary.textContent=`연결 조합 ${recipes.length}개 · 재료와 효과 보기`;details.appendChild(summary);
+    details.addEventListener('click',e=>e.stopPropagation());
+    details.addEventListener('keydown',e=>e.stopPropagation());
+    for(const preview of recipes){
+        const row=document.createElement('div');row.className='choice-recipe-detail';
+        const title=document.createElement('strong');title.textContent=`${preview.ok?'✓ 조합 가능':'◇ 재료 성장 필요'} · ${preview.output.name}`;
+        const ingredients=document.createElement('p');ingredients.textContent=preview.ingredients.map(i=>`${i.name}: ${i.level?`보유 Lv.${i.level}`:'미보유'} / 필요 Lv.${i.requiredLevel}`).join(' + ');
+        const effect=document.createElement('p');effect.textContent=preview.output.desc;
+        const stats=document.createElement('small');stats.textContent=fusionStatText(preview.output.stats);
+        row.append(title,ingredients,effect,stats);details.appendChild(row);
+    }
+    container.appendChild(details);
 }
 
 function pickCard(idx) {
@@ -339,6 +360,8 @@ function presentChest(kind) {
                     mountItemArt(el.querySelector('.r-icon'), r.id, r.kind);
                     el.querySelector('.r-name').textContent = r.kind === 'evolve' ? `진화! ${r.name}` : r.name;
                     el.querySelector('.r-desc').textContent = r.desc;
+                    if(r.kind==='weapon'||r.kind==='passive'){const level=document.createElement('div');level.className='reward-level';level.textContent=r.isNew?'신규 획득 · Lv.1':`Lv.${r.level-1} → Lv.${r.level}${r.level===(r.kind==='weapon'?8:5)?' · MAX':''}`;el.appendChild(level);}
+                    appendChoiceRecipes(el,r.id);
                     $('rewards').appendChild(el);
                 });
                 btn.textContent = '받기';
@@ -387,7 +410,7 @@ function fusionStatText(stats) {
     const area=stats?.area || 1;
     const shown={...stats,radius:stats?.radius*area,length:stats?.length*Math.sqrt(area),width:stats?.width*area};
     const parts=[];
-    for (const [key,label] of [['dmg','피해'],['amount','발수'],['pierce','관통'],['radius','범위'],['length','사거리'],['orbitDamage','꽃잎 피해'],['orbitAmount','꽃잎 수'],['orbitRadius','꽃잎 범위']]) {
+    for (const [key,label] of [['dmg','피해'],['amount','발수'],['pierce','관통'],['radius','범위'],['length','사거리'],['orbitDamage','꽃잎 피해'],['orbitAmount','꽃잎 수'],['orbitRadius','꽃잎 범위'],['fieldDamage','화염 틱 피해'],['fieldAmount','화염 지대'],['fieldRadius','화염 범위'],['fieldDuration','화염 지속(초)']]) {
         if (Number.isFinite(shown[key])) parts.push(`${label} ${Math.round(shown[key]*10)/10}`);
     }
     if (Number.isFinite(stats?.cd)) parts.push(`주기 ${Math.round(stats.cd*100)/100}초`);
@@ -403,9 +426,11 @@ export function showFusion() {
 }
 function renderFusion() {
     const wrap=$('fusion-recipes');wrap.replaceChildren();
-    for (const recipe of FUSION_RECIPES) {
-        const preview=previewFusion(recipe.id);
-        const card=document.createElement('article');card.className='fusion-recipe';
+    const recipes=FUSION_RECIPES.map(recipe=>({recipe,preview:previewFusion(recipe.id)}));
+    const ready=recipes.filter(row=>row.preview.ok).length;
+    $('fusion-summary').textContent=`전체 ${recipes.length}개 레시피 · 조합 가능 ${ready}개 · 재료는 각각 Lv.5 이상`;
+    for (const {recipe,preview} of recipes) {
+        const card=document.createElement('article');card.className=preview.ok?'fusion-recipe fusion-ready':'fusion-recipe';card.dataset.recipe=recipe.id;
         const ingredients=document.createElement('div');ingredients.className='fusion-ingredients';
         for(const item of preview.ingredients){
             const cell=document.createElement('div');const art=document.createElement('div');art.className='fusion-art';mountItemArt(art,item.id);

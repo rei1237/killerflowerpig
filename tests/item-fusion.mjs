@@ -66,3 +66,55 @@ test('preview signature binds exact recipe and damage modifiers',()=>{
  const p=previewFusion('lotus_bloom');assert.equal(fuseItems('scatter_rail',p.signature).code,'STALE_PREVIEW');
  G.player.stats.might=1.5;assert.equal(fuseItems('lotus_bloom',p.signature).code,'STALE_PREVIEW');assert.equal(G.weapons.length,4);
 });
+test('eight distinct recipes each lock low levels, consume two once, and restore output',()=>{
+ assert.equal(FUSION_RECIPES.length,8);assert.equal(new Set(FUSION_RECIPES.map(r=>r.output)).size,8);
+ for(const recipe of FUSION_RECIPES){
+  G.weapons=recipe.inputs.map((x,i)=>weapon(x.id,4,i));assert.equal(previewFusion(recipe.id).code,'ITEM_LEVEL_REQUIRED');
+  G.weapons.forEach(w=>w.level=5);const p=previewFusion(recipe.id);assert.equal(p.ok,true,recipe.id);
+  assert.equal(fuseItems(recipe.id,p.signature).ok,true);assert.equal(G.weapons.length,1);assert.equal(G.weapons[0].id,recipe.output);
+  assert.equal(fuseItems(recipe.id,p.signature).ok,false);const snap=JSON.parse(JSON.stringify(snapshotBuild()));restoreBuild(snap);
+  assert.equal(G.weapons[0].id,recipe.output);assert.equal(G.weapons[0].level,1);
+ }
+});
+test('burst rail produces timed piercing rounds without replacing unfinished bursts',()=>{
+ const w=weapon('burst_rail',1);w.cd=0;G.weapons=[w];updateWeapons(.01);assert.equal(w.burst,3);assert.equal(G.shots.count,0);
+ for(let i=0;i<3;i++)updateWeapons(.08);
+ assert.equal(G.shots.count,3);assert.equal(w.burst,0);assert.ok(G.shots.items.slice(0,3).every(s=>s.pierce===5 && s.dmg===17));
+});
+test('new toxic bullets and bouncing saws apply real slow on collision',()=>{
+ for(const [id,slow] of [['toxic_scatter',.4],['venom_saw',.45]]){
+  G.shots.clear();G.grid.reset();const w=weapon(id,1);w.cd=0;G.weapons=[w];updateWeapons(.01);
+  const shot=G.shots.items[0];shot.x=40;shot.y=0;shot.vx=0;shot.vy=0;
+  const e={id:99,x:40,y:10,radius:10,alive:true,hp:1000,maxHp:1000,mass:1,kx:0,ky:0,slow:0,slowT:0,hits:{}};G.grid.insert(e);
+  updateShots(0);assert.ok(e.hp<1000);assert.equal(e.slow,slow);assert.equal(e.slowT,.5);
+  if(id==='venom_saw'){assert.equal(shot.kind,'saw');assert.equal(shot.bounce,true);assert.equal(shot.hitCd,.4);}
+ }
+});
+test('ember lance fires beam and lasting fire field, both with its own damage attribution',()=>{
+ const w=weapon('ember_lance',1);w.cd=0;G.weapons=[w];let dmg=0;G.boss={alive:true,x:120,y:20,radius:20,hits:{},hurt(v){dmg+=v;}};
+ updateWeapons(.01);assert.ok(dmg>=48);assert.equal(G.beams.count,1);assert.equal(G.shots.count,1);updateShots(.6);
+ assert.equal(G.hazards.count,1);const h=G.hazards.items[0];assert.equal(h.kind,'fire');assert.equal(h.duration,3);assert.equal(h.radius,54);assert.equal(h.dmg,7.68);assert.equal(h.weapon,'ember_lance');
+ const p=previewFusion('ember_lance');assert.equal(p.output.stats.fieldDamage,h.dmg);assert.equal(p.output.stats.fieldDuration,h.duration);
+});
+test('orbit saw fires bouncing blades while activating its separate damaging orbit',()=>{
+ const w=weapon('orbit_saw',1);w.cd=0;G.weapons=[w];updateWeapons(.01);assert.equal(G.shots.count,2);assert.equal(w.activeT,2.8);
+ assert.ok(G.shots.items.slice(0,2).every(s=>s.kind==='saw' && s.bounce));let damage=0;
+ G.boss={alive:true,x:Math.cos(.034)*78,y:Math.sin(.034)*78*.8,radius:20,hits:{},hurt(v){damage+=v;}};
+ updateWeapons(.01);assert.ok(damage>0);assert.equal(orbitStats(w,w.s).amount,3);assert.equal(orbitStats(w,w.s).dmg,10.799999999999999);
+});
+test('all expanded fusion caps hold under maximum item and extreme passive bonuses',()=>{
+ Object.assign(G.player.stats,{amount:100,might:100,area:100,duration:100,cooldown:.01});
+ for(const recipe of FUSION_RECIPES){const w=weapon(recipe.output,8);const s=weaponStats(w);assert.ok(s.dmg<=220);assert.ok(s.area<=2);assert.ok(s.cd>=.5);assert.ok(s.amount<=(WEAPONS[w.id].amountCap ||12));assert.ok(s.duration<=6);assert.ok(s.slow<=.65);}
+});
+test('all eight fusions preserve live enemy hit buffers through release and pooled respawn',async()=>{
+ const {spawnEnemy}=await import('../src/game/enemies.js');const {ENEMIES}=await import('../src/data/enemies.js');
+ const type=Object.keys(ENEMIES).find(id=>!ENEMIES[id].ranged);G.caps.enemies=420;G.time=0;
+ for(const recipe of FUSION_RECIPES){
+  G.enemies.clear();const e=spawnEnemy(type,50,50,{force:true});assert.ok(e);const buffer=e.hits;
+  G.weapons=recipe.inputs.map((input,i)=>weapon(input.id,5,i));const preview=previewFusion(recipe.id);
+  assert.equal(fuseItems(recipe.id,preview.signature).ok,true);
+  G.enemies.release(0);
+  let reused;assert.doesNotThrow(()=>{reused=spawnEnemy(type,70,70,{force:true});},`${recipe.id}: pooled respawn`);
+  assert.equal(reused,e);assert.equal(reused.hits,buffer);assert.ok(reused.hits instanceof Float32Array);assert.ok([...reused.hits].every(v=>v===-99));
+ }
+});

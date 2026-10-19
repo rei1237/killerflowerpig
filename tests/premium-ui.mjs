@@ -299,7 +299,7 @@ test('fusion preview pauses safely and consumes two inputs only after explicit c
  freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>w.level=5);
  const before=JSON.stringify(G.weapons);togglePause();showFusion();
  assert.equal(topModalId(),'fusion');assert.equal(G.paused,true);assert.equal(JSON.stringify(G.weapons),before);
- assert.equal(node('fusion-recipes').children.length,3);
+ assert.equal(node('fusion-recipes').children.length,8);
  const button=node('fusion-recipes').children[0].querySelector('button');assert.equal(button.disabled,false);
  button.click();assert.deepEqual(G.weapons.map(w=>w.id),['lotus_bloom']);assert.equal(G.weapons[0].level,1);
  button.click();assert.equal(G.weapons.length,1);assert.match(node('fusion-status').textContent,/조합 완료/);
@@ -323,5 +323,44 @@ test('fused weapon level seven to eight selection renders without a legacy evolu
  G.weapons=[createWeapon('lotus_bloom',0)];G.weapons[0].level=7;
  G.banished=new Set([...Object.keys(WEAPONS),...Object.keys(PASSIVES)].filter(id=>id!=='lotus_bloom'));
  showLevelUp();assert.equal(topModalId(),'levelup');assert.equal(node('cards').children.length,1);
- node('cards').children[0].click();assert.equal(G.weapons[0].level,8);assert.equal(topModalId(),null);
+ node('cards').children[0].querySelector('.choice-select').click();assert.equal(G.weapons[0].level,8);assert.equal(topModalId(),null);
+});
+
+test('every fusion resumes real update/render frames after UI confirmation and close',async()=>{
+ const {FUSION_RECIPES}=await import('../src/data/fusions.js');
+ const {spawnEnemy}=await import('../src/game/enemies.js');
+ const {initRender,render}=await import('../src/game/render.js');
+ for(const name of ['rabbit1','rabbit2','rabbit3','player'])atlases[name]={walkH:112,frameCount:()=>8,draw:noop};
+ for(const name of ['petal','petalBlood','saw','sawBone','bomb'])fx[name]={width:16,height:16};
+ fx.gems=Array.from({length:4},()=>({width:16,height:16}));for(const id of ['meat','magnet','chest'])fx[id]={width:16,height:16};
+ fx.splats={red:[{width:16,height:16}],black:[{width:16,height:16}],green:[{width:16,height:16}]};
+ initRender(node('game'));
+ for(const [index,recipe] of FUSION_RECIPES.entries()){
+  freshRun();G.godMode=true;G.weapons=recipe.inputs.map((i,slot)=>{const w=createWeapon(i.id,slot);w.level=5;return w;});
+  spawnEnemy('shambler',180,0);
+  showLevelUp();showFusion();
+  const button=node('fusion-recipes').children[index].querySelector('button');button.click();button.click();
+  assert.equal(G.weapons.filter(w=>w.id===recipe.output).length,1);
+  closeModal('fusion');assert.equal(topModalId(),'levelup');
+  node('cards').querySelector('.choice-select').click();
+  while(topModalId())closeModal(topModalId());
+  assert.equal(G.paused,false);const clock=G.clock,x=G.player.x;input.move.x=1;
+  // Exercise the exact pooled-object reuse that ordinary kills/spawns trigger.
+  G.enemies.clear();assert.doesNotThrow(()=>spawnEnemy('shambler',180,0),recipe.id+' pool reuse');
+  for(let f=0;f<240;f++){G.hitstop=0;step(1/60);render(1/60);while(topModalId()){if(topModalId()==='levelup')node('cards').querySelector('.choice-select').click();else closeModal(topModalId());}}
+  assert.ok(G.clock>clock+3,recipe.id+' clock advances');assert.ok(G.player.x>x,recipe.id+' movement resumes');assert.equal(G.paused,false);
+  input.move.x=0;
+ }
+});
+
+test('upgrade cards show live current levels and all recipe details without selecting on disclosure',()=>{
+ freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>w.level=5);
+ G.banished=new Set([...Object.keys(WEAPONS),...Object.keys(PASSIVES)].filter(id=>id!=='cannon'));
+ showLevelUp();const card=node('cards').children[0];
+ assert.match(card.querySelector('.card-lv').textContent,/Lv.5 → Lv.6/);
+ const details=card.querySelector('details');assert.ok(details);assert.equal(details.querySelectorAll('.choice-recipe-detail').length,2);
+ assert.match(details.textContent,/만개 연꽃포/);assert.match(details.textContent,/화염 꽃잎창/);assert.match(details.textContent,/필요 Lv.5/);assert.match(details.textContent,/조합 가능/);
+ const event=details.dispatch('click');assert.equal(event.stopped,true);assert.equal(G.weapons[0].level,5);assert.equal(topModalId(),'levelup');
+ card.querySelector('.choice-select').click();assert.equal(G.weapons[0].level,6);
+ showLevelUp();assert.match(node('cards').children[0].querySelector('.card-lv').textContent,/Lv.6 → Lv.7/);
 });

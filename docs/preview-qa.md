@@ -22,7 +22,7 @@ The server adapter is preparation only. Cross-device/account persistence is not 
 
 ## Initial balance changes
 
-- The only ranged trash type is acid spitter (single projectile, not a shotgun volley). Its first spawn moved from stage 2 at 50 seconds to stage 3 at 90 seconds. Stage 1–2 have no spitter; stage 4+ and its damage/cooldown remain unchanged. Boss spread attacks were not globally weakened.
+- The only ranged trash type is acid spitter (single projectile, not a shotgun volley). Its normal-table first spawn is now stage5 at60seconds. Stages1–4 reject all ranged mobs across ordinary, forced, elite and boss-summon routes; later damage/cooldown remain unchanged. Boss spread attacks were not globally weakened.
 - Wing relic stats and 80-coin chest prices/rates are initial tunable balance. Odds and duplicate compensation are shown before opening; direct purchases offer the same relics without randomness. The strongest owned tier applies once; all speed sources are capped at 243 world units/second.
 
 ## Item-level progression and fusion (supersedes charged cannon)
@@ -38,3 +38,11 @@ The supplied 1040×681 screenshot showed chapter 1's flower pig cut off at the r
 The title menu now uses explicit grid areas: brand, copy, launch, illustration, utility cards and progress footer. On narrow screens the launch actions precede the illustration; every viewport scrolls from the top if content exceeds available height. Primary actions are at least 54px and utility cards 64px. Menu artwork has bounded contain boxes with no off-edge placement.
 
 Source-level responsive regression checks are not a substitute for browser rendering. Verify 1440×900, 1040×681, 768×1024, 390×844, 320×568 and 844×390; inspect the complete chapter art, scroll long text, reach Continue/Skip, and navigate every main menu action. Existing runtime restrictions prevented a real browser screenshot of this correction.
+
+## Profile / animated roster / support update
+- 177 automated tests passed before publication, including every fusion confirmed through real UI, closing nested reward dialogs, pooled-enemy reuse, then240 simulation/render frames per recipe. DOM/canvas boundaries are simulated; this is not a real browser/touch QA pass.
+- Fixed a reproduced freeze: fusion replaced enemy Float32Array hit cooldown buffers with plain objects; a reused pooled enemy then threw at `.fill()`. Buffers now retain their expected type. Boss hit maps remain separate.
+- New choice cards read actual current levels and show current→next or 신규/최대. Expandable recipe details are siblings of the selection button, avoiding accidental selection while inspecting ingredients/effects.
+- All10 profile-consistent story scenes use contained foreground art over a matching softened backdrop. Main hero matches supplied profile.
+- Ten8-pose boss sheets are event synchronized and loaded current/next only. Winged Yeongnyang uses8 actual poses, unchanged combat power and whole-frame bounds smaller than the player.
+- Native-canvas renderer previews inspected. Cloud Chromium remained blocked by environment socket restrictions; protected remote preview not browser-tested.

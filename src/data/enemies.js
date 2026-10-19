@@ -15,6 +15,11 @@ export const ENEMIES = {
 
 export const ELITE = { scale: 1.45, hp: 9, xp: 8, dmg: 1.5, speed: 1.1 };
 
+// 팽창체 사망 후 남는 산성 장판만 후반에 해금. 즉시 폭발은 그대로 유지한다.
+export const DEATH_CLOUD_UNLOCK_STAGE = 5;
+// All ordinary ranged spawn routes, including elite/forced/summoned mobs.
+export const RANGED_UNLOCK_STAGE = 5;
+
 const BEGINNER_SCALING = {
     1: { hp: 0.85, speed: 0.85, dmg: 0.7 },
     2: { hp: 0.92, speed: 0.92, dmg: 0.85 },

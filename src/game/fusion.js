@@ -1,7 +1,7 @@
 import { G, emit } from './state.js';
 import { WEAPONS, MAX_WEAPONS } from '../data/weapons.js';
 import { FUSION_RECIPES } from '../data/fusions.js';
-import { createWeapon, weaponStats, orbitStats } from './weapons.js';
+import { createWeapon, weaponStats, orbitStats, emberFieldStats } from './weapons.js';
 export { FUSION_RECIPES };
 const signature = recipeId => JSON.stringify([recipeId, G.player?.stats, G.stage, G.stageStartTime, G.fusionRevision || 0, G.weapons.map(w => [w.id, w.level, !!w.evolved, w.slot])]);
 export function previewFusion(recipeId) {
@@ -13,9 +13,13 @@ export function previewFusion(recipeId) {
     });
     const def = WEAPONS[recipe.output], candidate = createWeapon(recipe.output, 0);
     const stats = weaponStats(candidate);
-    if (recipe.output === 'lotus_bloom') {
+    if (['lotus_bloom', 'orbit_saw'].includes(recipe.output)) {
         const orbit = orbitStats(candidate, stats);
         Object.assign(stats, { orbitDamage: orbit.dmg, orbitAmount: orbit.amount, orbitRadius: orbit.radius * orbit.area, orbitDuration: 2.8 });
+    }
+    if (recipe.output === 'ember_lance') {
+        const field = emberFieldStats(stats);
+        Object.assign(stats, { fieldDamage: field.dmg, fieldAmount: field.amount, fieldRadius: field.radius * field.area, fieldDuration: field.duration, fieldTick: field.tick });
     }
     let code = null;
     if (new Set(G.weapons.map(w => w.id)).size !== G.weapons.length) code = 'INVALID_INVENTORY';
@@ -49,7 +53,13 @@ export function fuseItems(recipeId, expectedSignature) {
         const sh = G.shots.items[i], owner = G.weapons.find(w => w.id === sh.weapon);
         if (owner) sh.slot = owner.slot;
     }
-    for (let i = 0; i < G.enemies.count; i++) G.enemies.items[i].hits = {};
+    for (let i = 0; i < G.enemies.count; i++) {
+        const enemy = G.enemies.items[i];
+        // spawnEnemy reuses this Float32Array and calls .fill on pooled objects.
+        // Preserve its type and identity while resetting remapped hit channels.
+        if (!(enemy.hits instanceof Float32Array)) enemy.hits = new Float32Array(16);
+        enemy.hits.fill(-99);
+    }
     if (G.boss) G.boss.hits = {};
     emit('itemsFused', { recipeId, itemId: result.id });
     return { ok: true, item: result, output: preview.output, slotsAfter: G.weapons.length };
