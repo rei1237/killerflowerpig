@@ -275,12 +275,23 @@ export class Boss {
         setBossMotion(this, 'windup');
         const x = this.x, y = this.bodyY();
         const a = Math.atan2(G.player.y - 18 - y, G.player.x - x);
-        const shots = 3 + this.phase, last = 1.15 + (shots - 1) * .24;
+        // 변이: 각 사격이 3갈래 부채꼴. 광폭화: 양옆 측면 사격선이 반 박자 늦게 교차한다.
+        const shots = 3 + this.phase, fanCount = this.phase ? 3 : 1, fanSpread = .28;
+        let last = 1.15 + (shots - 1) * .24;
         for (let i = 0; i < shots; i++) {
             this.warn('tline', x, y, { angle: a, len: 760, width: 20, delay: 1.15 + i * .24, color: '#ffc35b' }, () => {
-                for (const speed of [270, 315, 360]) this.fan(x, y, a, 1, 0, speed, 'boss', 7);
+                for (const speed of [270, 315, 360]) this.fan(x, y, a, fanCount, fanSpread, speed, 'boss', 7);
                 audio.sfx('shot');
             });
+        }
+        if (this.phase === 2) {
+            for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {
+                const delay = 1.27 + .12 * (side + 1) + i * .48, flank = a + side * .55;
+                last = Math.max(last, delay);
+                this.warn('tline', x, y, { angle: flank, len: 760, width: 18, delay, color: '#ff9b4a' }, () => {
+                    for (const speed of [290, 340]) this.fan(x, y, flank, 1, 0, speed, 'boss', 7);
+                });
+            }
         }
         audio.sfx('warn');
         return this.signatureTask(last + .32, 2.5, 1.8);
@@ -296,15 +307,17 @@ export class Boss {
         } };
     }
 
-    // 3: fast lateral pursuit, then two independently locked, visible dashes.
+    // 3: fast lateral pursuit, then independently locked, visible dashes
+    // (2 → 3 in mutation → 3 off-beat in frenzy).
     // Each tell gets a rendered state of its own, even after a long frame.
     task_hunt() {
         const task = { t: 0, elapsed: 0, phase: 'warning', strike: 0, dash: 0,
-            target: G.player, speed: HUNTER_TUNING.dashSpeed * (1 + this.phase * HUNTER_TUNING.phaseSpeedStep), lane: null };
+            target: G.player, speed: HUNTER_TUNING.dashSpeed * (1 + this.phase * HUNTER_TUNING.phaseSpeedStep), lane: null,
+            warnings: HUNTER_TUNING.phaseWarnings[Math.min(this.phase, HUNTER_TUNING.phaseWarnings.length - 1)] };
         const lock = s => {
             const p = G.player, a = Math.atan2(p.y - this.y, p.x - this.x);
             const length = Math.min(HUNTER_TUNING.dashRange, Math.max(160, Math.hypot(p.x - this.x, p.y - this.y)));
-            const radius = this.radius + p.radius + 6, warning = s.strike ? HUNTER_TUNING.secondWarning : HUNTER_TUNING.warning;
+            const radius = this.radius + p.radius + 6, warning = s.warnings[s.strike];
             // The rectangle conservatively encloses the entire swept capsule,
             // including contact radius at both ends. No invisible wider hit.
             s.lane = { angle: a, length, radius, warning };
@@ -337,7 +350,7 @@ export class Boss {
             this.flip = ux < 0;
             if (hit) { damagePlayer(this.dmg, this.x, this.y); recover(); return; }
             if (s.dash + 1e-9 < length) return;
-            if (s.strike === 0) { s.strike = 1; lock(s); }
+            if (s.strike + 1 < s.warnings.length) { s.strike++; lock(s); }
             else recover();
         };
         lock(task);
@@ -348,11 +361,13 @@ export class Boss {
     // completely fixed for .55s, rewarding a direction change after lock-on.
     task_lockshot() {
         setBossMotion(this, 'windup');
+        // 변이: 저격 3회. 광폭화: 저격마다 3갈래 탄.
+        const lockCount = this.phase ? 3 : 2, fanCount = this.phase === 2 ? 3 : 1, end = (lockCount - 1) * 1.35 + 1.5;
         const task = { t: 0, locks: [], next: 0, step: (dt, s) => {
-            while (s.next < 2 && s.t >= s.next * 1.35) {
+            while (s.next < lockCount && s.t >= s.next * 1.35) {
                 const start = s.next * 1.35;
                 const h = this.warn('tline', this.x, this.bodyY(), { angle: 0, len: 1000, width: 20, delay: 1.15, color: '#f58a98' }, line => {
-                    this.fan(line.x, line.y, line.angle, 1, 0, 690, 'boss', 8);
+                    this.fan(line.x, line.y, line.angle, fanCount, .2, 690, 'boss', 8);
                     audio.sfx('zap');
                 });
                 s.locks.push({ h, start }); s.next++;
@@ -361,7 +376,7 @@ export class Boss {
             for (const lock of s.locks) {
                 if (s.t - lock.start <= .6) lock.h.angle = Math.atan2(G.player.y - 18 - lock.h.y, G.player.x - lock.h.x);
             }
-            if (s.t > 2.85) { this.endTask(2.1); this.attackT = Math.max(1.35, this.attackT); }
+            if (s.t > end) { this.endTask(2.1); this.attackT = Math.max(1.35, this.attackT); }
         } };
         task.step(0, task);
         return task;
@@ -371,9 +386,10 @@ export class Boss {
     // The flank/back stays open. Later phases add an offset return impact.
     task_artillery() {
         setBossMotion(this, 'windup');
-        const a = Math.atan2(G.player.y - this.y, G.player.x - this.x), count = this.phase === 2 ? 4 : 3;
+        // 변이: 측면 귀환 포격 1발. 광폭화: 양 측면 귀환 포격.
+        const a = Math.atan2(G.player.y - this.y, G.player.x - this.x), count = 3 + this.phase;
         for (let i = 0; i < count; i++) {
-            const distance = i < 3 ? 110 + i * 115 : 225, side = i < 3 ? 0 : 100;
+            const distance = i < 3 ? 110 + i * 115 : 225, side = i < 3 ? 0 : i === 3 ? 100 : -100;
             const x = this.x + Math.cos(a) * distance - Math.sin(a) * side;
             const y = this.y + Math.sin(a) * distance + Math.cos(a) * side;
             this.warn('tcircle', x, y, { radius: 66, delay: 1.1 + i * .3, color: '#efae67' }, h => {
@@ -389,15 +405,17 @@ export class Boss {
     task_toxicTide() {
         setBossMotion(this, 'windup');
         const x = G.player.x, y = G.player.y, gap = Math.atan2(y - this.y, x - this.x) + this.phase * .35;
-        for (let i = 2; i <= 6; i++) {
-            const a = gap + i * Math.PI / 4;
-            this.warn('tcircle', x + Math.cos(a) * 132, y + Math.sin(a) * 92.4, { radius: 48, delay: 1.2, color: '#b5df56' }, h => {
+        // 변이: 산성 웅덩이가 더 오래 남는다. 광폭화: 출구가 반대쪽인 두 번째 파도.
+        const waves = this.phase === 2 ? 2 : 1, acid = this.phase ? 3.6 : 2.8;
+        for (let w = 0; w < waves; w++) for (let i = 2; i <= 6; i++) {
+            const a = gap + w * Math.PI + i * Math.PI / 4;
+            this.warn('tcircle', x + Math.cos(a) * 132, y + Math.sin(a) * 92.4, { radius: 48, delay: 1.2 + w * 1.0, color: '#b5df56' }, h => {
                 this.circleHit(h, .55);
-                spawnHazard('acid', h.x, h.y, { radius: h.radius, duration: 2.8, dmg: this.dmg * .23, tick: .4 });
+                spawnHazard('acid', h.x, h.y, { radius: h.radius, duration: acid, dmg: this.dmg * .23, tick: .4 });
             });
         }
         audio.sfx('warn');
-        return this.signatureTask(1.55, 2.5, 1.6);
+        return this.signatureTask(1.55 + (waves - 1) * 1.0, 2.5, 1.6);
     }
 
     // 7: two locked crossing slashes. The queen relocates to the advertised
@@ -405,16 +423,18 @@ export class Boss {
     task_crosscut() {
         setBossMotion(this, 'windup');
         const x = G.player.x, y = G.player.y, angle = this.signatureCount % 2 ? Math.PI / 4 : -Math.PI / 4;
-        for (let i = 0; i < 2; i++) {
+        // 변이: 세 번째 칼날. 광폭화: 칼날 간격이 짧아진다.
+        const cuts = this.phase ? 3 : 2, gapT = this.phase === 2 ? .6 : .8;
+        for (let i = 0; i < cuts; i++) {
             const a = angle + i * Math.PI / 2, len = 440;
             const sx = x - Math.cos(a) * len / 2, sy = y - Math.sin(a) * len / 2;
-            this.warn('tline', sx, sy, { angle: a, len, width: 46, delay: 1.05 + i * .8, color: '#c68cff' }, h => {
+            this.warn('tline', sx, sy, { angle: a, len, width: 46, delay: 1.05 + i * gapT, color: '#c68cff' }, h => {
                 this.x = h.x; this.y = h.y; this.alpha = 1; this.flip = Math.cos(h.angle) < 0;
                 this.lineHit(h); audio.sfx('zap');
             });
         }
         audio.sfx('warn');
-        return this.signatureTask(2.2, 2.2, 1.4);
+        return this.signatureTask(1.4 + (cuts - 1) * gapT, 2.2, 1.4);
     }
 
     // 8: two spatially separate echoes, each with a broad missing wedge.
@@ -422,21 +442,24 @@ export class Boss {
     task_echo() {
         setBossMotion(this, 'windup');
         const targetX = G.player.x, targetY = G.player.y;
-        for (let i = 0; i < 2; i++) {
-            const x = this.x + (i ? 115 : -115), y = this.bodyY() + (i ? 45 : -45);
-            const gap = Math.atan2(targetY - 18 - y, targetX - x) + (i ? 1.2 : -.4);
-            this.warn('tcircle', x, y, { radius: 32, delay: 1.2 + i * 1.0, color: '#ba9af2' }, h => {
+        // 변이: 세 번째 메아리. 광폭화: 메아리 간격이 짧고 탄이 빠르다.
+        const echoes = this.phase ? 3 : 2, gapT = this.phase === 2 ? .8 : 1.0, speed = this.phase === 2 ? 165 : 145;
+        const spots = [[-115, -45, -.4], [115, 45, 1.2], [0, -120, 2.6]];
+        for (let i = 0; i < echoes; i++) {
+            const x = this.x + spots[i][0], y = this.bodyY() + spots[i][1];
+            const gap = Math.atan2(targetY - 18 - y, targetX - x) + spots[i][2];
+            this.warn('tcircle', x, y, { radius: 32, delay: 1.2 + i * gapT, color: '#ba9af2' }, h => {
                 // A 90-degree empty wedge remains even in the final phase.
                 const n = 16 + this.phase * 2;
                 for (let j = 0; j < n; j++) {
                     const a = gap + Math.PI / 4 + (j / (n - 1)) * Math.PI * 1.5;
-                    fireEnemyShot(h.x, h.y, Math.cos(a), Math.sin(a), 145, this.dmg * .55, 'boss', 7);
+                    fireEnemyShot(h.x, h.y, Math.cos(a), Math.sin(a), speed, this.dmg * .55, 'boss', 7);
                 }
                 sparks(h.x, h.y, 10, '#ba9af2', 90);
             });
         }
         audio.sfx('warn');
-        return this.signatureTask(2.55, 2.1, 1.35);
+        return this.signatureTask(1.55 + (echoes - 1) * gapT, 2.1, 1.35);
     }
 
     // 9: outer fault lines hit first; the center is safe, then the delayed
@@ -451,8 +474,16 @@ export class Boss {
                 this.lineHit(h, 1); shake(7); audio.sfx('explode');
             });
         }
+        // 변이 이후: 중앙 강타 뒤 직각 균열이 십자로 갈라진다 (광폭화는 더 빨리).
+        const crossDelay = this.phase ? 2.0 + (this.phase === 2 ? .6 : .8) : 0;
+        if (crossDelay) {
+            const b = a + Math.PI / 2;
+            this.warn('tline', x - Math.cos(b) * 240, y - Math.sin(b) * 240, { angle: b, len: 480, width: 58, delay: crossDelay, color: '#ffd08b' }, h => {
+                this.lineHit(h, 1); shake(7); audio.sfx('explode');
+            });
+        }
         audio.sfx('warn');
-        return this.signatureTask(2.4, 2.5, 1.5);
+        return this.signatureTask(Math.max(2.4, crossDelay + .4), 2.5, 1.5);
     }
 
     // 10: a contract snapshots your position. Coin interest is paid first;
@@ -461,10 +492,12 @@ export class Boss {
         setBossMotion(this, 'windup');
         const x = G.player.x, y = G.player.y;
         const angle = Math.atan2(y - 18 - this.bodyY(), x - this.x);
-        for (let i = 0; i < 5; i++) {
-            const a = angle + (i / 4 - .5) * .5;
+        // 변이: 금화 사격선 +1·탄속 증가. 광폭화: 사격선 +2·계약 원 2개.
+        const lines = 5 + this.phase, spread = .5 + this.phase * .1, coinSpeed = 210 + this.phase * 20;
+        for (let i = 0; i < lines; i++) {
+            const a = angle + (i / (lines - 1) - .5) * spread;
             this.warn('tline', this.x, this.bodyY(), { angle: a, len: 860, width: 16, delay: 1.05, color: '#f2d383' }, h => {
-                this.fan(h.x, h.y, h.angle, 1, 0, 210, 'coin', 8);
+                this.fan(h.x, h.y, h.angle, 1, 0, coinSpeed, 'coin', 8);
             });
         }
         const marks = this.phase === 2 ? 2 : 1;

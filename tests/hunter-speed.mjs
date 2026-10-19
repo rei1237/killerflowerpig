@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Boss } from '../src/game/boss.js';
-import { BOSSES } from '../src/data/bosses.js';
+import { BOSSES, HUNTER_TUNING } from '../src/data/bosses.js';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases, fx } from '../src/core/assets.js';
 import { SPRITES } from '../src/data/sprites.js';
@@ -33,7 +33,9 @@ test('Hunter speed and normalized lateral pursuit scale without changing HP, dam
     }
 });
 
-test('two independent locks keep fixed directions and full .65/.50 tells at every phase',()=>{
+test('independent locks keep fixed directions and full tells: 2 dashes, 3 in mutation, 3 off-beat in frenzy',()=>{
+    assert.deepEqual(HUNTER_TUNING.phaseWarnings.map(w=>w.length),[2,3,3]);
+    assert.ok(HUNTER_TUNING.phaseWarnings.flat().every(w=>w>=.5),'off-beat never shortens a tell below .5s');
     for(const phase of [0,1,2]){
         const b=reset(phase),s=begin(b),first={...hazards()[0]};
         close(s.speed,650*(1+phase*.08));close(s.lane.warning,.65);assert.equal(s.lane.length,300);
@@ -43,8 +45,16 @@ test('two independent locks keep fixed directions and full .65/.50 tells at ever
         close(b.x,300);close(b.y,0);assert.equal(s.phase,'warning');close(s.lane.warning,.5);close(s.lane.angle,Math.PI/2);
         G.player.x=-500;G.player.y=-500;const second={...s.lane};advance(b,.499);close(b.x,300);close(b.y,0);
         close(s.lane.angle,second.angle);advance(b,.001);assert.equal(s.phase,'dash');
+        const W=HUNTER_TUNING.phaseWarnings[phase];
+        if(W.length>2){
+            while(s.strike===1)advance(b,.01);
+            close(s.lane.warning,W[2]);const third={...s.lane};G.player.x=600;G.player.y=600;
+            advance(b,W[2]-.011);assert.equal(s.phase,'warning');close(s.lane.angle,third.angle);
+            advance(b,.02);assert.equal(s.phase,'dash');
+        }
         while(b.task===s)advance(b,.01);
-        close(b.x,300);close(b.y,220);assert.equal(b.task.phase,'recover');assert.equal(G.enemyShots.count,0);
+        if(W.length===2){close(b.x,300);close(b.y,220);}
+        assert.equal(b.task.phase,'recover');assert.equal(G.enemyShots.count,0);
     }
 });
 
@@ -75,6 +85,7 @@ test('missed combo and interrupted phase both expose at least 1.25 seconds of st
         const b=reset(2),s=begin(b);
         if(interruption==='combo'){
             G.player.y=200;b.update(.65);b.update(1);G.player.x=-500;G.player.y=-500;b.update(.5);b.update(1);
+            G.player.x=500;G.player.y=-500;b.update(.8);b.update(1);
         }else b.enterPhase(2);
         assert.equal(b.task.phase,'recover');const pos=[b.x,b.y];
         G.player.x=b.x;G.player.y=b.y;const hp=G.player.hp;advance(b,1.249);
@@ -105,12 +116,18 @@ test('360px portrait scale and 200ms scripted reaction leave a real sidestep at 
     for(const phase of [0,1,2])for(const fps of [30,60]){
         const b=reset(phase),s=begin(b);assert.ok(hazards()[0].width*.6>46);
         G.player.y=200;b.update(.65);b.update(1);assert.equal(s.strike,1);close(s.lane.warning,.5);
-        const warningStart=[G.player.x,G.player.y],angle=s.lane.angle,dt=1/fps;
-        for(let f=0;f<Math.round(.5*fps);f++){
-            if(f>=Math.round(.2*fps)){G.player.x-=Math.sin(angle)*135*dt;G.player.y+=Math.cos(angle)*135*dt;}
-            G.clock+=dt;updateHazards(dt);b.update(dt);
+        const dt=1/fps;
+        for(let k=1;k<HUNTER_TUNING.phaseWarnings[phase].length;k++){
+            if(b.task!==s)break;
+            while(s.strike<k)advance(b,dt,dt);
+            const W=s.lane.warning,warningStart=[G.player.x,G.player.y],angle=s.lane.angle;
+            for(let f=0;f<Math.round(W*fps);f++){
+                if(f>=Math.round(.2*fps)){G.player.x-=Math.sin(angle)*135*dt;G.player.y+=Math.cos(angle)*135*dt;}
+                G.clock+=dt;updateHazards(dt);b.update(dt);
+            }
+            assert.ok(Math.hypot(G.player.x-warningStart[0],G.player.y-warningStart[1])>s.lane.radius);
+            while(b.task===s&&s.strike===k)advance(b,dt,dt);
         }
-        assert.ok(Math.hypot(G.player.x-warningStart[0],G.player.y-warningStart[1])>s.lane.radius);
         while(b.task===s)advance(b,dt,dt);
         assert.equal(G.player.hp,100,`phase${phase}/${fps}fps: the locked dash is avoidable`);
     }
