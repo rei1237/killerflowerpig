@@ -132,6 +132,12 @@ export function drawHazards(ctx) {
     const time = motion ? G.clock : 0;
     const view = G.view, camera = G.camera;
     let mistBudget = G.lowQ ? 16 : 48;
+    // 아군 장판(화염·독가스)은 겹쳐 쌓이면 픽셀 채우기 비용이 폭증한다 (지옥 불꽃길은 최대 34장).
+    // 화면 면적 기준 예산을 넘으면 글로우를 생략하고, 채우기 예산을 넘으면 외곽선만 그린다.
+    // 적의 산성 장판과 보스 예고는 예산과 무관하게 항상 전부 그린다.
+    const screenArea = view.w * view.h, vis = G.visuals;
+    let glowBudget = screenArea * (vis.fieldGlowScreens ?? 1.2);
+    let fillBudget = screenArea * (vis.fieldFillScreens ?? 3);
     ctx.save();
     for (let i = 0; i < pool.count; i++) {
         const h = pool.items[i];
@@ -169,19 +175,36 @@ export function drawHazards(ctx) {
         }
         const fade = Math.max(0, Math.min(1, (h.duration - h.t) / 0.45));
         const life = Math.max(0, Math.min(fade, h.t / 0.18));
+        const footprint = Math.PI * h.radius * h.radius * 0.7;
+        if (h.kind !== 'acid' && fillBudget <= 0) {
+            // 예산 초과 아군 장판: 점선 없는 얇은 외곽선 1회만 (경로 래스터 비용 최소화)
+            ctx.setLineDash(NO_DASH);ctx.globalAlpha = 0.3 * life;
+            ctx.strokeStyle = h.kind === 'fire' ? '#ff7a3a' : '#64d7bc';ctx.lineWidth = 1.5;
+            ellipsePath(ctx, h);ctx.stroke();
+            continue;
+        }
+        if (h.kind !== 'acid') fillBudget -= footprint;
         if (h.kind === 'fire') {
             ctx.globalAlpha = 0.5 * life;ctx.fillStyle = '#5a1000';
             ellipsePath(ctx, h);ctx.fill();
-            ctx.globalCompositeOperation = 'lighter';
-            const g = glow('#ff5a14', 64), fl = motion ? 1 + Math.sin(time * 6 + h.x) * 0.035 : 1;
-            ctx.globalAlpha = 0.58 * life;
-            ctx.drawImage(g, h.x - h.radius * fl, h.y - h.radius * 0.7 * fl, h.radius * 2 * fl, h.radius * 1.4 * fl);
-            ctx.globalCompositeOperation = 'source-over';
+            const quad = h.radius * h.radius * 2.8;
+            if (glowBudget > 0) {
+                glowBudget -= quad;
+                ctx.globalCompositeOperation = 'lighter';
+                const g = glow('#ff5a14', 64), fl = motion ? 1 + Math.sin(time * 6 + h.x) * 0.035 : 1;
+                ctx.globalAlpha = 0.58 * life;
+                ctx.drawImage(g, h.x - h.radius * fl, h.y - h.radius * 0.7 * fl, h.radius * 2 * fl, h.radius * 1.4 * fl);
+                ctx.globalCompositeOperation = 'source-over';
+            } else {
+                ctx.globalAlpha = 0.35 * life;ctx.fillStyle = '#c2410c';
+                ellipsePath(ctx, h, h.radius * 0.55);ctx.fill();
+            }
         } else if (h.kind === 'gas' || h.kind === 'acid') {
             const hostile = h.kind === 'acid';
             ctx.globalAlpha = (hostile ? 0.48 : 0.2) * life;
             ctx.fillStyle = hostile ? '#27381d' : '#16463f';ellipsePath(ctx, h);ctx.fill();
-            if (mistBudget > 0 && life > 0) {
+            if (mistBudget > 0 && life > 0 && (hostile || glowBudget > 0)) {
+                if (!hostile) glowBudget -= footprint;
                 const count = Math.min(mistBudget, G.lowQ ? 1 : 3);
                 mist(ctx, h, time, life, hostile, count);
                 mistBudget -= count;
