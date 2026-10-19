@@ -8,7 +8,10 @@ export const BOSS_REWARD_TIERS = Object.freeze([
     Object.freeze({ minStage:6,maxStage:8,guaranteedCount:5,premiumChance:0.50 }),
     Object.freeze({ minStage:9,maxStage:10,guaranteedCount:5,premiumChance:0.65 }),
 ]);
-export function bossRewardTier(stage) {
+// 난이도가 오르면 확정 강화 개수가 줄고(최소 1) 정밀 강화 확률이 낮아진다. 쉬움은 표 그대로.
+export function bossRewardTier(stage, difficulty = { chestPenalty: 0, premiumMul: 1 }) {
     const n=Number.isInteger(stage)?Math.max(1,Math.min(10,stage)):1;
-    return {...BOSS_REWARD_TIERS.find(t=>n>=t.minStage&&n<=t.maxStage),stage:n,premiumLevels:2,premiumFallbackCoins:90+10*n};
+    const base=BOSS_REWARD_TIERS.find(t=>n>=t.minStage&&n<=t.maxStage);
+    return {...base,guaranteedCount:Math.max(1,base.guaranteedCount-(difficulty.chestPenalty||0)),premiumChance:base.premiumChance*(difficulty.premiumMul??1),
+        stage:n,premiumLevels:2,premiumFallbackCoins:90+10*n};
 }

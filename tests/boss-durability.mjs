@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BOSSES } from '../src/data/bosses.js';
+import { BOSSES, BOSS_HP_MULTIPLIER } from '../src/data/bosses.js';
 import { Boss } from '../src/game/boss.js';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
@@ -17,10 +17,10 @@ test('boss HP stays increasing by stage, without hidden resistance or a damage s
  let previousRatio=0;
  for(let stage=1;stage<=10;stage++){
   G.stage=stage;const b=new Boss(stage),def=BOSSES[stage],ratio=def.hp/oldHp[stage];
-  assert.equal(def.hp,newHp[stage]);assert.equal(b.maxHp,newHp[stage]);assert.equal(b.hp,b.maxHp);
+  assert.equal(def.hp,newHp[stage]);assert.equal(b.maxHp,newHp[stage]*BOSS_HP_MULTIPLIER);assert.equal(b.hp,b.maxHp);
   if(stage>1){assert.ok(ratio>=1.4&&ratio<=1.6);assert.ok(ratio>=previousRatio);previousRatio=ratio;}
   assert.ok(newHp[stage]>newHp[stage-1]);
-  assert.equal(b.hurt(100,{silent:true}),100);assert.equal(b.hp,newHp[stage]-100,'no hidden damage reduction');
+  assert.equal(b.hurt(100,{silent:true}),100);assert.equal(b.hp,b.maxHp-100,'no hidden damage reduction');
   assert.equal(b.dmg,def.dmg*(1+(stage-1)*.05));assert.equal(b.radius,SPRITES[def.sheet].walkH*def.scale*.32);
  }
 });
@@ -87,5 +87,14 @@ test('live early boss survives long enough to release its signature across 36 se
   assert.equal(result.hp,1400);assert.ok(result.first!==null,`no charge at distance ${distance}, seed ${seed}`);
   assert.ok(result.death!==null&&result.first<result.death);assert.ok(result.first>=3);
   assert.ok(result.death<25,'fixed early build still wins within a bounded encounter');
+ }
+});
+
+test('effective ×10 boss HP stays winnable: reference builds finish every live encounter within five minutes',()=>{
+ for(const scenario of DAMAGE_SCENARIOS)for(const seed of [1,2]){
+  const r=measureBossEncounter(scenario,{hp:BOSSES[scenario.stage].hp*BOSS_HP_MULTIPLIER,distance:200,seed,maxSeconds:300});
+  assert.ok(r.death!==null&&r.death<300,`${scenario.name}: ${r.death}`);
+  assert.ok(r.death>30,`${scenario.name}: the ×10 boss is a long fight, not a burst kill (${r.death})`);
+  assert.ok(r.starts.length>=5,'the boss cycles through several real patterns');
  }
 });

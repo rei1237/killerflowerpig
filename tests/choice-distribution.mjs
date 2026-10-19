@@ -31,6 +31,17 @@ test('three-card screens always retain eligible ordinary growth alongside discov
  for(let i=0;i<1000;i++){
   const cards=rollChoices(3);assert.ok(cards.some(c=>!c.isNew&&(c.kind==='passive'||c.kind==='weapon'&&!WEAPONS[c.id].fusionOnly)));assert.equal(new Set(cards.map(c=>c.id)).size,3);
  }
- G.level=4;G.passives={heart:1,nose:1,hide:1,focus:1,sap:1};let cards=rollChoices(3);assert.ok(cards.some(c=>c.id==='thorns'));assert.ok(cards.some(c=>!c.isNew));
+ // 연꽃 가시 보장은 아직 만개 연꽃포 재료로 소모되지 않았을 때만 적용된다.
+ G.weapons=[createWeapon('shotgun',0)];G.level=4;G.passives={heart:1,nose:1,hide:1,focus:1,sap:1};let cards=rollChoices(3);assert.ok(cards.some(c=>c.id==='thorns'));assert.ok(cards.some(c=>!c.isNew));
  G.weapons=[createWeapon('lotus_bloom',0)];G.passives={};G.level=2;const original=Math.random;Math.random=()=>.99;try{cards=rollChoices(3);assert.ok(cards.every(c=>c.isNew));}finally{Math.random=original;}
+});
+
+test('fusion materials are never offered again; unacquired items take their place',()=>{
+ G.weapons=[createWeapon('lotus_bloom',0)];G.passives={};
+ for(let i=0;i<500;i++){const cards=rollChoices(3);assert.ok(!cards.some(c=>c.id==='thorns'||c.id==='cannon'),'cannon/thorns were consumed by lotus bloom');}
+ G.consumedItems=new Set(['shotgun','rifle']);G.weapons=[createWeapon('scatter_rail',0),createWeapon('lotus_bloom',1)];
+ const pool=rollChoices(99);for(const id of ['shotgun','rifle','thorns','cannon'])assert.ok(!pool.some(c=>c.id===id),id);
+ const pistols=pool.find(c=>c.id==='pistols');G.consumedItems=new Set();const before=rollChoices(99).find(c=>c.id==='pistols');
+ assert.ok(pistols.weight>before.weight*1.9,'unacquired items are boosted after a fusion');
+ G.consumedItems=new Set(['gas']);const snap=snapshotBuild();resetBuild();assert.equal(G.consumedItems.size,0);restoreBuild(snap);assert.ok(G.consumedItems.has('gas'));
 });

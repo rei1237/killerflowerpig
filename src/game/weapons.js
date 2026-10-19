@@ -68,7 +68,7 @@ export function weaponStats(w) {
         length: (b.length || 0) * ps.projSpeed, width: b.width || 0,
         bonusAmount: ps.amount, durationScale: ps.duration,
     };
-    applyTechWeaponBonus(w.id, result);
+    applyTechWeaponBonus(w, result);
     if (w.sourceId) {
         result.dmg = Math.min(600, result.dmg * ((WEAPONS[w.sourceId]?.tier === 'absolute' ? 1.65 : 1.35) + 0.08 * (Math.min(8, Math.max(1, w.fusionLevel || 1)) - 1)));
         result.amount = Math.min(20, result.amount); result.area = Math.min(3, result.area);

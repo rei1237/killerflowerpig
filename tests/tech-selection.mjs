@@ -5,7 +5,7 @@ import { createPlayer, recomputeStats } from '../src/game/player.js';
 import { createWeapon, weaponStats } from '../src/game/weapons.js';
 import { resetBuild, applyChoice, rollChoices, snapshotBuild, restoreBuild } from '../src/game/progression.js';
 import { resonanceCount, resonanceTier, techChoiceWeight, isFamilyItem } from '../src/game/tech.js';
-import { TECHS, WEAPON_TAGS } from '../src/data/techs.js';
+import { TECHS, WEAPON_TAGS, MISMATCH_DAMAGE, FAMILY_WEIGHT, OFF_FAMILY_NEW_WEAPON_WEIGHT, IMPRINT_LEVELS } from '../src/data/techs.js';
 import { WEAPONS, PASSIVES } from '../src/data/weapons.js';
 import { FUSION_RECIPES } from '../src/data/fusions.js';
 
@@ -58,7 +58,8 @@ test('tech weapon bonus applies only to matching tags and grows with tiers', () 
     G.weapons.push(cannon);
     const cannonWith = weaponStats(cannon);
     G.tech = null; const cannonWithout = weaponStats(cannon); G.tech = 'gunline';
-    assert.deepEqual(cannonWith, cannonWithout, 'off-tag weapons get nothing');
+    assert.ok(Math.abs(cannonWith.dmg - cannonWithout.dmg * MISMATCH_DAMAGE) < 1e-9, 'off-tag weapons suffer the mismatch penalty');
+    assert.deepEqual({ ...cannonWith, dmg: 0 }, { ...cannonWithout, dmg: 0 }, 'and receive no tech bonus');
     G.weapons.pop();
     for (const [kind, id] of [['weapon', 'rifle'], ['passive', 'scope'], ['weapon', 'pistols'], ['passive', 'focus']]) applyChoice({ kind, id, level: 1 });
     assert.equal(resonanceTier(), 3);
@@ -103,9 +104,9 @@ test('fused outputs keep the resonance of the family parents they consumed', () 
 
 test('level-up weights favour the chosen family and fade off-family new weapons once committed', () => {
     startTech('plague');
-    assert.equal(techChoiceWeight({ kind: 'weapon', id: 'gas', isNew: true }), 1.7);
-    assert.equal(techChoiceWeight({ kind: 'passive', id: 'sap', isNew: true }), 1.7);
-    assert.equal(techChoiceWeight({ kind: 'weapon', id: 'pistols', isNew: true }), 0.6);
+    assert.equal(techChoiceWeight({ kind: 'weapon', id: 'gas', isNew: true }), FAMILY_WEIGHT);
+    assert.equal(techChoiceWeight({ kind: 'passive', id: 'sap', isNew: true }), FAMILY_WEIGHT);
+    assert.equal(techChoiceWeight({ kind: 'weapon', id: 'pistols', isNew: true }), OFF_FAMILY_NEW_WEAPON_WEIGHT);
     assert.equal(techChoiceWeight({ kind: 'passive', id: 'nose', isNew: true }), 1);
     G.tech = null;
     assert.equal(techChoiceWeight({ kind: 'weapon', id: 'pistols', isNew: true }), 1, 'no tech keeps legacy weights');
@@ -116,7 +117,7 @@ test('level-up weights favour the chosen family and fade off-family new weapons 
         let seed = 7; Math.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
         for (let i = 0; i < 400; i++) for (const c of rollChoices(3)) { total++; if (isFamilyItem(c.id)) family++; }
     } finally { Math.random = origRandom; }
-    assert.ok(family / total > 0.45, `family share ${family / total}`);
+    assert.ok(family / total > 0.55, `family share ${family / total}`);
 });
 
 test('tech survives checkpoint snapshot/restore and resetBuild clears it', () => {
@@ -129,4 +130,22 @@ test('tech survives checkpoint snapshot/restore and resetBuild clears it', () =>
     assert.equal(G.tech, 'butcher');
     restoreBuild({ ...snap, tech: 'not-a-tech' });
     assert.equal(G.tech, null, 'unknown tech ids are dropped');
+});
+
+test('imprints make the same weapon grow in a tech-specific direction at Lv3/5/7', () => {
+    const at = (tech, id, level) => { startTech(tech); const w = Object.assign(createWeapon(id, 0), { level }); G.weapons = [w]; G.passives = {}; recomputeStats(); return weaponStats(w); };
+    for (const lv of IMPRINT_LEVELS) for (const id of Object.keys(TECHS)) assert.ok(TECHS[id].imprints[lv]?.label, `${id} Lv${lv}`);
+    // 산탄총 Lv8: 탄막 사수는 투사체·관통, 도살자는 출혈·피해, 처형자(투사체 태그)는 치명·처형으로 성장
+    const gun = at('gunline', 'shotgun', 8), butcher = at('butcher', 'shotgun', 8), exe = at('executioner', 'shotgun', 8);
+    G.tech = null; recomputeStats(); const plain = weaponStats(Object.assign(createWeapon('shotgun', 0), { level: 8 }));
+    assert.equal(gun.amount, plain.amount + 2); assert.equal(gun.pierce, plain.pierce + 2);
+    assert.ok(Math.abs(butcher.dmg - plain.dmg * MISMATCH_DAMAGE) < 1e-9, 'shotgun is off-tag for the butcher (blade/orbit)');
+    assert.ok(exe.crit >= 0.16 && exe.execute >= 0.08);
+    const below = at('gunline', 'shotgun', 2), lv3 = at('gunline', 'shotgun', 3);
+    G.tech = null; recomputeStats(); const p2 = weaponStats(Object.assign(createWeapon('shotgun', 0), { level: 2 })), p3 = weaponStats(Object.assign(createWeapon('shotgun', 0), { level: 3 }));
+    assert.equal(below.amount - p2.amount, 0); assert.equal(lv3.amount - p3.amount, 1, 'Lv3 imprint adds exactly one projectile');
+    // 레벨업 카드에 이번 레벨의 각인이 표시된다
+    startTech('gunline'); G.weapons[0].level = 2;
+    const card = rollChoices(99).find(c => c.id === 'shotgun');
+    assert.match(card.desc, /탄막 각인 I/);
 });

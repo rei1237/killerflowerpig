@@ -5,6 +5,7 @@ import { G, clearWorld, configureCaps, emit } from './state.js';
 import { STAGES } from '../data/stages.js';
 import { STARTING_WEAPON, PASSIVES } from '../data/weapons.js';
 import { TECHS } from '../data/techs.js';
+import { DIFFICULTIES } from '../data/difficulty.js';
 import { createPlayer, updatePlayer, recomputeStats } from './player.js';
 import { updateEnemies, updateEnemyShots, flushExplosions } from './enemies.js';
 import { updateWeapons, updateShots, createWeapon } from './weapons.js';
@@ -54,8 +55,9 @@ function invalidateDeadRun() {
     if (failed) emit('runSaveError');
 }
 
-// techId 를 생략하면 기존과 동일하게 산탄총 단독으로 시작 (호환용).
-export function newRun(stage = 1, techId = null) {
+// techId 를 생략하면 기존과 동일하게 산탄총 단독으로 시작 (호환용). difficulty 생략 시 쉬움.
+export function newRun(stage = 1, techId = null, difficulty = 'easy') {
+    G.difficulty = DIFFICULTIES[difficulty] ? difficulty : 'easy';
     configureCaps();
     refreshGore();
     resetBuild();

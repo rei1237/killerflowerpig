@@ -8,8 +8,9 @@ import { WEAPONS, PASSIVES, MAX_WEAPONS, MAX_PASSIVES, WEAPON_MAX_LEVEL, PASSIVE
 import { recomputeStats, healPlayer } from './player.js';
 import { createWeapon } from './weapons.js';
 import { audio } from '../core/audio.js';
-import { techChoiceWeight } from './tech.js';
-import { TECHS } from '../data/techs.js';
+import { techChoiceWeight, imprintAt, isMismatchedWeapon, isFamilyItem } from './tech.js';
+import { TECHS, FAMILY_GUARANTEE_EVERY, MISMATCH_DAMAGE } from '../data/techs.js';
+import { DIFFICULTIES, difficultyOf } from '../data/difficulty.js';
 
 function copyChoiceSession(session) {
     const copy = { ...session };
@@ -24,6 +25,7 @@ function copyChoiceSession(session) {
         for (const key of ['name', 'icon', 'desc', 'evoHint']) if (typeof c[key] === 'string') card[key] = c[key].slice(0, 500);
         if (c.isNew) card.isNew = true;
         if (c.tech) card.tech = true;
+        if (c.mismatch) card.mismatch = true;
         if (Number.isFinite(c.weight)) card.weight = c.weight;
         return card;
     });
@@ -78,8 +80,9 @@ function restoreChoiceState(value) {
 }
 
 export function xpForLevel(lv) {
-    // 레벨업 비용: 뱀서처럼 구간(20, 35)마다 가팔라진다. 이전 곡선(8+7n…) 대비 런 전체 선택 횟수 약 20% 감소.
-    return Math.round(10 + (lv - 1) * 10 + Math.max(0, lv - 20) * 20 + Math.max(0, lv - 35) * 40);
+    // 레벨업 비용: 구간(20, 35)마다 가팔라지는 '쉬움' 기준 곡선 × 난이도 배율.
+    const base = 10 + (lv - 1) * 10 + Math.max(0, lv - 20) * 20 + Math.max(0, lv - 35) * 40;
+    return Math.round(base * difficultyOf(G.difficulty).xpMul);
 }
 
 export function addXP(v) {
@@ -94,6 +97,12 @@ export function addXP(v) {
 
 export function weaponOf(id) { return G.weapons.find(w => w.id === id); }
 
+// 융합 재료로 소모된 무기: 기록된 소모 목록 + 현재 보유한 융합 무기의 레시피 재료 (구버전 저장 호환)
+export function isConsumedMaterial(id) {
+    if (G.consumedItems?.has(id)) return true;
+    return G.weapons.some(w => WEAPONS[w.id]?.fusionOnly && FUSION_RECIPES.some(r => r.output === w.id && r.inputs.some(i => i.id === id)));
+}
+
 // 레벨업 선택지 후보
 function candidates() {
     const out = [];
@@ -107,7 +116,7 @@ function candidates() {
     }
     if (G.weapons.length < MAX_WEAPONS) {
         for (const id in WEAPONS) {
-            if (weaponOf(id) || G.banished.has(id) || WEAPONS[id].fusionOnly) continue;
+            if (weaponOf(id) || G.banished.has(id) || WEAPONS[id].fusionOnly || isConsumedMaterial(id)) continue;
             const def = WEAPONS[id];
             out.push({ kind: 'weapon', id, level: 1, weight: 2, name: def.name, icon: def.icon, desc: def.desc, isNew: true });
         }
@@ -133,8 +142,18 @@ function candidates() {
             if (!w.evolved && WEAPONS[w.id].evolve?.with === c.id) { c.weight += 2; c.evoHint = WEAPONS[w.id].evolve.name; }
         }
     }
-    // 시작 테크: 계열 아이템 우대, 공명 시작 후 다른 계열 신규 무기는 덜 등장
-    for (const c of out) { c.weight *= techChoiceWeight(c); if (techChoiceWeight(c) > 1) c.tech = true; }
+    // 최종 무기를 만든 뒤에는 아직 얻지 못한 아이템이 우선 등장 (재료 무기는 위에서 이미 제외)
+    if (G.consumedItems?.size) for (const c of out) if (c.isNew) c.weight *= 2;
+    // 시작 테크: 계열 아이템 우대, 다른 계열 신규 무기는 덜 등장. 무기 카드에는 이번 레벨의 각인/부조화를 표시
+    for (const c of out) {
+        const w = techChoiceWeight(c);
+        c.weight *= w;
+        if (w > 1) c.tech = true;
+        if (c.kind !== 'weapon') continue;
+        const im = imprintAt(c.id, c.level);
+        if (im) c.desc = `${c.desc} · ✦ ${im.label}`;
+        if (isMismatchedWeapon(c.id)) { c.mismatch = true; if (c.isNew) c.desc = `${c.desc} · ⚠ 테크 부조화: 피해 -${Math.round((1 - MISMATCH_DAMAGE) * 100)}%`; }
+    }
     for (const c of out) {
         if (c.kind === 'weapon' && WEAPONS[c.id].fusionOnly) { c.weight *= 0.25; continue; }
         if (!c.isNew) continue;
@@ -163,6 +182,15 @@ export function rollChoices(n = 3) {
     if (picks.length < n && regenProtected) {
         const regen = pool.findIndex(c => c.kind === 'passive' && c.id === 'regen' && c.isNew);
         if (regen >= 0) picks.push(pool.splice(regen, 1)[0]);
+    }
+    // 테크 방향성: 일정 레벨마다 계열 카드 1장을 보장 (후보 풀 안에서만, 슬롯·최대 레벨 제한을 우회하지 않음)
+    if (G.tech && picks.length < n && choiceLevel % FAMILY_GUARANTEE_EVERY === 0 && !picks.some(c => isFamilyItem(c.id))) {
+        const family = pool.filter(c => isFamilyItem(c.id) && !(c.kind === 'weapon' && WEAPONS[c.id].fusionOnly));
+        if (family.length) {
+            let r = Math.random() * family.reduce((sum, c) => sum + c.weight, 0);
+            const chosen = family.find(c => (r -= c.weight) < 0) || family[family.length - 1];
+            picks.push(pool.splice(pool.indexOf(chosen), 1)[0]);
+        }
     }
     // Three-card screens retain a normal growth route alongside discovery.
     // Guaranteed thorns/regen occupy at most two slots; fused upgrades stay rare.
@@ -249,7 +277,7 @@ const bossRewardReceipts = new Map();
 export function rollBossChest(requestId, random = Math.random) {
     if (typeof requestId !== 'string' || !requestId.length || requestId.length > 160) return { ok: false, code: 'INVALID_REQUEST' };
     if (bossRewardReceipts.has(requestId)) return { ...JSON.parse(JSON.stringify(bossRewardReceipts.get(requestId))), duplicate: true };
-    const tier = bossRewardTier(G.stage);
+    const tier = bossRewardTier(G.stage, difficultyOf(G.difficulty));
     const premiumWon = random() < tier.premiumChance;
     const rewards = rollChest(tier.guaranteedCount, random);
     if (premiumWon) {
@@ -280,6 +308,7 @@ export function resetBuild() {
     G.supplyDrought = supplyState();
     G.fusionRevision = (G.fusionRevision || 0) + 1;
     G.tech = null;
+    G.consumedItems = new Set();
     G.weapons = [];
     G.passives = {};
     G.level = 1;
@@ -299,6 +328,8 @@ export function snapshotBuild() {
         supplyDrought: supplyState(G.supplyDrought),
         stage: G.stage,
         tech: G.tech || null,
+        difficulty: G.difficulty,
+        consumedItems: [...(G.consumedItems || [])],
         level: G.level, xp: G.xp,
         weapons: G.weapons.map(w => ({ id: w.id, level: w.level, evolved: w.evolved })),
         passives: { ...G.passives },
@@ -314,6 +345,8 @@ export function restoreBuild(s) {
     G.fusionRevision = (G.fusionRevision || 0) + 1;
     G.stage = s.stage;
     G.tech = TECHS[s.tech] ? s.tech : null;
+    G.difficulty = DIFFICULTIES[s.difficulty] ? s.difficulty : 'easy';
+    G.consumedItems = new Set((Array.isArray(s.consumedItems) ? s.consumedItems : []).filter(id => WEAPONS[id] && !WEAPONS[id].fusionOnly));
     G.level = s.level;
     G.xp = s.xp;
     G.xpNext = xpForLevel(s.level);

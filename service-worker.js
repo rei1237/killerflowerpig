@@ -1,5 +1,5 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v12-tech-resonance';
+const VERSION = 'v13-difficulty-imprints';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
@@ -27,6 +27,7 @@ const PRECACHE = [
     './manifest.webmanifest',
     './src/main.js',
     './src/data/techs.js',
+    './src/data/difficulty.js',
     './src/game/tech.js',
     './src/ui/tech-select.js',
     './src/ui/tech-select.css',

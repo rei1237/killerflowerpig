@@ -55,9 +55,11 @@ test('role warning circle matches blast geometry and optional generated art pres
 test('long frames preserve fresh warning/fuse, bound dash travel, and sweep player collision',()=>{
  reset(); const e=spawnEnemy('suicider',240,0);
  updateEnemies(4); assert.equal(e.rolePhase,'warning'); assert.equal(e.roleT,.8); assert.equal(e.x,240);
- updateEnemies(4); assert.equal(e.rolePhase,'dash'); assert.equal(e.roleT,.55); assert.equal(e.x,240);
+ updateEnemies(4); assert.equal(e.rolePhase,'dash'); assert.equal(e.roleT,ENEMIES.suicider.charge.duration); assert.equal(e.x,240);
  G.player.y=400; updateEnemies(4); assert.equal(e.rolePhase,'dash'); assert.equal(e.roleT,0);
- assert.ok(Math.abs(e.x-75)<1e-8,'dash is at most 165px despite four-second frame');
+ const c=ENEMIES.suicider.charge, travelled=Math.hypot(e.x-240,e.y);
+ assert.ok(Math.abs(travelled-c.speed*c.duration)<1e-6,'dash length is bounded by speed×duration despite a four-second frame');
+ assert.ok(e.y>0,'the long dash steers toward the moved player');
  updateEnemies(4); assert.equal(e.rolePhase,'fuse'); assert.equal(e.roleT,.6); assert.equal(e.alive,true);
  hitEnemy(e,1e6,{silent:true}); flushExplosions();
  reset(); const near=spawnEnemy('suicider',100,0);

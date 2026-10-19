@@ -31,6 +31,7 @@ import { initFusionReveal, openFusionReveal, closeFusionReveal } from './fusion-
 import { initPractice, openPractice, closePractice, cancelPractice, shouldOfferPractice } from './practice.js';
 import { initTechSelect, openTechSelect } from './tech-select.js';
 import { techSummary } from '../game/tech.js';
+import { difficultyOf } from '../data/difficulty.js';
 import { RESONANCE_STEPS } from '../data/techs.js';
 import { initTutorial, openTutorial, closeTutorial, shouldOfferTutorial } from './tutorial.js';
 
@@ -384,7 +385,7 @@ export function showChest(kind) {
 function presentChest(kind) {
     const session = activeChest = {};
     const boss = kind === 'boss';
-    const tier=bossRewardTier(G.stage);
+    const tier=bossRewardTier(G.stage,difficultyOf(G.difficulty));
     const count=boss?tier.guaranteedCount:1;
     const receiptId=`${rewardSession}:boss:${G.stage}:${G.stageStartTime}`;
     $('chest-description').textContent=boss?`기본 강화 ${count}개 확정 · 연꽃 정밀 강화재 ${Math.round(tier.premiumChance*100)}%\n고급 강화재: 보유 무기 최대 +2레벨(최대8). 강화 가능한 무기가 없으면 ${tier.premiumFallbackCoins}코인. 상점 전용 상품은 나오지 않습니다.`:'보유 장비 1회 강화 · 진화 조건을 갖추면 진화 우선. 모두 만렙이면 '+(30+G.stage*10)+'코인을 받습니다.';
@@ -826,9 +827,9 @@ export function initUI() {
 
     click('btn-new', () => {
         // 튜토리얼/연습 → 시작 테크 선택 → 스토리 → 출격
-        const begin = () => openTechSelect((techId) => {
+        const begin = () => openTechSelect((techId, difficulty) => {
             clearRun();
-            beginStageFlow(1, () => { G.godMode = false; newRun(1, techId); startPlaying(); });
+            beginStageFlow(1, () => { G.godMode = false; newRun(1, techId, difficulty); startPlaying(); });
         });
         const practiceThenBegin = () => shouldOfferPractice() ? openPractice({ onDone: begin }) : begin();
         if (shouldOfferTutorial()) openTutorial({ onDone: practiceThenBegin });
@@ -894,9 +895,9 @@ export function initUI() {
         b.onclick = () => {
             if (!devUnlocked) return;
             audio.unlock();
-            openTechSelect((techId) => {
+            openTechSelect((techId, difficulty) => {
                 clearRun();
-                beginStageFlow(s, () => { newRun(s, techId); G.godMode = $('dev-god').checked; startPlaying(); });
+                beginStageFlow(s, () => { newRun(s, techId, difficulty); G.godMode = $('dev-god').checked; startPlaying(); });
             });
         };
         grid.appendChild(b);

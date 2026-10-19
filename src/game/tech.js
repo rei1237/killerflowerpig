@@ -1,7 +1,7 @@
 // 테크 공명: 선택한 테크 계열 아이템을 모을수록 단계별 보너스가 열린다.
 // 다른 계열 무기는 테크 보너스를 받지 않으므로, 한 계열에 집중하는 선택이 강해진다.
 import { G } from './state.js';
-import { TECHS, WEAPON_TAGS, RESONANCE_STEPS } from '../data/techs.js';
+import { TECHS, WEAPON_TAGS, RESONANCE_STEPS, IMPRINT_LEVELS, MISMATCH_DAMAGE, FAMILY_WEIGHT, OFF_FAMILY_NEW_WEAPON_WEIGHT } from '../data/techs.js';
 import { FUSION_RECIPES } from '../data/fusions.js';
 
 export function activeTech() { return G.tech ? TECHS[G.tech] || null : null; }
@@ -48,11 +48,35 @@ function sumTiers(tech, tier, key) {
     return out;
 }
 
-// weaponStats 결과에 테크 보너스를 적용 (태그가 맞는 무기만)
-export function applyTechWeaponBonus(weaponId, result) {
+// 무기 레벨에 따라 이미 열린 각인 보정 합계
+export function imprintMods(weaponLevel, tech = activeTech()) {
+    const out = {};
+    if (!tech?.imprints) return out;
+    for (const lv of IMPRINT_LEVELS) {
+        if (weaponLevel < lv || !tech.imprints[lv]) continue;
+        const mod = tech.imprints[lv].mod;
+        for (const k in mod) out[k] = (out[k] || 0) + mod[k];
+    }
+    return out;
+}
+
+// 레벨업 카드용: 이 무기가 level 에 도달할 때 열리는 각인 (없으면 null)
+export function imprintAt(weaponId, level, tech = activeTech()) {
+    if (!tech || !techTagsMatch(weaponId, tech)) return null;
+    return tech.imprints?.[level] || null;
+}
+
+// weaponStats 결과에 테크 보너스를 적용.
+// 태그가 맞는 무기: 공명 단계 보너스 + 무기 레벨 각인. 맞지 않는 무기: 부조화로 피해 감소.
+export function applyTechWeaponBonus(weapon, result) {
     const tech = activeTech();
-    if (!tech || !techTagsMatch(weaponId, tech)) return result;
+    if (!tech) return result;
+    const weaponId = typeof weapon === 'string' ? weapon : weapon.id;
+    if (!techTagsMatch(weaponId, tech)) { result.dmg *= MISMATCH_DAMAGE; return result; }
     const b = sumTiers(tech, resonanceTier(tech), 'weapon');
+    const level = typeof weapon === 'string' ? 1 : (weapon.level || 1);
+    const im = imprintMods(level, tech);
+    for (const k in im) b[k] = (b[k] || 0) + im[k];
     if (b.dmg) result.dmg *= 1 + b.dmg;
     if (b.cd) result.cd *= Math.max(0.5, 1 + b.cd);
     if (b.amount) result.amount += b.amount;
@@ -63,6 +87,7 @@ export function applyTechWeaponBonus(weaponId, result) {
     if (b.crit) result.crit = (result.crit || 0) + b.crit;
     if (b.execute) result.execute = Math.max(result.execute || 0, b.execute);
     if (b.bleed) result.bleed = Math.max(result.bleed || 0, b.bleed);
+    if (b.speed) result.speed *= 1 + b.speed;
     return result;
 }
 
@@ -82,9 +107,13 @@ export function applyTechPlayerBonus(stats) {
 export function techChoiceWeight(card) {
     const tech = activeTech();
     if (!tech) return 1;
-    if (isFamilyItem(card.id, tech)) return 1.7;
-    if (card.kind === 'weapon' && card.isNew && resonanceCount(tech) >= 2) return 0.6;
+    if (isFamilyItem(card.id, tech)) return FAMILY_WEIGHT;
+    if (card.kind === 'weapon' && card.isNew) return OFF_FAMILY_NEW_WEAPON_WEIGHT;
     return 1;
+}
+
+export function isMismatchedWeapon(weaponId, tech = activeTech()) {
+    return !!tech && !techTagsMatch(weaponId, tech);
 }
 
 export function techSummary() {

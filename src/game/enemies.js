@@ -3,7 +3,7 @@ import { rollSupplies, KILL_OPPORTUNITY } from './supply-drops.js';
 import { playerBody } from './player-motion.js';
 // 적 시스템: 스폰, 추적 이동 + 상호 밀어내기(그리드), 원거리 공격, 상태이상, 피격/사망 처리
 import { G, rand, emit } from './state.js';
-import { ENEMIES, ELITE, DEATH_CLOUD_UNLOCK_STAGE, RANGED_UNLOCK_STAGE, stageScaling } from '../data/enemies.js';
+import { ENEMIES, ELITE, DEATH_CLOUD_UNLOCK_STAGE, RANGED_UNLOCK_STAGE, stageScaling, BOSS_FIGHT_XP_MULTIPLIER } from '../data/enemies.js';
 import { STAGES } from '../data/stages.js';
 import { atlases } from '../core/assets.js';
 import { audio } from '../core/audio.js';
@@ -118,7 +118,7 @@ function killEnemy(e, opts) {
     gibs(e.x, e.y - e.radius, e.elite ? 10 : 3);
     if (e.elite) { shake(6); hitstop(0.06); }
 
-    dropGem(e.x, e.y, e.xp * KILL_OPPORTUNITY);
+    dropGem(e.x, e.y, e.xp * KILL_OPPORTUNITY * (G.boss && G.boss.alive ? BOSS_FIGHT_XP_MULTIPLIER : 1));
     const coinValue = coinDropValue(e.elite);
     if (coinValue) dropCoin(e.x, e.y, coinValue);
     // Elite enemies award only XP and coins; gear chests are boss-exclusive.
@@ -233,6 +233,15 @@ export function updateEnemies(dt) {
                 if (e.roleT <= 0 || dist < e.radius + p.radius + 12) {
                     e.rolePhase = 'fuse'; e.roleT = charge.fuse;
                 } else {
+                    // 돌진 중에도 꽃돼지 쪽으로 서서히 방향을 틀며 길게 파고든다 (초당 turnRate 라디안 제한)
+                    if (charge.turnRate) {
+                        const want = Math.atan2(dy, dx), cur = Math.atan2(e.aimY, e.aimX);
+                        let diff = want - cur;
+                        while (diff > Math.PI) diff -= Math.PI * 2;
+                        while (diff < -Math.PI) diff += Math.PI * 2;
+                        const step = Math.max(-charge.turnRate * dt, Math.min(charge.turnRate * dt, diff));
+                        e.aimX = Math.cos(cur + step); e.aimY = Math.sin(cur + step);
+                    }
                     movementDt = Math.min(Math.max(0, dt), e.roleT);
                     // Swept approach check stops at the player rather than
                     // tunneling past them when a long frame spends the dash.
@@ -395,7 +404,8 @@ export function drawEnemy(ctx, e) {
 
 function drawRoleWarning(ctx, e) {
     const charge = e.def?.charge;
-    if (!(charge && e.rolePhase !== 'approach') && !(e.shotWarning > 0)) return;
+    // 총탄 사냥꾼(원거리)은 조준 궤도를 표시하지 않는다. 자폭체만 폭발 반경/돌진 예고를 그린다.
+    if (!(charge && e.rolePhase !== 'approach')) return;
     ctx.save(); ctx.lineWidth = 2; ctx.strokeStyle = '#ffd17a'; ctx.fillStyle = 'rgba(255,95,40,0.12)';
     if (charge) {
         // The drawn blast circle exactly matches the collision circle.
@@ -405,8 +415,6 @@ function drawRoleWarning(ctx, e) {
         }
         const progress = e.rolePhase === 'fuse' ? 1 - Math.max(0, e.roleT) / charge.fuse : 0;
         ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(e.x, e.y, charge.radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress); ctx.stroke();
-    } else {
-        ctx.beginPath(); ctx.moveTo(e.x, e.y - e.radius); ctx.lineTo(e.x + e.aimX * e.def.ranged.range, e.y - e.radius + e.aimY * e.def.ranged.range); ctx.stroke();
     }
     ctx.restore();
 }

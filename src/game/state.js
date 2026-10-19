@@ -27,6 +27,7 @@ export const G = {
     shake: 0,
     hallucinate: 0,
     godMode: false,
+    difficulty: 'easy', // 런 단위 난이도 (data/difficulty.js)
     lowQ: false,
     caps: null,
     visuals: VISUAL_TIERS[0],

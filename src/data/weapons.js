@@ -82,7 +82,7 @@ export const WEAPONS = {
     gas: {
         name: '독가스 수류탄', icon: '☣️', color: '#7dff4a',
         desc: '독구름이 적을 느리게 하고 녹인다.',
-        base: { dmg: 3, cd: 4.5, amount: 1, speed: 1, duration: 4, area: 1, radius: 98, tick: 0.4, slow: 0.4 },
+        base: { dmg: 3, cd: 4.5, amount: 1, speed: 1, duration: 20, area: 1, radius: 98, tick: 0.4, slow: 0.4 }, // 독안개 지속 4초 → 20초
         levels: [
             { area: 0.15, t: '범위 +15%' }, { dmg: 2, t: '피해 +2' }, { duration: 0.25, t: '지속 +25%' },
             { amount: 1, t: '수류탄 +1' }, { slow: 0.1, t: '둔화 +10%' }, { cd: -0.15, t: '재사용 -15%' },

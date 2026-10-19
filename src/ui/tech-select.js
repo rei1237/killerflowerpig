@@ -1,10 +1,32 @@
 // 출격 전 시작 테크 선택 화면. 고른 테크 id 를 onPick 으로 넘긴다.
-import { TECHS, RESONANCE_STEPS, DEFAULT_TECH } from '../data/techs.js';
+import { TECHS, RESONANCE_STEPS, DEFAULT_TECH, IMPRINT_LEVELS, MISMATCH_DAMAGE } from '../data/techs.js';
+import { DIFFICULTIES, DIFFICULTY_ORDER } from '../data/difficulty.js';
 import { WEAPONS, PASSIVES } from '../data/weapons.js';
 import { mountItemArt } from './item-art.js';
 import { audio } from '../core/audio.js';
 
 const LAST_KEY = 'kfp.tech.v1';
+const DIFF_KEY = 'kfp.difficulty.v1';
+let difficulty = 'normal';
+function readDiff() { try { const d = localStorage.getItem(DIFF_KEY); return DIFFICULTIES[d] ? d : 'normal'; } catch { return 'normal'; } }
+function writeDiff(d) { try { localStorage.setItem(DIFF_KEY, d); } catch { /* 편의 기능 */ } }
+
+function renderDifficulty() {
+    const list = $('diff-list');
+    list.replaceChildren(...DIFFICULTY_ORDER.map((id) => {
+        const d = DIFFICULTIES[id];
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'diff-option';
+        b.dataset.diff = id;
+        b.setAttribute('role', 'radio');
+        b.setAttribute('aria-checked', String(id === difficulty));
+        b.textContent = `${d.icon} ${d.name}`;
+        b.onclick = () => { if (id !== difficulty) audio.sfx('click'); difficulty = id; renderDifficulty(); };
+        return b;
+    }));
+    $('diff-desc').textContent = DIFFICULTIES[difficulty].desc;
+}
 const $ = id => document.getElementById(id);
 let modal = null;
 let selected = DEFAULT_TECH;
@@ -77,6 +99,27 @@ function renderDetail() {
         tiers.append(li);
     });
 
+    const imprints = document.createElement('ol');
+    imprints.className = 'tech-tiers tech-imprints';
+    for (const lv of IMPRINT_LEVELS) {
+        const im = t.imprints?.[lv];
+        if (!im) continue;
+        const li = document.createElement('li');
+        const step = document.createElement('b');
+        step.textContent = `무기 Lv${lv}`;
+        const label = document.createElement('span');
+        label.textContent = im.label;
+        li.append(step, label);
+        imprints.append(li);
+    }
+    const rule = document.createElement('li');
+    const rb = document.createElement('b');
+    rb.textContent = '부조화';
+    const rl = document.createElement('span');
+    rl.textContent = `테크와 맞지 않는 무기 피해 -${Math.round((1 - MISMATCH_DAMAGE) * 100)}%`;
+    rule.append(rb, rl);
+    imprints.append(rule);
+
     const fam = document.createElement('div');
     fam.className = 'tech-family';
     const famTitle = document.createElement('p');
@@ -104,7 +147,7 @@ function renderDetail() {
     for (const r of t.route) { const li = document.createElement('li'); li.textContent = r; ul.append(li); }
     route.append(routeTitle, ul);
 
-    box.replaceChildren(head, tiers, fam, route);
+    box.replaceChildren(head, tiers, imprints, fam, route);
 }
 
 function select(id) {
@@ -120,8 +163,9 @@ function confirm() {
     const pick = onPick;
     onPick = null;
     writeLast(selected);
+    writeDiff(difficulty);
     modal.close();
-    pick(selected);
+    pick(selected, difficulty);
 }
 
 export function initTechSelect(api) {
@@ -142,6 +186,8 @@ export function initTechSelect(api) {
 export function openTechSelect(pick) {
     onPick = pick;
     selected = readLast();
+    difficulty = readDiff();
+    renderDifficulty();
     renderList();
     renderDetail();
     modal.open();

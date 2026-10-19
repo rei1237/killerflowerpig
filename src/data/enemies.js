@@ -11,7 +11,7 @@ export const ENEMIES = {
     splitter: { name: '기생 숙주', sheet: 'rabbit3', tint: 'normal', scale: 0.56, hp: 48, speed: 40, dmg: 11, xp: 5, radius: 16, mass: 1.5,
         split: { type: 'runner', count: 3 } },
     suicider: { name: '돌진 폭발체', sheet: 'rabbit2', tint: 'bloat', scale: 0.53, hp: 18, speed: 58, dmg: 7, xp: 3, radius: 14, mass: 1, unlockStage: 5,
-        charge: { range: 260, warning: 0.8, duration: 0.55, speed: 300, fuse: 0.6, radius: 68, dmg: 18, damageCap: 30 } },
+        charge: { range: 300, warning: 0.8, duration: 1.3, speed: 320, turnRate: 2.4, fuse: 0.6, radius: 68, dmg: 18, damageCap: 30 } },
     gunner: { name: '탄환 사냥꾼', sheet: 'rabbit3', tint: 'pale', scale: 0.55, hp: 28, speed: 36, dmg: 7, xp: 4, radius: 15, mass: 1.1, unlockStage: 6,
         ranged: { range: 300, cooldown: 2.8, speed: 255, dmg: 9, warning: 0.7, kind: 'bullet', radius: 5 } },
     hulk: { name: '사슬 도살자', sheet: 'rabbit3', tint: 'shadow', scale: 0.82, hp: 130, speed: 34, dmg: 16, xp: 10, radius: 22, mass: 3.5 },
@@ -26,6 +26,8 @@ export const RANGED_UNLOCK_STAGE = 5;
 
 // Fewer bodies, sturdier individual enemies; movement/contact damage are unchanged.
 export const ENEMY_TOUGHNESS_MULTIPLIER = 1.62;
+// 보스가 살아 있는 동안 일반 적 경험치 배율 (보스 체력이 커져 전투가 길어도 레벨업이 폭주하지 않게)
+export const BOSS_FIGHT_XP_MULTIPLIER = 0.5;
 
 const BEGINNER_SCALING = {
     1: { hp: 0.95, speed: 0.9, dmg: 0.85 },
