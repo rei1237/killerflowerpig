@@ -197,3 +197,33 @@ src/
 - **장르 전환 폭**: 8방향 이동 + 포위 등장은 기존 밸런스를 전부 바꿈 → Phase 2 초반에 프로토타입으로 손맛 먼저 검증.
 - **고어 수위**: 앱스토어/PWA 배포 대상이면 고어 옵션 기본값을 "보통"으로.
 - **에셋 부족**: 신규 적·무기 스프라이트가 필요 → 초기엔 기존 청토끼 스프라이트에 색조/크기 변형 + 절차적 이펙트로 대체.
+
+---
+
+## 구현 현황 (1차 구현 완료)
+
+장르를 **8방향 이동 서바이버**로 완전히 전환했고, 고어 수위 기본값은 **보통**입니다.
+
+### 구조
+```
+index.html, style.css          DOM UI (타이틀/스토리/레벨업/관 상자/일시정지/설정/상점/결과)
+src/main.js                    부트 + 고정 타임스텝(1/60s) 루프, ?debug 성능 오버레이
+src/core/                      settings · save(메타) · pool · grid(공간분할) · input · audio · assets
+src/data/                      stages · enemies · weapons(무기8/패시브12/진화8) · bosses · story · sprites(자동생성)
+src/game/                      state · player · enemies · weapons · pickups · hazards · boss · spawner · progression · effects · render · game
+src/ui/                        hud(캔버스) · screens(DOM)
+tools/bake_sprites.py          스프라이트 시트 → 트리밍·축소된 WebP 아틀라스 + 프레임/앵커 메타데이터
+tools/optimize_assets.sh       배경/일러스트 WebP, BGM 96kbps 재인코딩
+```
+
+### 성능
+- 고정 타임스텝 + dt 기반 이동 → 120/144Hz 기기에서도 동일 속도
+- 오브젝트 풀 + swap-remove, 공간 그리드 충돌/밀어내기, 화면 밖 컬링
+- `shadowBlur`/`ctx.filter` 미사용: 색조·피격 플래시·좌우 반전 변형을 로드 시 사전 렌더
+- 그림자 일괄 path, 안개+비네트 단일 오버레이, 데미지 숫자/파티클/데칼 상한(품질 설정별)
+- 에셋: 스프라이트 1.5MB → 0.88MB, 배경 4.0MB → 0.38MB, BGM 4.4MB → 2.8MB
+- 측정(헤드리스, GPU 없음): 적 400+ 에서 업데이트 ~1.5ms + 렌더 JS ~2.5ms / 프레임
+
+### 밸런스 (자동 봇 시뮬레이션 기준)
+- 스테이지 1~3 클리어, 보스 처치 ~25~35초, 스테이지 4 보스부터 진화 무기 필요
+- 사망 시 해당 스테이지 시작 시점 빌드로 재도전, 타이틀에서 이어하기 지원
