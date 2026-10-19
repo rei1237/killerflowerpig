@@ -28,6 +28,11 @@
           "id": "thorns",
           "level": 4,
           "evolved": false
+        },
+        {
+          "id": "gas",
+          "level": 1,
+          "evolved": false
         }
       ],
       "passives": {
@@ -35,14 +40,13 @@
         "pollen": 2,
         "spread": 1,
         "scope": 1,
-        "regen": 1,
-        "sap": 1
+        "regen": 1
       },
       "stats": {
         "might": 1,
         "area": 1.1,
         "cooldown": 0.86,
-        "duration": 1.12,
+        "duration": 1,
         "projSpeed": 1.12,
         "amount": 1,
         "crit": 0,
@@ -118,12 +122,12 @@
         },
         {
           "id": "lotus_bloom",
-          "level": 2,
+          "level": 8,
           "evolved": false
         },
         {
           "id": "plague_fire",
-          "level": 5,
+          "level": 6,
           "evolved": false
         }
       ],

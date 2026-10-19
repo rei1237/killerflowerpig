@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { STAGES, EVENTS } from '../src/data/stages.js';
-import { BOSSES } from '../src/data/bosses.js';
+import { BOSSES, BOSS_HP_MULTIPLIER } from '../src/data/bosses.js';
 import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, stageScaling } from '../src/data/enemies.js';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
@@ -140,7 +140,8 @@ test('stage 1 leaves a 70-second learning window and smaller events run only onc
 test('first boss keeps slower, visibly matched charge warnings after the requested HP increase', () => withFixedRandom(() => {
     reset(1);
     const boss = new Boss(1);
-    assert.equal(boss.hp, 1400);
+    assert.equal(BOSSES[1].hp, 1400);
+    assert.equal(boss.hp, 1400 * BOSS_HP_MULTIPLIER, 'live boss HP is the base value × multiplier');
     assert.equal(boss.speed, 48);
     assert.equal(boss.dmg, 10);
     assert.equal(boss.attackT, 3);

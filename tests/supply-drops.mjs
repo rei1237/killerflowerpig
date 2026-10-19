@@ -1,22 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {SUPPLY_RULES,supplyState,rollSupplies,KILL_OPPORTUNITY,compensatedChance} from '../src/game/supply-drops.js';
-const wounded={hpRatio:.8,healingOnField:0,magnetsOnField:0};
+const wounded={hpRatio:.25,healingOnField:0,magnetsOnField:0};
 test('compensation preserves spawn-limited XP and coin opportunity budgets',()=>{
  assert.equal(.6*KILL_OPPORTUNITY,1);
  for(const rate of [.04,.1,.015,.0015]) assert.ok(Math.abs((1-compensatedChance(rate))**.6-(1-rate))<1e-12);
 });
-test('each HP band has an exact compensated probability boundary; full HP never creates heals',()=>{
- for(const hpRatio of [.99,.7,.41,.4,.2,.01]){
-  const chance=compensatedChance(hpRatio<=.4?.1:.04);
+test('heals appear only at or below 30% HP with an exact compensated boundary; healthier HP never creates heals',()=>{
+ for(const hpRatio of [.99,.7,.41,.4,.31])assert.ok(!rollSupplies({heal:30,low:12},{...wounded,hpRatio},()=>0).kinds.includes('meat'),`no heal at ${hpRatio}`);
+ for(const hpRatio of [.3,.2,.01]){
+  const chance=compensatedChance(.1);
   assert.ok(rollSupplies({}, {...wounded,hpRatio},()=>chance-1e-8).kinds.includes('meat'));
   assert.ok(!rollSupplies({}, {...wounded,hpRatio},()=>chance).kinds.includes('meat'));
  }
  for(const hpRatio of [1,1.2,0,NaN])assert.ok(!rollSupplies({heal:30,low:12},{...wounded,hpRatio},()=>0).kinds.includes('meat'));
  assert.equal(rollSupplies({}, {...wounded,hpRatio:1},()=>.99).state.heal,0);
 });
-test('compensated guarantees are18 wounded,8 low-HP and36 magnet real kills',()=>{
- for(const [hpRatio,kind,threshold] of [[.8,'meat',18],[.2,'meat',8],[1,'magnet',36]]){
+test('compensated guarantees are 8 low-HP and 36 magnet real kills; healthy HP never accrues heal pity',()=>{
+ let healthy={};for(let n=1;n<=60;n++){const r=rollSupplies(healthy,{...wounded,hpRatio:.8},()=>.99);healthy=r.state;assert.ok(!r.kinds.includes('meat'));}
+ assert.equal(healthy.heal,0);assert.equal(healthy.low,0);
+ for(const [hpRatio,kind,threshold] of [[.2,'meat',8],[1,'magnet',36]]){
   let state={};for(let n=1;n<=threshold;n++){const r=rollSupplies(state,{...wounded,hpRatio},()=>.99);state=r.state;assert.equal(r.kinds.includes(kind),n===threshold);}
  }
 });

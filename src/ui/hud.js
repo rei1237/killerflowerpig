@@ -5,6 +5,7 @@ import { G } from '../game/state.js';
 import { STAGES } from '../data/stages.js';
 import { WEAPONS, PASSIVES } from '../data/weapons.js';
 import { techSummary } from '../game/tech.js';
+import { difficultyOf } from '../data/difficulty.js';
 
 let lastUpdate = -Infinity;
 let buildKey = '';
@@ -37,7 +38,7 @@ export function drawHUD() {
     if (nodes['hud-tech']) {
         nodes['hud-tech'].hidden = !ts;
         if (ts) {
-            const text = `${ts.tech.icon} ${'◆'.repeat(ts.tier)}${'◇'.repeat(3 - ts.tier)} ${ts.count}/6`;
+            const text = `${difficultyOf(G.difficulty).name} · ${ts.tech.icon} ${'◆'.repeat(ts.tier)}${'◇'.repeat(3 - ts.tier)} ${ts.count}/6`;
             if (nodes['hud-tech'].textContent !== text) {
                 nodes['hud-tech'].textContent = text;
                 nodes['hud-tech'].title = `${ts.tech.name} 공명 ${ts.count}/6`;

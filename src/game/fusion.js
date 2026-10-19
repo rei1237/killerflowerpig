@@ -52,6 +52,9 @@ export function fuseItems(recipeId, expectedSignature) {
     // All checks precede this single inventory replacement. Never mutate one input
     // before the other has been verified; repeated confirmation sees ALREADY_FUSED.
     G.weapons = next;
+    // 융합 재료로 쓴 무기는 이번 런에서 다시 레벨업 선택지에 나오지 않는다.
+    if (!(G.consumedItems instanceof Set)) G.consumedItems = new Set();
+    for (const id of consumed) G.consumedItems.add(id);
     G.fusionRevision = (G.fusionRevision || 0) + 1;
     G.weapons.forEach((w, i) => { w.slot = i; });
     for (const pool of [G.shots, G.hazards, G.beams]) removeOwnedEffects(pool, consumed);

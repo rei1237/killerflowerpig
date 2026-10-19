@@ -53,11 +53,11 @@ function kill(elite = false) {
     G.enemies.release(index);
 }
 
-test('real kill compensation produces18/36 guarantees with exact coin and XP totals',()=>withRandom(.99,()=>{
+test('healthy real kills never drop heals; magnet guarantee at 36 with exact coin and XP totals',()=>withRandom(.99,()=>{
  reset();let xp=0;
  for(let count=1;count<=36;count++){
   const prior=G.gems.count;kill();xp+=G.gems.items[prior].value;
-  assert.equal(field('meat').length,Math.floor(count/18));
+  assert.equal(field('meat').length,0,'HP above 30% never spawns healing');
   assert.equal(field('magnet').length,count===36?1:0);
  }
  assert.equal(G.kills,36);assert.equal(field('coin').reduce((n,c)=>n+c.value,0),0);
@@ -77,16 +77,16 @@ test('field cap retains pending guarantees and useful collection releases slots'
  G.supplyDrought={heal:30,low:12,magnet:60};kill();
  assert.deepEqual(G.supplyDrought,{heal:30,low:12,magnet:60});
  const meat=field('meat')[0],magnet=field('magnet')[0];meat.x=magnet.x=0;meat.y=magnet.y=-14;
- updatePickups(0);assert.equal(G.player.hp,50);kill();
+ updatePickups(0);assert.equal(G.player.hp,50);G.player.hp=20;kill();
  assert.equal(field('meat').length,3);assert.equal(field('magnet').length,2);
  assert.deepEqual(G.supplyDrought,{heal:0,low:0,magnet:0});
 }));
 
 test('JSON build reload retains fractional and legacy drought opportunity units',()=>withRandom(.99,()=>{
- reset();for(let n=0;n<7;n++)kill();const snapshot=JSON.parse(JSON.stringify(snapshotBuild()));
- close(snapshot.supplyDrought.heal,35/3);resetBuild();restoreBuild(snapshot);
- close(G.supplyDrought.heal,35/3);G.player.hp=G.player.maxHp*.8;
- for(let n=0;n<10;n++)kill();assert.equal(field('meat').length,0);kill();assert.equal(field('meat').length,1);
+ reset(1,25);for(let n=0;n<7;n++)kill();const snapshot=JSON.parse(JSON.stringify(snapshotBuild()));
+ close(snapshot.supplyDrought.heal,35/3);close(snapshot.supplyDrought.low,35/3);resetBuild();restoreBuild(snapshot);
+ close(G.supplyDrought.heal,35/3);close(G.supplyDrought.low,35/3);
+ G.player.hp=25;assert.equal(field('meat').length,0);kill();assert.equal(field('meat').length,1,'restored low-HP pity completes on the next kill');
  restoreBuild({...snapshot,supplyDrought:{heal:17,low:0,magnet:17}});assert.equal(G.supplyDrought.heal,17);
  delete snapshot.supplyDrought;restoreBuild(snapshot);assert.deepEqual(G.supplyDrought,{heal:0,low:0,magnet:0});
 }));
@@ -175,7 +175,7 @@ test('guaranteed real-kill healing is drawn and collected after movement, includ
 }));
 
 test('old visible heals remain useful while expired offscreen heals release the cap', () => withRandom(0.99, () => {
-    reset(1,80);
+    reset(1,20);
     const visible=dropPickup('meat',100,0);visible.t=100;
     for(let i=0;i<2;i++){const old=dropPickup('meat',800+i*20,0);old.t=100;}
     G.supplyDrought={heal:29,low:0,magnet:0};kill();

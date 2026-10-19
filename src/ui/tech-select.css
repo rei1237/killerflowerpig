@@ -16,7 +16,7 @@
 .tech-text strong{font-size:15px;font-weight:750;word-break:keep-all;color:var(--tech)}
 .tech-text small{font-size:12px;line-height:1.55;color:#a6b6c0;word-break:keep-all}
 .tech-key{position:absolute;top:10px;right:10px;color:#73848d;font:11px/1 ui-monospace,monospace}
-.tech-detail{--tech:#9fd3ff;display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px 18px;padding:14px 16px;border-radius:8px;border:1px solid color-mix(in srgb,var(--tech) 35%,transparent);background:#101a21cc}
+.tech-detail{--tech:#9fd3ff;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px 18px;padding:14px 16px;border-radius:8px;border:1px solid color-mix(in srgb,var(--tech) 35%,transparent);background:#101a21cc}
 .tech-detail-head{grid-column:1/-1}
 .tech-combo{margin:0;font-size:13px;font-weight:700;color:var(--tech)}
 .tech-tiers{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
@@ -30,6 +30,19 @@
 #btn-tech-go{min-width:180px}
 
 [data-tech=gunline]{--tech:#9fd3ff}[data-tech=bloom]{--tech:#ffb3d6}[data-tech=plague]{--tech:#ffb36b}[data-tech=executioner]{--tech:#e6c6ff}[data-tech=butcher]{--tech:#ff8f8f}
+
+/* 난이도 */
+.diff-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 14px}
+.diff-row .tech-sub{margin:0}
+.diff-list{display:flex;gap:6px;flex-wrap:wrap}
+.diff-option{min-height:38px;padding:7px 14px;border-radius:6px;border:1px solid #4a5e6666;background:#17242c;color:#c9d4d8;font:inherit;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation}
+.diff-option[aria-checked="true"]{border-color:#e8d6a8;background:#3a3222;color:#f4e6c0}
+.diff-option[data-diff=hell][aria-checked="true"]{border-color:#ff6b6b;background:#3a1a1c;color:#ffd0d0}
+.diff-option:focus-visible{outline:3px solid #e8d6a8;outline-offset:2px}
+.diff-desc{flex-basis:100%;margin:0;font-size:12px;color:#a6b6c0;line-height:1.5}
+.tech-imprints{grid-column:auto}
+.tech-imprints b{background:#3a4a52!important;color:#e8d6a8!important}
+.card-mismatch{margin-top:8px;font-size:11px;font-weight:700;color:#ff9b8f}
 
 /* 레벨업 카드 · HUD · 일시정지 */
 .card-tech{margin-top:10px;font-size:11px;font-weight:700;color:#e8d6a8;letter-spacing:.02em}
@@ -51,6 +64,7 @@
 }
 @media (max-height:520px) and (orientation:landscape){
  .tech-box{padding:14px 18px!important}
+ .diff-row{margin-bottom:8px}.diff-desc{display:none}.diff-option{min-height:32px;padding:4px 10px;font-size:12px}
  .tech-box .eyebrow,.tech-caption,.tech-family{display:none}
  .tech-box .modal-title{font-size:18px!important;margin-bottom:8px!important}
  .tech-box .modal-actions{bottom:-14px;margin:8px -18px -14px;padding:8px 18px 12px}

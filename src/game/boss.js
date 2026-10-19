@@ -3,7 +3,7 @@ import { prepareBossSheets, getBossSheet } from './boss-sheets.js';
 import { recordFusionHit } from './weapon-vfx.js';
 // 보스: 3페이즈, 예고(텔레그래프) 기반 패턴, 페이즈 전환 연출, 처치 시 관 상자
 import { G, rand, emit, pickWeighted } from './state.js';
-import { BOSSES, PHASE_THRESHOLDS, HUNTER_TUNING } from '../data/bosses.js';
+import { BOSSES, PHASE_THRESHOLDS, HUNTER_TUNING, BOSS_HP_MULTIPLIER } from '../data/bosses.js';
 import { STAGES } from '../data/stages.js';
 import { currentWeights } from './spawner.js';
 import { atlases, images } from '../core/assets.js';
@@ -26,7 +26,7 @@ export class Boss {
         this.scale = def.scale;
         this.tint = def.tint;
         this.radius = this.atlas.walkH * def.scale * 0.32;
-        this.maxHp = this.hp = def.hp;
+        this.maxHp = this.hp = def.hp * BOSS_HP_MULTIPLIER;
         this.speed = def.speed;
         this.dmg = def.dmg * (1 + (stage - 1) * 0.05);
         const pos = edgePosition(0.9);

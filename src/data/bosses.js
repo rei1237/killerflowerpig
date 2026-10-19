@@ -39,3 +39,7 @@ export const BOSSES = {
 };
 
 export const PHASE_THRESHOLDS = [0.6, 0.25];
+
+// 보스 체력 배율. hp 값은 기준치이며 실제 전투 체력은 hp × BOSS_HP_MULTIPLIER.
+export const BOSS_HP_MULTIPLIER = 10;
+export const bossMaxHp = stage => (BOSSES[stage]?.hp || 0) * BOSS_HP_MULTIPLIER;
