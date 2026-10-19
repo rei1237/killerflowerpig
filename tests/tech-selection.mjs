@@ -66,7 +66,7 @@ test('tech weapon bonus applies only to matching tags and grows with tiers', () 
     const t3 = weaponStats(G.weapons[0]);
     assert.ok(Math.abs(t3.dmg - shotgunT1.dmg * 1.35) < 1e-9, 'tier II+III damage +15% +20%');
     assert.ok(t3.cd < shotgunT1.cd);
-    assert.equal(t3.pierce, shotgunT1.pierce + 1);
+    assert.equal(t3.pierce, shotgunT1.pierce + 1 + 1, 'tier II pierce +1 and scope Lv1 pierce +1');
 });
 
 test('player-wide tier bonuses (HP, regen, armor, crit multiplier) follow resonance', () => {

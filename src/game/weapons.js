@@ -8,7 +8,7 @@ import { WEAPONS } from '../data/weapons.js';
 import { fx, glow, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { hitEnemy } from './enemies.js';
-import { spawnHazard } from './hazards.js';
+import { spawnHazard, limitFriendlyFields } from './hazards.js';
 import { sparks, petals, embers, shake } from './effects.js';
 import { healPlayer, triggerPlayerShot } from './player.js';
 import { preferredTarget } from './targeting.js';
@@ -60,7 +60,7 @@ export function weaponStats(w) {
         area: (1 + acc.area) * (ev.area || 1) * ps.area,
         duration: b.duration * (1 + acc.duration) * (ev.duration || 1) * ps.duration,
         speed: b.speed * (1 + acc.speed) * ps.projSpeed,
-        pierce: (b.pierce || 0) + acc.pierce + (ev.pierce || 0),
+        pierce: (b.pierce || 0) + acc.pierce + (ev.pierce || 0) + (b.pierce ? ps.pierce || 0 : 0),
         slow: Math.min(0.85, (b.slow || 0) + acc.slow + (ev.slow || 0)),
         crit: ev.crit || 0, execute: ev.execute || 0, bleed: ev.bleed || 0,
         lifesteal: ev.lifesteal || 0, permanent: !!ev.permanent, trail: !!ev.trail, follow: !!ev.follow,
@@ -166,10 +166,16 @@ function randomEnemyNear(maxR, preferBoss = false) {
     return pick;
 }
 
+export const SAW_VISUAL_CAP = 6;
+export const ORBIT_VISUAL_CAP = 8;
 export function orbitStats(w, s) {
     if (w.id === 'orbit_saw') return { ...s, dmg: s.dmg * 0.6, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3) + (s.bonusAmount || 0)), radius: 78, duration: Math.min(4.5, 2.8 * (s.durationScale || 1)), permanent: false };
-    return w.id === 'lotus_bloom' ? { ...s, dmg: s.dmg * 0.28, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3) + (s.bonusAmount || 0)), radius: 90, duration: Math.min(4.5, 2.8 * (s.durationScale || 1)), permanent: false } : s;
+    return w.id === 'lotus_bloom' ? { ...s, dmg: s.dmg * 0.28, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3) + (s.bonusAmount || 0)), radius: 90, duration: Math.min(4.5, 2.8 * (s.durationScale || 1)), permanent: false }
+        : s.amount > ORBIT_VISUAL_CAP ? { ...s, amount: ORBIT_VISUAL_CAP, dmg: s.dmg * s.amount / ORBIT_VISUAL_CAP } : s;
 }
+// 같은 무기의 장판은 한 번 투척 수 + 2 (최소 3)까지만 동시에 유지한다.
+// 융합 무기는 자체 상한이 있으므로 제외.
+const fieldCap = (s, id) => WEAPONS[id]?.fusionOnly ? Infinity : Math.max(3, Math.round(s.amount) + 2);
 export function hellfireTrailStats(s) { return { radius: 64 * s.area, duration: Math.min(10, 6 * (s.durationScale || 1)), dmg: s.dmg * 0.6, tick: 0.3 }; }
 export function emberFieldStats(s) { return { ...s, dmg: s.dmg * 0.16, amount: Math.min(2, s.amount), duration: Math.min(6, 3 * (s.durationScale || 1)), radius: 54, tick: 0.3 }; }
 const FIRE = {
@@ -260,7 +266,16 @@ const FIRE = {
         }
     },
     saw(w, s) {
-        for (let i = 0; i < s.amount; i++) {
+        // 화면 정리: 이전 톱날 묶음은 짧게 사라지고, 한 번에 최대 SAW_VISUAL_CAP개만 날린다.
+        // 상한을 넘는 톱날 수는 피해로 환산해 총 화력은 유지한다.
+        const owner = ownerId(w);
+        for (let i = 0; i < G.shots.count; i++) {
+            const old = G.shots.items[i];
+            if (old.kind === 'saw' && old.weapon === owner && old.slot === w.slot && old.coreIndex === (w.coreIndex || 0)) old.life = Math.min(old.life, .15);
+        }
+        const n = Math.min(SAW_VISUAL_CAP, s.amount);
+        if (s.amount > n) s = { ...s, dmg: s.dmg * s.amount / n };
+        for (let i = 0; i < n; i++) {
             const a = Math.random() * Math.PI * 2;
             const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: w.evolved ? fx.sawBone : fx.saw, radius: 14, knock: 40 });
             sh.kind = 'saw';
@@ -406,10 +421,12 @@ export function updateShots(dt) {
             if (k >= 1) {
                 const s = sh.s;
                 if (sh.hazard === 'fire' || sh.hazard === 'firegas') {
+                    limitFriendlyFields('fire', sh.weapon, fieldCap(s, sh.weapon));
                     spawnHazard('fire', sh.tx, sh.ty, { radius: s.radius * s.area, duration: s.duration, dmg: s.dmg, tick: s.tick, slow: sh.hazard === 'firegas' ? s.slow : 0, weapon: sh.weapon });
                     embers(sh.tx, sh.ty, 10);
                     audio.sfx('fire');
                 } else {
+                    limitFriendlyFields('gas', sh.weapon, fieldCap(s, sh.weapon));
                     spawnHazard('gas', sh.tx, sh.ty, { radius: s.radius * s.area, duration: s.duration, dmg: s.dmg, tick: s.tick, slow: s.slow, weapon: sh.weapon });
                 }
                 pool.release(i);

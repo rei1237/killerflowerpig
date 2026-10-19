@@ -86,7 +86,7 @@ export function xpForLevel(lv) {
 }
 
 export function addXP(v) {
-    G.xp += v;
+    G.xp += v * (G.player?.stats?.growth || 1);
     while (G.xp >= G.xpNext) {
         G.xp -= G.xpNext;
         G.level++;

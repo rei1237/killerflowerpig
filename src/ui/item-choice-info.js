@@ -22,8 +22,8 @@ export function relatedFusionInfo(itemId) {
 export function passiveEffectNote(id) {
     const shared='이번 작전의 현재 무기와 나중에 얻거나 조합한 무기에 계속 적용됩니다. 최대 레벨에서도 효과가 유지되며 개별 무기의 상한을 넘지는 않습니다.';
     if(id==='magazine')return `${shared} 탄·광선·투척물·회전 꽃잎의 수가 증가합니다. 영구 추적형 독구름은 하나로 유지됩니다.`;
-    if(id==='sap')return `${shared} 회전 꽃잎과 보조 화염 장판을 포함한 지속형 공격에 적용됩니다. 영구 유지 효과는 별도입니다.`;
-    if(id==='scope')return `${shared} 날아가는 탄의 속도와 사거리, 꽃잎 광선의 길이가 증가합니다.`;
+    if(id==='sap')return `${shared} 보석과 보스 보상을 포함한 모든 경험치 획득량이 늘어 레벨업이 빨라집니다.`;
+    if(id==='scope')return `${shared} 산탄·권총·소총처럼 관통하는 탄이 적을 더 많이 꿰뚫고, 탄속이 조금 빨라집니다.`;
     if(['whet','spread','pollen','focus'].includes(id))return shared;
     return '';
 }

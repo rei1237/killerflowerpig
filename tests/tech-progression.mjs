@@ -23,7 +23,7 @@ test('hellfire trail has large real footprint and six-second lifetime, with boun
  const inside=enemy(1,h.radius-.1),outside=enemy(2,h.radius+.1);G.grid.insert(inside);G.grid.insert(outside);updateHazards(.1);assert.ok(inside.hp<10000);assert.equal(outside.hp,10000);
  updateHazards(2.1);assert.equal(G.hazards.count,1);updateHazards(3.9);assert.equal(G.hazards.count,0);
  for(let level=1;level<=5;level++){applyChoice({kind:'passive',id:'spread',level});applyChoice({kind:'passive',id:'sap',level});}
- const stats=hellfireTrailStats(weaponStats(item));assert.ok(Math.abs(stats.radius-207.36)<1e-8);assert.ok(Math.abs(stats.duration-9.6)<1e-8);const snap=snapshotBuild();resetBuild();restoreBuild(snap);assert.deepEqual(hellfireTrailStats(weaponStats(G.weapons[0])),stats);
+ const stats=hellfireTrailStats(weaponStats(item));assert.ok(Math.abs(stats.radius-207.36)<1e-8);assert.equal(stats.duration,6,'sap now boosts XP, not duration');const snap=snapshotBuild();resetBuild();restoreBuild(snap);assert.deepEqual(hellfireTrailStats(weaponStats(G.weapons[0])),stats);
  assert.equal(hellfireTrailStats({...weaponStats(G.weapons[0]),durationScale:99}).duration,10);
 });
 test('final fused damage remains capped under extreme passive bonuses',()=>{
