@@ -9,7 +9,7 @@ import { fx, glow, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { hitEnemy } from './enemies.js';
 import { spawnHazard, limitFriendlyFields } from './hazards.js';
-import { sparks, petals, embers, shake } from './effects.js';
+import { sparks, petals, embers, shake, floatText } from './effects.js';
 import { healPlayer, triggerPlayerShot } from './player.js';
 import { preferredTarget } from './targeting.js';
 
@@ -47,7 +47,7 @@ export function weaponStats(w) {
     const def = WEAPONS[w.id];
     const b = def.base;
     const ps = G.player.stats;
-    const acc = { dmg: 0, cd: 0, amount: 0, area: 0, duration: 0, speed: 0, pierce: 0, slow: 0 };
+    const acc = { dmg: 0, cd: 0, amount: 0, area: 0, duration: 0, speed: 0, pierce: 0, slow: 0, crit: 0, critBonus: 0 };
     for (let i = 0; i < Math.min(8, Math.max(1, w.level)) - 1; i++) {
         const l = def.levels[i];
         for (const k in acc) if (l[k]) acc[k] += l[k];
@@ -62,15 +62,15 @@ export function weaponStats(w) {
         speed: b.speed * (1 + acc.speed) * ps.projSpeed,
         pierce: (b.pierce || 0) + acc.pierce + (ev.pierce || 0) + (b.pierce ? ps.pierce || 0 : 0),
         slow: Math.min(0.85, (b.slow || 0) + acc.slow + (ev.slow || 0)),
-        crit: ev.crit || 0, execute: ev.execute || 0, bleed: ev.bleed || 0,
+        // 무기 고유 치명타: 확률(crit)과 치명타 피해 배율 가산(critBonus, 기본 2배에 더함)
+        crit: (b.crit || 0) + acc.crit + (ev.crit || 0), critBonus: (b.critBonus || 0) + acc.critBonus + (ev.critBonus || 0),
+        execute: ev.execute || 0, bleed: ev.bleed || 0,
         lifesteal: ev.lifesteal || 0, permanent: !!ev.permanent, trail: !!ev.trail, follow: !!ev.follow,
         spread: b.spread || 0, radius: b.radius || 0, tick: b.tick || 0.3, hitCd: b.hitCd || 0.3,
         length: (b.length || 0) * ps.projSpeed, width: b.width || 0,
         bonusAmount: ps.amount, durationScale: ps.duration,
     };
     applyTechWeaponBonus(w, result);
-    // 등급 보정: 상위 등급 무기가 하위 등급보다 약해지지 않도록 (아래 피해 상한은 그대로 유지)
-    result.dmg *= tierPower(w);
     if (w.sourceId) {
         result.dmg = Math.min(600, result.dmg * ((WEAPONS[w.sourceId]?.tier === 'absolute' ? 1.65 : 1.35) + 0.08 * (Math.min(8, Math.max(1, w.fusionLevel || 1)) - 1)));
         result.amount = Math.min(20, result.amount); result.area = Math.min(3, result.area);
@@ -82,6 +82,8 @@ export function weaponStats(w) {
         result.area = Math.min(2, result.area); result.duration = Math.min(['lotus_bloom', 'ember_lance', 'absolute_bloom'].includes(w.id) ? 0.7 : 6, result.duration);
         result.pierce = Math.min(12, result.pierce); result.slow = Math.min(0.65, result.slow);
     }
+    // 등급 보정: 상위 등급 무기가 하위 등급보다 약해지지 않도록. 피해 상한(220/420/600)은 보정 전 값에 적용된다.
+    result.dmg *= tierPower(w);
     return result;
 }
 
@@ -128,6 +130,19 @@ export function bodyDist2(t, x, y) {
     return dx * dx + dy * dy;
 }
 
+// 처형인의 쌍권총 적중 연출: 치명타는 진홍 파편, 처형은 큰 문구와 화면 흔들림
+function executionerHitFx(e) {
+    const y = e.y - e.radius;
+    if (e.lastExecute) {
+        sparks(e.x, y, 14, '#ff2a4a', 260);
+        sparks(e.x, y, 8, '#ffd36b', 200);
+        floatText(e.x, y - e.radius * 2, '☠ 처형!', '#ff4d6d', 0.9);
+        shake(3);
+    } else if (e.lastCrit) {
+        sparks(e.x, y, 7, '#ff3b5c', 220);
+    }
+}
+
 function shoot(w, s, dirX, dirY, opts) {
     const p = G.player;
     const sh = G.shots.spawn();
@@ -141,7 +156,7 @@ function shoot(w, s, dirX, dirY, opts) {
     sh.dmg = s.dmg; sh.pierce = s.pierce; sh.life = s.duration;
     sh.radius = (opts.radius || 5) * s.area;
     sh.img = opts.img;
-    sh.crit = s.crit; sh.execute = s.execute; sh.bleed = s.bleed; sh.slow = s.slow || 0;
+    sh.crit = s.crit; sh.critBonus = s.critBonus || 0; sh.execute = s.execute; sh.bleed = s.bleed; sh.slow = s.slow || 0;
     sh.knock = opts.knock ?? 60;
     sh.bounce = false;
     sh.spin = 0;
@@ -352,7 +367,10 @@ export function updateWeapons(dt) {
                 const [dx, dy] = aimAt(w, t);
                 const side = (w.burst % 2 ? 1 : -1) * 0.06;
                 const a = Math.atan2(dy, dx) + side;
-                shoot(w, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: 5, knock: 50 });
+                const executioner = w.id === 'pistols' && w.evolved;
+                const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: executioner ? 7 : 5, knock: executioner ? 80 : 50 });
+                // 처형인의 쌍권총: 진홍빛 총구 섬광
+                if (executioner) sparks(sh.x, sh.y, 4, w.burst % 2 ? '#ff3b5c' : '#ffd36b', 180);
                 triggerPlayerShot(dx);
                 audio.sfx('shot');
                 w.burst--;
@@ -476,7 +494,8 @@ export function updateShots(dt) {
                 sh.lastHit.push(e.id);
             }
             const sp = Math.hypot(sh.vx, sh.vy) || 1;
-            hitEnemy(e, sh.dmg, { weapon: sh.weapon, kx: sh.vx / sp, ky: sh.vy / sp, knock: sh.knock, crit: sh.crit, execute: sh.execute, bleed: sh.bleed, slow: sh.slow });
+            hitEnemy(e, sh.dmg, { weapon: sh.weapon, kx: sh.vx / sp, ky: sh.vy / sp, knock: sh.knock, crit: sh.crit, critBonus: sh.critBonus, execute: sh.execute, bleed: sh.bleed, slow: sh.slow });
+            if (sh.weapon === 'pistols' && sh.evolved) executionerHitFx(e);
             if (--sh.pierce <= 0) dead = true;
         }
         const boss = G.boss;
@@ -484,10 +503,10 @@ export function updateShots(dt) {
             const rr = sh.radius + boss.radius;
             if (bodyDist2(boss, sh.x, sh.y) < rr * rr) {
                 if (sh.kind === 'saw') {
-                    if (now - (boss.hits[hitChannel(sh)] || -9) >= sh.hitCd) { boss.hits[hitChannel(sh)] = now; boss.hurt(sh.dmg, { weapon: sh.weapon, crit: sh.crit }); }
+                    if (now - (boss.hits[hitChannel(sh)] || -9) >= sh.hitCd) { boss.hits[hitChannel(sh)] = now; boss.hurt(sh.dmg, { weapon: sh.weapon, crit: sh.crit, critBonus: sh.critBonus }); }
                 } else if (!sh.lastHit.includes(-1)) {
                     sh.lastHit.push(-1);
-                    boss.hurt(sh.dmg, { weapon: sh.weapon, crit: sh.crit });
+                    boss.hurt(sh.dmg, { weapon: sh.weapon, crit: sh.crit, critBonus: sh.critBonus });
                     sparks(sh.x, sh.y, 3, '#ff5a6a');
                     if (--sh.pierce <= 0) dead = true;
                 }

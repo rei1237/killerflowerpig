@@ -22,6 +22,8 @@ export const WEAPON_VFX = Object.freeze({
  toxic_scatter:{color:'#74ccb2',light:'#e6ffeb',trail:21,shape:'toxic'},
 });
 for(const value of Object.values(WEAPON_VFX))Object.freeze(value);
+// 진화 후 외형이 크게 바뀌는 무기 (처형인의 쌍권총: 진홍 잔광 탄환)
+export const EVOLVED_VFX = Object.freeze({ pistols: Object.freeze({color:'#ff3b5c',light:'#ffe6a8',trail:46,shape:'execution'}) });
 const motionPreference=typeof window!=='undefined'&&window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):null;
 const TAU=Math.PI*2;
 const FUSIONS=new Set(['absolute_bloom','lotus_bloom','scatter_rail','plague_fire','burst_rail','venom_saw','ember_lance','orbit_saw','toxic_scatter']);
@@ -50,7 +52,7 @@ function segment(ctx,x0,y0,x1,y1,color,width,alpha){ctx.strokeStyle=color;ctx.li
 export function weaponVfxProfile(id){return WEAPON_VFX[id]||WEAPON_VFX.pistols;}
 
 export function drawWeaponProjectile(ctx,sh,frame) {
- const style=weaponVfxProfile(sh.weapon),decor=detail(frame);
+ const style=(sh.evolved&&EVOLVED_VFX[sh.weapon])||weaponVfxProfile(sh.weapon),decor=detail(frame);
  ctx.save();ctx.globalCompositeOperation='source-over';ctx.lineCap='round';
  if(sh.kind==='lob'){
   if(decor&&frame.motion){
@@ -99,6 +101,12 @@ export function drawWeaponProjectile(ctx,sh,frame) {
    }else if(style.shape==='burst'){
     for(let n=1;n<=3;n++)segment(ctx,-n*length*.25-3,0,-n*length*.25+2,0,style.light,2,.65);
    }else if(style.shape==='toxic'){ctx.globalAlpha=.7;petal(ctx,-length*.6,0,3.5,0,style.color);}
+   else if(style.shape==='execution'){
+    // 진홍 잔광 + 금빛 탄심 + 십자 섬광
+    segment(ctx,-length,0,-2,0,style.color,4,.55);segment(ctx,-length*.6,0,0,0,style.light,1.5,.85);
+    ctx.globalAlpha=.9;ctx.fillStyle=style.color;ctx.beginPath();ctx.moveTo(w*.55,0);ctx.lineTo(0,-4);ctx.lineTo(-3,0);ctx.lineTo(0,4);ctx.closePath();ctx.fill();
+    segment(ctx,w*.2,-5,w*.2,5,style.light,1,.8);
+   }
   }
   ctx.globalAlpha=.95;if(img)ctx.drawImage(img,-w/2,-h/2,w,h);
   // A small colored inlay preserves fusion identity even after the VFX budget.

@@ -1,4 +1,4 @@
-import {TIER_POWER} from '../src/data/weapons.js';
+import {TIER_POWER,tierPower} from '../src/data/weapons.js';
 import test, {beforeEach} from 'node:test';
 import assert from 'node:assert/strict';
 import {G} from '../src/game/state.js';
@@ -43,7 +43,7 @@ test('fusions never appear as unowned random drops, but acquired fusion levels u
 test('ordinary cannon stats depend on item level, not archived character XP; growth caps hold',()=>{
  const w=weapon('cannon',1);save.characterXP=0;const first=weaponStats(w);save.characterXP=28420;assert.deepEqual(weaponStats(w),first);
  w.level=8;assert.ok(weaponStats(w).dmg>first.dmg);assert.ok(weaponStats(w).area>first.area);
- for(const recipe of FUSION_RECIPES){const f=weapon(recipe.output,8);G.player.stats.amount=100;G.player.stats.area=100;const s=weaponStats(f);assert.ok(s.amount<=12);assert.ok(s.area<=2);assert.ok(s.dmg<=(recipe.tier==='absolute'?420:220));}
+ for(const recipe of FUSION_RECIPES){const f=weapon(recipe.output,8);G.player.stats.amount=100;G.player.stats.area=100;const s=weaponStats(f);assert.ok(s.amount<=12);assert.ok(s.area<=2);assert.ok(s.dmg<=(recipe.tier==='absolute'?420:220)*tierPower(f)+1e-9);}
 });
 test('lotus fusion actually fires piercing beam and activates damaging orbit together',()=>{
  const w=weapon('lotus_bloom',1);w.cd=0;G.weapons=[w];let damage=0;
@@ -54,9 +54,9 @@ test('lotus fusion actually fires piercing beam and activates damaging orbit tog
 });
 test('scatter fusion really creates spread with piercing bullets; plague lands slow-burning field',()=>{
  let w=weapon('scatter_rail',1);w.cd=0;G.weapons=[w];updateWeapons(.01);
- assert.equal(G.shots.count,7);assert.ok(G.shots.items.slice(0,7).every(s=>s.pierce===6));assert.ok(new Set(G.shots.items.slice(0,7).map(s=>s.angle)).size>1);
+ assert.equal(G.shots.count,7);assert.ok(G.shots.items.slice(0,7).every(s=>s.pierce===4));assert.ok(new Set(G.shots.items.slice(0,7).map(s=>s.angle)).size>1);
  G.shots.clear();w=weapon('plague_fire',1);w.cd=0;G.weapons=[w];updateWeapons(.01);assert.equal(G.shots.count,2);updateShots(.6);
- assert.equal(G.hazards.count,2);assert.ok(G.hazards.items.slice(0,2).every(h=>h.kind==='fire' && h.dmg===9 && h.slow===.45 && h.radius===100));
+ assert.equal(G.hazards.count,2);assert.ok(G.hazards.items.slice(0,2).every(h=>h.kind==='fire' && Math.abs(h.dmg-9*TIER_POWER.fused.plague_fire)<1e-9 && h.slow===.45 && h.radius===100));
 });
 test('fused loadout and item levels survive run snapshot restore without touching wallet/archive',()=>{
  G.weapons=[weapon('lotus_bloom',6),weapon('pistols',3,1)];G.rerolls=2;G.gold=10;G.kills=3;
@@ -81,7 +81,7 @@ test('eight distinct recipes each lock low levels, consume two once, and restore
 test('burst rail produces timed piercing rounds without replacing unfinished bursts',()=>{
  const w=weapon('burst_rail',1);w.cd=0;G.weapons=[w];updateWeapons(.01);assert.equal(w.burst,3);assert.equal(G.shots.count,0);
  for(let i=0;i<3;i++)updateWeapons(.08);
- assert.equal(G.shots.count,3);assert.equal(w.burst,0);assert.ok(G.shots.items.slice(0,3).every(s=>s.pierce===5 && s.dmg===17));
+ assert.equal(G.shots.count,3);assert.equal(w.burst,0);assert.ok(G.shots.items.slice(0,3).every(s=>s.pierce===3 && s.dmg===15));
 });
 test('new toxic bullets and bouncing saws apply real slow on collision',()=>{
  for(const [id,slow] of [['toxic_scatter',.4],['venom_saw',.45]]){
@@ -106,7 +106,7 @@ test('orbit saw fires bouncing blades while activating its separate damaging orb
 });
 test('all expanded fusion caps hold under maximum item and extreme passive bonuses',()=>{
  Object.assign(G.player.stats,{amount:100,might:100,area:100,duration:100,cooldown:.01});
- for(const recipe of FUSION_RECIPES){const w=weapon(recipe.output,8);const s=weaponStats(w);assert.ok(s.dmg<=(recipe.tier==='absolute'?420:220));assert.ok(s.area<=2);assert.ok(s.cd>=.5);assert.ok(s.amount<=(WEAPONS[w.id].amountCap ||12));assert.ok(s.duration<=6);assert.ok(s.slow<=.65);}
+ for(const recipe of FUSION_RECIPES){const w=weapon(recipe.output,8);const s=weaponStats(w);assert.ok(s.dmg<=(recipe.tier==='absolute'?420:220)*tierPower(w)+1e-9);assert.ok(s.area<=2);assert.ok(s.cd>=.5);assert.ok(s.amount<=(WEAPONS[w.id].amountCap ||12));assert.ok(s.duration<=6);assert.ok(s.slow<=.65);}
 });
 test('all eight fusions preserve live enemy hit buffers through release and pooled respawn',async()=>{
  const {spawnEnemy}=await import('../src/game/enemies.js');const {ENEMIES}=await import('../src/data/enemies.js');

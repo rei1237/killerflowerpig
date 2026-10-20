@@ -21,6 +21,9 @@ export const RESONANCE_STEPS = Object.freeze([2, 4, 6]);
 export const IMPRINT_LEVELS = Object.freeze([3, 5, 7]);
 // 테크 부조화: 테크 태그가 맞지 않는 무기는 피해가 줄어든다 (섞어 쓰면 손해).
 export const MISMATCH_DAMAGE = 0.8;
+// 테크 밸런스: 태그가 맞는 무기에 곱하는 피해 배율 (power).
+// 공격형 테크(탄막·역병·처형)는 서로 비슷하게, 생존 보너스가 큰 테크(연꽃·도살)는 약 90% 수준으로 맞춘다.
+// 계열 루트 빌드(진화 2종 → 최종 조합)를 보스·흩어진 무리·통로·포위 4장면에서 시뮬레이션해 산출.
 // 레벨업 카드 가중치
 export const FAMILY_WEIGHT = 2.2;
 export const OFF_FAMILY_NEW_WEAPON_WEIGHT = 0.35;
@@ -29,7 +32,7 @@ export const FAMILY_GUARANTEE_EVERY = 4;
 
 export const TECHS = Object.freeze({
     gunline: {
-        name: '탄막 사수', icon: '🎯', color: '#9fd3ff',
+        name: '탄막 사수', icon: '🎯', color: '#9fd3ff', power: 1.15,
         summary: '산탄과 관통탄으로 화면을 쓸어버리는 투사체 테크',
         start: { weapon: 'shotgun', passive: 'magazine' },
         family: { weapons: ['shotgun', 'rifle', 'pistols'], passives: ['magazine', 'scope', 'focus'] },
@@ -47,7 +50,7 @@ export const TECHS = Object.freeze({
         ],
     },
     bloom: {
-        name: '연꽃 정원', icon: '🌸', color: '#ffb3d6',
+        name: '연꽃 정원', icon: '🌸', color: '#ffb3d6', power: 2.0,
         summary: '회전 꽃잎과 광선으로 버티며 성장하는 생존 테크',
         start: { weapon: 'thorns', passive: 'regen' },
         family: { weapons: ['thorns', 'cannon', 'saw'], passives: ['regen', 'pollen', 'heart'] },
@@ -65,7 +68,7 @@ export const TECHS = Object.freeze({
         ],
     },
     plague: {
-        name: '역병 화염', icon: '🔥', color: '#ffb36b',
+        name: '역병 화염', icon: '🔥', color: '#ffb36b', power: 0.85,
         summary: '불길과 독구름 장판으로 무리를 녹이는 지역 장악 테크',
         start: { weapon: 'molotov', passive: 'spread' },
         family: { weapons: ['molotov', 'gas', 'cannon'], passives: ['spread', 'sap', 'hide'] },
@@ -83,7 +86,7 @@ export const TECHS = Object.freeze({
         ],
     },
     executioner: {
-        name: '처형자', icon: '☠️', color: '#e6c6ff',
+        name: '처형자', icon: '☠️', color: '#e6c6ff', power: 0.92,
         summary: '치명타를 쌓아 약해진 적을 즉시 끝내는 정밀 테크',
         start: { weapon: 'pistols', passive: 'focus' },
         family: { weapons: ['pistols', 'rifle', 'saw'], passives: ['focus', 'whet', 'madness'] },
@@ -101,7 +104,7 @@ export const TECHS = Object.freeze({
         ],
     },
     butcher: {
-        name: '도살자', icon: '🪚', color: '#ff8f8f',
+        name: '도살자', icon: '🪚', color: '#ff8f8f', power: 2.0,
         summary: '톱날과 출혈로 살점을 갈아내는 근접 난전 테크',
         start: { weapon: 'saw', passive: 'whet' },
         family: { weapons: ['saw', 'shotgun', 'thorns'], passives: ['whet', 'hide', 'heart'] },

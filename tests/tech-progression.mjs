@@ -6,6 +6,7 @@ import {createWeapon,weaponStats,hellfireTrailStats,updateWeapons} from '../src/
 import {updateHazards} from '../src/game/hazards.js';
 import {resetBuild,applyChoice,snapshotBuild,restoreBuild,xpForLevel} from '../src/game/progression.js';
 import {FUSION_RECIPES} from '../src/data/fusions.js';
+import {tierPower} from '../src/data/weapons.js';
 beforeEach(()=>{resetBuild();clearWorld();createPlayer();G.mode='play';G.stage=1;G.gold=0;G.clock=1;G.events={};G.boss=null;G.caps={particles:0,texts:0};G.grid.reset();});
 const w=(id,level,evolved=false)=>Object.assign(createWeapon(id,0),{level,evolved});
 const damageRate=item=>{const s=weaponStats(item);return s.dmg*s.amount/s.cd};
@@ -27,5 +28,5 @@ test('hellfire trail has large real footprint and six-second lifetime, with boun
  assert.equal(hellfireTrailStats({...weaponStats(G.weapons[0]),durationScale:99}).duration,10);
 });
 test('final fused damage remains capped under extreme passive bonuses',()=>{
- G.player.stats.might=100;for(const recipe of FUSION_RECIPES)assert.equal(weaponStats(w(recipe.output,8)).dmg,recipe.tier==='absolute'?420:220);
+ G.player.stats.might=100;for(const recipe of FUSION_RECIPES){const f=w(recipe.output,8);assert.ok(Math.abs(weaponStats(f).dmg-(recipe.tier==='absolute'?420:220)*tierPower(f))<1e-9);}
 });

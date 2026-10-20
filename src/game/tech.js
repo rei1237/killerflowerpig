@@ -78,6 +78,7 @@ export function applyTechWeaponBonus(weapon, result) {
     const im = imprintMods(level, tech);
     for (const k in im) b[k] = (b[k] || 0) + im[k];
     if (b.dmg) result.dmg *= 1 + b.dmg;
+    result.dmg *= tech.power || 1;
     if (b.cd) result.cd *= Math.max(0.5, 1 + b.cd);
     if (b.amount) result.amount += b.amount;
     if (b.area) result.area *= 1 + b.area;

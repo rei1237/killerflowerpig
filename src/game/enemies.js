@@ -82,8 +82,9 @@ export function hitEnemy(e, dmg, opts = {}) {
     let amount = dmg;
     let crit = false;
     const critChance = (opts.crit || 0) + G.player.stats.crit;
-    if (critChance > 0 && Math.random() < critChance) { amount *= G.player.stats.critMul || 2; crit = true; }
-    if (opts.execute && !e.elite && e.hp - amount < e.maxHp * opts.execute) amount = e.hp;
+    if (critChance > 0 && Math.random() < critChance) { amount *= (G.player.stats.critMul || 2) + (opts.critBonus || 0); crit = true; }
+    e.lastCrit = crit; e.lastExecute = false;
+    if (opts.execute && !e.elite && e.hp - amount < e.maxHp * opts.execute) { amount = e.hp; e.lastExecute = true; }
     e.hp -= amount;
     e.flash = 0.08;
     if (amount > 0) recordFusionHit(e, opts.weapon, G.clock, opts.slow || 0);

@@ -21,15 +21,15 @@ export const WEAPONS = {
     },
     pistols: {
         name: '쌍권총', icon: '🔫', color: '#ffd27a',
-        desc: '양손으로 가장 가까운 적을 자동 조준 사격.',
-        base: { dmg: 7, cd: 0.6, amount: 1, speed: 620, duration: 0.9, pierce: 1, area: 1 },
+        desc: '치명타 특화. 양손으로 가장 가까운 적을 연사하고, 치명타는 2.5배 피해 (레벨업으로 최대 3.5배).',
+        base: { dmg: 7, cd: 0.6, amount: 1, speed: 680, duration: 0.9, pierce: 1, area: 1, crit: 0.15, critBonus: 0.5 },
         levels: [
-            { amount: 1, t: '탄 +1' }, { dmg: 2, t: '피해 +2' }, { cd: -0.15, t: '연사 +15%' },
-            { amount: 1, t: '탄 +1' }, { dmg: 3, t: '피해 +3' }, { pierce: 1, t: '관통 +1' },
-            { amount: 1, cd: -0.1, t: '탄 +1, 연사 +10%' },
+            { amount: 1, t: '탄 +1' }, { crit: 0.1, t: '치명타 확률 +10%' }, { amount: 1, dmg: 3, t: '탄 +1, 피해 +3' },
+            { critBonus: 0.5, t: '치명타 피해 +50%' }, { cd: -0.15, crit: 0.1, t: '연사 +15%, 치명타 확률 +10%' }, { dmg: 4, critBonus: 0.5, t: '피해 +4, 치명타 피해 +50%' },
+            { amount: 1, crit: 0.1, cd: -0.1, t: '탄 +1, 치명타 확률 +10%, 연사 +10%' },
         ],
-        evolve: { with: 'focus', name: '처형인의 쌍권총', icon: '☠️', desc: '치명타 +25%. 체력 12% 이하의 적은 즉시 처형.',
-            mods: { dmg: 1.25, crit: 0.25, execute: 0.12, cd: 0.8 } },
+        evolve: { with: 'focus', name: '처형인의 쌍권총', icon: '☠️', desc: '피해 +35%, 치명타 확률 +30%, 치명타 피해 +120%, 관통 +2, 연사 +25%. 체력 15% 이하의 적은 즉시 처형.',
+            mods: { dmg: 1.35, crit: 0.3, critBonus: 1.2, execute: 0.15, cd: 0.75, pierce: 2 } },
     },
     thorns: {
         name: '연꽃 가시', icon: '🌸', color: '#ff4fa0',
@@ -52,8 +52,8 @@ export const WEAPONS = {
             { amount: 1, t: '탄 +1' }, { dmg: 10, t: '피해 +10' }, { pierce: 4, t: '관통 +4' },
             { cd: -0.15, amount: 1, t: '탄 +1, 재장전 -15%' },
         ],
-        evolve: { with: 'scope', name: '레일 소총', icon: '⚡', desc: '무한 관통 전자기탄. 일직선상의 모든 것을 증발시킨다.',
-            mods: { dmg: 1.6, pierce: 999, area: 1.6 } },
+        evolve: { with: 'scope', name: '레일 소총', icon: '⚡', desc: '관통 +10 전자기탄. 일직선상의 적을 꿰뚫는다.',
+            mods: { dmg: 1.35, pierce: 10, area: 1.3 } },
     },
     molotov: {
         name: '화염병', icon: '🔥', color: '#ff7a1a',
@@ -129,8 +129,8 @@ export const STARTING_WEAPON = 'shotgun';
 // 규칙: 진화 무기 > 모든 일반 무기 Lv8, 조합 무기 Lv1 > 모든 진화 무기, 절대 등급 Lv1 > 모든 조합 무기 Lv8.
 // tests/tier-order.mjs 가 실제 전투 시뮬레이션으로 이 순서를 검증한다.
 export const TIER_POWER = Object.freeze({
-    evolved: Object.freeze({ thorns: 2.4, cannon: 1.35, gas: 1.45 }),
-    fused: Object.freeze({ lotus_bloom: 1.6, venom_saw: 1.5, orbit_saw: 1.55, toxic_scatter: 1.1, absolute_bloom: 1.05 }),
+    evolved: Object.freeze({ thorns: 2.4, cannon: 1.45, gas: 1.6, saw: 1.1 }),
+    fused: Object.freeze({ lotus_bloom: 2.4, venom_saw: 2.05, orbit_saw: 2.05, toxic_scatter: 1.1, plague_fire: 0.85, absolute_bloom: 1.1 }),
 });
 // 조합 무기가 계승한 코어(sourceId)는 조합 무기의 보정을 함께 받는다.
 export function tierPower(w) {
