@@ -124,3 +124,17 @@ export const PASSIVES = {
 export const MAGAZINE_TABLE = [0, 1, 1, 2, 2, 3];
 
 export const STARTING_WEAPON = 'shotgun';
+
+// 등급 역전 방지 보정 (피해 배율).
+// 규칙: 진화 무기 > 모든 일반 무기 Lv8, 조합 무기 Lv1 > 모든 진화 무기, 절대 등급 Lv1 > 모든 조합 무기 Lv8.
+// tests/tier-order.mjs 가 실제 전투 시뮬레이션으로 이 순서를 검증한다.
+export const TIER_POWER = Object.freeze({
+    evolved: Object.freeze({ thorns: 2.4, cannon: 1.35, gas: 1.45 }),
+    fused: Object.freeze({ lotus_bloom: 1.6, venom_saw: 1.5, orbit_saw: 1.55, toxic_scatter: 1.1, absolute_bloom: 1.05 }),
+});
+// 조합 무기가 계승한 코어(sourceId)는 조합 무기의 보정을 함께 받는다.
+export function tierPower(w) {
+    if (w.sourceId) return TIER_POWER.fused[w.sourceId] || 1;
+    if (WEAPONS[w.id]?.fusionOnly) return TIER_POWER.fused[w.id] || 1;
+    return w.evolved ? (TIER_POWER.evolved[w.id] || 1) : 1;
+}

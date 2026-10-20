@@ -4,7 +4,7 @@ import { firingMuzzle } from './player-motion.js';
 import { createWeaponVfxFrame, drawWeaponProjectile, drawWeaponOrbit, drawWeaponBeam, drawBeamHitAccents, drawFusionResidues, drawFusionHitAccents } from './weapon-vfx.js';
 // 무기 런타임: 쿨다운 → 발사 패턴, 플레이어 투사체/광선/궤도체 업데이트 및 충돌
 import { G, rand } from './state.js';
-import { WEAPONS } from '../data/weapons.js';
+import { WEAPONS, tierPower } from '../data/weapons.js';
 import { fx, glow, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { hitEnemy } from './enemies.js';
@@ -69,6 +69,8 @@ export function weaponStats(w) {
         bonusAmount: ps.amount, durationScale: ps.duration,
     };
     applyTechWeaponBonus(w, result);
+    // 등급 보정: 상위 등급 무기가 하위 등급보다 약해지지 않도록 (아래 피해 상한은 그대로 유지)
+    result.dmg *= tierPower(w);
     if (w.sourceId) {
         result.dmg = Math.min(600, result.dmg * ((WEAPONS[w.sourceId]?.tier === 'absolute' ? 1.65 : 1.35) + 0.08 * (Math.min(8, Math.max(1, w.fusionLevel || 1)) - 1)));
         result.amount = Math.min(20, result.amount); result.area = Math.min(3, result.area);
@@ -113,6 +115,17 @@ function aimAt(w, target) {
     const dx = target.x - p.x, dy = (target.y - (target.radius || 20)) - (p.y - 22);
     const d = Math.hypot(dx, dy) || 1;
     return [dx / d, dy / d];
+}
+
+// 탄환 피격 판정: 발밑 원 하나가 아니라 스프라이트 높이만큼의 세로 캡슐.
+// 머리·몸통에 맞은 산탄 펠릿도 한 발 한 발 피해가 들어간다.
+export function bodyDist2(t, x, y) {
+    const spriteH = (t.atlas?.walkH || 0) * (t.scale || 0);
+    const bottom = t.y - t.radius;
+    const top = t.y - Math.max(t.radius, spriteH * 0.85 - t.radius);
+    const cy = Math.max(top, Math.min(bottom, y));
+    const dx = t.x - x, dy = cy - y;
+    return dx * dx + dy * dy;
 }
 
 function shoot(w, s, dirX, dirY, opts) {
@@ -446,14 +459,14 @@ export function updateShots(dt) {
                 if (sh.y > cam.y + hh - 10 && sh.vy > 0) sh.vy = -sh.vy;
             }
         }
-        const list = G.grid.query(sh.x, sh.y + 16, sh.radius + 28, shotList);
+        // 몸통 캡슐 판정에 맞춰 발밑 좌표 기준으로 넉넉히 조회
+        const list = G.grid.query(sh.x, sh.y + 45, sh.radius + 95, shotList);
         let dead = false;
         for (let k = 0; k < list.length && !dead; k++) {
             const e = list[k];
             if (!e.alive) continue;
-            const dx = e.x - sh.x, dy = (e.y - e.radius) - sh.y;
             const rr = sh.radius + e.radius;
-            if (dx * dx + dy * dy > rr * rr) continue;
+            if (bodyDist2(e, sh.x, sh.y) > rr * rr) continue;
             if (sh.kind === 'saw') {
                 ensureHitChannels(e);
                 if (now - e.hits[hitChannel(sh)] < sh.hitCd) continue;
@@ -468,9 +481,8 @@ export function updateShots(dt) {
         }
         const boss = G.boss;
         if (!dead && boss && boss.alive) {
-            const dx = boss.x - sh.x, dy = (boss.y - boss.radius) - sh.y;
             const rr = sh.radius + boss.radius;
-            if (dx * dx + dy * dy < rr * rr) {
+            if (bodyDist2(boss, sh.x, sh.y) < rr * rr) {
                 if (sh.kind === 'saw') {
                     if (now - (boss.hits[hitChannel(sh)] || -9) >= sh.hitCd) { boss.hits[hitChannel(sh)] = now; boss.hurt(sh.dmg, { weapon: sh.weapon, crit: sh.crit }); }
                 } else if (!sh.lastHit.includes(-1)) {

@@ -1,3 +1,4 @@
+import {TIER_POWER} from '../src/data/weapons.js';
 import test, {beforeEach} from 'node:test';
 import assert from 'node:assert/strict';
 import {G} from '../src/game/state.js';
@@ -16,7 +17,7 @@ beforeEach(()=>{
 test('recipes lock missing/low-level inputs and expose explicit stats preview without mutation',()=>{
  assert.equal(previewFusion('lotus_bloom').code,'MISSING_INGREDIENT');
  G.weapons=[weapon('cannon',4,0),weapon('thorns',5,1)];const before=JSON.stringify(G.weapons),p=previewFusion('lotus_bloom');
- assert.equal(p.code,'ITEM_LEVEL_REQUIRED');assert.equal(p.ingredients[0].requiredLevel,8);assert.equal(p.output.stats.dmg,50);assert.equal(p.output.stats.orbitDamage,14.000000000000002);assert.equal(JSON.stringify(G.weapons),before);
+ assert.equal(p.code,'ITEM_LEVEL_REQUIRED');assert.equal(p.ingredients[0].requiredLevel,8);assert.equal(p.output.stats.dmg,50*TIER_POWER.fused.lotus_bloom);assert.ok(Math.abs(p.output.stats.orbitDamage-14*TIER_POWER.fused.lotus_bloom)<1e-9);assert.equal(JSON.stringify(G.weapons),before);
  assert.equal(fuseItems('lotus_bloom',p.signature).ok,false);assert.equal(G.weapons.length,2);
 });
 test('fusion atomically consumes two, frees full slot, rejects duplicate click and cleans old effects',()=>{
@@ -101,7 +102,7 @@ test('orbit saw fires bouncing blades while activating its separate damaging orb
  const w=weapon('orbit_saw',1);w.cd=0;G.weapons=[w];updateWeapons(.01);assert.equal(G.shots.count,2);assert.equal(w.activeT,2.8);
  assert.ok(G.shots.items.slice(0,2).every(s=>s.kind==='saw' && s.bounce));let damage=0;
  G.boss={alive:true,x:Math.cos(.034)*78,y:Math.sin(.034)*78*.8,radius:20,hits:{},hurt(v){damage+=v;}};
- updateWeapons(.01);assert.ok(damage>0);assert.equal(orbitStats(w,w.s).amount,3);assert.equal(orbitStats(w,w.s).dmg,10.799999999999999);
+ updateWeapons(.01);assert.ok(damage>0);assert.equal(orbitStats(w,w.s).amount,3);assert.ok(Math.abs(orbitStats(w,w.s).dmg-10.8*TIER_POWER.fused.orbit_saw)<1e-9);
 });
 test('all expanded fusion caps hold under maximum item and extreme passive bonuses',()=>{
  Object.assign(G.player.stats,{amount:100,might:100,area:100,duration:100,cooldown:.01});
