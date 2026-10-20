@@ -24,7 +24,7 @@ test('late specialist spawn tables are gated while earlier stage roster stays un
   if(stage<5) assert.equal(weights.spitter,undefined);
  }
 });
-test('late rush events contain six to ten spaced suiciders instead of dense runner crowds',()=>{
+test('late rush events contain three to five spaced suiciders instead of dense runner crowds',()=>{
  for(let stage=1;stage<=10;stage++){
   reset(stage);event(stage,'swarm');const enemies=G.enemies.items.slice(0,G.enemies.count);
   assert.equal(enemies.length,STAGES[stage].eventTuning.swarmCount);
@@ -49,7 +49,7 @@ test('swarm rush is faster and, from stage 2, a pincer wave charges from the opp
   reset(stage);event(stage,'swarm');const first=G.enemies.items.slice(0,G.enemies.count).map(e=>({lineX:e.lineX,lineY:e.lineY}));
   G.time+=SWARM_RUSH.pincerDelay-.05;updateSpawner(0);assert.equal(G.enemies.count,first.length,'pincer waits for its delay');
   G.time+=.1;updateSpawner(0);const all=G.enemies.items.slice(0,G.enemies.count);const pincer=all.slice(first.length);
-  assert.equal(pincer.length,Math.max(3,Math.round(first.length*SWARM_RUSH.pincerRatio)));
+  assert.equal(pincer.length,Math.max(1,Math.round(first.length*SWARM_RUSH.pincerRatio)));
   assert.ok(pincer.every(e=>Math.abs(e.lineX+first[0].lineX)<1e-9&&Math.abs(e.lineY+first[0].lineY)<1e-9),'second wave runs the opposite direction');
  }
 });

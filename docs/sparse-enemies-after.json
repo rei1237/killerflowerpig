@@ -1,0 +1,2176 @@
+{
+  "before": false,
+  "method": "Current weapons (including strengthened legendary), equal 3/14/31 investment + two equal evolution rewards. Twelve finite moving enemies, three seeds, no invulnerability for separate three-enemy stage1 introduction. Planner difficulty is easy; director XP assumes residency, not survival; 40 actual choice/chest planning seeds.",
+  "caps": [
+    15,
+    18,
+    22,
+    26,
+    30,
+    33,
+    36,
+    39,
+    42,
+    48
+  ],
+  "rows": [
+    {
+      "id": "gunline",
+      "phase": "base",
+      "legendary": false,
+      "investment": 3,
+      "clearSeconds": [
+        9.717,
+        11.183,
+        9.75
+      ],
+      "halfClearSeconds": [
+        5.017,
+        4.017,
+        6.017
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        33.686,
+        202.114
+      ]
+    },
+    {
+      "id": "gunline",
+      "phase": "mid",
+      "legendary": false,
+      "investment": 14,
+      "clearSeconds": [
+        11.367,
+        9.967,
+        9.933
+      ],
+      "halfClearSeconds": [
+        5.767,
+        4.267,
+        4.517
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        132.017,
+        792.103
+      ]
+    },
+    {
+      "id": "gunline",
+      "phase": "evolved",
+      "legendary": false,
+      "investment": 31,
+      "clearSeconds": [
+        5.283,
+        4.6,
+        5.233
+      ],
+      "halfClearSeconds": [
+        2.3,
+        3.033,
+        2.25
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        329.158,
+        1974.948
+      ]
+    },
+    {
+      "id": "executioner",
+      "phase": "base",
+      "legendary": false,
+      "investment": 3,
+      "clearSeconds": [
+        24.5,
+        17.867,
+        17.633
+      ],
+      "halfClearSeconds": [
+        11.95,
+        8.55,
+        11.917
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        33.686,
+        202.114
+      ]
+    },
+    {
+      "id": "executioner",
+      "phase": "mid",
+      "legendary": false,
+      "investment": 14,
+      "clearSeconds": [
+        11.733,
+        10.9,
+        8.633
+      ],
+      "halfClearSeconds": [
+        6.533,
+        5.517,
+        5.283
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        132.017,
+        792.103
+      ]
+    },
+    {
+      "id": "executioner",
+      "phase": "evolved",
+      "legendary": false,
+      "investment": 31,
+      "clearSeconds": [
+        3.517,
+        3.817,
+        3.383
+      ],
+      "halfClearSeconds": [
+        1.533,
+        1.7,
+        2
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        329.158,
+        1974.948
+      ]
+    },
+    {
+      "id": "bloom",
+      "phase": "base",
+      "legendary": false,
+      "investment": 3,
+      "clearSeconds": [
+        7.867,
+        7.867,
+        7.867
+      ],
+      "halfClearSeconds": [
+        2.633,
+        2.633,
+        2.633
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        33.686,
+        202.114
+      ]
+    },
+    {
+      "id": "bloom",
+      "phase": "mid",
+      "legendary": false,
+      "investment": 14,
+      "clearSeconds": [
+        6.75,
+        5.067,
+        8.433
+      ],
+      "halfClearSeconds": [
+        1.7,
+        1.7,
+        1.7
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        132.017,
+        792.103
+      ]
+    },
+    {
+      "id": "bloom",
+      "phase": "evolved",
+      "legendary": false,
+      "investment": 31,
+      "clearSeconds": [
+        2.617,
+        1.967,
+        1.967
+      ],
+      "halfClearSeconds": [
+        0.633,
+        0.533,
+        0.35
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        329.158,
+        1974.948
+      ]
+    },
+    {
+      "id": "plague",
+      "phase": "base",
+      "legendary": false,
+      "investment": 3,
+      "clearSeconds": [
+        11.3,
+        9.733,
+        10.883
+      ],
+      "halfClearSeconds": [
+        5.25,
+        5.2,
+        4.933
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        33.686,
+        202.114
+      ]
+    },
+    {
+      "id": "plague",
+      "phase": "mid",
+      "legendary": false,
+      "investment": 14,
+      "clearSeconds": [
+        14.633,
+        12.65,
+        14.583
+      ],
+      "halfClearSeconds": [
+        6.467,
+        5.517,
+        6.817
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        132.017,
+        792.103
+      ]
+    },
+    {
+      "id": "plague",
+      "phase": "evolved",
+      "legendary": false,
+      "investment": 31,
+      "clearSeconds": [
+        2.567,
+        4.767,
+        3.533
+      ],
+      "halfClearSeconds": [
+        0.85,
+        0.667,
+        0.85
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        329.158,
+        1974.948
+      ]
+    },
+    {
+      "id": "butcher",
+      "phase": "base",
+      "legendary": false,
+      "investment": 3,
+      "clearSeconds": [
+        7.75,
+        8.267,
+        8.067
+      ],
+      "halfClearSeconds": [
+        3.783,
+        3.55,
+        3.517
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        33.686,
+        202.114
+      ]
+    },
+    {
+      "id": "butcher",
+      "phase": "mid",
+      "legendary": false,
+      "investment": 14,
+      "clearSeconds": [
+        10.317,
+        10.933,
+        10.783
+      ],
+      "halfClearSeconds": [
+        3.15,
+        4.783,
+        4.417
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        132.017,
+        792.103
+      ]
+    },
+    {
+      "id": "butcher",
+      "phase": "evolved",
+      "legendary": false,
+      "investment": 31,
+      "clearSeconds": [
+        3.8,
+        4.3,
+        4.3
+      ],
+      "halfClearSeconds": [
+        0.317,
+        1.017,
+        1.017
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        329.158,
+        1974.948
+      ]
+    },
+    {
+      "id": "gunline",
+      "phase": "base",
+      "legendary": true,
+      "investment": 3,
+      "clearSeconds": [
+        3.283,
+        3.317,
+        2.933
+      ],
+      "halfClearSeconds": [
+        1.733,
+        1.733,
+        1.65
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        33.686,
+        202.114
+      ]
+    },
+    {
+      "id": "gunline",
+      "phase": "mid",
+      "legendary": true,
+      "investment": 14,
+      "clearSeconds": [
+        3.867,
+        4.283,
+        3.95
+      ],
+      "halfClearSeconds": [
+        2.1,
+        1.8,
+        2.067
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        132.017,
+        792.103
+      ]
+    },
+    {
+      "id": "gunline",
+      "phase": "evolved",
+      "legendary": true,
+      "investment": 31,
+      "clearSeconds": [
+        3.35,
+        3.267,
+        3.283
+      ],
+      "halfClearSeconds": [
+        1.6,
+        1.733,
+        1.65
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        329.158,
+        1974.948
+      ]
+    },
+    {
+      "id": "executioner",
+      "phase": "base",
+      "legendary": true,
+      "investment": 3,
+      "clearSeconds": [
+        2.95,
+        2.983,
+        2.983
+      ],
+      "halfClearSeconds": [
+        1.617,
+        1.75,
+        1.333
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        33.686,
+        202.114
+      ]
+    },
+    {
+      "id": "executioner",
+      "phase": "mid",
+      "legendary": true,
+      "investment": 14,
+      "clearSeconds": [
+        3.55,
+        4.217,
+        3.6
+      ],
+      "halfClearSeconds": [
+        1.717,
+        1.7,
+        1.417
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        132.017,
+        792.103
+      ]
+    },
+    {
+      "id": "executioner",
+      "phase": "evolved",
+      "legendary": true,
+      "investment": 31,
+      "clearSeconds": [
+        3.067,
+        3.017,
+        2.85
+      ],
+      "halfClearSeconds": [
+        1.467,
+        1.683,
+        1.367
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        329.158,
+        1974.948
+      ]
+    },
+    {
+      "id": "bloom",
+      "phase": "base",
+      "legendary": true,
+      "investment": 3,
+      "clearSeconds": [
+        2.95,
+        2.983,
+        2.633
+      ],
+      "halfClearSeconds": [
+        1.283,
+        1.35,
+        1.083
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        33.686,
+        202.114
+      ]
+    },
+    {
+      "id": "bloom",
+      "phase": "mid",
+      "legendary": true,
+      "investment": 14,
+      "clearSeconds": [
+        3.283,
+        2.967,
+        3.283
+      ],
+      "halfClearSeconds": [
+        1.283,
+        1.317,
+        1.333
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        132.017,
+        792.103
+      ]
+    },
+    {
+      "id": "bloom",
+      "phase": "evolved",
+      "legendary": true,
+      "investment": 31,
+      "clearSeconds": [
+        2.217,
+        1.967,
+        1.317
+      ],
+      "halfClearSeconds": [
+        0.583,
+        0.533,
+        0.35
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        329.158,
+        1974.948
+      ]
+    },
+    {
+      "id": "plague",
+      "phase": "base",
+      "legendary": true,
+      "investment": 3,
+      "clearSeconds": [
+        3.6,
+        2.983,
+        2.65
+      ],
+      "halfClearSeconds": [
+        2.033,
+        1.35,
+        1.183
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        33.686,
+        202.114
+      ]
+    },
+    {
+      "id": "plague",
+      "phase": "mid",
+      "legendary": true,
+      "investment": 14,
+      "clearSeconds": [
+        4.267,
+        3.95,
+        4.333
+      ],
+      "halfClearSeconds": [
+        2.35,
+        2.1,
+        2.133
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        132.017,
+        792.103
+      ]
+    },
+    {
+      "id": "plague",
+      "phase": "evolved",
+      "legendary": true,
+      "investment": 31,
+      "clearSeconds": [
+        2.267,
+        3.1,
+        2.583
+      ],
+      "halfClearSeconds": [
+        0.85,
+        0.667,
+        0.85
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        329.158,
+        1974.948
+      ]
+    },
+    {
+      "id": "butcher",
+      "phase": "base",
+      "legendary": true,
+      "investment": 3,
+      "clearSeconds": [
+        3.283,
+        2.983,
+        2.983
+      ],
+      "halfClearSeconds": [
+        1.733,
+        1.733,
+        1.333
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        33.686,
+        202.114
+      ]
+    },
+    {
+      "id": "butcher",
+      "phase": "mid",
+      "legendary": true,
+      "investment": 14,
+      "clearSeconds": [
+        3.917,
+        3.617,
+        3.95
+      ],
+      "halfClearSeconds": [
+        2.05,
+        1.667,
+        2.083
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        132.017,
+        792.103
+      ]
+    },
+    {
+      "id": "butcher",
+      "phase": "evolved",
+      "legendary": true,
+      "investment": 31,
+      "clearSeconds": [
+        2.567,
+        2.967,
+        2.967
+      ],
+      "halfClearSeconds": [
+        0.317,
+        0.567,
+        0.533
+      ],
+      "kills": [
+        12,
+        12,
+        12
+      ],
+      "hpRange": [
+        329.158,
+        1974.948
+      ]
+    }
+  ],
+  "introduction": [
+    {
+      "id": "gunline",
+      "phase": "base",
+      "scene": "moving",
+      "route": true,
+      "seed": 1,
+      "oneCast": false,
+      "legendary": false,
+      "godMode": false,
+      "playerHP": 100,
+      "config": {
+        "tech": "gunline",
+        "stage": 1,
+        "build": [
+          {
+            "id": "shotgun",
+            "level": 1,
+            "evolved": false
+          }
+        ],
+        "passives": {
+          "magazine": 1
+        },
+        "investment": 3,
+        "evolutionRewards": 0
+      },
+      "stats": [
+        {
+          "id": "shotgun",
+          "dmg": 9.9,
+          "cd": 1,
+          "amount": 6,
+          "area": 1,
+          "duration": 0.42,
+          "speed": 540,
+          "pierce": 2,
+          "slow": 0,
+          "crit": 0,
+          "critBonus": 0,
+          "execute": 0,
+          "bleed": 0,
+          "lifesteal": 0,
+          "permanent": false,
+          "trail": false,
+          "follow": false,
+          "spread": 0.6,
+          "radius": 0,
+          "tick": 0.3,
+          "hitCd": 0.3,
+          "length": 0,
+          "width": 0,
+          "bonusAmount": 0,
+          "durationScale": 1,
+          "executeChance": 0
+        }
+      ],
+      "hpRange": [
+        20.007,
+        72.025
+      ],
+      "totalHp": 112.039,
+      "kills": 3,
+      "remainingHp": 0,
+      "effectiveDamage": 112.039,
+      "hitEvents": 14,
+      "uniqueTargets": 3,
+      "firstCastUniqueTargets": null,
+      "casts": 30,
+      "t50": 3.033,
+      "t90": 4.25,
+      "clearTime": 4.25,
+      "observedSeconds": 30,
+      "peakShots": 6,
+      "peakFields": 0
+    },
+    {
+      "id": "executioner",
+      "phase": "base",
+      "scene": "moving",
+      "route": true,
+      "seed": 1,
+      "oneCast": false,
+      "legendary": false,
+      "godMode": false,
+      "playerHP": 100,
+      "config": {
+        "tech": "executioner",
+        "stage": 1,
+        "build": [
+          {
+            "id": "pistols",
+            "level": 1,
+            "evolved": false
+          }
+        ],
+        "passives": {
+          "focus": 1
+        },
+        "investment": 3,
+        "evolutionRewards": 0
+      },
+      "stats": [
+        {
+          "id": "pistols",
+          "dmg": 3.28,
+          "cd": 0.276,
+          "amount": 1,
+          "area": 1,
+          "duration": 0.9,
+          "speed": 720,
+          "pierce": 1,
+          "slow": 0,
+          "crit": 0.25,
+          "critBonus": 1,
+          "execute": 0,
+          "bleed": 0,
+          "lifesteal": 0,
+          "permanent": false,
+          "trail": false,
+          "follow": false,
+          "spread": 0,
+          "radius": 0,
+          "tick": 0.3,
+          "hitCd": 0.3,
+          "length": 0,
+          "width": 0,
+          "bonusAmount": 0,
+          "durationScale": 1,
+          "executeChance": 0.03,
+          "precision": true
+        }
+      ],
+      "hpRange": [
+        20.007,
+        72.025
+      ],
+      "totalHp": 112.039,
+      "kills": 3,
+      "remainingHp": 0,
+      "effectiveDamage": 112.039,
+      "hitEvents": 16,
+      "uniqueTargets": 3,
+      "firstCastUniqueTargets": null,
+      "casts": 106,
+      "t50": 2.233,
+      "t90": 4.367,
+      "clearTime": 4.367,
+      "observedSeconds": 30,
+      "peakShots": 4,
+      "peakFields": 0
+    },
+    {
+      "id": "bloom",
+      "phase": "base",
+      "scene": "moving",
+      "route": true,
+      "seed": 1,
+      "oneCast": false,
+      "legendary": false,
+      "godMode": false,
+      "playerHP": 120,
+      "config": {
+        "tech": "bloom",
+        "stage": 1,
+        "build": [
+          {
+            "id": "thorns",
+            "level": 1,
+            "evolved": false
+          },
+          {
+            "id": "cannon",
+            "level": 1,
+            "evolved": false
+          }
+        ],
+        "passives": {
+          "regen": 1
+        },
+        "investment": 3,
+        "evolutionRewards": 0
+      },
+      "stats": [
+        {
+          "id": "thorns",
+          "dmg": 140.4,
+          "cd": 1.6,
+          "amount": 2,
+          "area": 1,
+          "duration": 0,
+          "speed": 3.4,
+          "pierce": 0,
+          "slow": 0,
+          "crit": 0,
+          "critBonus": 0,
+          "execute": 0,
+          "bleed": 0,
+          "lifesteal": 0,
+          "permanent": true,
+          "trail": false,
+          "follow": false,
+          "spread": 0,
+          "radius": 68,
+          "tick": 0.3,
+          "hitCd": 0.45,
+          "length": 0,
+          "width": 0,
+          "bonusAmount": 0,
+          "durationScale": 1,
+          "regrow": 1.6,
+          "executeChance": 0
+        },
+        {
+          "id": "cannon",
+          "dmg": 114.4,
+          "cd": 2.6,
+          "amount": 1,
+          "area": 1,
+          "duration": 0.35,
+          "speed": 1,
+          "pierce": 0,
+          "slow": 0,
+          "crit": 0,
+          "critBonus": 0,
+          "execute": 0,
+          "bleed": 0,
+          "lifesteal": 0,
+          "permanent": false,
+          "trail": false,
+          "follow": false,
+          "spread": 0,
+          "radius": 0,
+          "tick": 0.3,
+          "hitCd": 0.3,
+          "length": 520,
+          "width": 44,
+          "bonusAmount": 0,
+          "durationScale": 1,
+          "beamDamage": 228.8,
+          "focusBeamDamage": 228.8,
+          "beamAutoImpact": 228.8,
+          "beamFocusedImpact": 251.68000000000004,
+          "executeChance": 0
+        }
+      ],
+      "hpRange": [
+        20.007,
+        72.025
+      ],
+      "totalHp": 112.039,
+      "kills": 3,
+      "remainingHp": 0,
+      "effectiveDamage": 112.039,
+      "hitEvents": 3,
+      "uniqueTargets": 3,
+      "firstCastUniqueTargets": null,
+      "casts": 1812,
+      "t50": 2.633,
+      "t90": 4.583,
+      "clearTime": 4.583,
+      "observedSeconds": 30,
+      "peakShots": 0,
+      "peakFields": 0
+    },
+    {
+      "id": "plague",
+      "phase": "base",
+      "scene": "moving",
+      "route": true,
+      "seed": 1,
+      "oneCast": false,
+      "legendary": false,
+      "godMode": false,
+      "playerHP": 100,
+      "config": {
+        "tech": "plague",
+        "stage": 1,
+        "build": [
+          {
+            "id": "molotov",
+            "level": 1,
+            "evolved": false
+          }
+        ],
+        "passives": {
+          "spread": 1
+        },
+        "investment": 3,
+        "evolutionRewards": 0
+      },
+      "stats": [
+        {
+          "id": "molotov",
+          "dmg": 6.8,
+          "cd": 2.2525,
+          "amount": 2,
+          "area": 1.1,
+          "duration": 3.12,
+          "speed": 1,
+          "pierce": 0,
+          "slow": 0.2,
+          "crit": 0,
+          "critBonus": 0,
+          "execute": 0,
+          "bleed": 0,
+          "lifesteal": 0,
+          "permanent": false,
+          "trail": false,
+          "follow": false,
+          "spread": 0,
+          "radius": 60,
+          "tick": 0.3,
+          "hitCd": 0.3,
+          "length": 0,
+          "width": 0,
+          "bonusAmount": 0,
+          "durationScale": 1,
+          "executeChance": 0
+        }
+      ],
+      "hpRange": [
+        20.007,
+        72.025
+      ],
+      "totalHp": 112.039,
+      "kills": 3,
+      "remainingHp": 0,
+      "effectiveDamage": 112.039,
+      "hitEvents": 17,
+      "uniqueTargets": 3,
+      "firstCastUniqueTargets": null,
+      "casts": 14,
+      "t50": 2.933,
+      "t90": 4.883,
+      "clearTime": 4.883,
+      "observedSeconds": 30,
+      "peakShots": 2,
+      "peakFields": 4
+    },
+    {
+      "id": "butcher",
+      "phase": "base",
+      "scene": "moving",
+      "route": true,
+      "seed": 1,
+      "oneCast": false,
+      "legendary": false,
+      "godMode": false,
+      "playerHP": 100,
+      "config": {
+        "tech": "butcher",
+        "stage": 1,
+        "build": [
+          {
+            "id": "sword",
+            "level": 1,
+            "evolved": false
+          },
+          {
+            "id": "saw",
+            "level": 1,
+            "evolved": false
+          }
+        ],
+        "passives": {
+          "whet": 1
+        },
+        "investment": 3,
+        "evolutionRewards": 0
+      },
+      "stats": [
+        {
+          "id": "sword",
+          "dmg": 61.60000000000001,
+          "cd": 0.8075,
+          "amount": 1,
+          "area": 1,
+          "duration": 0.18,
+          "speed": 1,
+          "pierce": 0,
+          "slow": 0,
+          "crit": 0,
+          "critBonus": 0,
+          "execute": 0,
+          "bleed": 3,
+          "lifesteal": 0,
+          "permanent": false,
+          "trail": false,
+          "follow": false,
+          "spread": 0,
+          "radius": 110,
+          "tick": 0.3,
+          "hitCd": 0.3,
+          "length": 0,
+          "width": 0,
+          "bonusAmount": 0,
+          "durationScale": 1,
+          "executeChance": 0
+        },
+        {
+          "id": "saw",
+          "dmg": 39.6,
+          "cd": 2.38,
+          "amount": 1,
+          "area": 1,
+          "duration": 3.2,
+          "speed": 410,
+          "pierce": 0,
+          "slow": 0,
+          "crit": 0,
+          "critBonus": 0,
+          "execute": 0,
+          "bleed": 3,
+          "lifesteal": 0,
+          "permanent": false,
+          "trail": false,
+          "follow": false,
+          "spread": 0,
+          "radius": 0,
+          "tick": 0.3,
+          "hitCd": 0.3,
+          "length": 0,
+          "width": 0,
+          "bonusAmount": 0,
+          "durationScale": 1,
+          "executeChance": 0
+        }
+      ],
+      "hpRange": [
+        20.007,
+        72.025
+      ],
+      "totalHp": 112.039,
+      "kills": 3,
+      "remainingHp": 0,
+      "effectiveDamage": 112.039,
+      "hitEvents": 155,
+      "uniqueTargets": 3,
+      "firstCastUniqueTargets": null,
+      "casts": 16,
+      "t50": 2.567,
+      "t90": 4.183,
+      "clearTime": 4.183,
+      "observedSeconds": 30,
+      "peakShots": 2,
+      "peakFields": 0
+    }
+  ],
+  "openingSurvival": [
+    {
+      "id": "gunline",
+      "seconds": 70,
+      "hp": 100,
+      "maxHP": 100,
+      "kills": 20,
+      "peak": 9,
+      "legendary": false,
+      "levelUps": 0
+    },
+    {
+      "id": "executioner",
+      "seconds": 70,
+      "hp": 100,
+      "maxHP": 100,
+      "kills": 31,
+      "peak": 8,
+      "legendary": false,
+      "levelUps": 0
+    },
+    {
+      "id": "bloom",
+      "seconds": 70,
+      "hp": 120,
+      "maxHP": 120,
+      "kills": 25,
+      "peak": 9,
+      "legendary": false,
+      "levelUps": 0
+    },
+    {
+      "id": "plague",
+      "seconds": 70,
+      "hp": 100,
+      "maxHP": 100,
+      "kills": 30,
+      "peak": 8,
+      "legendary": false,
+      "levelUps": 0
+    },
+    {
+      "id": "butcher",
+      "seconds": 70,
+      "hp": 100,
+      "maxHP": 100,
+      "kills": 32,
+      "peak": 8,
+      "legendary": false,
+      "levelUps": 0
+    }
+  ],
+  "scenarios": [
+    {
+      "residency": 8,
+      "rows": [
+        {
+          "stage": 1,
+          "waveXP": 367.50000000000006,
+          "bossXP": 112,
+          "kills": 92,
+          "eliteKills": 1,
+          "peak": 11,
+          "uncreditedSurvivors": 6
+        },
+        {
+          "stage": 2,
+          "waveXP": 848.1249999999997,
+          "bossXP": 144,
+          "kills": 133,
+          "eliteKills": 2,
+          "peak": 14,
+          "uncreditedSurvivors": 9
+        },
+        {
+          "stage": 3,
+          "waveXP": 2879.5000000000005,
+          "bossXP": 176,
+          "kills": 201,
+          "eliteKills": 2,
+          "peak": 18,
+          "uncreditedSurvivors": 13
+        },
+        {
+          "stage": 4,
+          "waveXP": 3936.75,
+          "bossXP": 208,
+          "kills": 255,
+          "eliteKills": 2,
+          "peak": 20,
+          "uncreditedSurvivors": 17
+        },
+        {
+          "stage": 5,
+          "waveXP": 6600.000000000001,
+          "bossXP": 240,
+          "kills": 305,
+          "eliteKills": 2,
+          "peak": 24,
+          "uncreditedSurvivors": 20
+        },
+        {
+          "stage": 6,
+          "waveXP": 10333.75,
+          "bossXP": 272,
+          "kills": 372,
+          "eliteKills": 2,
+          "peak": 32,
+          "uncreditedSurvivors": 25
+        },
+        {
+          "stage": 7,
+          "waveXP": 10041.5,
+          "bossXP": 304,
+          "kills": 403,
+          "eliteKills": 2,
+          "peak": 34,
+          "uncreditedSurvivors": 28
+        },
+        {
+          "stage": 8,
+          "waveXP": 13878.5,
+          "bossXP": 336,
+          "kills": 486,
+          "eliteKills": 2,
+          "peak": 37,
+          "uncreditedSurvivors": 26
+        },
+        {
+          "stage": 9,
+          "waveXP": 17809,
+          "bossXP": 368,
+          "kills": 515,
+          "eliteKills": 2,
+          "peak": 38,
+          "uncreditedSurvivors": 33
+        },
+        {
+          "stage": 10,
+          "waveXP": 22101.75,
+          "bossXP": 400,
+          "kills": 600,
+          "eliteKills": 3,
+          "peak": 43,
+          "uncreditedSurvivors": 30
+        }
+      ],
+      "plans": {
+        "seeds": 40,
+        "beforeBoss10Finals": {
+          "3": 40
+        },
+        "beforeBoss10Absolutes": {
+          "0": 40
+        },
+        "afterBoss10Finals": {
+          "3": 40
+        },
+        "choicesMinP10P50P90Max": [
+          64,
+          65,
+          67,
+          68,
+          68
+        ],
+        "skipsMinP10P50P90Max": [
+          4,
+          5,
+          8,
+          11,
+          14
+        ],
+        "exchangesUsed": 0,
+        "firstFusionStage": {
+          "3": 5,
+          "4": 13,
+          "5": 12,
+          "6": 10
+        },
+        "beforeBossByStage": [
+          {
+            "stage": 1,
+            "levels": [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            "finals": {
+              "0": 40
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 2,
+            "levels": [
+              15,
+              15,
+              15,
+              15,
+              16
+            ],
+            "finals": {
+              "0": 40
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 3,
+            "levels": [
+              24,
+              24,
+              24,
+              25,
+              25
+            ],
+            "finals": {
+              "0": 40
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 4,
+            "levels": [
+              30,
+              30,
+              30,
+              31,
+              31
+            ],
+            "finals": {
+              "0": 35,
+              "1": 5
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 5,
+            "levels": [
+              36,
+              36,
+              37,
+              37,
+              38
+            ],
+            "finals": {
+              "0": 22,
+              "1": 18
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 6,
+            "levels": [
+              42,
+              42,
+              43,
+              44,
+              45
+            ],
+            "finals": {
+              "0": 10,
+              "1": 25,
+              "2": 5
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 7,
+            "levels": [
+              47,
+              47,
+              48,
+              50,
+              50
+            ],
+            "finals": {
+              "1": 17,
+              "2": 23
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 8,
+            "levels": [
+              52,
+              52,
+              54,
+              56,
+              56
+            ],
+            "finals": {
+              "1": 1,
+              "2": 28,
+              "3": 11
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 9,
+            "levels": [
+              58,
+              59,
+              60,
+              62,
+              63
+            ],
+            "finals": {
+              "2": 7,
+              "3": 33
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 10,
+            "levels": [
+              65,
+              66,
+              67,
+              69,
+              69
+            ],
+            "finals": {
+              "3": 40
+            },
+            "absolutes": {
+              "0": 40
+            }
+          }
+        ]
+      }
+    },
+    {
+      "residency": 16,
+      "rows": [
+        {
+          "stage": 1,
+          "waveXP": 199.50000000000003,
+          "bossXP": 112,
+          "kills": 50,
+          "eliteKills": 1,
+          "peak": 12,
+          "uncreditedSurvivors": 7
+        },
+        {
+          "stage": 2,
+          "waveXP": 392.91666666666697,
+          "bossXP": 144,
+          "kills": 71,
+          "eliteKills": 1,
+          "peak": 15,
+          "uncreditedSurvivors": 12
+        },
+        {
+          "stage": 3,
+          "waveXP": 1449.5000000000002,
+          "bossXP": 176,
+          "kills": 104,
+          "eliteKills": 2,
+          "peak": 19,
+          "uncreditedSurvivors": 15
+        },
+        {
+          "stage": 4,
+          "waveXP": 2102.5,
+          "bossXP": 208,
+          "kills": 135,
+          "eliteKills": 2,
+          "peak": 22,
+          "uncreditedSurvivors": 19
+        },
+        {
+          "stage": 5,
+          "waveXP": 3512.0000000000005,
+          "bossXP": 240,
+          "kills": 160,
+          "eliteKills": 2,
+          "peak": 26,
+          "uncreditedSurvivors": 23
+        },
+        {
+          "stage": 6,
+          "waveXP": 5766.25,
+          "bossXP": 272,
+          "kills": 191,
+          "eliteKills": 2,
+          "peak": 29,
+          "uncreditedSurvivors": 26
+        },
+        {
+          "stage": 7,
+          "waveXP": 5529,
+          "bossXP": 304,
+          "kills": 214,
+          "eliteKills": 2,
+          "peak": 35,
+          "uncreditedSurvivors": 28
+        },
+        {
+          "stage": 8,
+          "waveXP": 8046.25,
+          "bossXP": 336,
+          "kills": 255,
+          "eliteKills": 2,
+          "peak": 38,
+          "uncreditedSurvivors": 30
+        },
+        {
+          "stage": 9,
+          "waveXP": 9295,
+          "bossXP": 368,
+          "kills": 275,
+          "eliteKills": 2,
+          "peak": 39,
+          "uncreditedSurvivors": 34
+        },
+        {
+          "stage": 10,
+          "waveXP": 12760.5,
+          "bossXP": 400,
+          "kills": 327,
+          "eliteKills": 2,
+          "peak": 42,
+          "uncreditedSurvivors": 39
+        }
+      ],
+      "plans": {
+        "seeds": 40,
+        "beforeBoss10Finals": {
+          "2": 4,
+          "3": 36
+        },
+        "beforeBoss10Absolutes": {
+          "0": 40
+        },
+        "afterBoss10Finals": {
+          "3": 40
+        },
+        "choicesMinP10P50P90Max": [
+          50,
+          51,
+          53,
+          54,
+          54
+        ],
+        "skipsMinP10P50P90Max": [
+          0,
+          0,
+          2,
+          4,
+          7
+        ],
+        "exchangesUsed": 0,
+        "firstFusionStage": {
+          "3": 4,
+          "4": 5,
+          "5": 14,
+          "6": 9,
+          "7": 8
+        },
+        "beforeBossByStage": [
+          {
+            "stage": 1,
+            "levels": [
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            "finals": {
+              "0": 40
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 2,
+            "levels": [
+              11,
+              11,
+              11,
+              11,
+              11
+            ],
+            "finals": {
+              "0": 40
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 3,
+            "levels": [
+              18,
+              18,
+              18,
+              18,
+              19
+            ],
+            "finals": {
+              "0": 40
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 4,
+            "levels": [
+              24,
+              24,
+              24,
+              24,
+              25
+            ],
+            "finals": {
+              "0": 36,
+              "1": 4
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 5,
+            "levels": [
+              29,
+              29,
+              29,
+              30,
+              30
+            ],
+            "finals": {
+              "0": 31,
+              "1": 9
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 6,
+            "levels": [
+              34,
+              34,
+              35,
+              36,
+              37
+            ],
+            "finals": {
+              "0": 17,
+              "1": 23
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 7,
+            "levels": [
+              38,
+              38,
+              39,
+              40,
+              41
+            ],
+            "finals": {
+              "0": 8,
+              "1": 26,
+              "2": 6
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 8,
+            "levels": [
+              42,
+              42,
+              43,
+              45,
+              46
+            ],
+            "finals": {
+              "1": 17,
+              "2": 23
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 9,
+            "levels": [
+              46,
+              47,
+              48,
+              49,
+              50
+            ],
+            "finals": {
+              "1": 2,
+              "2": 31,
+              "3": 7
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 10,
+            "levels": [
+              51,
+              52,
+              53,
+              55,
+              55
+            ],
+            "finals": {
+              "2": 4,
+              "3": 36
+            },
+            "absolutes": {
+              "0": 40
+            }
+          }
+        ]
+      }
+    },
+    {
+      "residency": 24,
+      "rows": [
+        {
+          "stage": 1,
+          "waveXP": 112.00000000000001,
+          "bossXP": 112,
+          "kills": 32,
+          "eliteKills": 0,
+          "peak": 11,
+          "uncreditedSurvivors": 10
+        },
+        {
+          "stage": 2,
+          "waveXP": 273.12499999999994,
+          "bossXP": 144,
+          "kills": 46,
+          "eliteKills": 1,
+          "peak": 15,
+          "uncreditedSurvivors": 12
+        },
+        {
+          "stage": 3,
+          "waveXP": 1027.0000000000002,
+          "bossXP": 176,
+          "kills": 69,
+          "eliteKills": 1,
+          "peak": 20,
+          "uncreditedSurvivors": 15
+        },
+        {
+          "stage": 4,
+          "waveXP": 1210.75,
+          "bossXP": 208,
+          "kills": 89,
+          "eliteKills": 1,
+          "peak": 23,
+          "uncreditedSurvivors": 19
+        },
+        {
+          "stage": 5,
+          "waveXP": 2216.0000000000005,
+          "bossXP": 240,
+          "kills": 104,
+          "eliteKills": 1,
+          "peak": 27,
+          "uncreditedSurvivors": 23
+        },
+        {
+          "stage": 6,
+          "waveXP": 3281.25,
+          "bossXP": 272,
+          "kills": 128,
+          "eliteKills": 1,
+          "peak": 30,
+          "uncreditedSurvivors": 26
+        },
+        {
+          "stage": 7,
+          "waveXP": 3467.5,
+          "bossXP": 304,
+          "kills": 141,
+          "eliteKills": 1,
+          "peak": 34,
+          "uncreditedSurvivors": 30
+        },
+        {
+          "stage": 8,
+          "waveXP": 5576,
+          "bossXP": 336,
+          "kills": 178,
+          "eliteKills": 2,
+          "peak": 39,
+          "uncreditedSurvivors": 30
+        },
+        {
+          "stage": 9,
+          "waveXP": 6446,
+          "bossXP": 368,
+          "kills": 188,
+          "eliteKills": 2,
+          "peak": 42,
+          "uncreditedSurvivors": 33
+        },
+        {
+          "stage": 10,
+          "waveXP": 7954.75,
+          "bossXP": 400,
+          "kills": 215,
+          "eliteKills": 2,
+          "peak": 43,
+          "uncreditedSurvivors": 40
+        }
+      ],
+      "plans": {
+        "seeds": 40,
+        "beforeBoss10Finals": {
+          "1": 2,
+          "2": 27,
+          "3": 11
+        },
+        "beforeBoss10Absolutes": {
+          "0": 40
+        },
+        "afterBoss10Finals": {
+          "2": 6,
+          "3": 34
+        },
+        "choicesMinP10P50P90Max": [
+          41,
+          42,
+          43,
+          44,
+          45
+        ],
+        "skipsMinP10P50P90Max": [
+          0,
+          0,
+          0,
+          0,
+          2
+        ],
+        "exchangesUsed": 0,
+        "firstFusionStage": {
+          "3": 4,
+          "4": 3,
+          "5": 9,
+          "6": 10,
+          "7": 11,
+          "8": 3
+        },
+        "beforeBossByStage": [
+          {
+            "stage": 1,
+            "levels": [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "finals": {
+              "0": 40
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 2,
+            "levels": [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            "finals": {
+              "0": 40
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 3,
+            "levels": [
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            "finals": {
+              "0": 40
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 4,
+            "levels": [
+              19,
+              19,
+              19,
+              19,
+              20
+            ],
+            "finals": {
+              "0": 36,
+              "1": 4
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 5,
+            "levels": [
+              24,
+              24,
+              24,
+              24,
+              26
+            ],
+            "finals": {
+              "0": 33,
+              "1": 7
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 6,
+            "levels": [
+              28,
+              28,
+              28,
+              29,
+              31
+            ],
+            "finals": {
+              "0": 24,
+              "1": 16
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 7,
+            "levels": [
+              31,
+              31,
+              31,
+              32,
+              34
+            ],
+            "finals": {
+              "0": 14,
+              "1": 22,
+              "2": 4
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 8,
+            "levels": [
+              35,
+              35,
+              36,
+              37,
+              38
+            ],
+            "finals": {
+              "0": 3,
+              "1": 28,
+              "2": 9
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 9,
+            "levels": [
+              38,
+              39,
+              40,
+              41,
+              42
+            ],
+            "finals": {
+              "1": 15,
+              "2": 23,
+              "3": 2
+            },
+            "absolutes": {
+              "0": 40
+            }
+          },
+          {
+            "stage": 10,
+            "levels": [
+              42,
+              42,
+              44,
+              45,
+              46
+            ],
+            "finals": {
+              "1": 2,
+              "2": 27,
+              "3": 11
+            },
+            "absolutes": {
+              "0": 40
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

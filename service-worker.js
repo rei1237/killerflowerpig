@@ -1,9 +1,33 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v16-declutter';
+const VERSION = 'v26-slayer-mobile-launch';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
 const PRECACHE = [
+    './src/ui/mobile.css',
+    './asset/branding/slayer-icon-180.png',
+    './asset/branding/slayer-icon-192.png',
+    './asset/branding/slayer-icon-32.png',
+    './asset/branding/slayer-icon-512.png',
+    './asset/branding/slayer-launch-480.webp',
+    './asset/branding/slayer-launch-900.webp',
+    './asset/branding/slayer-maskable-512.png',
+    './src/core/run-rewards.js',
+    './src/game/stage-checkpoint.js',
+    './src/game/cannon-targeting.js',
+    './src/game/thorn-charges.js',
+    './src/game/butcher-sword.js',
+    './src/game/plague-targeting.js',
+    './src/data/pet-upgrades.js',
+    './src/core/pet-upgrades.js',
+    './src/ui/pet-upgrade-shop.js',
+    './src/data/cosmetics.js',
+    './src/core/cosmetics.js',
+    './src/game/cosmetic-effects.js',
+    './src/game/attack-animation.js',
+    './src/game/player-appearance.js',
+    './src/ui/cosmetic-shop.js',
+    './src/ui/cosmetic-shop.css',
     './src/data/bestiary.js',
     './src/ui/bestiary.js',
     './src/ui/bestiary.css',

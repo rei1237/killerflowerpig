@@ -43,7 +43,7 @@ test('all ten shipped WebP atlases match runtime dimensions, pose order, anchors
 test('all ten sheets select source cells with the same ground anchor and unchanged hit circle',()=>{
  assert.equal(new Set(BOSS_SHEETS.slice(1).map(x=>x.src)).size,10);
  for(let stage=1;stage<=10;stage++) {
-  const boss=reset(stage),meta=BOSS_SHEETS[stage],image={width:1024,height:512};
+  const boss=reset(stage),meta=BOSS_SHEETS[boss.artStage],image={width:1024,height:512};
   assert.deepEqual([meta.columns,meta.cellWidth,meta.cellHeight,meta.anchorX,meta.footY],[4,256,256,128,240]);
   const seen=new Set();
   for(const [state,frame] of [['walk',0],['windup',2],['attack',3],['recover',4]]) {
@@ -105,7 +105,7 @@ test('ring and aimed volleys release the attack frame on the actual projectile e
 test('spiral, snipe, summon and blink switch poses at their own gameplay events',()=>{
  let b=reset(8);begin(b,'spiral');assertFrame(b,'windup');b.update(.001);assertFrame(b,'attack');assert.equal(G.enemyShots.count,2);
  b=reset(4);begin(b,'snipe');b.update(1.099);assertFrame(b,'windup');assert.equal(G.enemyShots.count,0);b.update(.002);assertFrame(b,'attack');assert.equal(G.enemyShots.count,3);
- b=reset(1);begin(b,'summon');b.update(.599);assertFrame(b,'windup');assert.equal(G.enemies.count,0);b.update(.002);assertFrame(b,'attack');assert.equal(G.enemies.count,2);assert.equal(b.task,null);
+ b=reset(6);begin(b,'summon');b.update(.599);assertFrame(b,'windup');assert.equal(G.enemies.count,0);b.update(.002);assertFrame(b,'attack');assert.equal(G.enemies.count,4);assert.equal(b.task,null);
  b=reset(7);const task=begin(b,'blink');b.update(.699);assertFrame(b,'windup');assert.equal(b.x,0);b.update(.002);assertFrame(b,'attack');close(b.x,task.tx);close(b.y,task.ty);assert.equal(G.enemyShots.count,8);
 });
 

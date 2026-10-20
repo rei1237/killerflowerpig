@@ -18,7 +18,7 @@ test('coin budget merges value rather than dropping coins',()=>{
  reset();for(let i=0;i<500;i++)dropCoin(100,100,1);assert.equal(G.pickups.count,180);assert.equal(G.pickups.items.slice(0,G.pickups.count).reduce((sum,c)=>sum+c.value,0),500);
 });
 test('owned equipped pet follows, attracts nearby coins and damages enemies on cooldown',()=>{
- reset();save.maxClearedStage=2;earnCoins(200,'pet-test');assert.equal(buyUpgrade('pet_yeongnyang',0),true);
+ reset();save.maxClearedStage=2;earnCoins(600,'pet-test');assert.equal(buyUpgrade('pet_yeongnyang',0),true);
  const c=dropCoin(-60,8);const e=G.enemies.spawn();Object.assign(e,{alive:true,x:-50,y:8,hp:100,maxHp:100,radius:8,slow:0});
  updatePets(0.7);assert.equal(c.pull,true);assert.ok(e.hp<100);const hp=e.hp;updatePets(0.1);assert.equal(e.hp,hp);
  equipPet(null);updatePets(2);assert.equal(e.hp,hp);assert.equal(equipPet('pet_yeongnyang'),true);

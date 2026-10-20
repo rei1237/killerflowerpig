@@ -33,20 +33,9 @@ test('ten encounters advertise ten different executable signatures and concise K
   assert.equal(typeof b[`task_${def.signature}`],'function');assert.match(def.signatureHint,/[가-힣]/);assert.ok(def.signatureHint.length<65);
   for(const phase of def.phases) assert.ok(phase.includes(def.signature));
   close(b.radius,112*def.scale*.32);
-  if(stage>1) for(const field of ['speed','dmg']) assert.equal(def[field],stage===3&&field==='speed'?118:baseline.bosses[stage][field],`${stage}:${field}`);
+  if(stage>1&&stage!==9) for(const field of ['speed','dmg']) assert.equal(def[field],stage===3&&field==='speed'?118:baseline.bosses[stage][field],`${stage}:${field}`);
   b.startPattern();assert.equal(b.lastPattern,def.signature,'opening cannot randomly skip identity');
  }
-});
-
-test('stage 1 keeps its generous charge warning, speed and long recovery in every phase',()=>{
- const old=Math.random;Math.random=()=>.5;
- try { for(let phase=0;phase<3;phase++) {
-  const b=reset(1,phase);begin(b);const warning=1.15/Math.sqrt(b.phaseMul);
-  assert.equal(hazards()[0].delay,warning);advance(b,warning-.005);close(b.x,0);
-  advance(b,.01);assert.ok(b.x>0&&b.x<=4.8);
-  while(b.task) advance(b,.01);
-  assert.ok(b.attackT>=1.4/b.phaseMul*1.5-.011);
- } } finally { Math.random=old; }
 });
 
 test('signatures preserve their full warning and release attack poses only at their gameplay event',()=>{
@@ -139,14 +128,26 @@ test('psychic echoes use separate origins, staggered release and a wide missing 
  }
 });
 
-// 강화: 기본부터 중앙 강타 뒤 직각 십자 균열(2.75초), 변이 이후 대각선 X 균열이 이어진다.
-test('hammer faults leave center safe first, then hit center only at its later warning',()=>{
- const b=reset(9);begin(b);const marks=hazards();assert.equal(marks.length,4);
- const outer=marks.filter(h=>h.delay<2),center=marks.find(h=>h.delay===2),cross=marks.find(h=>h.delay>2);
- assert.equal(outer.length,2);assert.ok(outer.every(h=>!lineContains(h,300,0)));assert.ok(lineContains(center,300,0));
- close(cross.delay,2.75);close(Math.abs(cross.angle-center.angle),Math.PI/2);
- G.player.iframes=0;updateHazards(1.051);assert.equal(G.player.hp,10000);updateHazards(.948);assert.equal(G.player.hp,10000);updateHazards(.002);assert.ok(G.player.hp<10000);
- for(const phase of [1,2])assert.equal((reset(9,phase),begin(G.boss),hazards().length),6,'mutation adds two diagonal X lines');
+test('King fixes sequential fault lines then reacquires one/two fully warned verdicts without adds',()=>{
+ for(const phase of [0,1,2]) {
+  const b=reset(9,phase);const task=begin(b);const initial=hazards().map(h=>({...h}));
+  assert.equal(initial.length,phase?6:4);
+  assert.equal(initial[0].delay,1.05);assert.equal(initial[1].delay,1.05);assert.equal(initial[2].delay,2);
+  assert.equal(initial[0].width,58);
+  G.player.x=600;G.player.y=200;
+  let circles=0,seen=new Set();
+  while(b.task){advance(b,.01);for(const h of hazards())if(h.kind==='tcircle'&&!seen.has(h.onFire)){seen.add(h.onFire);circles++;assert.equal(h.delay,1.05);assert.equal(h.x,600);assert.equal(h.y,200);}}
+  assert.equal(circles,phase);assert.ok(b.attackT>=1.5);assert.equal(G.enemyShots.count,0);assert.equal(G.enemies.count,0);
+ }
+});
+
+test('King telegraph footprints have a reachable central opening and outside edges stay safe',()=>{
+ const b=reset(9);begin(b);G.player.iframes=0;
+ const marks=hazards().map(h=>({...h}));
+ assert.ok(!lineContains(marks[0],300,0)&&!lineContains(marks[1],300,0));
+ updateHazards(1.051);assert.equal(G.player.hp,10000,'first flank strike leaves center open');
+ G.player.y=45;updateHazards(.95);assert.equal(G.player.hp,10000,'45px sidestep clears center');
+ const hp=G.player.hp;G.player.x=300;G.player.y=0;b.lineHit(marks[2],1);close(hp-G.player.hp,b.dmg);assert.ok(b.dmg<50);
 });
 
 // 강화: 금화 사격선 7/9/11줄, 모래시계 2/2/3개(.65초 간격), 결산 금화 11발.
@@ -161,7 +162,7 @@ test('financier contract fixes the debt mark, fires coins first and settles afte
 
 test('death and phase changes cancel owned warning callbacks without removing unrelated hazards',()=>{
  for(const stage of [2,3,4,5,6,7,8,9,10]) for(const interruption of ['phase','death']) {
-  const b=reset(stage);begin(b);const callbacks=hazards().map(h=>[h.onFire,{...h}]);
+  const b=reset(stage);begin(b);const callbacks=hazards().filter(h=>h.onFire).map(h=>[h.onFire,{...h}]);
   const friendly=spawnHazard('gas',1000,1000,{radius:20,duration:5});
   if(interruption==='phase') b.enterPhase(1);else b.die();
   assert.ok(hazards().includes(friendly));assert.ok(hazards().every(h=>h.onFire?.bossOwner!==b));
@@ -174,7 +175,7 @@ test('death and phase changes cancel owned warning callbacks without removing un
 test('phase reinforcement is an explicit brute/brood identity, not the same add wave on every boss',()=>{
  for(let stage=1;stage<=10;stage++) {
   const b=reset(stage);b.enterPhase(1);
-  assert.equal(G.enemies.count,stage===1?4:stage===6?5:0,`stage ${stage}`);
+  assert.equal(G.enemies.count,stage===6?5:0,`stage ${stage}`);
  }
 });
 
@@ -182,7 +183,7 @@ test('phase reinforcement is an explicit brute/brood identity, not the same add 
 test('each final-phase signature completes with bounded hazards/projectiles and a real recovery gap',()=>{
  for(let stage=2;stage<=10;stage++) {
   const b=reset(stage,2);begin(b);let maxHazards=0,maxShots=0;
-  for(let t=0;b.task&&t<6;t+=.01) {advance(b,.01);maxHazards=Math.max(maxHazards,G.hazards.count);maxShots=Math.max(maxShots,G.enemyShots.count);}
+  for(let t=0;b.task&&t<8;t+=.01) {advance(b,.01);maxHazards=Math.max(maxHazards,G.hazards.count);maxShots=Math.max(maxShots,G.enemyShots.count);}
   assert.equal(b.task,null,`stage ${stage}: stuck task`);assert.ok(b.attackT>=1.25);assert.ok(maxHazards<=16,`stage ${stage}: ${maxHazards} hazards`);assert.ok(maxShots<=110,`stage ${stage}: ${maxShots} shots`);
   assert.ok(Number.isFinite(b.x)&&Number.isFinite(b.y));
  }
@@ -195,9 +196,10 @@ test('hourglass marker is draw-only and pooled hazards reset it on reuse',()=>{
  G.hazards.clear();const plain=spawnHazard('tcircle',0,0,{delay:1});assert.equal(plain.symbol,null);
 });
 
-test('every boss mixes a bullet pattern after mutation and its signature escalates through mutation and frenzy',()=>{
+test('advanced bosses retain bullet mixing and signature escalation; beginner does not',()=>{
  for(let stage=1;stage<=10;stage++) {
   const def=BOSSES[stage];
+  if(stage===1){assert.deepEqual(def.phases,[['trainingCharge'],['trainingCharge'],['trainingCharge']]);continue;}
   assert.ok(!def.phases[0].some(k=>k==='ring'||k==='aimed')||stage===1,`${stage}: opening phase stays a pure signature read`);
   assert.ok(def.phases[2].some(k=>k==='ring'||k==='aimed'),`${stage}: frenzy mixes a bullet pattern`);
   // Hunter's 2 → 3 → off-beat 3 combo is verified with a moving player in hunter-speed.mjs.

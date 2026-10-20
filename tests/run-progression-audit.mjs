@@ -34,7 +34,7 @@ test('boss benchmark snapshots are reproduced by actual rolls and fit the six we
 
 test('seeded planned versus scattered runs conserve item investment and respect real chest evolution', () => {
     const result = {};
-    for (const mode of ['planned', 'scattered', 'absolute']) {
+    for (const mode of ['planned', 'scattered', 'absolute', 'butcher']) {
         const runs = [];
         for (let seed = 1; seed <= 40; seed++) {
             const run = simulatePlan({ rows, mode, seed }); runs.push(run);
@@ -42,7 +42,7 @@ test('seeded planned versus scattered runs conserve item investment and respect 
             const choices = Object.entries(run.itemChoices).filter(([id]) => !['gold', 'meat'].includes(id)).reduce((n, [, v]) => n + v, 0);
             const consumed = run.fusions.reduce((n, f) => n + FUSION_RECIPES.find(r => r.id === f.id).inputs.length * 8 - 1, 0);
             const lost = run.exchanges.reduce((n, x) => n + x.lostLevel - 1, 0);
-            const invested = end.weapons.reduce((n, w) => n + w.level, 0) + Object.values(end.passives).reduce((a, b) => a + b, 0) + consumed + lost - 1;
+            const invested = end.weapons.reduce((n, w) => n + w.level, 0) + Object.values(end.passives).reduce((a, b) => a + b, 0) + consumed + lost - run.initialInvestment;
             assert.equal(invested, choices + run.chestUpgrades, 'no invented levels from planner');
             const consumedEvolutions = {};
             for (const f of run.fusions) for (const input of FUSION_RECIPES.find(r => r.id === f.id).inputs) {
@@ -57,11 +57,13 @@ test('seeded planned versus scattered runs conserve item investment and respect 
         }
         result[mode] = summarizePlans(runs);
     }
-    // 느려진 레벨업(STAGE_XP_YIELD 0.55 + 5·10·13·18·27레벨 가속): 모든 장비를 최대로 만드는 것은 불가능하다.
-    // 측정(40시드): 집중 빌드는 최종 보스 전에 최종 무기 3개에 도달하지 못하고(0개 2 / 1개 12 / 2개 26), 절대 빌드는 30/40이 절대 무기를 갖춘다.
-    assert.equal(result.planned.beforeBoss10Finals[3], undefined, 'three finals before the last boss are no longer reachable');
-    assert.ok((result.planned.beforeBoss10Finals[2] || 0) >= 20, 'a focused build still reaches two finals in most runs');
+    // 느려진 레벨업(STAGE_XP_YIELD 0.55 + 5·10·13·18·27레벨 가속) + 14개 조합: 모든 장비를 최대로 만드는 것은 불가능하다.
+    // 측정(40시드): 집중 빌드 최종 1개 11 / 2개 28 / 3개 1, 도살 빌드 1개 12 / 2개 28, 절대 빌드는 28/40이 절대 무기를 갖춘다.
+    assert.ok((result.planned.beforeBoss10Finals[3] || 0) <= 5, 'three finals before the last boss are rare');
+    assert.ok((result.planned.beforeBoss10Finals[2] || 0) + (result.planned.beforeBoss10Finals[3] || 0) >= 20, 'a focused build still reaches two finals in most runs');
     assert.ok((result.absolute.beforeBoss10Absolutes[1] || 0) >= 20 && (result.absolute.beforeBoss10Absolutes[1] || 0) < 40, 'absolute route is usually, not always, complete');
+    assert.ok((result.butcher.beforeBoss10Finals[2] || 0) + (result.butcher.beforeBoss10Finals[3] || 0) >= 20, 'butcher route usually reaches two finals');
+    assert.ok((result.butcher.beforeBoss10Finals[3] || 0) <= 5);
     assert.ok((result.scattered.beforeBoss10Finals[0] || 0) + (result.scattered.beforeBoss10Finals[1] || 0) > 0);
     // 보조 아이템은 슬롯 제한이 없어 진화 짝을 얻으려고 교체할 필요가 없다.
     assert.equal(result.scattered.exchangesUsed, 0);
@@ -77,4 +79,9 @@ test('the final boss reward cannot retroactively become the build used against t
     assert.equal(noChoices.fusions.length, 0, 'chests alone cannot discover missing weapons or passives');
     assert.equal(noChoices.stages[9].beforeBoss.weapons.length, 1);
     assert.deepEqual(noChoices.stages[9].beforeBoss.passives, {});
+});
+
+test('Butcher receives the actual two weapons and passive once without invented choice investment',()=>{
+ const none=rows.map(r=>({...r,waveXP:0,bossXP:0}));const run=simulatePlan({rows:none,mode:'butcher'});
+ assert.equal(run.initialInvestment,3);assert.equal(run.choices,0);assert.deepEqual(run.stages[0].beforeBoss.weapons.map(w=>[w.id,w.level]),[['sword',1],['saw',1]]);assert.deepEqual(run.stages[0].beforeBoss.passives,{whet:1});
 });

@@ -22,10 +22,10 @@ function reset(){clearWorld();G.clock=2;G.lowQ=false;G.camera={x:0,y:0};G.view={
 function shot(id='shotgun'){return {kind:'bullet',weapon:id,x:20,y:30,vx:200,vy:0,radius:5,angle:.3,life:.5,dmg:20,pierce:2,img:fx.bullet,lastHit:[1]};}
 function beam(id='cannon'){return {weapon:id,x:0,y:0,angle:0,len:420,width:38,life:.3,max:.35,evolved:false};}
 
-test('all eight ordinary, eight final and one absolute weapons have explicit distinct visual identities',()=>{
- assert.equal(Object.keys(WEAPON_VFX).length,21);for(const id of Object.keys(WEAPONS))assert.ok(WEAPON_VFX[id],id);
- const fused=FUSION_RECIPES.map(r=>WEAPON_VFX[r.id]);assert.equal(new Set(fused.map(p=>p.color+':'+p.shape)).size,13);
- assert.equal(WEAPON_VFX.cannon.shape,'petal');assert.equal(WEAPON_VFX.lotus_bloom.shape,'lotus');assert.equal(WEAPON_VFX.ember_lance.shape,'ember');
+test('all nine ordinary and fourteen final or absolute weapons have explicit distinct visual identities',()=>{
+ assert.equal(Object.keys(WEAPON_VFX).length,23);for(const id of Object.keys(WEAPONS))assert.ok(WEAPON_VFX[id],id);
+ const fused=FUSION_RECIPES.map(r=>WEAPON_VFX[r.id]);assert.equal(new Set(fused.map(p=>p.color+':'+p.shape)).size,14);
+ assert.equal(WEAPON_VFX.cannon.shape,'lotus');assert.equal(WEAPON_VFX.lotus_bloom.shape,'lotus');assert.equal(WEAPON_VFX.ember_lance.shape,'ember');
 });
 
 test('rendering all projectile and beam shapes leaves damage, collision and lifetime state untouched',()=>{
@@ -115,4 +115,48 @@ test('fusion residue motion freezes with reduced motion and actual fields never 
 test('fused hit and slow cues share the existing strict impact budget',()=>{
  reset();const pool={count:30,items:Array.from({length:30},(_,i)=>({id:i,alive:true,x:i*3,y:10,radius:10,flash:.08,slow:.4,slowT:.5}))};for(const e of pool.items)recordFusionHit(e,'venom_saw',2,.4);
  for(const low of [true,false]){const f=createWeaponVfxFrame(low,2);drawFusionHitAccents(context(),pool,null,f);assert.equal(f.impactsUsed,low?3:8);assert.equal(f.statusUsed,low?3:8);assert.ok(f.scanLeft>=0);}
+});
+
+test('focused lotus adds one confirmed endpoint bloom within shared visual budgets',()=>{
+ reset();const b={...beam(),focused:true,focusPrimary:true,focusHit:true},before=JSON.stringify(b);
+ for(const low of [false,true]){const f=createWeaponVfxFrame(low,2,{projectileGlow:false}),ctx=context();drawWeaponBeam(ctx,b,f);assert.equal(f.impactsUsed,1);assert.ok(f.petalsUsed<=(low?10:32));assert.ok(ctx.ops.some(op=>op.name==='ellipse'&&op.args[0]===b.len));assert.equal(JSON.stringify(b),before);}
+ const f=createWeaponVfxFrame(false,2,{});drawWeaponBeam(context(),{...b,focusPrimary:false},f);assert.equal(f.impactsUsed,0);
+ const missed=createWeaponVfxFrame(false,2,{});drawWeaponBeam(context(),{...b,focusHit:false},missed);assert.equal(missed.impactsUsed,0);
+});
+test('focused beams never decorate incidental bystanders as damaged impacts',()=>{
+ reset();const b={...beam(),focused:true,focusPrimary:true,focusHit:true};const f=createWeaponVfxFrame(false,2,{});
+ drawBeamHitAccents(context(),{count:1,items:[b]},{count:1,items:[{x:100,y:16,radius:16,flash:1}]},null,f);assert.equal(f.impactsUsed,0);
+});
+
+test('merged short-wide and long-narrow components keep their real visible union',()=>{
+ reset();const b={...beam(),len:760,width:120,segments:[{length:760,width:12},{length:180,width:120}]},before=JSON.stringify(b),ctx=context(),f=createWeaponVfxFrame(false,2,{projectileGlow:false});
+ drawWeaponBeam(ctx,b,f);const far=ctx.ops.filter(o=>o.name==='lineTo'&&o.args[0]>300);assert.ok(far.length);assert.ok(far.every(o=>Math.abs(o.args[1])<8));assert.equal(JSON.stringify(b),before);
+ const impacts=createWeaponVfxFrame(false,2,{});drawBeamHitAccents(context(),{count:1,items:[b]},{count:1,items:[{x:600,y:56,radius:16,flash:1}]},null,impacts);assert.equal(impacts.impactsUsed,0,'phantom wide-far target is not decorated as a hit');
+});
+
+
+test('legendary lotus VFX has a bounded actual-impact ring and reduced-motion stable petals', async()=>{
+ const {recordLotusBloom,drawLotusBlooms,resetLotusBlooms,BONUS_VFX}=await import('../src/game/weapon-vfx.js');
+ reset();resetLotusBlooms();assert.equal(BONUS_VFX.lotus_gun.shape,'regalia');
+ for(let i=0;i<100;i++)recordLotusBloom(i,0,90,2);
+ for(const low of [false,true]){
+  const f=createWeaponVfxFrame(low,2.1),ctx=context();drawLotusBlooms(ctx,f);
+  assert.equal(ctx.ops.filter(o=>o.name==='ellipse').length,f.petalsUsed,'outer and inner petals both consume budget');
+  for(let i=0;i<200;i++)drawWeaponProjectile(ctx,shot('lotus_gun'),f);
+  assert.ok(f.petalsUsed<=(low?10:32));assert.ok(f.impactsUsed<=(low?3:8));
+  assert.equal(ctx.ops.filter(o=>o.name==='ellipse').length-200,f.petalsUsed);
+  assert.equal(ctx.globalAlpha,.71);assert.ok(ctx.ops.every(o=>o.composite==='source-over'));
+ }
+ media.matches=true;const f=createWeaponVfxFrame(false,2.1);assert.equal(f.motion,false);
+ const ctx=context();drawWeaponProjectile(ctx,shot('lotus_gun'),f);
+ assert.ok(!ctx.ops.some(o=>o.name==='moveTo'&&o.args[0]===-44),'no moving projectile trail');
+ resetLotusBlooms();const empty=context();drawLotusBlooms(empty,createWeaponVfxFrame(false,2.1));assert.equal(empty.ops.length,0);
+});
+
+test('adaptive minimal tier lowers optional budgets without hiding projectile or beam cores',()=>{
+ reset();const mobile=createWeaponVfxFrame(true,2,{tier:1}),minimal=createWeaponVfxFrame(true,2,{tier:2});
+ assert.ok(minimal.detailLeft<mobile.detailLeft);assert.ok(minimal.petalLeft<mobile.petalLeft);assert.ok(minimal.impactLeft<mobile.impactLeft);
+ const sh=shot('lotus_gun'),b=beam('cannon'),before=JSON.stringify({sh,b});minimal.detailLeft=0;minimal.petalLeft=0;
+ const ctx=context();drawWeaponProjectile(ctx,sh,minimal);drawWeaponBeam(ctx,b,minimal);
+ assert.ok(ctx.ops.some(op=>op.name==='ellipse'));assert.ok(ctx.ops.some(op=>op.name==='lineTo'&&op.args[0]===b.len));assert.equal(JSON.stringify({sh,b}),before);
 });

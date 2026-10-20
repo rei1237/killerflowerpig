@@ -1,4 +1,7 @@
+import { hasRunReward, recordRunReward } from './run-rewards.js';
+import { purchasePetUpgrade } from './pet-upgrades.js';
 import { purchaseAccessory, equipAccessory } from './accessories.js';
+import { purchaseCosmetic, equipCosmetic } from './cosmetics.js';
 import { awardCharacterXP } from './character-progression.js';
 import { SHOP } from '../data/shop.js';
 import { createGuestAdapter, itemLevel, purchase, validateProgress, openRelicChest, purchaseRelic } from './progression-store.js';
@@ -40,8 +43,9 @@ export function equipPet(id) {
 export function earnCoins(amount, eventId) {
     if (!Number.isSafeInteger(amount) || amount < 0 || amount > 1_000_000) return false;
     if (eventId !== undefined && (typeof eventId !== 'string' || !eventId.length || eventId.length > 160)) return false;
-    if (eventId && save.receipts.includes(eventId)) return true;
+    if (eventId && hasRunReward(save,eventId)) return true;
     return commit({ ...save, gold: Math.min(1_000_000_000, save.gold + amount), revision: save.revision + 1,
+        runRewards: eventId ? recordRunReward(save,eventId) : save.runRewards,
         receipts: eventId ? [...save.receipts, eventId].slice(-128) : save.receipts });
 }
 // Non-repeatable chest/result rewards can wait in memory while disk storage is blocked.
@@ -107,4 +111,70 @@ export function buyAccessory(itemId, expectedRevision = save.revision, requestId
 export function setAccessory(itemId, expectedRevision = save.revision) {
     if (expectedRevision !== save.revision) { lastSaveError = 'REVISION_CONFLICT'; return { ok: false, code: lastSaveError }; }
     return finishAccessoryAction(equipAccessory(save, itemId));
+}
+
+// Notify runtime subscribers only after an outfit/ornament change is durable.
+// This keeps failed writes and repeated requests from applying temporary bonuses.
+const cosmeticChangeListeners = new Set();
+export function onCosmeticsChanged(listener) {
+    cosmeticChangeListeners.add(listener);
+    return () => cosmeticChangeListeners.delete(listener);
+}
+function finishCosmeticAction(result) {
+    if (!result.ok) { lastSaveError = result.code; return { ok: false, code: result.code }; }
+    if (!result.duplicate && !commit(result.state)) {
+        const code = lastSaveError;
+        if (code === 'REVISION_CONFLICT') {
+            const fresh = adapter.refresh();
+            if (fresh.ok) { Object.assign(save, fresh.state); notifyCosmeticsChanged(); }
+        }
+        return { ok: false, code };
+    }
+    lastSaveError = null;
+    if (!result.duplicate) notifyCosmeticsChanged();
+    return { ok: true, duplicate: !!result.duplicate };
+}
+function notifyCosmeticsChanged() {
+    for (const listener of cosmeticChangeListeners) {
+        // A view/runtime listener cannot turn a completed purchase into a false
+        // transaction failure. The player also reconciles on its next update.
+        try { listener(save); } catch (error) { console.error('Cosmetic refresh failed', error); }
+    }
+}
+export function buyCosmetic(itemId, expectedRevision = save.revision, requestId = `cosmetic:${itemId}`) {
+    return finishCosmeticAction(purchaseCosmetic(save, { itemId, expectedRevision, requestId }));
+}
+export function setCosmetic(slot, itemId, expectedRevision = save.revision, requestId = `cosmetic-equip:${slot}:${itemId}:${expectedRevision}`) {
+    return finishCosmeticAction(equipCosmetic(save, { slot, itemId, expectedRevision, requestId }));
+}
+
+export function buyPetUpgrade(trackId, expectedLevel, expectedRevision = save.revision) {
+    const result = purchasePetUpgrade(save, { trackId, expectedLevel, expectedRevision, requestId: `pet-training:${trackId}:${expectedLevel}` });
+    if (!result.ok) { lastSaveError = result.code; return { ok: false, code: result.code }; }
+    if (!result.duplicate && !commit(result.state)) {
+        const code = lastSaveError;
+        if (code === 'REVISION_CONFLICT') { const fresh = adapter.refresh(); if (fresh.ok) Object.assign(save, fresh.state); }
+        return { ok: false, code };
+    }
+    lastSaveError = null;
+    return { ok: true, duplicate: !!result.duplicate };
+}
+
+export function pinRewardRun(runId) {
+    if (typeof runId === 'string' && runId.length > 0 && runId.length <= 96) save.pinnedRewardRunId = runId;
+}
+// Bounty, settlement receipt, unlocks, kills and titles commit as one durable record.
+export function settleRunStage(rec) {
+    if (!rec || typeof rec.runId !== 'string' || !rec.runId.length || rec.runId.length > 96 || !Number.isSafeInteger(rec.kills) || rec.kills < 0) return {ok:false,code:'INVALID_REQUEST'};
+    const clearId = `stage-clear:${rec.runId}:${rec.stage}`;
+    const bountyId = `boss-bounty:${rec.runId}:${rec.stage}`;
+    if (hasRunReward(save,clearId)) return { ok:true,duplicate:true,earned:0,titles:[] };
+    const earned = hasRunReward(save,bountyId) ? 0 : rec.bounty;
+    if (!Number.isSafeInteger(earned) || earned < 0 || earned > 1000000 || !Number.isInteger(rec.stage) || rec.stage < 1 || rec.stage > 10) return {ok:false,code:'INVALID_REQUEST'};
+    const titleResult = recordSettlement(save,rec);
+    const next = {...titleResult.state, gold:Math.min(1e9,save.gold+earned), kills:save.kills+Math.max(0,rec.kills), maxStage:Math.max(save.maxStage,Math.min(10,rec.stage+1)),maxClearedStage:Math.max(save.maxClearedStage||0,rec.stage),revision:save.revision+1};
+    next.runRewards=recordRunReward(next,bountyId);next.runRewards=recordRunReward(next,clearId);
+    next.receipts=[...save.receipts,bountyId,clearId].slice(-128);
+    if (!commit(next)) { const code=lastSaveError; if(code==='REVISION_CONFLICT'){const fresh=adapter.refresh();if(fresh.ok)Object.assign(save,fresh.state);} return {ok:false,code}; }
+    return {ok:true,earned,titles:titleResult.earned};
 }

@@ -63,6 +63,7 @@ class Element extends Events {
     matches(selector) {
         return selector.split(',').some(s => {
             s = s.trim();
+            if (s.includes(':not(:disabled)')) { if (this.disabled) return false; s = s.replace(':not(:disabled)', ''); }
             const attr = s.match(/\[([^=\]]+)(?:=["']?([^"'\]]+)["']?)?\]/);
             if (attr) {
                 const value = attr[1].startsWith('data-') ? this.dataset[attr[1].slice(5)] : this.attributes[attr[1]];
@@ -82,6 +83,8 @@ class Element extends Events {
         return this.children.filter(n => n instanceof Element).flatMap(n => [...(n.matches(selector) ? [n] : []), ...n.querySelectorAll(selector)]);
     }
     querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
+    contains(node) { for (let n = node; n; n = n.parentNode) if (n === this) return true; return false; }
+    getClientRects() { for (let n = this; n; n = n.parentNode) if (n.hidden) return []; return [{}]; }
     getContext() { return context; }
 }
 
@@ -149,9 +152,9 @@ function takeChest() { node('btn-chest').click(); advanceTime(901); node('btn-ch
 test.afterEach(() => { if (isTutorialOpen()) closeTutorial(); if (isPracticeOpen()) closePractice(); showTitle(); timers.clear(); clearWorld(); });
 
 test('shot phase uses fixed-size cells and an invariant foot anchor', () => {
-    assert.deepEqual([shotFrame(-1), shotFrame(Infinity), shotFrame(0), shotFrame(.05), shotFrame(.115), shotFrame(.2)], [0, 0, 1, 2, 3, 0]);
+    assert.deepEqual([shotFrame(-1), shotFrame(Infinity), shotFrame(0), shotFrame(.05), shotFrame(.075), shotFrame(.12), shotFrame(.18), shotFrame(.23), shotFrame(.28), shotFrame(.3)], [0, 0, 1, 2, 3, 4, 5, 6, 7, 0]);
     const base = firingDrawRect(0);
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 8; i++) {
         const rect = firingDrawRect(i);
         assert.equal(rect[0], i * FIRING_SPRITE.cellWidth);
         assert.deepEqual(rect.slice(1), base.slice(1));
@@ -162,7 +165,7 @@ test('shot phase uses fixed-size cells and an invariant foot anchor', () => {
 });
 
 test('firing pose starts on an actual shotgun shot and on each actual pistol burst projectile', () => {
-    freshRun(); images.playerFire = { width: 1536, height: 256 };
+    freshRun(); images.playerFire = { width: 3072, height: 256 };
     const p = G.player; const w = G.weapons[0];
     updateWeapons(.01); assert.equal(p.shotAt, -Infinity); assert.equal(G.shots.count, 0);
     G.clock = 10; w.cd = 0; updateWeapons(.016);
@@ -177,11 +180,11 @@ test('firing pose starts on an actual shotgun shot and on each actual pistol bur
 test('combat draws the animated firing atlas with no per-frame scaling or static UI portrait', () => {
     freshRun(); const drawCalls = []; const transforms = [];
     const ctx = { globalAlpha: 1, save: noop, restore: noop, translate: (...v) => transforms.push(v), scale: noop, drawImage: (...v) => drawCalls.push(v) };
-    const fire = images.playerFire = { width: 1536, height: 256 };
+    const fire = images.playerFire = { width: 3072, height: 256 };
     G.player.iframes = G.player.hurtT = 0; G.player.shotAt = 4; G.player.vx = 0; G.player.vy = 0;
     const x = G.player.x, y = G.player.y;
-    for (const time of [4, 4.06, 4.15, 4.3]) { G.clock = time; drawPlayer(ctx); }
-    assert.deepEqual(drawCalls.map(c => c[1]), [384, 768, 1152, 0]);
+    for (const time of [4, 4.05, 4.075, 4.12, 4.18, 4.23, 4.28, 4.31]) { G.clock = time; drawPlayer(ctx); }
+    assert.deepEqual(drawCalls.map(c => c[1]), [384, 768, 1152, 1536, 1920, 2304, 2688, 0]);
     for (const call of drawCalls) { assert.equal(call[0], fire); assert.deepEqual(call.slice(2), drawCalls[0].slice(2)); }
     assert.equal(G.player.x, x); assert.equal(G.player.y, y);
     assert.ok(transforms.every(([tx]) => tx === x));
@@ -307,7 +310,7 @@ test('fusion preview pauses safely and consumes two inputs only after explicit c
  freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>{w.level=8;w.evolved=true;});
  const before=JSON.stringify(G.weapons);togglePause();showFusion();
  assert.equal(topModalId(),'fusion');assert.equal(G.paused,true);assert.equal(JSON.stringify(G.weapons),before);
- assert.equal(node('fusion-recipes').children.length,13);
+ assert.equal(node('fusion-recipes').children.length,14);
  const button=node('fusion-recipes').children[0].querySelector('button');assert.equal(button.disabled,false);
  button.click();assert.deepEqual(G.weapons.map(w=>w.id),['lotus_bloom']);assert.equal(G.weapons[0].level,1);
  button.click();assert.equal(G.weapons.length,1);assert.match(node('fusion-status').textContent,/조합 완료/);
@@ -393,10 +396,10 @@ test('premium accessory shop shows six actual items with ownership, locks and re
  showTitle();save.maxClearedStage=9;earnCoins(10000,'accessory-ui-test');node('btn-shop').click();
  assert.equal(node('accessory-list').children.length,6);
  const card=node('accessory-list').children[0],button=card.querySelector('button'),gold=save.gold;
- assert.match(card.textContent,/90/);assert.match(card.textContent,/최대 HP \+40/);assert.match(card.textContent,/미보유/);
- button.click();button.click();assert.equal(save.gold,gold-90);assert.equal(save.equippedAccessory,'moon_guard');assert.match(node('accessory-equipped').textContent,/달빛 수호 망토/);
- node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,null);assert.equal(save.gold,gold-90);
- node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,'moon_guard');assert.equal(save.gold,gold-90);
+ assert.match(card.textContent,/540/);assert.match(card.textContent,/최대 HP \+40/);assert.match(card.textContent,/미보유/);
+ button.click();button.click();assert.equal(save.gold,gold-540);assert.equal(save.equippedAccessory,'moon_guard');assert.match(node('accessory-equipped').textContent,/달빛 수호 망토/);
+ node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,null);assert.equal(save.gold,gold-540);
+ node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,'moon_guard');assert.equal(save.gold,gold-540);
  closeModal('shop');save.maxClearedStage=0;node('btn-shop').click();assert.equal(node('accessory-list').children[1].querySelector('button').disabled,true);
 });
 
@@ -485,37 +488,26 @@ test('loadout evolution helper describes fused maxima and CSS retains mobile rea
  assert.match(css,/min-height:44px/);assert.match(css,/overflow:auto/);assert.match(css,/@media\(max-width:600px\)/);assert.match(css,/focus-visible/);assert.match(css,/\[hidden\]/);
 });
 
-test('death immediately tombstones checkpoint; retry starts stage one fresh while permanent shop progress survives',async()=>{
- const {loadRun,continueRun,onPlayerDeath,startStage}=await import('../src/game/game.js');
- const {save}=await import('../src/core/save.js');
- freshRun();const checkpoint=loadRun(),oldId=G.runId;assert.equal(continueRun(checkpoint),true);
- G.weapons=[Object.assign(createWeapon('lotus_bloom',0),{level:8})];G.passives={heart:5};G.stage=5;G.loadoutExchangesUsed=1;
- const permanent=JSON.stringify({gold:save.gold,upgrades:save.upgrades,accessories:save.accessories,relics:save.relics});
- onPlayerDeath();assert.equal(loadRun(),null);assert.equal(continueRun(checkpoint),false);assert.equal(G.mode,'dead');assert.equal(startStage(6),false);
- showTitle();node('btn-retry').click();assert.equal(G.stage,1);assert.notEqual(G.runId,oldId);assert.equal(G.level,1);assert.deepEqual(G.passives,{});
- assert.equal(G.weapons.length,1);assert.equal(G.weapons[0].level,1);assert.equal(G.weapons[0].evolved,false);assert.equal(G.loadoutExchangesUsed,0);
- assert.equal(JSON.stringify({gold:save.gold,upgrades:save.upgrades,accessories:save.accessories,relics:save.relics}),permanent);
- assert.equal(continueRun(checkpoint),false,'dead build cannot be loaded after a new run');assert.match(html,/id="btn-retry"[^>]*>[^<]*STAGE 1/);
+test('death keeps stage-entry build and retry restores stage5 without rolling back purchases',async()=>{
+ const {loadRun,onPlayerDeath,startStage}=await import('../src/game/game.js');const {save}=await import('../src/core/save.js');
+ freshRun();G.level=14;G.weapons=[Object.assign(createWeapon('lotus_bloom',0),{level:3})];G.passives={heart:2};startStage(5);const checkpoint=loadRun(),oldId=G.runId;
+ G.weapons[0].level=8;G.passives.heart=5;const permanent=JSON.stringify(save);
+ onPlayerDeath();assert.equal(loadRun().stage,5);assert.equal(G.mode,'dead');assert.equal(startStage(6),false);showGameOver();node('btn-retry').click();
+ assert.equal(G.stage,5);assert.equal(G.runId,oldId);assert.equal(G.level,checkpoint.level);assert.deepEqual(G.passives,{heart:2});assert.equal(G.weapons[0].level,3);assert.equal(G.player.iframes,0);assert.equal(G.player.hp,G.player.maxHp);
+ const after=JSON.parse(permanent);assert.equal(save.gold,after.gold);assert.deepEqual(save.upgrades,after.upgrades);assert.match(html,/해당 스테이지 처음부터 재도전/);
 });
-test('death storage failure retains in-memory invalidation and tombstone protection with warning',async()=>{
- const {loadRun,continueRun,onPlayerDeath}=await import('../src/game/game.js');freshRun();const checkpoint=loadRun();
- const remove=localStorage.removeItem;let warnings=0;const handler=G.events.runSaveError;G.events.runSaveError=()=>warnings++;
- localStorage.removeItem=()=>{throw new Error('storage blocked');};
- try{onPlayerDeath();assert.equal(loadRun(),null);assert.equal(continueRun(checkpoint),false);assert.equal(warnings,1);assert.ok(JSON.parse(localStorage.getItem('kfp.dead-runs.v1')).includes(checkpoint.runId));}
- finally{localStorage.removeItem=remove;G.events.runSaveError=handler;}
+test('death checkpoint write failure retains in-memory retry and warns',async()=>{
+ const {loadRun,onPlayerDeath,retryStage}=await import('../src/game/game.js');freshRun();const checkpoint=loadRun();
+ const write=localStorage.setItem;let warnings=0;const handler=G.events.runSaveError;G.events.runSaveError=()=>warnings++;
+ localStorage.setItem=()=>{throw new Error('storage blocked');};
+ try{onPlayerDeath();assert.equal(loadRun().stage,checkpoint.stage);assert.equal(warnings,1);assert.equal(retryStage(),true);assert.equal(G.player.dead,false);}
+ finally{localStorage.setItem=write;G.events.runSaveError=handler;}
 });
 test('fusion UI requires both evolved inputs and displays the actual final tech requirement',()=>{
  freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>w.level=8);showFusion();
  assert.equal(node('fusion-recipes').children[0].querySelector('button').disabled,true);assert.match(node('fusion-summary').textContent,/진화 2개 → 최종.*진화 3개 → 절대/);
  assert.match(node('fusion-recipes').children[0].textContent,/진화 필요/);const before=JSON.stringify(G.weapons);
  node('fusion-recipes').children[0].querySelector('button').click();assert.equal(JSON.stringify(G.weapons),before);
-});
-test('when all death storage operations fail, current session still blocks old continuation and warns',async()=>{
- const {loadRun,continueRun,onPlayerDeath}=await import('../src/game/game.js');freshRun();const checkpoint=loadRun();
- const put=localStorage.setItem,remove=localStorage.removeItem,handler=G.events.runSaveError;let warnings=0;
- G.events.runSaveError=()=>warnings++;localStorage.setItem=localStorage.removeItem=()=>{throw new Error('storage unavailable');};
- try{onPlayerDeath();assert.equal(loadRun(),null);assert.equal(continueRun(checkpoint),false);assert.equal(warnings,1);}
- finally{localStorage.setItem=put;localStorage.removeItem=remove;G.events.runSaveError=handler;}
 });
 test('absolute recipe UI consumes three evolved ingredients and reveals three-to-one with two freed slots',()=>{
  freshRun();G.weapons=['cannon','thorns','molotov'].map((id,i)=>Object.assign(createWeapon(id,i),{level:8,evolved:true}));showFusion();
@@ -532,7 +524,7 @@ test('new and restarted runs apply the modest mob HP increase once without raisi
     const { onPlayerDeath, retryStage } = await import('../src/game/game.js');
     freshRun();
     const playerMax = G.player.maxHp;
-    const first = spawnEnemy('shambler', 400, 0);
+    const first = spawnEnemy('shambler', 400, 0); // 10 × 1.62 × 0.95(초반 완화) = 15.39 (희소 배율 되돌림)
     assert.ok(Math.abs(first.hp - 15.39) < 1e-9);
     onPlayerDeath(); retryStage();
     const second = spawnEnemy('shambler', 400, 0);
@@ -563,4 +555,139 @@ test('main menu bestiary opens its real modal and Escape restores launcher focus
  window.dispatch('keydown',{code:'Escape',key:'Escape',target:document.activeElement});
  assert.equal(isBestiaryOpen(),false);assert.equal(topModalId(),null);assert.equal(document.activeElement,launcher);
  launcher.click();showTitle();assert.equal(isBestiaryOpen(),false);
+});
+
+test('new bloom and butcher runs receive two distinct Lv1 weapon slots once',async()=>{
+ const {TECHS}=await import('../src/data/techs.js');
+ const {resonanceCount,resonanceTier}=await import('../src/game/tech.js');
+ const {loadRun,startStage}=await import('../src/game/game.js');
+ const {applyChoice}=await import('../src/game/progression.js');
+ const inventory=()=>G.weapons.map(w=>[w.id,w.level,w.evolved,w.slot]);
+ for(const id of Object.keys(TECHS)){
+  newRun(1,id);
+  assert.deepEqual(inventory(),id==='bloom'?[['thorns',1,false,0],['cannon',1,false,1]]:id==='butcher'?[['sword',1,false,0],['saw',1,false,1]]:[[TECHS[id].start.weapon,1,false,0]],id);
+  assert.deepEqual(G.passives,{[TECHS[id].start.passive]:1});
+  assert.equal(resonanceCount(),['bloom','butcher'].includes(id)?3:2);assert.equal(resonanceTier(),1);
+ }
+ for(const id of [null,'missing-tech']){
+  newRun(1,id);assert.equal(G.tech,null);assert.deepEqual(inventory(),[['shotgun',1,false,0]]);assert.deepEqual(G.passives,{});
+ }
+ newRun(1,'bloom');const firstRun=G.runId;
+ applyChoice({kind:'weapon',id:'cannon',level:2});startStage(2);startStage(3);
+ assert.deepEqual(inventory(),[['thorns',1,false,0],['cannon',2,false,1]],'stage transitions neither grant duplicates nor reset levels');
+ assert.deepEqual(loadRun().weapons.map(w=>[w.id,w.level]),[['thorns',1],['cannon',2]]);
+ newRun(1,'bloom');assert.notEqual(G.runId,firstRun);assert.deepEqual(inventory(),[['thorns',1,false,0],['cannon',1,false,1]]);
+ newRun(5,'bloom');assert.deepEqual(inventory(),[['thorns',1,false,0],['cannon',1,false,1]],'advanced stage starts do not grant levels or evolution');
+ assert.equal(G.pendingLevelUps,20);assert.deepEqual(G.passives,{regen:1});
+});
+
+test('continuing old, dual-starter and fused bloom checkpoints never retroactively grants starter equipment',async()=>{
+ const {loadRun,continueRun}=await import('../src/game/game.js');
+ const {snapshotBuild}=await import('../src/game/progression.js');
+ newRun(1,'bloom');const current=loadRun();
+ for(let i=0;i<3;i++){assert.equal(continueRun(current),true);assert.deepEqual(snapshotBuild().weapons,current.weapons);}
+ const old={...current,weapons:[{id:'thorns',level:4,evolved:false}],passives:{regen:2}};
+ assert.equal(continueRun(old),true);assert.deepEqual(snapshotBuild().weapons,old.weapons);assert.deepEqual(G.passives,{regen:2});
+ const evolved={...current,weapons:[{id:'thorns',level:8,evolved:true},{id:'cannon',level:8,evolved:true}],passives:{regen:2,pollen:1}};
+ assert.equal(continueRun(evolved),true);assert.deepEqual(snapshotBuild().weapons,evolved.weapons);assert.deepEqual(G.passives,evolved.passives);
+ const fused={...current,weapons:[{id:'lotus_bloom',level:3,evolved:false}],consumedItems:['thorns','cannon']};
+ assert.equal(continueRun(fused),true);assert.deepEqual(snapshotBuild().weapons,fused.weapons);assert.deepEqual([...G.consumedItems],fused.consumedItems);
+});
+
+test('bloom selection shows both starters and correct slot/resonance counts; cancel and double-confirm cannot grant extras',async()=>{
+ const {openTechSelect}=await import('../src/ui/tech-select.js');
+ const {snapshotBuild}=await import('../src/game/progression.js');
+ freshRun();const before=snapshotBuild();let starts=0;
+ const pick=(id,difficulty)=>{starts++;newRun(1,id,difficulty);};
+ openTechSelect(pick);
+ const bloom=node('tech-list').querySelector('[data-tech="bloom"]');bloom.click();
+ assert.equal(bloom.querySelector('.tech-arts').children.length,3);
+ assert.ok(node('tech-detail').textContent.includes(`${WEAPONS.thorns.name} Lv1 + ${WEAPONS.cannon.name} Lv1 + ${PASSIVES.regen.name} Lv1`));
+ assert.match(node('tech-detail').textContent,/무기 2\/6칸 · 공명 3\/6 · I단계/);
+ node('btn-tech-back').click();assert.equal(starts,0);assert.deepEqual(snapshotBuild(),before);
+ openTechSelect(pick);
+ node('tech-list').querySelector('[data-tech="gunline"]').click();
+ assert.match(node('tech-detail').textContent,/무기 1\/6칸 · 공명 2\/6/);
+ node('tech-list').querySelector('[data-tech="bloom"]').click();
+ node('btn-tech-go').click();const runId=G.runId;node('btn-tech-go').click();
+ assert.equal(starts,1);assert.equal(G.runId,runId);assert.deepEqual(G.weapons.map(w=>[w.id,w.level]),[['thorns',1],['cannon',1]]);
+ openTechSelect(pick);node('btn-tech-back').click();assert.equal(starts,1);assert.equal(G.weapons.length,2);
+});
+
+test('pet training shop shows ownership, current-next values, exact price and capped state',async()=>{
+ const {renderPetUpgradeShop}=await import('../src/ui/pet-upgrade-shop.js');const {save}=await import('../src/core/save.js');
+ const prior={inventory:save.inventory,petUpgrades:save.petUpgrades,gold:save.gold};const list=document.createElement('div');
+ save.inventory=[];save.petUpgrades={attack:0,heal:0,support:0};save.gold=2000;renderPetUpgradeShop(list,()=>{});
+ assert.equal(list.children.length,3);assert.ok(list.querySelectorAll('button').every(b=>b.disabled));assert.match(list.querySelector('button').textContent,/보유 필요/);
+ list.replaceChildren();save.inventory=['pet_yeongnyang'];renderPetUpgradeShop(list,()=>{});assert.match(list.children[0].querySelector('.s-desc').textContent,/14 → 16/);assert.match(list.children[0].querySelector('button').textContent,/180/);
+ list.replaceChildren();save.petUpgrades={attack:5,heal:3,support:3};renderPetUpgradeShop(list,()=>{});assert.ok(list.querySelectorAll('button').every(b=>b.disabled));assert.match(list.children[1].querySelector('.s-desc').textContent,/회복 HP 6/);Object.assign(save,prior);
+});
+
+test('retry cancels a stale chest timer and repeated clear settlement cannot duplicate permanent gold',async()=>{
+ const {onPlayerDeath,startStage,loadRun}=await import('../src/game/game.js');const {save}=await import('../src/core/save.js');
+ freshRun();startStage(5);showChest('boss');node('btn-chest').click();onPlayerDeath();showGameOver();node('btn-retry').click();const before=G.weapons.map(w=>w.level);advanceTime(2000);assert.deepEqual(G.weapons.map(w=>w.level),before);assert.equal(topModalId(),null);assert.equal(G.stage,5);
+ const gold=save.gold;showStageClear();const credited=save.gold;assert.ok(credited>gold);assert.equal(loadRun().stage,6);showStageClear();assert.equal(save.gold,credited);
+ G.settlement=null;showStageClear();assert.equal(save.gold,credited,'durable run-stage receipt blocks repeated settlement even after in-memory guard loss');
+});
+
+test('boss bundle and clear fallback share a receipt so collection is never paid twice',async()=>{
+ const {startStage}=await import('../src/game/game.js');const {dropCoin,updatePickups}=await import('../src/game/pickups.js');const {bossCoinReceipt,bossCoinValue}=await import('../src/game/coin-drops.js');const {save}=await import('../src/core/save.js');freshRun();startStage(5);
+ const before=save.gold,amount=Math.round(bossCoinValue(5)*G.player.stats.greed);dropCoin(0,-14,bossCoinValue(5),bossCoinReceipt(G.runId,5));updatePickups(.01);assert.equal(save.gold,before+amount);showStageClear();assert.equal(save.gold,before+amount);showStageClear();assert.equal(save.gold,before+amount);
+});
+test('clear settlement atomically saves bounty, receipt, unlock and kills before checkpoint advancement',async()=>{
+ const {startStage,loadRun}=await import('../src/game/game.js');const {save}=await import('../src/core/save.js');const {hasRunReward}=await import('../src/core/run-rewards.js');freshRun();startStage(5);G.kills+=7;
+ const before={gold:save.gold,kills:save.kills,max:save.maxClearedStage},id=`stage-clear:${G.runId}:5`,put=localStorage.setItem;let writes=0;
+ localStorage.setItem=(key,value)=>{if(key==='kfp.progress.v5.guest'){writes++;throw Error('metadata quota');}return put(key,value);};
+ try{showStageClear();assert.equal(writes,1);assert.equal(save.gold,before.gold);assert.equal(save.kills,before.kills);assert.equal(save.maxClearedStage,before.max);assert.equal(hasRunReward(save,id),false);assert.equal(loadRun().stage,5);assert.equal(G.settlement.pending,true);assert.match(node('btn-next').textContent,/저장/);}finally{localStorage.setItem=put;}
+ node('btn-next').click();assert.equal(G.settlement.pending,undefined);assert.equal(hasRunReward(save,id),true);assert.equal(save.kills,before.kills+7);assert.ok(save.maxClearedStage>=5);assert.equal(loadRun().stage,6);
+});
+
+test('higher catalog prices appear consistently in shop UI with matching affordability', async () => {
+ const {save}=await import('../src/core/save.js');
+ const {defaultProgress}=await import('../src/core/progression-store.js');
+ const {SHOP}=await import('../src/data/shop.js');
+ const {RELICS,RELIC_CHEST}=await import('../src/data/relics.js');
+ const prior=structuredClone(save);
+ try {
+  for(const gold of [0,10000]) {
+   Object.assign(save,defaultProgress(),{gold,maxClearedStage:10});
+   showTitle();node('btn-shop').click();
+   SHOP.forEach((item,i)=>{const button=node('shop-list').children[i].querySelector('button');assert.equal(button.textContent,`구매 ● ${item.cost[0]}`);assert.equal(button.disabled,gold<item.cost[0]);});
+   RELICS.forEach((item,i)=>{const button=node('relic-list').children[i].querySelector('button');assert.equal(button.textContent,`확정 구매 · ${item.price} 코인`);assert.equal(button.disabled,gold<item.price);});
+   assert.equal(node('btn-coin-cache').textContent,`상자 1개 열기 · ${RELIC_CHEST.cost} 코인`);
+   assert.equal(node('btn-coin-cache').disabled,gold<RELIC_CHEST.cost);
+   closeModal('shop');
+  }
+ } finally { Object.assign(save,prior); }
+});
+
+
+test('modal Tab cycles both directions and restores the original trigger', () => {
+    freshRun(); const trigger = node('btn-pause'); trigger.focus(); openModal('settings');
+    const eligible = node('settings').querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, a[href], [tabindex="0"]').filter(n=>n.getClientRects().length);
+    eligible.at(-1).focus();
+    assert.equal(window.dispatch('keydown',{key:'Tab',target:document.activeElement}).defaultPrevented,true);
+    assert.equal(document.activeElement,eligible[0]);
+    window.dispatch('keydown',{key:'Tab',shiftKey:true,target:document.activeElement});
+    assert.equal(document.activeElement,eligible.at(-1));
+    closeModal('settings'); assert.equal(document.activeElement,trigger);
+});
+test('opening a modal clears held movement and ignores new movement keys while paused', () => {
+    freshRun(); input.enabled=true;
+    window.dispatch('keydown',{code:'KeyD',target:node('game')}); assert.equal(input.move.x,1);
+    openModal('pause'); assert.deepEqual(input.move,{x:0,y:0});
+    window.dispatch('keydown',{code:'KeyW',target:node('btn-resume')});
+    closeModal('pause'); assert.deepEqual(input.move,{x:0,y:0});
+    window.dispatch('keyup',{code:'KeyD'}); assert.deepEqual(input.move,{x:0,y:0});
+});
+
+
+test('story stops ticking in a hidden page and resumes without catching up unseen text', () => {
+    freshRun(); playStory('기록','오래 읽는 작전 기록입니다. 충분히 천천히 읽어 보세요.',()=>{});
+    advanceTime(130); const before=node('story-text').children[0].data;
+    document.hidden=true; document.dispatch('visibilitychange');
+    advanceTime(60000); assert.equal(node('story-text').children[0].data,before);
+    document.hidden=false; document.dispatch('visibilitychange');
+    advanceTime(1); assert.equal(node('story-text').children[0].data,before);
+    advanceTime(100); assert.ok(node('story-text').children[0].data.length>before.length);
 });

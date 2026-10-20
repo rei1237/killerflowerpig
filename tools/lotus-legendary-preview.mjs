@@ -1,0 +1,15 @@
+// Actual native renderer, controlled combat fixture; not a browser screenshot.
+import fs from 'node:fs';import {createRequire} from 'node:module';const require=createRequire(import.meta.url);const {createCanvas,Image}=require('@napi-rs/canvas');
+const media={matches:false};globalThis.Image=Image;globalThis.document={createElement:()=>createCanvas(1,1)};globalThis.window={matchMedia:()=>media};globalThis.localStorage={getItem:()=>null,setItem:()=>{}};
+const {loadAssets,requestCharacterSheet}=await import('../src/core/assets.js');await loadAssets();await requestCharacterSheet("playerLotusFire");
+const {G,clearWorld,configureCaps}=await import('../src/game/state.js');const {createPlayer,drawPlayer}=await import('../src/game/player.js');const {spawnEnemy,drawEnemy}=await import('../src/game/enemies.js');
+const {updateWeapons,updateShots,drawShots,resetWeaponRuntime}=await import('../src/game/weapons.js');const {save}=await import('../src/core/save.js');const {settings}=await import('../src/core/settings.js');
+settings.shake=false;settings.gore='off';Math.random=()=>.99;save.upgrades.lotus_gun=1;
+const c=createCanvas(1440,850),ctx=c.getContext('2d');ctx.fillStyle='#091423';ctx.fillRect(0,0,1440,850);ctx.fillStyle='#fff4d8';ctx.font='bold 30px sans-serif';ctx.fillText('Legendary Lotus Gun / jade seeds & royal bloom',32,48);ctx.font='16px sans-serif';ctx.fillStyle='#bacbd4';ctx.fillText('Actual native game renderer • authored equipped sprite • real hit-triggered bloom • controlled targets',32,80);
+for(const [idx,label,time,low,reduced]of [[0,'Opening volley',.57,false,false],[1,'First impact / one bounded bloom',.74,false,false],[2,'Low-quality mode',.74,true,false],[3,'Reduced motion / stable lotus silhouette',.74,false,true]]){
+ settings.quality=low?'low':'high';media.matches=reduced;configureCaps();clearWorld();resetWeaponRuntime();G.clock=0;G.stage=4;G.mode='play';G.passives={};G.weapons=[];G.camera={x:200,y:0};G.view={w:1000,h:600};createPlayer();
+ for(const [x,y]of [[210,0],[275,-12],[295,40],[360,-35]]){const e=spawnEnemy('shambler',x,y,{hpMul:10000});G.grid.insert(e);}
+ while(G.clock<time-.0001){const dt=Math.min(.005,time-G.clock);G.clock+=dt;updateWeapons(dt);updateShots(dt);}
+ const x=32+(idx%2)*704,y=116+Math.floor(idx/2)*356;ctx.fillStyle='#17283a';ctx.fillRect(x,y,672,320);ctx.save();ctx.beginPath();ctx.rect(x,y,672,320);ctx.clip();ctx.translate(x+130,y+190);ctx.scale(1.2,1.2);ctx.strokeStyle='#263e50';ctx.lineWidth=1;for(let j=-100;j<100;j+=40){ctx.beginPath();ctx.moveTo(-120,j);ctx.lineTo(450,j);ctx.stroke();}for(let j=0;j<G.enemies.count;j++)drawEnemy(ctx,G.enemies.items[j]);drawPlayer(ctx);drawShots(ctx);ctx.restore();ctx.fillStyle='#fff4d8';ctx.font='bold 18px sans-serif';ctx.fillText(label,x+16,y+29);ctx.fillStyle='#a9bdc9';ctx.font='14px sans-serif';ctx.fillText(`t=${time.toFixed(2)}s · ${G.shots.count} real projectiles · no screen flash`,x+16,y+298);
+}
+const out=process.argv[2]||'/workspace/shared/lotus-legendary-preview.png';fs.writeFileSync(out,c.toBuffer('image/png'));console.log(out);

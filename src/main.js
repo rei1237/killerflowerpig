@@ -1,10 +1,11 @@
+import { createFrameLoop } from './core/frame-loop.js';
 import { triggerPlayerShot } from './game/player.js';
 // 부트스트랩: 에셋 로딩 → UI/입력 연결 → 고정 타임스텝 루프
 import { G, configureCaps } from './game/state.js';
 import { initRender, render, resize, observeRenderCost } from './game/render.js';
 import { step, onPlayerDeath } from './game/game.js';
 import { loadAssets } from './core/assets.js';
-import { initInput, input } from './core/input.js';
+import { initInput, input, resetInput } from './core/input.js';
 import { audio } from './core/audio.js';
 import { createLoadingScreen } from './ui/loading.js';
 import {
@@ -39,7 +40,7 @@ async function boot() {
         showTitle();
         last = performance.now();
         acc = 0;
-        requestAnimationFrame(frame);
+        loop.start();
     });
 }
 
@@ -51,12 +52,6 @@ const debug = new URLSearchParams(location.search).has('debug');
 window.__kfp = { G, perf };
 
 function frame(now) {
-    if (document.hidden) {
-        last = now;
-        acc = 0;
-        requestAnimationFrame(frame);
-        return;
-    }
     let dt = (now - last) / 1000;
     last = now;
     if (dt > 0.25) dt = 0.25; // 탭 복귀 시 순간이동 방지
@@ -85,7 +80,6 @@ function frame(now) {
         perf.frames = 0; perf.t = 0; perf.stepMs = 0; perf.renderMs = 0;
     }
     if (debug) drawDebug();
-    requestAnimationFrame(frame);
 }
 
 function drawDebug() {
@@ -103,14 +97,19 @@ function drawDebug() {
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 150));
 
-// 백그라운드로 가면 자동 일시정지
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
+// Mobile app switching and Safari BFCache both cancel background frame work.
+const loop = createFrameLoop({
+    frame,
+    reset() { last = performance.now(); acc = 0; },
+    onSuspend() {
+        resetInput();
         if ((G.mode === 'play' || G.mode === 'boss') && !G.paused) togglePause();
         audio.pauseBGM();
-    } else if (G.mode !== 'idle' || audio.unlocked) {
-        audio.playBGM();
-    }
+    },
+    onResume() {
+        resize();
+        if (G.mode !== 'idle' || audio.unlocked) audio.playBGM();
+    },
 });
 
 // 안드로이드 뒤로가기 → 일시정지

@@ -17,7 +17,7 @@ export function previewFusion(recipeId) {
         const core = Object.assign(createWeapon(input.id, 0), { level: 8, evolved: true, sourceId: recipe.output, fusionLevel: 1 });
         return { id: input.id, name: WEAPONS[input.id].evolve.name, desc: WEAPONS[input.id].evolve.desc, stats: weaponStats(core) };
     });
-    stats.coreDamageMultiplier = recipe.tier === 'absolute' ? 1.65 : 1.35;
+    stats.coreDamageMultiplier = recipe.tier === 'absolute' ? 1.35 : 1.15;
     if (['lotus_bloom', 'orbit_saw'].includes(recipe.output)) {
         const orbit = orbitStats(candidate, stats);
         Object.assign(stats, { orbitDamage: orbit.dmg, orbitAmount: orbit.amount, orbitRadius: orbit.radius * orbit.area, orbitDuration: orbit.duration });

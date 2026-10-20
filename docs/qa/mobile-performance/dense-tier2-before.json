@@ -1,0 +1,56 @@
+{
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "backend": "counting Canvas shim; no browser/GPU/phone"
+  },
+  "fixture": {
+    "scenario": "dense",
+    "tier": 2,
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 3,
+    "quality": "auto/coarse",
+    "enemies": 180,
+    "friendlyShots": 150,
+    "beams": 0,
+    "hostileShots": 60,
+    "hazards": 12,
+    "gems": 300,
+    "particles": 260,
+    "decals": 72,
+    "texts": 44
+  },
+  "rasterPixels": 185469,
+  "activeCanvasCalls": {
+    "setTransform": 3,
+    "fillRect": 108,
+    "drawImage": 495,
+    "save": 135,
+    "beginPath": 330,
+    "ellipse": 225,
+    "fill": 94,
+    "clip": 12,
+    "restore": 135,
+    "setLineDash": 36,
+    "stroke": 230,
+    "moveTo": 363,
+    "lineTo": 272,
+    "closePath": 26,
+    "translate": 121,
+    "scale": 1,
+    "rotate": 100,
+    "arc": 15,
+    "strokeText": 22,
+    "fillText": 22
+  },
+  "activeCallsTotal": 2745,
+  "paused120FramesCalls": 0,
+  "jsShimMedianMs": 0.09037599999999202,
+  "jsShimP95Ms": 0.23193900000001122,
+  "gameplayUnchanged": true,
+  "canvasCreates": 4
+}

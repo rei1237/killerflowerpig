@@ -10,6 +10,7 @@ import { createWeapon, updateWeapons, updateShots } from '../src/game/weapons.js
 import { updateHazards } from '../src/game/hazards.js';
 import { BOSSES } from '../src/data/bosses.js';
 import { STAGES } from '../src/data/stages.js';
+import { clearFocus, tapFocusAt } from '../src/game/targeting.js';
 import { updateEnemies, updateEnemyShots, flushExplosions } from '../src/game/enemies.js';
 
 const planned = JSON.parse(readFileSync(new URL('../tests/fixtures/planned-boss-builds.json', import.meta.url), 'utf8'));
@@ -37,14 +38,15 @@ export function measureBossDps(scenario, seconds=30) {
 // Live boss movement/phases/summons with a fixed reachable build. The standing
 // player's HP is a test fixture so contact deaths cannot end the measurement.
 // No ordinary-wave director, pickups or new level choices are added mid-test.
-export function measureBossEncounter(scenario,{hp=BOSSES[scenario.stage].hp,distance=300,seed=0x5eed1234,maxSeconds=120}={}){
+export function measureBossEncounter(scenario,{hp=BOSSES[scenario.stage].hp,distance=300,seed=0x5eed1234,maxSeconds=120,focus=false}={}){
  const random=Math.random;Math.random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
- try{clearWorld();G.stage=scenario.stage;G.time=STAGES[scenario.stage].duration;G.clock=0;G.events={};G.damageBy={};G.mode='boss';G.lowQ=false;G.godMode=false;
+ try{clearWorld();clearFocus();G.stage=scenario.stage;G.time=STAGES[scenario.stage].duration;G.clock=0;G.events={};G.damageBy={};G.mode='boss';G.lowQ=false;G.godMode=false;
  G.view={w:1000,h:600};G.camera={x:0,y:0};G.caps={enemies:252,particles:0,texts:0,gems:500,decalScale:0};
  G.player={x:0,y:0,vx:0,vy:0,facingX:1,facingY:0,radius:10,hp:1e9,maxHp:1e9,dead:false,flip:false,iframes:0,stats:{armor:0,...scenario.stats}};
  for(const [name,data] of Object.entries(SPRITES))atlases[name]={walkH:data.walkH,frameCount:()=>8,draw(){}};
  fx.splats={dark:[{width:64,height:64}],red:[{width:64,height:64}]};
  const b=new Boss(scenario.stage);b.x=distance;b.y=0;b.maxHp=b.hp=hp;G.boss=b;
+ if(focus)tapFocusAt(b.x,b.y-b.radius);
  let first=null,phases=[],starts=[];
  const charge=b.task_charge.bind(b);b.task_charge=()=>{const task=charge(),step=task.step;task.step=(dt,s)=>{step(dt,s);if(s.phase===1&&first===null)first=G.clock;};return task;};
  const start=b.startPattern.bind(b);b.startPattern=()=>{start();starts.push([G.clock,b.lastPattern,b.phase]);};
@@ -54,7 +56,7 @@ export function measureBossEncounter(scenario,{hp=BOSSES[scenario.stage].hp,dist
   const dt=1/60;if(G.hitstop>0){G.hitstop-=dt;continue;}G.clock+=dt;G.player.iframes=Math.max(0,G.player.iframes-dt);
   updateEnemies(dt);flushExplosions();updateWeapons(dt);updateShots(dt);updateEnemyShots(dt);updateHazards(dt);b.update(dt);
  }
- return {name:scenario.name,stage:scenario.stage,hp,distance,first,death:b.alive?null:G.clock,remainingHp:b.hp,starts,phases};
+ return {name:scenario.name,stage:scenario.stage,hp,distance,focus,first,death:b.alive?null:G.clock,remainingHp:b.hp,starts,phases};
  }finally{Math.random=random;}
 }
 export function measureEarlyBossEncounter(options={}) { return measureBossEncounter(DAMAGE_SCENARIOS[0],{maxSeconds:45,...options}); }

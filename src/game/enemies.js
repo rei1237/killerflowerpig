@@ -17,6 +17,7 @@ import { recordFusionHit } from './weapon-vfx.js';
 
 let nextId = 1;
 const explosionQueue = [];
+export function clearPendingExplosions() { explosionQueue.length = 0; }
 const HIT_CHANNELS = 16;
 let sepFrame = 0;
 const roleReducedMotion = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
@@ -52,10 +53,11 @@ export function spawnEnemy(typeId, x, y, opts = {}) {
     e.anim = (Math.random() * 6) | 0;
     e.animT = 0;
     e.flash = 0;
-    e.deadT = 0;
+    e.deadT = 0; e.detonated = false;
     e.flip = x > G.player.x;
     e.slow = 0; e.slowT = 0;
     e.bleed = 0; e.bleedT = 0;
+    e.motionVX = 0; e.motionVY = 0;
     e.shootT = def.ranged ? rand(0.5, def.ranged.cooldown) : 0;
     e.attackT = 0;
     e.rolePhase = 'approach'; e.roleT = 0; e.aimX = 0; e.aimY = 0;
@@ -92,7 +94,7 @@ export function hitEnemy(e, dmg, opts = {}) {
     const critChance = (opts.crit || 0) + G.player.stats.crit;
     if (critChance > 0 && Math.random() < critChance) { amount *= (G.player.stats.critMul || 3) + (opts.critBonus || 0); crit = true; }
     e.lastCrit = crit; e.lastExecute = false;
-    if (opts.execute && !e.elite && !e.champion && e.hp - amount < e.maxHp * opts.execute) { amount = e.hp; e.lastExecute = true; }
+    if (opts.executeChance > 0 && !e.elite && !e.champion && Math.random() < Math.min(0.08, opts.executeChance)) { amount = Math.max(amount, e.hp); e.lastExecute = true; }
     // 엘리트 방벽: 체력보다 먼저 피해를 받는다 (남은 피해만 체력에 들어간다)
     const dealt = amount;
     if (e.barrier > 0) amount = absorbBarrier(e, amount);
@@ -117,6 +119,9 @@ export function hitEnemy(e, dmg, opts = {}) {
 
 function killEnemy(e, opts) {
     e.alive = false;
+    e.detonated = !!(opts.detonate && e.def.charge);
+    e.rolePhase = 'disarmed';
+    e.roleT = 0;
     e.state = 'dead';
     e.anim = 0;
     e.animT = 0;
@@ -131,7 +136,7 @@ function killEnemy(e, opts) {
     if (e.elite) { shake(6); hitstop(0.06); }
 
     dropGem(e.x, e.y, e.xp * KILL_OPPORTUNITY * (G.boss && G.boss.alive ? BOSS_FIGHT_XP_MULTIPLIER : 1));
-    const coinValue = coinDropValue(e.elite);
+    const coinValue = coinDropValue(e);
     if (coinValue) dropCoin(e.x, e.y, coinValue);
     // 보물 상자: 아주 드문 보너스 (필드에 이미 있으면 굴리지 않는다)
     let chestsOnField = 0;
@@ -158,17 +163,11 @@ function killEnemy(e, opts) {
     const def = e.def;
     if (opts.detonate && def.charge) {
         const dmg = Math.min(def.charge.damageCap, def.charge.dmg * (1 + (G.stage - 1) * 0.16));
-        explosionQueue.push({ x: e.x, y: e.y, r: def.charge.radius, dmg, suicide: true });
-        // 파편: 폭발 반경 밖으로 피한 뒤에도 사방으로 튀는 파편을 피해야 한다
-        const n = def.charge.shrapnel || 0, off = Math.random() * Math.PI * 2;
-        for (let i = 0; i < n; i++) {
-            const a = off + (i / n) * Math.PI * 2;
-            fireEnemyShot(e.x, e.y - e.radius, Math.cos(a), Math.sin(a), def.charge.shrapnelSpeed || 200, dmg * 0.35, 'bullet', 4);
-        }
+        explosionQueue.push({ x: e.x, y: e.y, r: def.charge.radius, dmg, suicide: true, revision: G.worldRevision || 0 });
     }
     const blast = championDeathBlast(e);
-    if (blast) explosionQueue.push(blast);
-    if (def.explode) explosionQueue.push({ x: e.x, y: e.y, r: def.explode.radius, dmg: def.explode.dmg * (1 + (G.stage - 1) * 0.16) });
+    if (blast) explosionQueue.push({ ...blast, revision: G.worldRevision || 0 });
+    if (def.explode) explosionQueue.push({ x: e.x, y: e.y, r: def.explode.radius, dmg: def.explode.dmg * (1 + (G.stage - 1) * 0.16), revision: G.worldRevision || 0 });
     if (def.split) {
         for (let i = 0; i < def.split.count; i++) {
             const a = (i / def.split.count) * Math.PI * 2;
@@ -185,6 +184,7 @@ const tmp = [];
 export function flushExplosions() {
     while (explosionQueue.length) {
         const ex = explosionQueue.pop();
+        if (ex.revision !== (G.worldRevision || 0)) continue;
         const p = G.player;
         const dx = p.x - ex.x, dy = p.y - ex.y;
         if (dx * dx + dy * dy < (ex.r + p.radius) ** 2) damagePlayer(ex.dmg, ex.x, ex.y);
@@ -226,7 +226,7 @@ export function updateEnemies(dt) {
             if (gore.deathAnim) {
                 if (e.animT > 0.075 && e.anim < frames - 1) { e.anim++; e.animT = 0; }
                 if (e.deadT > frames * 0.075 + 0.35) pool.release(i);
-            } else if (e.deadT > 0.15) pool.release(i);
+            } else if (e.deadT > (e.detonated ? 0.32 : 0.15)) pool.release(i);
             continue;
         }
         if (e.flash > 0) e.flash -= dt;
@@ -249,7 +249,17 @@ export function updateEnemies(dt) {
         let movementDt = dt;
         const charge = e.def?.charge;
         let justLocked = false;
+        // Only one nearby bomber commits at once; others remain killable pursuers.
+        let nearbyCharge = false;
         if (charge && e.rolePhase === 'approach' && dist < charge.range) {
+            for (let j = 0; j < pool.count; j++) {
+                const o = pool.items[j];
+                if (o === e || !o.def?.charge) continue;
+                if (!((o.alive && o.rolePhase !== 'approach') || (o.detonated && o.deadT < 0.35))) continue;
+                if (Math.hypot(o.x - e.x, o.y - e.y) < charge.range * 2) { nearbyCharge = true; break; }
+            }
+        }
+        if (charge && e.rolePhase === 'approach' && dist < charge.range && !nearbyCharge) {
             e.rolePhase = 'warning'; e.roleT = charge.warning;
             e.aimX = dx / dist; e.aimY = dy / dist;
             justLocked = true;
@@ -266,15 +276,7 @@ export function updateEnemies(dt) {
                 if (e.roleT <= 0 || dist < e.radius + p.radius + 12) {
                     e.rolePhase = 'fuse'; e.roleT = charge.fuse;
                 } else {
-                    // 돌진 중에도 꽃돼지 쪽으로 서서히 방향을 틀며 길게 파고든다 (초당 turnRate 라디안 제한)
-                    if (charge.turnRate) {
-                        const want = Math.atan2(dy, dx), cur = Math.atan2(e.aimY, e.aimX);
-                        let diff = want - cur;
-                        while (diff > Math.PI) diff -= Math.PI * 2;
-                        while (diff < -Math.PI) diff += Math.PI * 2;
-                        const step = Math.max(-charge.turnRate * dt, Math.min(charge.turnRate * dt, diff));
-                        e.aimX = Math.cos(cur + step); e.aimY = Math.sin(cur + step);
-                    }
+                    // Committed direction: sidestepping the visible lane always works.
                     movementDt = Math.min(Math.max(0, dt), e.roleT);
                     // Swept approach check stops at the player rather than
                     // tunneling past them when a long frame spends the dash.
@@ -334,12 +336,16 @@ export function updateEnemies(dt) {
             if (dist > recycleR && !e.elite) {
                 const pos = edgePosition(0.8);
                 e.x = pos.x; e.y = pos.y;
+                e.motionVX = 0; e.motionVY = 0;
                 continue;
             }
         }
         const sp = e.speed * slowMul;
-        e.x += (mvx * sp + e.kx) * movementDt;
-        e.y += (mvy * sp + e.ky) * movementDt;
+        const beforeX = e.x, beforeY = e.y;
+        const planted = charge && e.rolePhase !== 'approach';
+        e.x += (mvx * sp + (planted ? 0 : e.kx)) * movementDt;
+        e.y += (mvy * sp + (planted ? 0 : e.ky)) * movementDt;
+        e.motionVX = dt > 0 ? (e.x-beforeX)/dt : 0; e.motionVY = dt > 0 ? (e.y-beforeY)/dt : 0;
         const damp = Math.exp(-8 * dt);
         e.kx *= damp; e.ky *= damp;
         if (Math.abs(mvx) > 0.1) e.flip = mvx < 0;
@@ -350,7 +356,7 @@ export function updateEnemies(dt) {
         }
 
         // 밀어내기 (군집이 겹치지 않고 '밀려오는' 느낌). 비용 절감: 스텝마다 절반씩 번갈아 처리
-        if ((e.id + sepFrame) & 1) { animate(e, dt); continue; }
+        if (planted || ((e.id + sepFrame) & 1)) { animate(e, dt); continue; }
         const near = grid.query(e.x, e.y, e.radius * 2);
         for (let k = 0; k < near.length; k++) {
             const o = near[k];
@@ -421,14 +427,48 @@ export function drawEnemy(ctx, e) {
         else if (e.deadT > frames * 0.075) ctx.globalAlpha = Math.max(0, 1 - (e.deadT - frames * 0.075) / 0.35);
     }
     if (e.alive) { drawRoleWarning(ctx, e); if (e.champion || e.affixes) drawAffixMarks(ctx, e); }
+    else if (e.detonated && e.deadT < 0.32) {
+        // Damage-free afterimage: the outer border is always the exact hit radius.
+        const t = e.deadT / 0.32, radius = e.def.charge.radius;
+        ctx.save(); ctx.globalAlpha = 1 - t;
+        ctx.fillStyle = 'rgba(255,121,39,0.18)'; ctx.strokeStyle = '#fff0b1'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(e.x, e.y, radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        if (!roleReducedMotion?.matches) {
+            const n = G.lowQ ? 6 : 10, ring = radius * (0.36 + 0.64 * t);
+            ctx.strokeStyle = '#ffb34b';
+            for (let j = 0; j < n; j++) {
+                const a = j / n * Math.PI * 2 + (e.id % 7) * 0.15;
+                ctx.lineWidth = (G.lowQ ? 3 : 5) * (1 - t) + 1;
+                ctx.beginPath(); ctx.arc(e.x, e.y, ring, a + 0.04, a + Math.PI * 2 / n * 0.66); ctx.stroke();
+                // Short ember streaks remain inside the warned area; zero projectile entities.
+                const r = radius * (0.52 + t * 0.46), tail = Math.max(0, r - 12 * (1 - t));
+                ctx.lineWidth = G.lowQ ? 2 : 3;
+                ctx.beginPath(); ctx.moveTo(e.x + Math.cos(a) * tail, e.y + Math.sin(a) * tail);
+                ctx.lineTo(e.x + Math.cos(a) * r, e.y + Math.sin(a) * r); ctx.stroke();
+            }
+        }
+        ctx.restore();
+    }
     const roleArt = atlases[`enemyRole_${e.type}`];
     if (roleArt) {
         // New roles use dedicated art with restrained walk/attack/death poses.
         const reduced = roleReducedMotion?.matches;
         const bob = e.alive && e.state === 'walk' && !reduced ? Math.sin(e.anim * 1.4) * 1.5 : 0;
         ctx.save(); ctx.translate(e.x, e.y + bob);
-        if (!e.alive) { ctx.globalAlpha *= Math.max(0, 1 - e.deadT / 0.4); ctx.rotate(e.flip ? -0.25 : 0.25); }
-        else if (e.rolePhase === 'dash' || e.shotWarning > 0) ctx.rotate(e.flip ? -0.1 : 0.1);
+        if (!e.alive) {
+            ctx.globalAlpha *= Math.max(0, 1 - e.deadT / 0.4);
+            if (!reduced) {
+                ctx.rotate(e.flip ? -0.25 : 0.25);
+                if (e.detonated) { const t = Math.min(1, e.deadT / 0.24); ctx.translate(-e.aimX * t * 9, -t * 7); ctx.scale(1.3 - t * 0.45, 0.72 + t * 0.2); }
+            }
+        }
+        else if (!reduced && e.def.charge && e.rolePhase === 'warning') {
+            const t = 1 - e.roleT / e.def.charge.warning;
+            ctx.scale(1 + t * 0.16, 1 - t * 0.14); ctx.rotate((e.flip ? 1 : -1) * t * 0.13);
+        } else if (!reduced && e.rolePhase === 'dash') { ctx.rotate(e.flip ? -0.24 : 0.24); ctx.scale(1.12, 0.9); }
+        else if (!reduced && e.def.charge && e.rolePhase === 'fuse') {
+            const t = 1 - e.roleT / e.def.charge.fuse; ctx.scale(1 + t * 0.22, 1 + t * 0.13);
+        } else if (!reduced && e.shotWarning > 0) ctx.rotate(e.flip ? -0.1 : 0.1);
         roleArt.draw(ctx, 'walk', 0, 0, 0, e.scale, e.flip, e.flash > 0 ? 'flash' : e.elite ? 'elite' : tint === 'hallu' ? 'hallu' : 'normal');
         ctx.restore();
     } else atlas.draw(ctx, anim, e.anim, e.x, e.y, e.scale, e.flip, tint);
@@ -454,13 +494,17 @@ export function drawEnemy(ctx, e) {
 function drawRoleWarning(ctx, e) {
     const charge = e.def?.charge;
     // 총탄 사냥꾼(원거리)은 조준 궤도를 표시하지 않는다. 자폭체만 폭발 반경/돌진 예고를 그린다.
-    if (!(charge && e.rolePhase !== 'approach')) return;
-    ctx.save(); ctx.lineWidth = 2; ctx.strokeStyle = '#ffd17a'; ctx.fillStyle = 'rgba(255,95,40,0.12)';
+    if (!(charge && ['warning', 'dash', 'fuse'].includes(e.rolePhase))) return;
+    ctx.save(); ctx.lineWidth = 2; ctx.strokeStyle = '#ffd17a'; ctx.fillStyle = e.rolePhase === 'fuse' ? 'rgba(255,75,20,0.20)' : 'rgba(255,95,40,0.08)';
     if (charge) {
         // The drawn blast circle exactly matches the collision circle.
         ctx.beginPath(); ctx.arc(e.x, e.y, charge.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        if (e.rolePhase === 'warning') {
-            ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + e.aimX * charge.speed * charge.duration, e.y + e.aimY * charge.speed * charge.duration); ctx.stroke();
+        if (e.rolePhase === 'warning' || e.rolePhase === 'dash') {
+            const distance = charge.speed * (e.rolePhase === 'dash' ? e.roleT : charge.duration);
+            ctx.lineWidth = e.radius * 2; ctx.strokeStyle = 'rgba(255,173,64,0.16)';
+            ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + e.aimX * distance, e.y + e.aimY * distance); ctx.stroke();
+            ctx.lineWidth = 2; ctx.strokeStyle = '#ffd17a';
+            ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + e.aimX * distance, e.y + e.aimY * distance); ctx.stroke();
         }
         const progress = e.rolePhase === 'fuse' ? 1 - Math.max(0, e.roleT) / charge.fuse : 0;
         ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(e.x, e.y, charge.radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress); ctx.stroke();

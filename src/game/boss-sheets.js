@@ -1,3 +1,4 @@
+import { BOSSES } from '../data/bosses.js';
 import { BOSS_SHEETS } from './boss-appearance.js';
 
 // At most the current encounter and the next encounter stay decoded (~4 MiB).
@@ -13,7 +14,11 @@ function requestImage(src) {
             image.onload = image.onerror = null;
             resolve(value);
         };
-        image.onload = () => finish(image);
+        image.onload = async () => {
+            try { if (typeof image.decode === 'function') await image.decode(); }
+            catch { finish(null); return; }
+            finish(image);
+        };
         image.onerror = () => finish(null);
         timer = setTimeout(() => { finish(null); image.src = ''; }, 15000);
         image.src = src;
@@ -28,7 +33,7 @@ export class BossSheetCache {
     }
 
     prepare(stage) {
-        const wanted = new Set([stage, stage + 1].filter(n => BOSS_SHEETS[n]));
+        const wanted = new Set([stage, stage + 1].filter(n => BOSSES[n]).map(n => BOSSES[n].artStage ?? n).filter(n => BOSS_SHEETS[n]));
         for (const [n, entry] of this.entries) {
             if (wanted.has(n)) continue;
             this.entries.delete(n);

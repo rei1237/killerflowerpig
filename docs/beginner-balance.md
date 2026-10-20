@@ -29,7 +29,9 @@ Stage 2 keeps the existing event schedule. Its rings contain 16 enemies and rush
 
 Rush speed multipliers are 1.15 in stage 1 and 1.30 in stage 2, down from 1.50, applied in addition to the stage's enemy speed multiplier. Event elites receive HP multipliers of 0.65 and 0.80, respectively; elite reward multipliers stay the same.
 
-## First boss
+## First boss (historical, superseded)
+
+The former Alpha encounter now belongs to stage 9. The current beginner guard has 600 base HP (4,200 live), one 1.5-second warned charge and 2.5-second stationary safe recovery, with no summons or bullets. See [boss-stage-relocation.md](boss-stage-relocation.md). The older values below are retained only as history.
 
 - HP 750 → 520; movement speed 58 → 48; base damage 14 → 10.
 - Initial attack delay 2.2s → 3.0s.

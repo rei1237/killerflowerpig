@@ -1,3 +1,4 @@
+import { hasRunReward } from '../core/run-rewards.js';
 // 경험치 젬 + 필드 아이템(고기/자석/다이너마이트/관 상자)
 import { G, rand, emit } from './state.js';
 import { fx, glow } from '../core/assets.js';
@@ -5,7 +6,7 @@ import { audio } from '../core/audio.js';
 import { addXP } from './progression.js';
 import { healPlayer } from './player.js';
 import { flash, shake, floatText } from './effects.js';
-import { earnCoins } from '../core/save.js';
+import { earnCoins, save } from '../core/save.js';
 import { hitEnemy } from './enemies.js';
 import { SUPPLY_RULES } from './supply-drops.js';
 
@@ -43,21 +44,25 @@ export function pruneFieldSupplies() {
 
 export function dropPickup(kind, x, y) {
     const p = G.pickups.spawn();
-    p.kind = kind; p.x = x; p.y = y; p.t = 0; p.pull = false; p.speed = 0; p.boss = false; p.treasure = false; p.value = 0;
+    p.kind = kind; p.x = x; p.y = y; p.t = 0; p.pull = false; p.speed = 0; p.boss = false; p.treasure = false; p.value = 0; p.rewardId = undefined;
     return p;
 }
 
 // Coins share the bounded pickup field; excess coins merge without losing value.
-export function dropCoin(x, y, value = 1) {
+export function dropCoin(x, y, value = 1, rewardId) {
     if (!Number.isSafeInteger(value) || value <= 0) return null;
-    if (G.pickups.count >= 180) {
+    if (rewardId) {
+        if (hasRunReward(save,rewardId)) return null;
+        for (let i=0;i<G.pickups.count;i++) if (G.pickups.items[i].kind === 'coin' && G.pickups.items[i].rewardId === rewardId) return G.pickups.items[i];
+    }
+    if (!rewardId && G.pickups.count >= 180) {
         for (let i = 0; i < G.pickups.count; i++) {
             const coin = G.pickups.items[i];
-            if (coin.kind === 'coin') { coin.value += value; return coin; }
+            if (coin.kind === 'coin' && !coin.rewardId) { coin.value += value; return coin; }
         }
     }
     const coin = dropPickup('coin', x, y);
-    coin.value = value;
+    coin.value = value; coin.rewardId = rewardId;
     coin.retryAt = 0;
     return coin;
 }
@@ -89,7 +94,8 @@ function collect(item) {
         case 'coin': {
             const value = Math.max(1, Math.round(item.value * G.player.stats.greed));
             if (item.retryAt > G.clock) return false;
-            if (!earnCoins(value)) {
+            if (item.rewardId && hasRunReward(save,item.rewardId)) break;
+            if (!earnCoins(value, item.rewardId)) {
                 item.retryAt = G.clock + 2;
                 if (G.clock >= nextStorageNotice) { nextStorageNotice = G.clock + 6; emit('saveError'); }
                 return false;

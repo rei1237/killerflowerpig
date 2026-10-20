@@ -2,14 +2,16 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>꽃돼지 · BLUE NIGHT SURVIVAL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>꽃돼지 청토끼 슬레이어!</title>
     <meta name="description" content="꽃돼지와 함께 청토끼 좀비를 물리치는 서바이벌 슈터">
-    <meta name="theme-color" content="#101f32">
+    <meta name="theme-color" content="#101827">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="꽃돼지">
+    <meta name="apple-mobile-web-app-title" content="꽃돼지 청토끼 슬레이어!">
     <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" type="image/png" sizes="32x32" href="asset/branding/slayer-icon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="asset/branding/slayer-icon-180.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +25,8 @@
     <link rel="stylesheet" href="src/ui/loadout-exchange.css">
     <link rel="stylesheet" href="src/ui/loading.css">
     <link rel="stylesheet" href="src/ui/tech-select.css">
+    <link rel="stylesheet" href="src/ui/cosmetic-shop.css">
+    <link rel="stylesheet" href="src/ui/mobile.css">
 </head>
 <body>
     <div id="app">
@@ -31,14 +35,14 @@
         <!-- 로딩 -->
         <section id="loading" class="screen" aria-labelledby="loading-title" aria-busy="true" data-state="loading">
             <div class="loading-shell">
-                <header class="loading-signal"><span>FLOWERPIG / BLUE NIGHT</span><span><i aria-hidden="true"></i>SURVIVOR SIGNAL</span></header>
+                <header class="loading-signal"><span>FLOWERPIG / SLAYER</span><span><i aria-hidden="true"></i>LOTUS PROTOCOL</span></header>
                 <div class="loading-visual">
-                    <img id="loading-art" src="asset/ui/menu-yeoni.webp" width="900" height="900" alt="연꽃과 보라색 스카프를 한 꽃돼지 생존자" fetchpriority="high" decoding="async">
-                    <div id="loading-art-fallback" hidden aria-label="꽃돼지 생존자 표식"><span aria-hidden="true">✿</span>FLOWERPIG<br>LAST SURVIVOR</div>
+                    <img id="loading-art" src="asset/branding/slayer-launch-900.webp" srcset="asset/branding/slayer-launch-480.webp 480w, asset/branding/slayer-launch-900.webp 900w" sizes="(max-width:640px) 280px, 440px" width="900" height="900" alt="연꽃과 보라색 스카프를 한 꽃돼지 생존자" fetchpriority="high" decoding="async">
+                    <div id="loading-art-fallback" hidden aria-label="꽃돼지 생존자 표식"><span aria-hidden="true">✿</span>꽃돼지<br>청토끼 슬레이어!</div>
                 </div>
                 <div class="loading-copy">
-                    <p class="loading-eyebrow">ENTERING THE QUARANTINE ZONE</p>
-                    <h1 id="loading-title">다음 새벽을 향해</h1>
+                    <p class="loading-eyebrow">BLOOM IN THE DARK</p>
+                    <h1 id="loading-title">꽃돼지 청토끼 슬레이어!</h1>
                     <p id="loading-status" role="status" aria-live="polite">꽃돼지의 장비와 감염 구역을 불러오고 있어요.</p>
                     <div class="loading-meter-label" aria-hidden="true"><span>OPERATION PREPARATION</span><span id="loading-text">0%</span></div>
                     <div id="loading-progress" role="progressbar" aria-label="게임 준비 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="loading-fill"></div></div>
@@ -54,10 +58,10 @@
         <!-- 타이틀 -->
         <section id="title" class="screen" hidden>
             <div class="title-wrap">
-                <header class="menu-brand"><span class="brand-mark" aria-hidden="true">✿</span> FLOWERPIG <span class="edition">BLUE NIGHT / SURVIVAL</span></header>
+                <header class="menu-brand"><span class="brand-mark" aria-hidden="true">✿</span> FLOWERPIG <span class="edition">LOTUS / SURVIVAL</span></header>
                 <div class="menu-copy">
                     <p class="eyebrow"><span></span> QUARANTINE ZONE · 청토끼 감염 지대</p>
-                    <h1>꽃돼지<span>작은 영웅, 끝나지 않은 밤.</span></h1>
+                    <h1 class="slayer-title">꽃돼지 청토끼 슬레이어!</h1><p class="slayer-tagline">작은 영웅, 끝나지 않은 밤.</p>
                     <p class="menu-description">푸른 감염이 도시를 삼켰다.<br>꽃돼지와 함께 장비를 모으고, 10개의 구역을 되찾으세요.</p>
                     <div class="mission-tags"><span>AUTO FIRE</span><span>10개 작전 구역</span><span>무기 진화</span></div>
                 </div>
@@ -156,7 +160,7 @@
             <div class="modal-box tech-box">
                 <p class="eyebrow"><span></span>LOADOUT · 출격 준비</p>
                 <h2 id="tech-title" class="modal-title">시작 테크 선택</h2>
-                <p class="panel-caption tech-caption">시작 무기와 짝 보조 장비가 주어집니다. 같은 계열 장비를 <b>2·4·6개</b> 모으면 <b>공명</b> 보너스가 단계별로 열리고, 다른 계열 무기는 테크 보너스를 받지 못합니다.</p>
+                <p class="panel-caption tech-caption">시작 무기와 짝 보조 장비가 주어집니다. 연꽃 정원은 연꽃 가시와 꽃잎포를 함께 들고 시작합니다. 같은 계열 장비를 <b>2·4·6개</b> 모으면 <b>공명</b> 보너스가 단계별로 열리고, 다른 계열 무기는 테크 보너스를 받지 못합니다.</p>
                 <div class="diff-row">
                     <span class="tech-sub">난이도</span>
                     <div id="diff-list" class="diff-list" role="radiogroup" aria-label="난이도"></div>
@@ -259,8 +263,27 @@
         <!-- 상점 -->
         <section id="shop" class="modal" hidden>
             <div class="modal-box shop-box">
-                <h2 class="modal-title drip">강화 상점 <small id="shop-gold">● 0</small></h2>
-                <p id="shop-character" class="character-record"></p><p id="shop-status" class="shop-status" role="status"></p><div id="shop-list" class="shop-list"></div>
+                <h2 class="modal-title drip">장비 보급소 <small id="shop-gold">● 0</small></h2>
+                <p id="shop-character" class="character-record"></p><p id="shop-status" class="shop-status" role="status"></p>
+                <section id="cosmetic-room" class="cosmetic-room" aria-labelledby="cosmetic-heading">
+                    <div class="cosmetic-heading"><div><p class="eyebrow">FLOWERPIG ATELIER</p><h3 id="cosmetic-heading">꽃돼지의 의상실</h3></div><span class="cosmetic-pure-tag">외형 + 의상 효과</span></div>
+                    <p class="cosmetic-intro">연꽃을 두르고, 나만의 꽃돼지로.<br><strong>구매 전에 자유롭게 입어보세요.</strong> 망토는 이동·수집을, 예복은 방어를 돕습니다. 장식은 외형만 바뀝니다.</p>
+                    <div class="cosmetic-layout">
+                        <div class="cosmetic-preview-panel">
+                            <div class="cosmetic-preview-stage"><div class="cosmetic-preview-watermark"><span>LIVE FITTING</span><b>YEONI / 01</b></div><img id="cosmetic-preview-fallback" src="asset/ui/menu-yeoni.webp" alt="꽃돼지 기본 모습" hidden><canvas id="cosmetic-preview-canvas" width="320" height="312" role="img" aria-label="꽃돼지 외형 미리보기"></canvas></div>
+                            <div class="cosmetic-preview-copy"><p id="cosmetic-preview-state" class="cosmetic-preview-state" aria-live="polite">현재 장착 모습</p><h4 id="cosmetic-preview-name">꽃돼지 · 나의 장비</h4><p id="cosmetic-preview-look"></p>
+                                <div class="cosmetic-preview-controls" role="group" aria-label="미리보기 동작"><button id="cosmetic-preview-idle" type="button" aria-pressed="true">대기</button><button id="cosmetic-preview-walk" type="button" aria-pressed="false">걷기</button><button id="cosmetic-preview-fire" type="button" aria-pressed="false">공격 동작</button><button id="cosmetic-preview-flip" type="button" aria-pressed="false">좌우 반전</button></div>
+                                <label class="cosmetic-family-label" for="cosmetic-preview-family">공격 모션</label><select id="cosmetic-preview-family" class="cosmetic-family-select"><option value="fire">산탄·소총</option><option value="dual">쌍권총</option><option value="throw">병·수류탄 투척</option><option value="cannon">꽃잎포</option><option value="blade">톱날 발사</option><option value="channel">연꽃 시전</option><option value="sword">도살자 검 베기</option></select>
+                                <button id="cosmetic-preview-reset" class="cosmetic-reset" type="button" disabled>실제 장착 모습으로 돌아가기</button>
+                            </div>
+                            <div id="cosmetic-equipped-slots" class="cosmetic-slots" aria-label="실제 장착 슬롯"></div>
+                        </div>
+                        <div class="cosmetic-collection"><h4 class="cosmetic-collection-heading">연꽃 컬렉션 <small>의상 1개 + 장식 1개</small></h4><div id="cosmetic-list" class="cosmetic-list"></div></div>
+                    </div>
+                    <p id="cosmetic-status" class="cosmetic-status" role="status" aria-live="polite"></p>
+                    <p class="cosmetic-footnote">입어보기는 저장·구매·장착되지 않습니다. 구매하면 영구 보유되며 해당 슬롯에 바로 장착됩니다. 보유한 외형은 무료로 다시 장착할 수 있습니다. 의상 2종은 함께 장착할 수 없고, 장식은 의상과 함께 사용할 수 있습니다.</p>
+                </section>
+                <div id="shop-list" class="shop-list"></div>
                 <p id="pet-redemption-note" class="panel-caption"></p><button class="btn btn-small" type="button" disabled>영냥이 특별 초대 · 준비 중</button><section class="relic-section"><p class="eyebrow">CELESTIAL RELICS</p><h3>날개 유물 · 더 빠른 생존</h3><p class="panel-caption">가장 높은 등급 하나의 효과만 적용됩니다. 원하는 유물은 확정 구매할 수 있어요.</p><div id="relic-list" class="relic-list"></div></section>
                 <section class="accessory-section"><p class="eyebrow">YEONGNYANG'S ARMORY</p><h3>고급 장신구</h3><p class="panel-caption">한 번에 1개 장착 · 구매하면 자동 장착 · 다음 작전부터 적용됩니다. 다른 장신구와 효과가 중첩되지 않습니다.</p><p id="accessory-equipped" class="accessory-equipped" role="status"></p><div id="accessory-list" class="accessory-list"></div></section>
                 <section class="coin-cache-panel"><div class="cache-heading"><img src="asset/items/salvage-cache.png" alt="별빛 보급 상자"><div><p class="eyebrow">EARNED COINS ONLY</p><h3>별빛 보급 상자</h3><p>플레이로 모은 코인으로 유물 1개를 얻습니다.</p></div></div><p id="cache-rates" class="cache-rates"></p><p id="cache-pity" class="panel-caption"></p><button id="btn-coin-cache" class="btn" type="button">상자 열기</button><div id="cache-result" class="cache-result" role="status" aria-live="polite" hidden></div><p class="cache-note">현금 구매·환전은 없습니다. 확정 구매로도 같은 유물을 얻을 수 있어요.</p></section>
@@ -279,7 +302,7 @@
                 <p id="gameover-lore" class="lore"></p>
                 <div id="gameover-stats" class="stats"></div>
                 <div class="menu-buttons row">
-                    <button id="btn-retry" class="btn btn-blood" type="button">⚔ 새 도전 · STAGE 1부터</button>
+                    <button id="btn-retry" class="btn btn-blood" type="button">⚔ 해당 스테이지 처음부터 재도전</button>
                     <button id="btn-gameover-title" class="btn btn-ghost" type="button">타이틀로</button>
                 </div></div>
             </div>
@@ -312,7 +335,7 @@
         <!-- 설치 안내 -->
         <section id="install" class="modal" hidden>
             <div class="modal-box small-box">
-                <h2 class="modal-title">📲 앱 설치</h2>
+                <h2 class="modal-title">앱 설치</h2><p class="panel-caption">꽃돼지 청토끼 슬레이어!</p>
                 <div id="install-body" class="install-body"></div>
                 <div class="modal-actions">
                     <button id="btn-install-close" class="btn btn-small" type="button">닫기</button>

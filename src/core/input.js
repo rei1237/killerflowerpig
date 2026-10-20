@@ -50,7 +50,7 @@ export function initInput(canvas) {
             if (input.onPause) { input.onPause(); e.preventDefault(); }
             return;
         }
-        if (MOVE_KEYS[e.code]) {
+        if (MOVE_KEYS[e.code] && input.enabled) {
             keys.add(e.code);
             updateKeyboardMove();
             if (input.enabled) e.preventDefault();

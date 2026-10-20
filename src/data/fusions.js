@@ -10,6 +10,7 @@ export const FUSION_RECIPES = Object.freeze([
     { id: 'ember_lance', inputs: [{ id: 'cannon', level: 8 }, { id: 'molotov', level: 8 }], output: 'ember_lance' },
     { id: 'orbit_saw', inputs: [{ id: 'thorns', level: 8 }, { id: 'saw', level: 8 }], output: 'orbit_saw' },
     { id: 'toxic_scatter', inputs: [{ id: 'shotgun', level: 8 }, { id: 'gas', level: 8 }], output: 'toxic_scatter' },
+    { id: 'sword_wheel', inputs: [{ id: 'sword', level: 8 }, { id: 'saw', level: 8 }], output: 'sword_wheel' },
     { id: 'absolute_bloom', tier: 'absolute', inputs: [{ id: 'cannon', level: 8 }, { id: 'thorns', level: 8 }, { id: 'molotov', level: 8 }], output: 'absolute_bloom' },
     { id: 'doom_barrage', tier: 'absolute', inputs: [{ id: 'shotgun', level: 8 }, { id: 'rifle', level: 8 }, { id: 'pistols', level: 8 }], output: 'doom_barrage' },
     { id: 'plague_end', tier: 'absolute', inputs: [{ id: 'molotov', level: 8 }, { id: 'gas', level: 8 }, { id: 'cannon', level: 8 }], output: 'plague_end' },
@@ -17,10 +18,21 @@ export const FUSION_RECIPES = Object.freeze([
     { id: 'carnage_saw', tier: 'absolute', inputs: [{ id: 'saw', level: 8 }, { id: 'shotgun', level: 8 }, { id: 'thorns', level: 8 }], output: 'carnage_saw' },
 ]);
 export const FUSED_WEAPONS = {
+    sword_wheel: {
+        name: '학살자의 검륜', icon: '⚔️', color: '#ff91aa', fusionOnly: true, amountCap: 4,
+        desc: '핏빛 연꽃검과 척추 분쇄기를 계승한다. 넓은 검격으로 가까운 적을 베고 진화 톱날이 바깥의 적을 추격한다.',
+        base: { dmg: 70, cd: 1.15, amount: 1, speed: 1, duration: 0.22, area: 1, radius: 125, bleed: 5 },
+        levels: [
+            { dmg: 10, t: '검격 피해 +10 · 계승 공격 강화' }, { area: 0.12, t: '검격 범위 +12%' },
+            { cd: -0.08, t: '공격 간격 -8%' }, { dmg: 12, t: '검격 피해 +12 · 계승 공격 강화' },
+            { area: 0.12, t: '검격 범위 +12%' }, { cd: -0.08, t: '공격 간격 -8%' },
+            { dmg: 15, cd: -0.04, t: '검격 피해 +15, 공격 간격 -4% · 두 진화 공격 최종 강화' },
+        ],
+    },
     absolute_bloom: {
         name: '절대 만개', icon: '💮', color: '#fff0b8', fusionOnly: true, tier: 'absolute', amountCap: 12,
-        desc: '세 진화 무기의 공격을 계승하고 여덟 방향의 거대한 연꽃 광선으로 전장을 뒤덮는다.',
-        base: { dmg: 150, cd: 3.0, amount: 8, speed: 1, duration: 0.6, area: 1, length: 660, width: 56 },
+        desc: '세 진화 무기의 공격을 계승한다. 연꽃 광선은 피해 2배 강화, 집중 총 피해는 1/2/3발에 1.1/2.2/3.3배, 보너스와 계승 공격을 합쳐 화면 전체 최대 3발. 자동 사격은 분산 피해, 집중 조준은 선택한 적에게 강화 피해를 준다.',
+        base: { dmg: 125, cd: 3.2, amount: 8, speed: 1, duration: 0.6, area: 1, length: 680, width: 58 },
         levels: [{dmg:15,t:'절대 광선 피해 +15 · 계승 공격 강화'},{area:0.12,t:'절대 광선 범위 +12%'},{cd:-0.08,t:'재사용 -8%'},{dmg:20,t:'절대 광선 피해 +20 · 계승 공격 강화'},{area:0.12,t:'절대 광선 범위 +12%'},{cd:-0.08,t:'재사용 -8%'},{dmg:25,t:'절대 광선 피해 +25 · 세 진화 공격 최종 강화'}],
     },
     lotus_bloom: {
@@ -49,8 +61,8 @@ export const FUSED_WEAPONS = {
     },
     guillotine: {
         name: '심판의 단두대', icon: '⚔️', color: '#ff3b5c', fusionOnly: true, tier: 'absolute', amountCap: 10,
-        desc: '세 진화 무기를 계승하고, 치명타 확률 30%·치명타 피해 4배의 관통 처형탄을 빠르게 연사한다. 체력 12% 이하 일반 적은 즉시 처형.',
-        base: { dmg: 28, cd: 0.9, amount: 5, speed: 920, duration: 0.9, pierce: 3, area: 1, crit: 0.3, critBonus: 1.0, execute: 0.12 },
+        desc: '세 진화 무기를 계승하고, 치명타 확률 30%·치명타 피해 4배의 관통 처형탄을 빠르게 연사한다. 처형자 테크에서는 체력과 무관하게 일반 적 확률 처형.',
+        base: { dmg: 28, cd: 0.9, amount: 5, speed: 920, duration: 0.9, pierce: 3, area: 1, crit: 0.3, critBonus: 1.0 },
         levels: [{dmg:5,t:'피해 +5 · 계승 공격 강화'},{crit:0.05,t:'치명타 +5%'},{amount:1,t:'처형탄 +1'},{critBonus:0.3,t:'치명타 피해 +30%'},{dmg:6,t:'피해 +6 · 계승 공격 강화'},{cd:-0.1,t:'재사용 -10%'},{amount:1,crit:0.05,t:'처형탄 +1, 치명타 +5% · 최종 강화'}],
     },
     carnage_saw: {

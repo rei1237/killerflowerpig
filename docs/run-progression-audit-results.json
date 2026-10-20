@@ -1,2799 +1,2808 @@
 {
-  "audit": {
-    "method": "Synthetic residency + actual director/death XP. No survival simulation. Chest-first; one free reroll per planned choice, optional one run exchange; no purchases.",
-    "xpCurve": {
-      "level1": 8,
-      "level20": 141,
-      "level40": 481
-    },
-    "scenarios": [
-      {
-        "id": "slow",
-        "residency": 24,
-        "collection": 0.7,
-        "rows": [
-          {
-            "stage": 1,
-            "waveXP": 101.66666666666674,
-            "bossXP": 168,
-            "kills": 61,
-            "eliteKills": 0,
-            "peak": 21,
-            "uncreditedSurvivors": 18
-          },
-          {
-            "stage": 2,
-            "waveXP": 228.08333333333312,
-            "bossXP": 216,
-            "kills": 106,
-            "eliteKills": 1,
-            "peak": 36,
-            "uncreditedSurvivors": 30
-          },
-          {
-            "stage": 3,
-            "waveXP": 983.6666666666646,
-            "bossXP": 264,
-            "kills": 228,
-            "eliteKills": 1,
-            "peak": 60,
-            "uncreditedSurvivors": 52
-          },
-          {
-            "stage": 4,
-            "waveXP": 1205.9166666666654,
-            "bossXP": 312,
-            "kills": 277,
-            "eliteKills": 1,
-            "peak": 71,
-            "uncreditedSurvivors": 66
-          },
-          {
-            "stage": 5,
-            "waveXP": 2077.333333333339,
-            "bossXP": 360,
-            "kills": 327,
-            "eliteKills": 1,
-            "peak": 84,
-            "uncreditedSurvivors": 78
-          },
-          {
-            "stage": 6,
-            "waveXP": 3657.4999999999886,
-            "bossXP": 408,
-            "kills": 417,
-            "eliteKills": 1,
-            "peak": 95,
-            "uncreditedSurvivors": 90
-          },
-          {
-            "stage": 7,
-            "waveXP": 3489.6666666666533,
-            "bossXP": 456,
-            "kills": 481,
-            "eliteKills": 1,
-            "peak": 110,
-            "uncreditedSurvivors": 106
-          },
-          {
-            "stage": 8,
-            "waveXP": 5750.250000000027,
-            "bossXP": 504,
-            "kills": 594,
-            "eliteKills": 2,
-            "peak": 121,
-            "uncreditedSurvivors": 117
-          },
-          {
-            "stage": 9,
-            "waveXP": 7421.3333333333685,
-            "bossXP": 552,
-            "kills": 645,
-            "eliteKills": 2,
-            "peak": 138,
-            "uncreditedSurvivors": 131
-          },
-          {
-            "stage": 10,
-            "waveXP": 9497.91666666669,
-            "bossXP": 600,
-            "kills": 734,
-            "eliteKills": 2,
-            "peak": 149,
-            "uncreditedSurvivors": 144
-          }
-        ],
-        "collectedXP": 26777.333333333376,
-        "plans": {
-          "planned": {
-            "seeds": 200,
-            "beforeBoss10Finals": {
-              "3": 200
-            },
-            "beforeBoss10Absolutes": {
-              "0": 200
-            },
-            "afterBoss10Finals": {
-              "3": 200
-            },
-            "choicesMinP10P50P90Max": [
-              61,
-              61,
-              61,
-              61,
-              61
-            ],
-            "skipsMinP10P50P90Max": [
-              1,
-              3,
-              5,
-              7,
-              11
-            ],
-            "exchangesUsed": 0,
-            "firstFusionStage": {
-              "3": 11,
-              "4": 41,
-              "5": 76,
-              "6": 60,
-              "7": 10,
-              "8": 2
-            },
-            "beforeBossByStage": [
-              {
-                "stage": 1,
-                "levels": [
-                  4,
-                  4,
-                  4,
-                  4,
-                  4
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 2,
-                "levels": [
-                  10,
-                  10,
-                  10,
-                  10,
-                  10
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 3,
-                "levels": [
-                  18,
-                  18,
-                  18,
-                  18,
-                  18
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 4,
-                "levels": [
-                  24,
-                  24,
-                  24,
-                  24,
-                  24
-                ],
-                "finals": {
-                  "0": 189,
-                  "1": 11
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 5,
-                "levels": [
-                  31,
-                  31,
-                  31,
-                  31,
-                  31
-                ],
-                "finals": {
-                  "0": 148,
-                  "1": 52
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 6,
-                "levels": [
-                  38,
-                  38,
-                  38,
-                  38,
-                  38
-                ],
-                "finals": {
-                  "0": 72,
-                  "1": 119,
-                  "2": 9
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 7,
-                "levels": [
-                  43,
-                  43,
-                  43,
-                  43,
-                  43
-                ],
-                "finals": {
-                  "0": 12,
-                  "1": 113,
-                  "2": 75
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 8,
-                "levels": [
-                  50,
-                  50,
-                  50,
-                  50,
-                  50
-                ],
-                "finals": {
-                  "0": 2,
-                  "1": 34,
-                  "2": 137,
-                  "3": 27
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 9,
-                "levels": [
-                  56,
-                  56,
-                  56,
-                  56,
-                  56
-                ],
-                "finals": {
-                  "2": 26,
-                  "3": 174
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 10,
-                "levels": [
-                  62,
-                  62,
-                  62,
-                  62,
-                  62
-                ],
-                "finals": {
-                  "3": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              }
-            ]
-          },
-          "scattered": {
-            "seeds": 200,
-            "beforeBoss10Finals": {
-              "0": 9,
-              "1": 97,
-              "2": 88,
-              "3": 6
-            },
-            "beforeBoss10Absolutes": {
-              "0": 200
-            },
-            "afterBoss10Finals": {
-              "0": 9,
-              "1": 73,
-              "2": 102,
-              "3": 16
-            },
-            "choicesMinP10P50P90Max": [
-              61,
-              61,
-              61,
-              61,
-              61
-            ],
-            "skipsMinP10P50P90Max": [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "exchangesUsed": 200,
-            "firstFusionStage": {
-              "5": 5,
-              "6": 22,
-              "7": 59,
-              "8": 93,
-              "9": 12,
-              "none": 9
-            },
-            "beforeBossByStage": [
-              {
-                "stage": 1,
-                "levels": [
-                  4,
-                  4,
-                  4,
-                  4,
-                  4
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 2,
-                "levels": [
-                  10,
-                  10,
-                  10,
-                  10,
-                  10
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 3,
-                "levels": [
-                  18,
-                  18,
-                  18,
-                  18,
-                  18
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 4,
-                "levels": [
-                  24,
-                  24,
-                  24,
-                  24,
-                  24
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 5,
-                "levels": [
-                  31,
-                  31,
-                  31,
-                  31,
-                  31
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 6,
-                "levels": [
-                  38,
-                  38,
-                  38,
-                  38,
-                  38
-                ],
-                "finals": {
-                  "0": 195,
-                  "1": 5
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 7,
-                "levels": [
-                  43,
-                  43,
-                  43,
-                  43,
-                  43
-                ],
-                "finals": {
-                  "0": 173,
-                  "1": 27
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 8,
-                "levels": [
-                  50,
-                  50,
-                  50,
-                  50,
-                  50
-                ],
-                "finals": {
-                  "0": 114,
-                  "1": 81,
-                  "2": 5
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 9,
-                "levels": [
-                  56,
-                  56,
-                  56,
-                  56,
-                  56
-                ],
-                "finals": {
-                  "0": 21,
-                  "1": 131,
-                  "2": 48
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 10,
-                "levels": [
-                  62,
-                  62,
-                  62,
-                  62,
-                  62
-                ],
-                "finals": {
-                  "0": 9,
-                  "1": 97,
-                  "2": 88,
-                  "3": 6
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              }
-            ]
-          },
-          "absolute": {
-            "seeds": 200,
-            "beforeBoss10Finals": {
-              "1": 200
-            },
-            "beforeBoss10Absolutes": {
-              "1": 200
-            },
-            "afterBoss10Finals": {
-              "1": 200
-            },
-            "choicesMinP10P50P90Max": [
-              61,
-              61,
-              61,
-              61,
-              61
-            ],
-            "skipsMinP10P50P90Max": [
-              7,
-              9,
-              11,
-              14,
-              19
-            ],
-            "exchangesUsed": 0,
-            "firstFusionStage": {
-              "4": 1,
-              "5": 43,
-              "6": 139,
-              "7": 17
-            },
-            "beforeBossByStage": [
-              {
-                "stage": 1,
-                "levels": [
-                  4,
-                  4,
-                  4,
-                  4,
-                  4
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 2,
-                "levels": [
-                  10,
-                  10,
-                  10,
-                  10,
-                  10
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 3,
-                "levels": [
-                  18,
-                  18,
-                  18,
-                  18,
-                  18
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 4,
-                "levels": [
-                  24,
-                  24,
-                  24,
-                  24,
-                  24
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 5,
-                "levels": [
-                  31,
-                  31,
-                  31,
-                  31,
-                  31
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 199,
-                  "1": 1
-                }
-              },
-              {
-                "stage": 6,
-                "levels": [
-                  38,
-                  38,
-                  38,
-                  38,
-                  38
-                ],
-                "finals": {
-                  "0": 182,
-                  "1": 18
-                },
-                "absolutes": {
-                  "0": 174,
-                  "1": 26
-                }
-              },
-              {
-                "stage": 7,
-                "levels": [
-                  43,
-                  43,
-                  43,
-                  43,
-                  43
-                ],
-                "finals": {
-                  "0": 92,
-                  "1": 108
-                },
-                "absolutes": {
-                  "0": 78,
-                  "1": 122
-                }
-              },
-              {
-                "stage": 8,
-                "levels": [
-                  50,
-                  50,
-                  50,
-                  50,
-                  50
-                ],
-                "finals": {
-                  "0": 9,
-                  "1": 191
-                },
-                "absolutes": {
-                  "0": 7,
-                  "1": 193
-                }
-              },
-              {
-                "stage": 9,
-                "levels": [
-                  56,
-                  56,
-                  56,
-                  56,
-                  56
-                ],
-                "finals": {
-                  "1": 200
-                },
-                "absolutes": {
-                  "1": 200
-                }
-              },
-              {
-                "stage": 10,
-                "levels": [
-                  62,
-                  62,
-                  62,
-                  62,
-                  62
-                ],
-                "finals": {
-                  "1": 200
-                },
-                "absolutes": {
-                  "1": 200
-                }
-              }
-            ]
-          }
-        }
-      },
-      {
-        "id": "central",
-        "residency": 16,
-        "collection": 0.85,
-        "rows": [
-          {
-            "stage": 1,
-            "waveXP": 190.00000000000003,
-            "bossXP": 168,
-            "kills": 97,
-            "eliteKills": 1,
-            "peak": 22,
-            "uncreditedSurvivors": 17
-          },
-          {
-            "stage": 2,
-            "waveXP": 371.8333333333336,
-            "bossXP": 216,
-            "kills": 167,
-            "eliteKills": 1,
-            "peak": 36,
-            "uncreditedSurvivors": 30
-          },
-          {
-            "stage": 3,
-            "waveXP": 1406.1666666666695,
-            "bossXP": 264,
-            "kills": 324,
-            "eliteKills": 2,
-            "peak": 60,
-            "uncreditedSurvivors": 53
-          },
-          {
-            "stage": 4,
-            "waveXP": 2196.750000000007,
-            "bossXP": 312,
-            "kills": 441,
-            "eliteKills": 2,
-            "peak": 71,
-            "uncreditedSurvivors": 65
-          },
-          {
-            "stage": 5,
-            "waveXP": 3447.9999999999877,
-            "bossXP": 360,
-            "kills": 512,
-            "eliteKills": 2,
-            "peak": 85,
-            "uncreditedSurvivors": 79
-          },
-          {
-            "stage": 6,
-            "waveXP": 5635.000000000004,
-            "bossXP": 408,
-            "kills": 644,
-            "eliteKills": 2,
-            "peak": 96,
-            "uncreditedSurvivors": 93
-          },
-          {
-            "stage": 7,
-            "waveXP": 6203.500000000032,
-            "bossXP": 456,
-            "kills": 743,
-            "eliteKills": 2,
-            "peak": 113,
-            "uncreditedSurvivors": 102
-          },
-          {
-            "stage": 8,
-            "waveXP": 9218.1666666667,
-            "bossXP": 504,
-            "kills": 883,
-            "eliteKills": 2,
-            "peak": 125,
-            "uncreditedSurvivors": 119
-          },
-          {
-            "stage": 9,
-            "waveXP": 11538.999999999956,
-            "bossXP": 552,
-            "kills": 977,
-            "eliteKills": 2,
-            "peak": 137,
-            "uncreditedSurvivors": 134
-          },
-          {
-            "stage": 10,
-            "waveXP": 14652.249999999845,
-            "bossXP": 600,
-            "kills": 1152,
-            "eliteKills": 2,
-            "peak": 149,
-            "uncreditedSurvivors": 144
-          }
-        ],
-        "collectedXP": 49895.56666666655,
-        "plans": {
-          "planned": {
-            "seeds": 200,
-            "beforeBoss10Finals": {
-              "3": 200
-            },
-            "beforeBoss10Absolutes": {
-              "0": 200
-            },
-            "afterBoss10Finals": {
-              "3": 200
-            },
-            "choicesMinP10P50P90Max": [
-              77,
-              77,
-              77,
-              77,
-              77
-            ],
-            "skipsMinP10P50P90Max": [
-              8,
-              11,
-              13,
-              15,
-              19
-            ],
-            "exchangesUsed": 0,
-            "firstFusionStage": {
-              "3": 27,
-              "4": 71,
-              "5": 76,
-              "6": 26
-            },
-            "beforeBossByStage": [
-              {
-                "stage": 1,
-                "levels": [
-                  7,
-                  7,
-                  7,
-                  7,
-                  7
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 2,
-                "levels": [
-                  13,
-                  13,
-                  13,
-                  13,
-                  13
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 3,
-                "levels": [
-                  23,
-                  23,
-                  23,
-                  23,
-                  23
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 4,
-                "levels": [
-                  31,
-                  31,
-                  31,
-                  31,
-                  31
-                ],
-                "finals": {
-                  "0": 173,
-                  "1": 27
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 5,
-                "levels": [
-                  39,
-                  39,
-                  39,
-                  39,
-                  39
-                ],
-                "finals": {
-                  "0": 102,
-                  "1": 98
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 6,
-                "levels": [
-                  48,
-                  48,
-                  48,
-                  48,
-                  48
-                ],
-                "finals": {
-                  "0": 26,
-                  "1": 130,
-                  "2": 44
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 7,
-                "levels": [
-                  54,
-                  54,
-                  54,
-                  54,
-                  54
-                ],
-                "finals": {
-                  "1": 32,
-                  "2": 129,
-                  "3": 39
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 8,
-                "levels": [
-                  62,
-                  62,
-                  62,
-                  62,
-                  62
-                ],
-                "finals": {
-                  "2": 52,
-                  "3": 148
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 9,
-                "levels": [
-                  70,
-                  70,
-                  70,
-                  70,
-                  70
-                ],
-                "finals": {
-                  "3": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 10,
-                "levels": [
-                  78,
-                  78,
-                  78,
-                  78,
-                  78
-                ],
-                "finals": {
-                  "3": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              }
-            ]
-          },
-          "scattered": {
-            "seeds": 200,
-            "beforeBoss10Finals": {
-              "0": 11,
-              "1": 68,
-              "2": 107,
-              "3": 14
-            },
-            "beforeBoss10Absolutes": {
-              "0": 200
-            },
-            "afterBoss10Finals": {
-              "0": 11,
-              "1": 65,
-              "2": 89,
-              "3": 35
-            },
-            "choicesMinP10P50P90Max": [
-              77,
-              77,
-              77,
-              77,
-              77
-            ],
-            "skipsMinP10P50P90Max": [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "exchangesUsed": 200,
-            "firstFusionStage": {
-              "5": 10,
-              "6": 58,
-              "7": 97,
-              "8": 24,
-              "none": 11
-            },
-            "beforeBossByStage": [
-              {
-                "stage": 1,
-                "levels": [
-                  7,
-                  7,
-                  7,
-                  7,
-                  7
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 2,
-                "levels": [
-                  13,
-                  13,
-                  13,
-                  13,
-                  13
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 3,
-                "levels": [
-                  23,
-                  23,
-                  23,
-                  23,
-                  23
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 4,
-                "levels": [
-                  31,
-                  31,
-                  31,
-                  31,
-                  31
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 5,
-                "levels": [
-                  39,
-                  39,
-                  39,
-                  39,
-                  39
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 6,
-                "levels": [
-                  48,
-                  48,
-                  48,
-                  48,
-                  48
-                ],
-                "finals": {
-                  "0": 190,
-                  "1": 10
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 7,
-                "levels": [
-                  54,
-                  54,
-                  54,
-                  54,
-                  54
-                ],
-                "finals": {
-                  "0": 132,
-                  "1": 67,
-                  "2": 1
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 8,
-                "levels": [
-                  62,
-                  62,
-                  62,
-                  62,
-                  62
-                ],
-                "finals": {
-                  "0": 35,
-                  "1": 124,
-                  "2": 41
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 9,
-                "levels": [
-                  70,
-                  70,
-                  70,
-                  70,
-                  70
-                ],
-                "finals": {
-                  "0": 11,
-                  "1": 89,
-                  "2": 95,
-                  "3": 5
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 10,
-                "levels": [
-                  78,
-                  78,
-                  78,
-                  78,
-                  78
-                ],
-                "finals": {
-                  "0": 11,
-                  "1": 68,
-                  "2": 107,
-                  "3": 14
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              }
-            ]
-          },
-          "absolute": {
-            "seeds": 200,
-            "beforeBoss10Finals": {
-              "1": 200
-            },
-            "beforeBoss10Absolutes": {
-              "1": 200
-            },
-            "afterBoss10Finals": {
-              "1": 200
-            },
-            "choicesMinP10P50P90Max": [
-              77,
-              77,
-              77,
-              77,
-              77
-            ],
-            "skipsMinP10P50P90Max": [
-              16,
-              19,
-              22,
-              24,
-              27
-            ],
-            "exchangesUsed": 0,
-            "firstFusionStage": {
-              "4": 17,
-              "5": 133,
-              "6": 50
-            },
-            "beforeBossByStage": [
-              {
-                "stage": 1,
-                "levels": [
-                  7,
-                  7,
-                  7,
-                  7,
-                  7
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 2,
-                "levels": [
-                  13,
-                  13,
-                  13,
-                  13,
-                  13
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 3,
-                "levels": [
-                  23,
-                  23,
-                  23,
-                  23,
-                  23
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 4,
-                "levels": [
-                  31,
-                  31,
-                  31,
-                  31,
-                  31
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 5,
-                "levels": [
-                  39,
-                  39,
-                  39,
-                  39,
-                  39
-                ],
-                "finals": {
-                  "0": 197,
-                  "1": 3
-                },
-                "absolutes": {
-                  "0": 186,
-                  "1": 14
-                }
-              },
-              {
-                "stage": 6,
-                "levels": [
-                  48,
-                  48,
-                  48,
-                  48,
-                  48
-                ],
-                "finals": {
-                  "0": 136,
-                  "1": 64
-                },
-                "absolutes": {
-                  "0": 96,
-                  "1": 104
-                }
-              },
-              {
-                "stage": 7,
-                "levels": [
-                  54,
-                  54,
-                  54,
-                  54,
-                  54
-                ],
-                "finals": {
-                  "0": 13,
-                  "1": 187
-                },
-                "absolutes": {
-                  "0": 5,
-                  "1": 195
-                }
-              },
-              {
-                "stage": 8,
-                "levels": [
-                  62,
-                  62,
-                  62,
-                  62,
-                  62
-                ],
-                "finals": {
-                  "1": 200
-                },
-                "absolutes": {
-                  "1": 200
-                }
-              },
-              {
-                "stage": 9,
-                "levels": [
-                  70,
-                  70,
-                  70,
-                  70,
-                  70
-                ],
-                "finals": {
-                  "1": 200
-                },
-                "absolutes": {
-                  "1": 200
-                }
-              },
-              {
-                "stage": 10,
-                "levels": [
-                  78,
-                  78,
-                  78,
-                  78,
-                  78
-                ],
-                "finals": {
-                  "1": 200
-                },
-                "absolutes": {
-                  "1": 200
-                }
-              }
-            ]
-          }
-        }
-      },
-      {
-        "id": "fast",
-        "residency": 8,
-        "collection": 0.95,
-        "rows": [
-          {
-            "stage": 1,
-            "waveXP": 338.3333333333337,
-            "bossXP": 168,
-            "kills": 190,
-            "eliteKills": 1,
-            "peak": 22,
-            "uncreditedSurvivors": 16
-          },
-          {
-            "stage": 2,
-            "waveXP": 772.416666666666,
-            "bossXP": 216,
-            "kills": 331,
-            "eliteKills": 2,
-            "peak": 34,
-            "uncreditedSurvivors": 27
-          },
-          {
-            "stage": 3,
-            "waveXP": 2974.8333333333203,
-            "bossXP": 264,
-            "kills": 655,
-            "eliteKills": 2,
-            "peak": 59,
-            "uncreditedSurvivors": 50
-          },
-          {
-            "stage": 4,
-            "waveXP": 4207.416666666639,
-            "bossXP": 312,
-            "kills": 859,
-            "eliteKills": 2,
-            "peak": 70,
-            "uncreditedSurvivors": 61
-          },
-          {
-            "stage": 5,
-            "waveXP": 6680.00000000005,
-            "bossXP": 360,
-            "kills": 1028,
-            "eliteKills": 2,
-            "peak": 83,
-            "uncreditedSurvivors": 74
-          },
-          {
-            "stage": 6,
-            "waveXP": 11911.66666666658,
-            "bossXP": 408,
-            "kills": 1288,
-            "eliteKills": 2,
-            "peak": 95,
-            "uncreditedSurvivors": 88
-          },
-          {
-            "stage": 7,
-            "waveXP": 12058.6666666666,
-            "bossXP": 456,
-            "kills": 1485,
-            "eliteKills": 2,
-            "peak": 112,
-            "uncreditedSurvivors": 99
-          },
-          {
-            "stage": 8,
-            "waveXP": 17079.916666666482,
-            "bossXP": 504,
-            "kills": 1777,
-            "eliteKills": 2,
-            "peak": 123,
-            "uncreditedSurvivors": 113
-          },
-          {
-            "stage": 9,
-            "waveXP": 23529.00000000021,
-            "bossXP": 552,
-            "kills": 1965,
-            "eliteKills": 2,
-            "peak": 134,
-            "uncreditedSurvivors": 126
-          },
-          {
-            "stage": 10,
-            "waveXP": 29461.166666667283,
-            "bossXP": 600,
-            "kills": 2298,
-            "eliteKills": 3,
-            "peak": 152,
-            "uncreditedSurvivors": 148
-          }
-        ],
-        "collectedXP": 107210.74583333381,
-        "plans": {
-          "planned": {
-            "seeds": 200,
-            "beforeBoss10Finals": {
-              "3": 200
-            },
-            "beforeBoss10Absolutes": {
-              "0": 200
-            },
-            "afterBoss10Finals": {
-              "3": 200
-            },
-            "choicesMinP10P50P90Max": [
-              103,
-              103,
-              103,
-              103,
-              103
-            ],
-            "skipsMinP10P50P90Max": [
-              27,
-              30,
-              32,
-              35,
-              38
-            ],
-            "exchangesUsed": 0,
-            "firstFusionStage": {
-              "2": 13,
-              "3": 60,
-              "4": 91,
-              "5": 36
-            },
-            "beforeBossByStage": [
-              {
-                "stage": 1,
-                "levels": [
-                  9,
-                  9,
-                  9,
-                  9,
-                  9
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 2,
-                "levels": [
-                  18,
-                  18,
-                  18,
-                  18,
-                  18
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 3,
-                "levels": [
-                  32,
-                  32,
-                  32,
-                  32,
-                  32
-                ],
-                "finals": {
-                  "0": 187,
-                  "1": 13
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 4,
-                "levels": [
-                  42,
-                  42,
-                  42,
-                  42,
-                  42
-                ],
-                "finals": {
-                  "0": 127,
-                  "1": 72,
-                  "2": 1
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 5,
-                "levels": [
-                  51,
-                  51,
-                  51,
-                  51,
-                  51
-                ],
-                "finals": {
-                  "0": 36,
-                  "1": 122,
-                  "2": 42
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 6,
-                "levels": [
-                  62,
-                  62,
-                  62,
-                  62,
-                  62
-                ],
-                "finals": {
-                  "1": 26,
-                  "2": 137,
-                  "3": 37
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 7,
-                "levels": [
-                  71,
-                  71,
-                  71,
-                  71,
-                  71
-                ],
-                "finals": {
-                  "2": 3,
-                  "3": 197
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 8,
-                "levels": [
-                  81,
-                  81,
-                  81,
-                  81,
-                  81
-                ],
-                "finals": {
-                  "3": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 9,
-                "levels": [
-                  92,
-                  92,
-                  92,
-                  92,
-                  92
-                ],
-                "finals": {
-                  "3": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 10,
-                "levels": [
-                  104,
-                  104,
-                  104,
-                  104,
-                  104
-                ],
-                "finals": {
-                  "3": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              }
-            ]
-          },
-          "scattered": {
-            "seeds": 200,
-            "beforeBoss10Finals": {
-              "0": 12,
-              "1": 69,
-              "2": 79,
-              "3": 39,
-              "4": 1
-            },
-            "beforeBoss10Absolutes": {
-              "0": 200
-            },
-            "afterBoss10Finals": {
-              "0": 12,
-              "1": 69,
-              "2": 79,
-              "3": 36,
-              "4": 4
-            },
-            "choicesMinP10P50P90Max": [
-              103,
-              103,
-              103,
-              103,
-              103
-            ],
-            "skipsMinP10P50P90Max": [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "exchangesUsed": 200,
-            "firstFusionStage": {
-              "4": 12,
-              "5": 38,
-              "6": 129,
-              "7": 9,
-              "none": 12
-            },
-            "beforeBossByStage": [
-              {
-                "stage": 1,
-                "levels": [
-                  9,
-                  9,
-                  9,
-                  9,
-                  9
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 2,
-                "levels": [
-                  18,
-                  18,
-                  18,
-                  18,
-                  18
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 3,
-                "levels": [
-                  32,
-                  32,
-                  32,
-                  32,
-                  32
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 4,
-                "levels": [
-                  42,
-                  42,
-                  42,
-                  42,
-                  42
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 5,
-                "levels": [
-                  51,
-                  51,
-                  51,
-                  51,
-                  51
-                ],
-                "finals": {
-                  "0": 188,
-                  "1": 12
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 6,
-                "levels": [
-                  62,
-                  62,
-                  62,
-                  62,
-                  62
-                ],
-                "finals": {
-                  "0": 150,
-                  "1": 49,
-                  "2": 1
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 7,
-                "levels": [
-                  71,
-                  71,
-                  71,
-                  71,
-                  71
-                ],
-                "finals": {
-                  "0": 21,
-                  "1": 135,
-                  "2": 44
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 8,
-                "levels": [
-                  81,
-                  81,
-                  81,
-                  81,
-                  81
-                ],
-                "finals": {
-                  "0": 12,
-                  "1": 87,
-                  "2": 93,
-                  "3": 8
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 9,
-                "levels": [
-                  92,
-                  92,
-                  92,
-                  92,
-                  92
-                ],
-                "finals": {
-                  "0": 12,
-                  "1": 71,
-                  "2": 95,
-                  "3": 22
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 10,
-                "levels": [
-                  104,
-                  104,
-                  104,
-                  104,
-                  104
-                ],
-                "finals": {
-                  "0": 12,
-                  "1": 69,
-                  "2": 79,
-                  "3": 39,
-                  "4": 1
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              }
-            ]
-          },
-          "absolute": {
-            "seeds": 200,
-            "beforeBoss10Finals": {
-              "1": 200
-            },
-            "beforeBoss10Absolutes": {
-              "1": 200
-            },
-            "afterBoss10Finals": {
-              "1": 200
-            },
-            "choicesMinP10P50P90Max": [
-              103,
-              103,
-              103,
-              103,
-              103
-            ],
-            "skipsMinP10P50P90Max": [
-              36,
-              39,
-              41,
-              43,
-              46
-            ],
-            "exchangesUsed": 0,
-            "firstFusionStage": {
-              "3": 5,
-              "4": 149,
-              "5": 46
-            },
-            "beforeBossByStage": [
-              {
-                "stage": 1,
-                "levels": [
-                  9,
-                  9,
-                  9,
-                  9,
-                  9
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 2,
-                "levels": [
-                  18,
-                  18,
-                  18,
-                  18,
-                  18
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 3,
-                "levels": [
-                  32,
-                  32,
-                  32,
-                  32,
-                  32
-                ],
-                "finals": {
-                  "0": 200
-                },
-                "absolutes": {
-                  "0": 200
-                }
-              },
-              {
-                "stage": 4,
-                "levels": [
-                  42,
-                  42,
-                  42,
-                  42,
-                  42
-                ],
-                "finals": {
-                  "0": 198,
-                  "1": 2
-                },
-                "absolutes": {
-                  "0": 197,
-                  "1": 3
-                }
-              },
-              {
-                "stage": 5,
-                "levels": [
-                  51,
-                  51,
-                  51,
-                  51,
-                  51
-                ],
-                "finals": {
-                  "0": 138,
-                  "1": 62
-                },
-                "absolutes": {
-                  "0": 95,
-                  "1": 105
-                }
-              },
-              {
-                "stage": 6,
-                "levels": [
-                  62,
-                  62,
-                  62,
-                  62,
-                  62
-                ],
-                "finals": {
-                  "0": 9,
-                  "1": 191
-                },
-                "absolutes": {
-                  "0": 5,
-                  "1": 195
-                }
-              },
-              {
-                "stage": 7,
-                "levels": [
-                  71,
-                  71,
-                  71,
-                  71,
-                  71
-                ],
-                "finals": {
-                  "1": 200
-                },
-                "absolutes": {
-                  "1": 200
-                }
-              },
-              {
-                "stage": 8,
-                "levels": [
-                  81,
-                  81,
-                  81,
-                  81,
-                  81
-                ],
-                "finals": {
-                  "1": 200
-                },
-                "absolutes": {
-                  "1": 200
-                }
-              },
-              {
-                "stage": 9,
-                "levels": [
-                  92,
-                  92,
-                  92,
-                  92,
-                  92
-                ],
-                "finals": {
-                  "1": 200
-                },
-                "absolutes": {
-                  "1": 200
-                }
-              },
-              {
-                "stage": 10,
-                "levels": [
-                  104,
-                  104,
-                  104,
-                  104,
-                  104
-                ],
-                "finals": {
-                  "1": 200
-                },
-                "absolutes": {
-                  "1": 200
-                }
-              }
-            ]
-          }
-        }
-      }
-    ]
+  "method": "Synthetic residency + actual director/death XP. No survival simulation. Chest-first; one free reroll per planned choice, optional one run exchange; no purchases.",
+  "xpCurve": {
+    "level1": 10,
+    "level20": 308,
+    "level40": 1723
   },
-  "sensitivity": {
-    "spawnSensitivity": [
-      {
-        "residency": 8,
-        "min": 110034.08333333375,
-        "max": 112853.41666666717
-      },
-      {
-        "residency": 16,
-        "min": 56857.416666666606,
-        "max": 58990.999999999905
-      },
-      {
-        "residency": 24,
-        "min": 38253.333333333394,
-        "max": 39520.666666666715
-      }
-    ],
-    "highQuality": {
-      "totalXP": 49895.56666666655,
-      "seeds": 100,
-      "beforeBoss10Finals": {
-        "3": 100
-      },
-      "beforeBoss10Absolutes": {
-        "0": 100
-      },
-      "afterBoss10Finals": {
-        "3": 100
-      },
-      "choicesMinP10P50P90Max": [
-        77,
-        77,
-        77,
-        77,
-        77
-      ],
-      "skipsMinP10P50P90Max": [
-        8,
-        11,
-        13,
-        15,
-        19
-      ],
-      "exchangesUsed": 0,
-      "firstFusionStage": {
-        "3": 13,
-        "4": 37,
-        "5": 39,
-        "6": 11
-      },
-      "beforeBossByStage": [
+  "scenarios": [
+    {
+      "id": "slow",
+      "residency": 24,
+      "collection": 0.7,
+      "rows": [
         {
           "stage": 1,
-          "levels": [
-            7,
-            7,
-            7,
-            7,
-            7
-          ],
-          "finals": {
-            "0": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 101.66666666666674,
+          "bossXP": 112,
+          "kills": 61,
+          "eliteKills": 0,
+          "peak": 21,
+          "uncreditedSurvivors": 18
         },
         {
           "stage": 2,
-          "levels": [
-            13,
-            13,
-            13,
-            13,
-            13
-          ],
-          "finals": {
-            "0": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 241.49999999999977,
+          "bossXP": 144,
+          "kills": 109,
+          "eliteKills": 1,
+          "peak": 37,
+          "uncreditedSurvivors": 30
         },
         {
           "stage": 3,
-          "levels": [
-            23,
-            23,
-            23,
-            23,
-            23
-          ],
-          "finals": {
-            "0": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 916.4999999999985,
+          "bossXP": 176,
+          "kills": 236,
+          "eliteKills": 1,
+          "peak": 64,
+          "uncreditedSurvivors": 49
         },
         {
           "stage": 4,
-          "levels": [
-            31,
-            31,
-            31,
-            31,
-            31
-          ],
-          "finals": {
-            "0": 87,
-            "1": 13
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 1244.5833333333328,
+          "bossXP": 208,
+          "kills": 289,
+          "eliteKills": 1,
+          "peak": 74,
+          "uncreditedSurvivors": 66
         },
         {
           "stage": 5,
-          "levels": [
-            39,
-            39,
-            39,
-            39,
-            39
-          ],
-          "finals": {
-            "0": 50,
-            "1": 50
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 2146.6666666666733,
+          "bossXP": 240,
+          "kills": 327,
+          "eliteKills": 1,
+          "peak": 84,
+          "uncreditedSurvivors": 81
         },
         {
           "stage": 6,
-          "levels": [
-            48,
-            48,
-            48,
-            48,
-            48
-          ],
-          "finals": {
-            "0": 11,
-            "1": 68,
-            "2": 21
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 3952.083333333318,
+          "bossXP": 272,
+          "kills": 415,
+          "eliteKills": 1,
+          "peak": 98,
+          "uncreditedSurvivors": 91
         },
         {
           "stage": 7,
-          "levels": [
-            54,
-            54,
-            54,
-            54,
-            54
-          ],
-          "finals": {
-            "1": 17,
-            "2": 65,
-            "3": 18
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 4122.999999999986,
+          "bossXP": 304,
+          "kills": 481,
+          "eliteKills": 1,
+          "peak": 118,
+          "uncreditedSurvivors": 104
         },
         {
           "stage": 8,
-          "levels": [
-            62,
-            62,
-            62,
-            62,
-            62
-          ],
-          "finals": {
-            "2": 29,
-            "3": 71
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 5941.58333333335,
+          "bossXP": 336,
+          "kills": 587,
+          "eliteKills": 2,
+          "peak": 127,
+          "uncreditedSurvivors": 118
         },
         {
           "stage": 9,
-          "levels": [
-            70,
-            70,
-            70,
-            70,
-            70
-          ],
-          "finals": {
-            "3": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 7494.6666666667015,
+          "bossXP": 368,
+          "kills": 646,
+          "eliteKills": 2,
+          "peak": 136,
+          "uncreditedSurvivors": 130
         },
         {
           "stage": 10,
-          "levels": [
-            78,
-            78,
-            78,
-            78,
-            78
-          ],
-          "finals": {
-            "3": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 9345.166666666693,
+          "bossXP": 400,
+          "kills": 736,
+          "eliteKills": 2,
+          "peak": 149,
+          "uncreditedSurvivors": 148
         }
-      ]
+      ],
+      "collectedXP": 26647.191666666702,
+      "plans": {
+        "planned": {
+          "seeds": 200,
+          "beforeBoss10Finals": {
+            "1": 10,
+            "2": 107,
+            "3": 83
+          },
+          "beforeBoss10Absolutes": {
+            "0": 200
+          },
+          "afterBoss10Finals": {
+            "2": 21,
+            "3": 179
+          },
+          "choicesMinP10P50P90Max": [
+            42,
+            43,
+            45,
+            46,
+            47
+          ],
+          "skipsMinP10P50P90Max": [
+            0,
+            0,
+            0,
+            1,
+            4
+          ],
+          "exchangesUsed": 0,
+          "firstFusionStage": {
+            "3": 5,
+            "4": 23,
+            "5": 35,
+            "6": 68,
+            "7": 45,
+            "8": 23,
+            "9": 1
+          },
+          "beforeBossByStage": [
+            {
+              "stage": 1,
+              "levels": [
+                4,
+                4,
+                4,
+                4,
+                4
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 2,
+              "levels": [
+                8,
+                8,
+                8,
+                8,
+                8
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 3,
+              "levels": [
+                14,
+                14,
+                14,
+                14,
+                15
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 4,
+              "levels": [
+                19,
+                19,
+                19,
+                19,
+                20
+              ],
+              "finals": {
+                "0": 195,
+                "1": 5
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 5,
+              "levels": [
+                23,
+                23,
+                23,
+                24,
+                25
+              ],
+              "finals": {
+                "0": 172,
+                "1": 28
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 6,
+              "levels": [
+                28,
+                28,
+                28,
+                29,
+                31
+              ],
+              "finals": {
+                "0": 137,
+                "1": 63
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 7,
+              "levels": [
+                32,
+                32,
+                32,
+                34,
+                35
+              ],
+              "finals": {
+                "0": 69,
+                "1": 123,
+                "2": 8
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 8,
+              "levels": [
+                36,
+                36,
+                37,
+                38,
+                39
+              ],
+              "finals": {
+                "0": 24,
+                "1": 111,
+                "2": 64,
+                "3": 1
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 9,
+              "levels": [
+                40,
+                40,
+                41,
+                42,
+                43
+              ],
+              "finals": {
+                "0": 1,
+                "1": 62,
+                "2": 124,
+                "3": 13
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 10,
+              "levels": [
+                43,
+                44,
+                45,
+                47,
+                48
+              ],
+              "finals": {
+                "1": 10,
+                "2": 107,
+                "3": 83
+              },
+              "absolutes": {
+                "0": 200
+              }
+            }
+          ]
+        },
+        "scattered": {
+          "seeds": 200,
+          "beforeBoss10Finals": {
+            "0": 112,
+            "1": 77,
+            "2": 11
+          },
+          "beforeBoss10Absolutes": {
+            "0": 200
+          },
+          "afterBoss10Finals": {
+            "0": 64,
+            "1": 98,
+            "2": 38
+          },
+          "choicesMinP10P50P90Max": [
+            42,
+            42,
+            44,
+            46,
+            47
+          ],
+          "skipsMinP10P50P90Max": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "exchangesUsed": 0,
+          "firstFusionStage": {
+            "5": 1,
+            "6": 2,
+            "7": 18,
+            "8": 23,
+            "9": 44,
+            "10": 48,
+            "none": 64
+          },
+          "beforeBossByStage": [
+            {
+              "stage": 1,
+              "levels": [
+                4,
+                4,
+                4,
+                4,
+                4
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 2,
+              "levels": [
+                8,
+                8,
+                8,
+                8,
+                9
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 3,
+              "levels": [
+                14,
+                14,
+                14,
+                15,
+                16
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 4,
+              "levels": [
+                19,
+                19,
+                19,
+                20,
+                21
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 5,
+              "levels": [
+                23,
+                23,
+                23,
+                25,
+                26
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 6,
+              "levels": [
+                28,
+                28,
+                28,
+                30,
+                31
+              ],
+              "finals": {
+                "0": 199,
+                "1": 1
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 7,
+              "levels": [
+                32,
+                32,
+                32,
+                34,
+                35
+              ],
+              "finals": {
+                "0": 197,
+                "1": 3
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 8,
+              "levels": [
+                36,
+                36,
+                37,
+                39,
+                40
+              ],
+              "finals": {
+                "0": 179,
+                "1": 21
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 9,
+              "levels": [
+                40,
+                40,
+                41,
+                43,
+                44
+              ],
+              "finals": {
+                "0": 156,
+                "1": 43,
+                "2": 1
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 10,
+              "levels": [
+                43,
+                43,
+                45,
+                47,
+                48
+              ],
+              "finals": {
+                "0": 112,
+                "1": 77,
+                "2": 11
+              },
+              "absolutes": {
+                "0": 200
+              }
+            }
+          ]
+        },
+        "absolute": {
+          "seeds": 200,
+          "beforeBoss10Finals": {
+            "0": 3,
+            "1": 197
+          },
+          "beforeBoss10Absolutes": {
+            "0": 2,
+            "1": 198
+          },
+          "afterBoss10Finals": {
+            "1": 200
+          },
+          "choicesMinP10P50P90Max": [
+            42,
+            42,
+            42,
+            42,
+            42
+          ],
+          "skipsMinP10P50P90Max": [
+            0,
+            0,
+            2,
+            3,
+            7
+          ],
+          "exchangesUsed": 0,
+          "firstFusionStage": {
+            "4": 1,
+            "5": 5,
+            "6": 61,
+            "7": 106,
+            "8": 26,
+            "9": 1
+          },
+          "beforeBossByStage": [
+            {
+              "stage": 1,
+              "levels": [
+                4,
+                4,
+                4,
+                4,
+                4
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 2,
+              "levels": [
+                8,
+                8,
+                8,
+                8,
+                8
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 3,
+              "levels": [
+                14,
+                14,
+                14,
+                14,
+                14
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 4,
+              "levels": [
+                19,
+                19,
+                19,
+                19,
+                19
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 5,
+              "levels": [
+                23,
+                23,
+                23,
+                23,
+                23
+              ],
+              "finals": {
+                "0": 199,
+                "1": 1
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 6,
+              "levels": [
+                28,
+                28,
+                28,
+                28,
+                28
+              ],
+              "finals": {
+                "0": 194,
+                "1": 6
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 7,
+              "levels": [
+                32,
+                32,
+                32,
+                32,
+                32
+              ],
+              "finals": {
+                "0": 168,
+                "1": 32
+              },
+              "absolutes": {
+                "0": 165,
+                "1": 35
+              }
+            },
+            {
+              "stage": 8,
+              "levels": [
+                36,
+                36,
+                36,
+                36,
+                36
+              ],
+              "finals": {
+                "0": 102,
+                "1": 98
+              },
+              "absolutes": {
+                "0": 100,
+                "1": 100
+              }
+            },
+            {
+              "stage": 9,
+              "levels": [
+                40,
+                40,
+                40,
+                40,
+                40
+              ],
+              "finals": {
+                "0": 32,
+                "1": 168
+              },
+              "absolutes": {
+                "0": 25,
+                "1": 175
+              }
+            },
+            {
+              "stage": 10,
+              "levels": [
+                43,
+                43,
+                43,
+                43,
+                43
+              ],
+              "finals": {
+                "0": 3,
+                "1": 197
+              },
+              "absolutes": {
+                "0": 2,
+                "1": 198
+              }
+            }
+          ]
+        },
+        "butcher": {
+          "seeds": 200,
+          "beforeBoss10Finals": {
+            "1": 10,
+            "2": 119,
+            "3": 71
+          },
+          "beforeBoss10Absolutes": {
+            "0": 200
+          },
+          "afterBoss10Finals": {
+            "2": 45,
+            "3": 155
+          },
+          "choicesMinP10P50P90Max": [
+            42,
+            42,
+            42,
+            42,
+            42
+          ],
+          "skipsMinP10P50P90Max": [
+            0,
+            0,
+            0,
+            2,
+            4
+          ],
+          "exchangesUsed": 0,
+          "firstFusionStage": {
+            "3": 25,
+            "4": 97,
+            "5": 57,
+            "6": 19,
+            "7": 2
+          },
+          "beforeBossByStage": [
+            {
+              "stage": 1,
+              "levels": [
+                4,
+                4,
+                4,
+                4,
+                4
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 2,
+              "levels": [
+                8,
+                8,
+                8,
+                8,
+                8
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 3,
+              "levels": [
+                14,
+                14,
+                14,
+                14,
+                14
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 4,
+              "levels": [
+                19,
+                19,
+                19,
+                19,
+                19
+              ],
+              "finals": {
+                "0": 175,
+                "1": 25
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 5,
+              "levels": [
+                23,
+                23,
+                23,
+                23,
+                23
+              ],
+              "finals": {
+                "0": 78,
+                "1": 122
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 6,
+              "levels": [
+                28,
+                28,
+                28,
+                28,
+                28
+              ],
+              "finals": {
+                "0": 21,
+                "1": 179
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 7,
+              "levels": [
+                32,
+                32,
+                32,
+                32,
+                32
+              ],
+              "finals": {
+                "0": 2,
+                "1": 196,
+                "2": 2
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 8,
+              "levels": [
+                36,
+                36,
+                36,
+                36,
+                36
+              ],
+              "finals": {
+                "1": 173,
+                "2": 27
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 9,
+              "levels": [
+                40,
+                40,
+                40,
+                40,
+                40
+              ],
+              "finals": {
+                "1": 90,
+                "2": 109,
+                "3": 1
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 10,
+              "levels": [
+                43,
+                43,
+                43,
+                43,
+                43
+              ],
+              "finals": {
+                "1": 10,
+                "2": 119,
+                "3": 71
+              },
+              "absolutes": {
+                "0": 200
+              }
+            }
+          ]
+        }
+      }
     },
-    "lowQuality": {
-      "totalXP": 42668.15833333331,
-      "seeds": 100,
-      "beforeBoss10Finals": {
-        "3": 100
-      },
-      "beforeBoss10Absolutes": {
-        "0": 100
-      },
-      "afterBoss10Finals": {
-        "3": 100
-      },
-      "choicesMinP10P50P90Max": [
-        73,
-        73,
-        73,
-        73,
-        73
-      ],
-      "skipsMinP10P50P90Max": [
-        8,
-        9,
-        12,
-        14,
-        16
-      ],
-      "exchangesUsed": 0,
-      "firstFusionStage": {
-        "3": 8,
-        "4": 32,
-        "5": 34,
-        "6": 26
-      },
-      "beforeBossByStage": [
+    {
+      "id": "central",
+      "residency": 16,
+      "collection": 0.85,
+      "rows": [
         {
           "stage": 1,
-          "levels": [
-            6,
-            6,
-            6,
-            6,
-            6
-          ],
-          "finals": {
-            "0": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 190.00000000000003,
+          "bossXP": 112,
+          "kills": 97,
+          "eliteKills": 1,
+          "peak": 22,
+          "uncreditedSurvivors": 17
         },
         {
           "stage": 2,
-          "levels": [
-            12,
-            12,
-            12,
-            12,
-            12
-          ],
-          "finals": {
-            "0": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 377.5833333333339,
+          "bossXP": 144,
+          "kills": 170,
+          "eliteKills": 1,
+          "peak": 37,
+          "uncreditedSurvivors": 30
         },
         {
           "stage": 3,
-          "levels": [
-            22,
-            22,
-            22,
-            22,
-            22
-          ],
-          "finals": {
-            "0": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 1421.333333333336,
+          "bossXP": 176,
+          "kills": 334,
+          "eliteKills": 2,
+          "peak": 61,
+          "uncreditedSurvivors": 53
         },
         {
           "stage": 4,
-          "levels": [
-            30,
-            30,
-            30,
-            30,
-            30
-          ],
-          "finals": {
-            "0": 92,
-            "1": 8
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 2109.7500000000077,
+          "bossXP": 208,
+          "kills": 451,
+          "eliteKills": 2,
+          "peak": 72,
+          "uncreditedSurvivors": 63
         },
         {
           "stage": 5,
-          "levels": [
-            37,
-            37,
-            37,
-            37,
-            37
-          ],
-          "finals": {
-            "0": 60,
-            "1": 40
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 3450.666666666654,
+          "bossXP": 240,
+          "kills": 511,
+          "eliteKills": 2,
+          "peak": 84,
+          "uncreditedSurvivors": 79
         },
         {
           "stage": 6,
-          "levels": [
-            46,
-            46,
-            46,
-            46,
-            46
-          ],
-          "finals": {
-            "0": 26,
-            "1": 61,
-            "2": 13
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 5710.83333333334,
+          "bossXP": 272,
+          "kills": 650,
+          "eliteKills": 2,
+          "peak": 96,
+          "uncreditedSurvivors": 88
         },
         {
           "stage": 7,
-          "levels": [
-            52,
-            52,
-            52,
-            52,
-            52
-          ],
-          "finals": {
-            "1": 18,
-            "2": 75,
-            "3": 7
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 5981.833333333364,
+          "bossXP": 304,
+          "kills": 731,
+          "eliteKills": 2,
+          "peak": 108,
+          "uncreditedSurvivors": 103
         },
         {
           "stage": 8,
-          "levels": [
-            59,
-            59,
-            59,
-            59,
-            59
-          ],
-          "finals": {
-            "1": 2,
-            "2": 26,
-            "3": 72
-          },
-          "absolutes": {
-            "0": 100
-          }
+          "waveXP": 8541.66666666671,
+          "bossXP": 336,
+          "kills": 906,
+          "eliteKills": 2,
+          "peak": 121,
+          "uncreditedSurvivors": 118
         },
         {
           "stage": 9,
-          "levels": [
+          "waveXP": 10779.999999999987,
+          "bossXP": 368,
+          "kills": 981,
+          "eliteKills": 2,
+          "peak": 136,
+          "uncreditedSurvivors": 130
+        },
+        {
+          "stage": 10,
+          "waveXP": 14154.833333333203,
+          "bossXP": 400,
+          "kills": 1161,
+          "eliteKills": 2,
+          "peak": 153,
+          "uncreditedSurvivors": 143
+        }
+      ],
+      "collectedXP": 46986.72499999995,
+      "plans": {
+        "planned": {
+          "seeds": 200,
+          "beforeBoss10Finals": {
+            "2": 23,
+            "3": 177
+          },
+          "beforeBoss10Absolutes": {
+            "0": 200
+          },
+          "afterBoss10Finals": {
+            "3": 200
+          },
+          "choicesMinP10P50P90Max": [
+            51,
+            52,
+            54,
+            55,
+            56
+          ],
+          "skipsMinP10P50P90Max": [
+            0,
+            0,
+            3,
+            5,
+            6
+          ],
+          "exchangesUsed": 0,
+          "firstFusionStage": {
+            "3": 18,
+            "4": 27,
+            "5": 58,
+            "6": 72,
+            "7": 21,
+            "8": 4
+          },
+          "beforeBossByStage": [
+            {
+              "stage": 1,
+              "levels": [
+                6,
+                6,
+                6,
+                6,
+                6
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 2,
+              "levels": [
+                11,
+                11,
+                11,
+                11,
+                11
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 3,
+              "levels": [
+                18,
+                18,
+                18,
+                18,
+                19
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 4,
+              "levels": [
+                24,
+                24,
+                24,
+                24,
+                25
+              ],
+              "finals": {
+                "0": 182,
+                "1": 18
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 5,
+              "levels": [
+                29,
+                29,
+                29,
+                30,
+                30
+              ],
+              "finals": {
+                "0": 155,
+                "1": 45
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 6,
+              "levels": [
+                34,
+                34,
+                34,
+                35,
+                37
+              ],
+              "finals": {
+                "0": 97,
+                "1": 101,
+                "2": 2
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 7,
+              "levels": [
+                38,
+                38,
+                39,
+                40,
+                41
+              ],
+              "finals": {
+                "0": 25,
+                "1": 144,
+                "2": 31
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 8,
+              "levels": [
+                42,
+                43,
+                44,
+                45,
+                46
+              ],
+              "finals": {
+                "0": 4,
+                "1": 99,
+                "2": 95,
+                "3": 2
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 9,
+              "levels": [
+                47,
+                48,
+                49,
+                50,
+                51
+              ],
+              "finals": {
+                "1": 24,
+                "2": 131,
+                "3": 45
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 10,
+              "levels": [
+                52,
+                53,
+                55,
+                56,
+                57
+              ],
+              "finals": {
+                "2": 23,
+                "3": 177
+              },
+              "absolutes": {
+                "0": 200
+              }
+            }
+          ]
+        },
+        "scattered": {
+          "seeds": 200,
+          "beforeBoss10Finals": {
+            "0": 69,
+            "1": 113,
+            "2": 18
+          },
+          "beforeBoss10Absolutes": {
+            "0": 200
+          },
+          "afterBoss10Finals": {
+            "0": 26,
+            "1": 105,
+            "2": 69
+          },
+          "choicesMinP10P50P90Max": [
+            50,
+            50,
+            54,
+            56,
+            56
+          ],
+          "skipsMinP10P50P90Max": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "exchangesUsed": 0,
+          "firstFusionStage": {
+            "5": 2,
+            "6": 4,
+            "7": 19,
+            "8": 34,
+            "9": 72,
+            "10": 43,
+            "none": 26
+          },
+          "beforeBossByStage": [
+            {
+              "stage": 1,
+              "levels": [
+                6,
+                6,
+                6,
+                6,
+                6
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 2,
+              "levels": [
+                11,
+                11,
+                11,
+                11,
+                12
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 3,
+              "levels": [
+                18,
+                18,
+                18,
+                19,
+                20
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 4,
+              "levels": [
+                24,
+                24,
+                24,
+                25,
+                26
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 5,
+              "levels": [
+                29,
+                29,
+                29,
+                31,
+                32
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 6,
+              "levels": [
+                34,
+                34,
+                35,
+                37,
+                38
+              ],
+              "finals": {
+                "0": 198,
+                "1": 2
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 7,
+              "levels": [
+                38,
+                38,
+                39,
+                41,
+                42
+              ],
+              "finals": {
+                "0": 194,
+                "1": 6
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 8,
+              "levels": [
+                42,
+                42,
+                44,
+                46,
+                47
+              ],
+              "finals": {
+                "0": 175,
+                "1": 25
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 9,
+              "levels": [
+                47,
+                47,
+                49,
+                51,
+                52
+              ],
+              "finals": {
+                "0": 141,
+                "1": 56,
+                "2": 3
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 10,
+              "levels": [
+                51,
+                51,
+                55,
+                57,
+                57
+              ],
+              "finals": {
+                "0": 69,
+                "1": 113,
+                "2": 18
+              },
+              "absolutes": {
+                "0": 200
+              }
+            }
+          ]
+        },
+        "absolute": {
+          "seeds": 200,
+          "beforeBoss10Finals": {
+            "1": 200
+          },
+          "beforeBoss10Absolutes": {
+            "1": 200
+          },
+          "afterBoss10Finals": {
+            "1": 200
+          },
+          "choicesMinP10P50P90Max": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "skipsMinP10P50P90Max": [
+            0,
+            3,
+            5,
+            7,
+            10
+          ],
+          "exchangesUsed": 0,
+          "firstFusionStage": {
+            "5": 32,
+            "6": 113,
+            "7": 48,
+            "8": 7
+          },
+          "beforeBossByStage": [
+            {
+              "stage": 1,
+              "levels": [
+                6,
+                6,
+                6,
+                6,
+                6
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 2,
+              "levels": [
+                11,
+                11,
+                11,
+                11,
+                11
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 3,
+              "levels": [
+                18,
+                18,
+                18,
+                18,
+                18
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 4,
+              "levels": [
+                24,
+                24,
+                24,
+                24,
+                24
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 5,
+              "levels": [
+                29,
+                29,
+                29,
+                29,
+                29
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 6,
+              "levels": [
+                34,
+                34,
+                34,
+                34,
+                34
+              ],
+              "finals": {
+                "0": 190,
+                "1": 10
+              },
+              "absolutes": {
+                "0": 178,
+                "1": 22
+              }
+            },
+            {
+              "stage": 7,
+              "levels": [
+                38,
+                38,
+                38,
+                38,
+                38
+              ],
+              "finals": {
+                "0": 139,
+                "1": 61
+              },
+              "absolutes": {
+                "0": 108,
+                "1": 92
+              }
+            },
+            {
+              "stage": 8,
+              "levels": [
+                42,
+                42,
+                42,
+                42,
+                42
+              ],
+              "finals": {
+                "0": 67,
+                "1": 133
+              },
+              "absolutes": {
+                "0": 52,
+                "1": 148
+              }
+            },
+            {
+              "stage": 9,
+              "levels": [
+                47,
+                47,
+                47,
+                47,
+                47
+              ],
+              "finals": {
+                "0": 17,
+                "1": 183
+              },
+              "absolutes": {
+                "0": 9,
+                "1": 191
+              }
+            },
+            {
+              "stage": 10,
+              "levels": [
+                51,
+                51,
+                51,
+                51,
+                51
+              ],
+              "finals": {
+                "1": 200
+              },
+              "absolutes": {
+                "1": 200
+              }
+            }
+          ]
+        },
+        "butcher": {
+          "seeds": 200,
+          "beforeBoss10Finals": {
+            "2": 40,
+            "3": 160
+          },
+          "beforeBoss10Absolutes": {
+            "0": 200
+          },
+          "afterBoss10Finals": {
+            "2": 5,
+            "3": 195
+          },
+          "choicesMinP10P50P90Max": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "skipsMinP10P50P90Max": [
+            0,
+            1,
+            3,
+            5,
+            9
+          ],
+          "exchangesUsed": 0,
+          "firstFusionStage": {
+            "3": 59,
+            "4": 105,
+            "5": 29,
+            "6": 7
+          },
+          "beforeBossByStage": [
+            {
+              "stage": 1,
+              "levels": [
+                6,
+                6,
+                6,
+                6,
+                6
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 2,
+              "levels": [
+                11,
+                11,
+                11,
+                11,
+                11
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 3,
+              "levels": [
+                18,
+                18,
+                18,
+                18,
+                18
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 4,
+              "levels": [
+                24,
+                24,
+                24,
+                24,
+                24
+              ],
+              "finals": {
+                "0": 141,
+                "1": 59
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 5,
+              "levels": [
+                29,
+                29,
+                29,
+                29,
+                29
+              ],
+              "finals": {
+                "0": 36,
+                "1": 164
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 6,
+              "levels": [
+                34,
+                34,
+                34,
+                34,
+                34
+              ],
+              "finals": {
+                "0": 7,
+                "1": 193
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 7,
+              "levels": [
+                38,
+                38,
+                38,
+                38,
+                38
+              ],
+              "finals": {
+                "1": 182,
+                "2": 18
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 8,
+              "levels": [
+                42,
+                42,
+                42,
+                42,
+                42
+              ],
+              "finals": {
+                "1": 105,
+                "2": 93,
+                "3": 2
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 9,
+              "levels": [
+                47,
+                47,
+                47,
+                47,
+                47
+              ],
+              "finals": {
+                "1": 28,
+                "2": 142,
+                "3": 30
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 10,
+              "levels": [
+                51,
+                51,
+                51,
+                51,
+                51
+              ],
+              "finals": {
+                "2": 40,
+                "3": 160
+              },
+              "absolutes": {
+                "0": 200
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fast",
+      "residency": 8,
+      "collection": 0.95,
+      "rows": [
+        {
+          "stage": 1,
+          "waveXP": 338.3333333333337,
+          "bossXP": 112,
+          "kills": 190,
+          "eliteKills": 1,
+          "peak": 22,
+          "uncreditedSurvivors": 16
+        },
+        {
+          "stage": 2,
+          "waveXP": 785.8333333333327,
+          "bossXP": 144,
+          "kills": 332,
+          "eliteKills": 2,
+          "peak": 35,
+          "uncreditedSurvivors": 27
+        },
+        {
+          "stage": 3,
+          "waveXP": 3000.833333333324,
+          "bossXP": 176,
+          "kills": 657,
+          "eliteKills": 2,
+          "peak": 59,
+          "uncreditedSurvivors": 51
+        },
+        {
+          "stage": 4,
+          "waveXP": 4180.833333333303,
+          "bossXP": 208,
+          "kills": 860,
+          "eliteKills": 2,
+          "peak": 70,
+          "uncreditedSurvivors": 62
+        },
+        {
+          "stage": 5,
+          "waveXP": 6816.000000000042,
+          "bossXP": 240,
+          "kills": 1027,
+          "eliteKills": 2,
+          "peak": 87,
+          "uncreditedSurvivors": 73
+        },
+        {
+          "stage": 6,
+          "waveXP": 11742.499999999953,
+          "bossXP": 272,
+          "kills": 1293,
+          "eliteKills": 2,
+          "peak": 95,
+          "uncreditedSurvivors": 87
+        },
+        {
+          "stage": 7,
+          "waveXP": 11814.833333333272,
+          "bossXP": 304,
+          "kills": 1477,
+          "eliteKills": 2,
+          "peak": 107,
+          "uncreditedSurvivors": 98
+        },
+        {
+          "stage": 8,
+          "waveXP": 17158.49999999981,
+          "bossXP": 336,
+          "kills": 1790,
+          "eliteKills": 2,
+          "peak": 128,
+          "uncreditedSurvivors": 106
+        },
+        {
+          "stage": 9,
+          "waveXP": 22410.666666666857,
+          "bossXP": 368,
+          "kills": 1985,
+          "eliteKills": 2,
+          "peak": 133,
+          "uncreditedSurvivors": 122
+        },
+        {
+          "stage": 10,
+          "waveXP": 28818.833333333936,
+          "bossXP": 400,
+          "kills": 2300,
+          "eliteKills": 3,
+          "peak": 148,
+          "uncreditedSurvivors": 144
+        }
+      ],
+      "collectedXP": 104145.80833333381,
+      "plans": {
+        "planned": {
+          "seeds": 200,
+          "beforeBoss10Finals": {
+            "3": 200
+          },
+          "beforeBoss10Absolutes": {
+            "0": 200
+          },
+          "afterBoss10Finals": {
+            "3": 200
+          },
+          "choicesMinP10P50P90Max": [
+            68,
+            70,
+            71,
+            73,
+            74
+          ],
+          "skipsMinP10P50P90Max": [
+            6,
+            9,
+            12,
+            14,
+            16
+          ],
+          "exchangesUsed": 0,
+          "firstFusionStage": {
+            "3": 29,
+            "4": 53,
+            "5": 68,
+            "6": 46,
+            "7": 4
+          },
+          "beforeBossByStage": [
+            {
+              "stage": 1,
+              "levels": [
+                8,
+                8,
+                8,
+                8,
+                8
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 2,
+              "levels": [
+                15,
+                15,
+                15,
+                15,
+                15
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 3,
+              "levels": [
+                24,
+                24,
+                24,
+                25,
+                25
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 4,
+              "levels": [
+                30,
+                30,
+                30,
+                31,
+                32
+              ],
+              "finals": {
+                "0": 171,
+                "1": 29
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 5,
+              "levels": [
+                37,
+                37,
+                37,
+                38,
+                39
+              ],
+              "finals": {
+                "0": 118,
+                "1": 81,
+                "2": 1
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 6,
+              "levels": [
+                43,
+                43,
+                44,
+                45,
+                47
+              ],
+              "finals": {
+                "0": 50,
+                "1": 132,
+                "2": 18
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 7,
+              "levels": [
+                48,
+                48,
+                49,
+                51,
+                53
+              ],
+              "finals": {
+                "0": 4,
+                "1": 91,
+                "2": 104,
+                "3": 1
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 8,
+              "levels": [
+                54,
+                55,
+                56,
+                58,
+                60
+              ],
+              "finals": {
+                "1": 17,
+                "2": 116,
+                "3": 67
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 9,
+              "levels": [
+                61,
+                62,
+                64,
+                66,
+                67
+              ],
+              "finals": {
+                "2": 17,
+                "3": 183
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 10,
+              "levels": [
+                69,
+                71,
+                72,
+                74,
+                75
+              ],
+              "finals": {
+                "3": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            }
+          ]
+        },
+        "scattered": {
+          "seeds": 200,
+          "beforeBoss10Finals": {
+            "0": 11,
+            "1": 124,
+            "2": 64,
+            "3": 1
+          },
+          "beforeBoss10Absolutes": {
+            "0": 200
+          },
+          "afterBoss10Finals": {
+            "1": 54,
+            "2": 131,
+            "3": 15
+          },
+          "choicesMinP10P50P90Max": [
+            66,
+            67,
+            71,
+            74,
+            74
+          ],
+          "skipsMinP10P50P90Max": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "exchangesUsed": 0,
+          "firstFusionStage": {
+            "4": 1,
+            "5": 3,
+            "6": 19,
+            "7": 33,
+            "8": 60,
+            "9": 73,
+            "10": 11
+          },
+          "beforeBossByStage": [
+            {
+              "stage": 1,
+              "levels": [
+                8,
+                8,
+                8,
+                8,
+                8
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 2,
+              "levels": [
+                15,
+                15,
+                15,
+                15,
+                16
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 3,
+              "levels": [
+                24,
+                24,
+                24,
+                26,
+                27
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 4,
+              "levels": [
+                30,
+                30,
+                30,
+                32,
+                34
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 5,
+              "levels": [
+                37,
+                37,
+                37,
+                39,
+                40
+              ],
+              "finals": {
+                "0": 199,
+                "1": 1
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 6,
+              "levels": [
+                43,
+                43,
+                44,
+                47,
+                48
+              ],
+              "finals": {
+                "0": 196,
+                "1": 4
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 7,
+              "levels": [
+                48,
+                48,
+                50,
+                53,
+                53
+              ],
+              "finals": {
+                "0": 177,
+                "1": 23
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 8,
+              "levels": [
+                54,
+                54,
+                57,
+                59,
+                60
+              ],
+              "finals": {
+                "0": 144,
+                "1": 55,
+                "2": 1
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 9,
+              "levels": [
+                60,
+                60,
+                64,
+                67,
+                67
+              ],
+              "finals": {
+                "0": 84,
+                "1": 102,
+                "2": 14
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 10,
+              "levels": [
+                67,
+                68,
+                72,
+                74,
+                75
+              ],
+              "finals": {
+                "0": 11,
+                "1": 124,
+                "2": 64,
+                "3": 1
+              },
+              "absolutes": {
+                "0": 200
+              }
+            }
+          ]
+        },
+        "absolute": {
+          "seeds": 200,
+          "beforeBoss10Finals": {
+            "1": 200
+          },
+          "beforeBoss10Absolutes": {
+            "1": 200
+          },
+          "afterBoss10Finals": {
+            "1": 200
+          },
+          "choicesMinP10P50P90Max": [
             66,
             66,
             66,
             66,
             66
           ],
-          "finals": {
-            "3": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
-        },
-        {
-          "stage": 10,
-          "levels": [
-            73,
-            73,
-            73,
-            73,
-            73
+          "skipsMinP10P50P90Max": [
+            11,
+            13,
+            15,
+            17,
+            19
           ],
-          "finals": {
-            "3": 100
+          "exchangesUsed": 0,
+          "firstFusionStage": {
+            "4": 14,
+            "5": 104,
+            "6": 78,
+            "7": 4
           },
-          "absolutes": {
-            "0": 100
-          }
+          "beforeBossByStage": [
+            {
+              "stage": 1,
+              "levels": [
+                8,
+                8,
+                8,
+                8,
+                8
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 2,
+              "levels": [
+                15,
+                15,
+                15,
+                15,
+                15
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 3,
+              "levels": [
+                24,
+                24,
+                24,
+                24,
+                24
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 4,
+              "levels": [
+                30,
+                30,
+                30,
+                30,
+                30
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 5,
+              "levels": [
+                37,
+                37,
+                37,
+                37,
+                37
+              ],
+              "finals": {
+                "0": 199,
+                "1": 1
+              },
+              "absolutes": {
+                "0": 187,
+                "1": 13
+              }
+            },
+            {
+              "stage": 6,
+              "levels": [
+                43,
+                43,
+                43,
+                43,
+                43
+              ],
+              "finals": {
+                "0": 153,
+                "1": 47
+              },
+              "absolutes": {
+                "0": 123,
+                "1": 77
+              }
+            },
+            {
+              "stage": 7,
+              "levels": [
+                48,
+                48,
+                48,
+                48,
+                48
+              ],
+              "finals": {
+                "0": 64,
+                "1": 136
+              },
+              "absolutes": {
+                "0": 31,
+                "1": 169
+              }
+            },
+            {
+              "stage": 8,
+              "levels": [
+                54,
+                54,
+                54,
+                54,
+                54
+              ],
+              "finals": {
+                "0": 8,
+                "1": 192
+              },
+              "absolutes": {
+                "0": 4,
+                "1": 196
+              }
+            },
+            {
+              "stage": 9,
+              "levels": [
+                60,
+                60,
+                60,
+                60,
+                60
+              ],
+              "finals": {
+                "1": 200
+              },
+              "absolutes": {
+                "1": 200
+              }
+            },
+            {
+              "stage": 10,
+              "levels": [
+                67,
+                67,
+                67,
+                67,
+                67
+              ],
+              "finals": {
+                "1": 200
+              },
+              "absolutes": {
+                "1": 200
+              }
+            }
+          ]
+        },
+        "butcher": {
+          "seeds": 200,
+          "beforeBoss10Finals": {
+            "2": 1,
+            "3": 199
+          },
+          "beforeBoss10Absolutes": {
+            "0": 200
+          },
+          "afterBoss10Finals": {
+            "3": 200
+          },
+          "choicesMinP10P50P90Max": [
+            66,
+            66,
+            66,
+            66,
+            66
+          ],
+          "skipsMinP10P50P90Max": [
+            6,
+            9,
+            11,
+            13,
+            16
+          ],
+          "exchangesUsed": 0,
+          "firstFusionStage": {
+            "2": 7,
+            "3": 129,
+            "4": 58,
+            "5": 6
+          },
+          "beforeBossByStage": [
+            {
+              "stage": 1,
+              "levels": [
+                8,
+                8,
+                8,
+                8,
+                8
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 2,
+              "levels": [
+                15,
+                15,
+                15,
+                15,
+                15
+              ],
+              "finals": {
+                "0": 200
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 3,
+              "levels": [
+                24,
+                24,
+                24,
+                24,
+                24
+              ],
+              "finals": {
+                "0": 193,
+                "1": 7
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 4,
+              "levels": [
+                30,
+                30,
+                30,
+                30,
+                30
+              ],
+              "finals": {
+                "0": 64,
+                "1": 136
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 5,
+              "levels": [
+                37,
+                37,
+                37,
+                37,
+                37
+              ],
+              "finals": {
+                "0": 6,
+                "1": 194
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 6,
+              "levels": [
+                43,
+                43,
+                43,
+                43,
+                43
+              ],
+              "finals": {
+                "1": 183,
+                "2": 17
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 7,
+              "levels": [
+                48,
+                48,
+                48,
+                48,
+                48
+              ],
+              "finals": {
+                "1": 95,
+                "2": 100,
+                "3": 5
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 8,
+              "levels": [
+                54,
+                54,
+                54,
+                54,
+                54
+              ],
+              "finals": {
+                "1": 14,
+                "2": 135,
+                "3": 51
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 9,
+              "levels": [
+                60,
+                60,
+                60,
+                60,
+                60
+              ],
+              "finals": {
+                "2": 14,
+                "3": 186
+              },
+              "absolutes": {
+                "0": 200
+              }
+            },
+            {
+              "stage": 10,
+              "levels": [
+                67,
+                67,
+                67,
+                67,
+                67
+              ],
+              "finals": {
+                "2": 1,
+                "3": 199
+              },
+              "absolutes": {
+                "0": 200
+              }
+            }
+          ]
         }
-      ]
-    },
-    "chestXPFirst": {
-      "seeds": 100,
-      "beforeBoss10Finals": {
-        "3": 100
-      },
-      "beforeBoss10Absolutes": {
-        "0": 100
-      },
-      "afterBoss10Finals": {
-        "3": 100
-      },
-      "choicesMinP10P50P90Max": [
-        77,
-        77,
-        77,
-        77,
-        77
-      ],
-      "skipsMinP10P50P90Max": [
-        7,
-        12,
-        14,
-        16,
-        21
-      ],
-      "exchangesUsed": 0,
-      "firstFusionStage": {
-        "3": 18,
-        "4": 30,
-        "5": 43,
-        "6": 9
-      },
-      "beforeBossByStage": [
-        {
-          "stage": 1,
-          "levels": [
-            7,
-            7,
-            7,
-            7,
-            7
-          ],
-          "finals": {
-            "0": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
-        },
-        {
-          "stage": 2,
-          "levels": [
-            13,
-            13,
-            13,
-            13,
-            13
-          ],
-          "finals": {
-            "0": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
-        },
-        {
-          "stage": 3,
-          "levels": [
-            23,
-            23,
-            23,
-            23,
-            23
-          ],
-          "finals": {
-            "0": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
-        },
-        {
-          "stage": 4,
-          "levels": [
-            31,
-            31,
-            31,
-            31,
-            31
-          ],
-          "finals": {
-            "0": 82,
-            "1": 18
-          },
-          "absolutes": {
-            "0": 100
-          }
-        },
-        {
-          "stage": 5,
-          "levels": [
-            39,
-            39,
-            39,
-            39,
-            39
-          ],
-          "finals": {
-            "0": 52,
-            "1": 46,
-            "2": 2
-          },
-          "absolutes": {
-            "0": 100
-          }
-        },
-        {
-          "stage": 6,
-          "levels": [
-            48,
-            48,
-            48,
-            48,
-            48
-          ],
-          "finals": {
-            "0": 9,
-            "1": 59,
-            "2": 32
-          },
-          "absolutes": {
-            "0": 100
-          }
-        },
-        {
-          "stage": 7,
-          "levels": [
-            54,
-            54,
-            54,
-            54,
-            54
-          ],
-          "finals": {
-            "1": 10,
-            "2": 74,
-            "3": 16
-          },
-          "absolutes": {
-            "0": 100
-          }
-        },
-        {
-          "stage": 8,
-          "levels": [
-            62,
-            62,
-            62,
-            62,
-            62
-          ],
-          "finals": {
-            "2": 13,
-            "3": 87
-          },
-          "absolutes": {
-            "0": 100
-          }
-        },
-        {
-          "stage": 9,
-          "levels": [
-            70,
-            70,
-            70,
-            70,
-            70
-          ],
-          "finals": {
-            "3": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
-        },
-        {
-          "stage": 10,
-          "levels": [
-            78,
-            78,
-            78,
-            78,
-            78
-          ],
-          "finals": {
-            "3": 100
-          },
-          "absolutes": {
-            "0": 100
-          }
-        }
-      ]
+      }
     }
-  }
+  ]
 }

@@ -1,5 +1,13 @@
 # Boss durability adjustment
 
+## Current beginner and Alpha relocation
+
+The earlier stage-1 1,400-HP claims below are historical and superseded. Stage 1 is now the beginner gate guard at **600 base HP / 4,200 live HP**, with one fixed 1.5-second charge tell and 2.5-second stationary contact-safe recovery, no summons, and no bullets in any phase. The old Alpha definition and art have moved to stage 9 at **13,000 base HP / 291,200 live HP**. The old stage-9 44,800 base value would remain 1,003,520 live HP, not 44,800. The replacement now takes **83.5–93.3 seconds** with automatic targeting, or **69.2–76.9 seconds** with one explicit focus tap, for the actual pre-stage-9 two-final planner build. Its final HP/TTK measurements are documented in [boss-stage-relocation.md](boss-stage-relocation.md). Stages 2–8 and 10 retain their previous definitions and the global HP multipliers are unchanged.
+
+The current legal two-final equipment probe retains **25.5% actual DPS growth** when might increases 1.50→2.15: 10,324.94→12,955.84 DPS. The existing inherited non-Cannon 600 damage cap remains intact; the regression requires >20% measured improvement rather than inflating the cap to preserve an obsolete >30% assumption. The following older DPS/timing tables predate current cannon, thorn and Absolute mechanics and are historical, not final release measurements. See also [absolute-bloom-balance.md](absolute-bloom-balance.md).
+
+## Historical durability pass
+
 The user reported weak bosses in the existing release. The ten new signatures have not yet been human-playtested in production; this adjustment does not treat that feedback as a test of the new patterns.
 
 ## HP before → after
@@ -27,7 +35,7 @@ The economy reduces run XP requirements by 20% and makes permanent damage upgrad
 
 Stages 2–10 receive progressively larger relative adjustments. Stage 1 has a separate evidence-driven correction because its earlier reduced HP allowed phase transitions to cancel every charge before death. A strong build still clears faster than a weak one; purchases are not nullified by adaptive scaling.
 
-## Current actual-code samples, after inherited-core finals
+## Historical actual-code samples, after inherited-core finals
 
 Run `node tools/boss-damage-bench.mjs`. The old stage-5 three-final and stage-10 six-final samples were removed. They assumed implausible investment and their old DPS numbers no longer described the inherited-core combat implementation.
 
@@ -61,4 +69,4 @@ The subsequent fewer/stronger-mob request also scales explicit boss summons to 6
 
 ## Tests
 
-`tests/boss-durability.mjs` verifies exact HP values, stage-monotonic HP and later-stage multipliers, unchanged direct damage taken, collision geometry, early timing, ten signatures, reproducible legal-build damage samples, equipment scaling, explicit summon counts, 36 live early encounters and 144 live mid/late encounters. Existing boss-signature, animation, hazard and beginner tests remain applicable. The earlier fixture's HP-only assertions were updated to reflect this explicit later request; damage/speed/scaling protections remain.
+`tests/boss-durability.mjs` verifies exact HP values, the unchanged HP ladder outside the encounter-specific stage-9 replacement and later-stage multipliers, unchanged direct damage taken, collision geometry, early timing, ten signatures, reproducible legal-build damage samples, equipment scaling, explicit summon counts, 36 live early encounters and 144 live mid/late encounters. Existing boss-signature, animation, hazard and beginner tests remain applicable. The earlier fixture's HP-only assertions were updated to reflect this explicit later request; damage/speed/scaling protections remain.

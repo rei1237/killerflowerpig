@@ -2,6 +2,7 @@
 // cover weapon hardware so no browser-dependent emoji is used for inventory art.
 const ROOT = 'asset/items/';
 const weapons = {
+    sword:'sword.png', sword_wheel:'blood-reaper.png',
     burst_rail:'fusion-burst.svg',venom_saw:'fusion-venom.svg',ember_lance:'fusion-ember.svg',orbit_saw:'fusion-orbit.svg',toxic_scatter:'fusion-toxic.svg',
     absolute_bloom:'cannon.svg',doom_barrage:'rifle.svg',plague_end:'molotov.svg',guillotine:'pistols.svg',carnage_saw:'saw.svg',lotus_bloom:'cannon.svg',scatter_rail:'shotgun.svg',plague_fire:'molotov.svg',petalCannon:'cannon.svg',shotgun:'shotgun.svg', pistols:'pistols.svg', rifle:'rifle.svg',
     thorns:'thorns.svg', molotov:'molotov.svg', cannon:'cannon.svg', gas:'gas.svg', saw:'saw.svg',
@@ -14,7 +15,7 @@ const passives = {
 };
 const shop = {
     wind_feather:'wing-common.png',moon_wings:'wing-rare.png',star_wings:'wing-epic.png',maxHp:'celestial-cloak.png',might:'violet-orb.png',speed:'paw-charm.png',magnet:'celestial-hat.png',
-    reroll:'star-charm.png',greed:'fish-snack.png',pet_yeongnyang:'pet-yeongnyang.png',lotus_gun:'lotus-gun.png',
+    reroll:'star-charm.png',greed:'fish-snack.png',pet_yeongnyang:'pet-yeongnyang.png',lotus_gun:'lotus-gun.png?v=lotus-regalia',
 };
 export function itemArt(id, kind) {
     const file = kind === 'shop' ? shop[id] : weapons[id] || passives[id] || shop[id];

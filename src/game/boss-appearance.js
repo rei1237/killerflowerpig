@@ -21,7 +21,7 @@ export function bossArtPose(boss,clock) {
 }
 
 export function drawBossArtwork(ctx,boss,clock,image) {
- const meta=BOSS_ART[boss.stage];
+ const meta=BOSS_ART[boss.artStage ?? boss.stage];
  if(!meta||!image||!(image.width>0)||!(image.height>0))return false;
  const pose=bossArtPose(boss,clock),scale=boss.radius*3.2/meta.height;
  ctx.save();
@@ -99,7 +99,7 @@ export function bossSpriteFrame(boss) {
 }
 
 export function drawBossSpriteSheet(ctx,boss,image) {
- const meta=BOSS_SHEETS[boss.stage];
+ const meta=BOSS_SHEETS[boss.artStage ?? boss.stage];
  if(!meta || !image || image.width!==meta.width || image.height!==meta.height)return false;
  const frame=bossSpriteFrame(boss),scale=boss.radius*3.2/meta.bodyHeight;
  const sx=frame%meta.columns*meta.cellWidth,sy=Math.floor(frame/meta.columns)*meta.cellHeight;

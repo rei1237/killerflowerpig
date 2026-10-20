@@ -1,0 +1,74 @@
+{
+  "method": "900 real updateWeapons calls per dt, three independent inherited thorns cores, 180 enemies with 30 near and one fast crossing. Requested20 stat petals/core are capped to8 actual pets/core. Node wall-time diagnostic, not a mobile-frame guarantee.",
+  "results": [
+    {
+      "dt": 0.016666666666666666,
+      "enemies": 180,
+      "cores": 3,
+      "requestedStatAmounts": [
+        20,
+        20,
+        20
+      ],
+      "cappedPetalsPerCore": [
+        8,
+        8,
+        8
+      ],
+      "meanMs": 0.0371,
+      "p95Ms": 0.0979,
+      "maxMs": 4.0712,
+      "activePetalsAtEnd": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "dt": 0.1,
+      "enemies": 180,
+      "cores": 3,
+      "requestedStatAmounts": [
+        20,
+        20,
+        20
+      ],
+      "cappedPetalsPerCore": [
+        8,
+        8,
+        8
+      ],
+      "meanMs": 0.0541,
+      "p95Ms": 0.203,
+      "maxMs": 1.2561,
+      "activePetalsAtEnd": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "dt": 0.25,
+      "enemies": 180,
+      "cores": 3,
+      "requestedStatAmounts": [
+        20,
+        20,
+        20
+      ],
+      "cappedPetalsPerCore": [
+        8,
+        8,
+        8
+      ],
+      "meanMs": 0.0703,
+      "p95Ms": 0.2009,
+      "maxMs": 0.7981,
+      "activePetalsAtEnd": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

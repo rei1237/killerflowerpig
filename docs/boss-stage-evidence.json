@@ -1,0 +1,2449 @@
+{
+  "beginner": {
+    "method": "Five actual techs, paired seeds 1/7/13; two route weapons Lv4 + two legal passives Lv1 = 10 item levels, 0 evolution rewards. Equivalent run level 8 for two-weapon starters, 9 for one-weapon starters. Actual finite HP 4200, no god mode, purchases, healing pickups, wave director or mid-fight choices. Same 100px circular movement policy with radial correction and real movement speed for all techs. This is a controlled dodge/TTK check, not a human clear-rate estimate. Simulation ignores rendering/hitstop wall-time.",
+    "sourceHashes": {
+      "src/game/attack-animation.js": "4192eac40471c31938e2c68a639c6053e9f539a99b490d6ed964173048dd024e",
+      "src/game/boss-appearance.js": "c5aab715be86af5330b9cc8fa2a269753526cd4707a18c1695bb4a9c42c3cb9d",
+      "src/game/boss-sheets.js": "89d97ff7f11ea0df718781d6831aa6db34ab344972d5b0a8bd05b8cc06b9bbb4",
+      "src/game/boss.js": "52ec5364f381eec41bed1d2238533e7d2a60e546edfc0269dcb3bc2a0d388a78",
+      "src/game/butcher-sword.js": "527dd8057a7509a976954ca4021fbe8d77c89208efc8c7b900896217d9105c41",
+      "src/game/cannon-targeting.js": "7bf73142fe7a382d706d9c11ee37efc67c5dc12d7e7a2530e851f5a381e43892",
+      "src/game/coin-drops.js": "eefa2e1e459304fe98efc639485d4ccfc8fcde2cb382832dfb4ef87bb3377e62",
+      "src/game/cosmetic-effects.js": "8e2ddcf25d506e70c27e67e79178d1112d47644191c65f0501040dbee23306ef",
+      "src/game/effects.js": "200f6c1dad5999bb3f3a1e67fcadd9fe7df8736fbb8547bd3a72388da33a51b4",
+      "src/game/encirclement.js": "5e1f64429215a41ac688b6530cc5b0b520b43c466a4480da64d6176096701102",
+      "src/game/enemies.js": "0ea501a12179abb20962e264164ecba6b12d166a0fc23423188ef623a3f25631",
+      "src/game/fusion.js": "e89223fdd86f892b5c91299f236b187458cacaf5e03ecb511c4297cae1b7acc8",
+      "src/game/game.js": "6265bd2b08cd06153de40f57c56c0aff611f3be1b7351195cbafafb8d866a9dc",
+      "src/game/hazards.js": "50bb0a6d83658b7422aa0b488aa75d8bcb66a4a48c0ea2ddf4823938e3341ff4",
+      "src/game/loadout-exchange.js": "0972a08a1ebdd0baee08e7e43396a4c7494d95a5f016606d8bb3ef944e518020",
+      "src/game/pet-sprite.js": "c33a4586bff04ccea06621ac25084915dcde027f5a4588306990711e09aa6221",
+      "src/game/petal-cannon.js": "59c05bcb82b561652e382477e3186ed7278ed0737a9198a94712d0807d5458e8",
+      "src/game/petal-charge.js": "14f0443a6cb81d1d933f87eb303ba55c373c7a9cc10c43c48e4a122d724d3d30",
+      "src/game/pets.js": "17cd1969a2bd17292ba814814cd8608e9a77073caf93cdeffda682974c42f464",
+      "src/game/pickups.js": "481bed658e80ce651d956af4c895bfceaec9507ee61d1f113cdb0d5190ed4209",
+      "src/game/plague-targeting.js": "f6450451d56a45389aacbab8eb6a0c005a05d2443ea16c516b51d7b59ddc9e12",
+      "src/game/player-appearance.js": "f8111463b97634b00bac1c525d18923d4b3fdcdefd032e5b7cfcad1112ce213d",
+      "src/game/player-motion.js": "c01be8479862a66d924b74f2f8d1da4954652e372b51fae8544ca33610babc1d",
+      "src/game/player.js": "28027e42c9ecd44f290ea46c66ae86b3d09de2865749f85b56c08781bca817d4",
+      "src/game/practice.js": "d99aba4870cf590b96219a425e893d0e7376854e0f2f00a290cb424aba34aa0d",
+      "src/game/progression.js": "f6f1e96b187efa2d9b73cd075227f7e1a098dccada70a32b4b68b43a64c2af64",
+      "src/game/render.js": "bc64dc54c088377c0738880722c678cf5305f4c1cf43063fafc9e8a0d6bd9b60",
+      "src/game/spawner.js": "14afa755af05b6b496dfe48d09fce634e02d0dd1070cf9be76dec574a6235a43",
+      "src/game/stage-checkpoint.js": "d6c7d9871ec096994eadb225a05c8fdf91ccd6b2ab1f5ec10d223d6364e63be7",
+      "src/game/state.js": "7a93d77cd14f24a5aaffc13171f064638d0565b7ab56fba6a5e456b9181f5e0a",
+      "src/game/supply-drops.js": "51b14003c88a27930d25f7212d42b92a2596ab99eac35c994bb8f1164cfa7e2e",
+      "src/game/targeting.js": "45aa2fc53493989466d74a8518be72611cddcdbb03d579e78224577231895c78",
+      "src/game/tech.js": "dbaa5cd57ec19048ebdb5722d24b98f3eab8ea9dca4ab45e27bb1626415eb076",
+      "src/game/thorn-charges.js": "1af66aa6597a77dc80a76f5486645f72a7264c61a4d7ea18658eb20afa0d305c",
+      "src/game/weapon-vfx.js": "4c006fdf8250df3ed71a84345af76fe46768f61109f06949ed0bbe8ea9d21819",
+      "src/game/weapons.js": "e7dfba3332d3511de10ef6ae27f1b4482573a572b9351b610b0541d6f18ee5bb",
+      "src/data/accessories.js": "84f8a3a99b2d8d50d9313783267f772fb708f863f47aff1a9dd292afb372e34b",
+      "src/data/bestiary.js": "bd5726adf9d66ab1a0c7a72bbbc3865fe868f93de997b544ac4fedc87b2c000f",
+      "src/data/boss-rewards.js": "6e9136371b9703f53af88945ef7f2b4d3a29ad9f2e36bc10c56ca1e28a358a7f",
+      "src/data/bosses.js": "0bffb0a684ffa692ee9446c1b526c6f61835da06114bd17859d381d20ddce5b7",
+      "src/data/cosmetics.js": "2cc3e200fe8bfeabbb57fc0d20048770c9a17d7fe398444886aea0b34da946da",
+      "src/data/difficulty.js": "d0b5386c2848d0edb9dcfd399f880c006ebad080532a1a52b839d984866d2da1",
+      "src/data/enemies.js": "4e6bac541c99f52ac29bfcb4a61fb23fbe7dafee2ab9667e981663bd9a66d365",
+      "src/data/fusions.js": "2839de13a987e922e73dbb51f76ab661f1b05532272578b752204c1a10682f0c",
+      "src/data/pet-upgrades.js": "0ecdff30490ba6ff88605d91e7bab69f3dafe0ddd84f9f00090be384730773b1",
+      "src/data/relics.js": "5474e4949733f8514c088f1ebf15f4989bcfea786e8ddcd1b237b0ea3926ba01",
+      "src/data/shop.js": "c706e0539c0a0ffcbc494cb8b97f69b8729e530ce5cf07ad6f866302b72c5026",
+      "src/data/sprites.js": "69b46a50ac6dccc2b528f03ce994e92ae44378d27b0e58f1711943a40cd247bd",
+      "src/data/stages.js": "7574185b50b603e2d69fbd94a5ca7bef168369c12e7f5d68599d6ba299295676",
+      "src/data/story.js": "5fe3e8466d949426c781a442d95b1866eafa2d4491bfb66e7112152273911aef",
+      "src/data/techs.js": "e51bd95514d75c73f835fe9e4c95f5f46b1e8a2c4837c73ec799264409a68149",
+      "src/data/titles.js": "f3788cf83075628afa1dea4a1d73a7959a134dcaf6b5a54381b65c73da108595",
+      "src/data/weapons.js": "a8d01b73e7e96a5a0e82fc5714566f98ac856069a2b8fda5d3a5455b0e6522e3"
+    },
+    "sourceHashGuardPassed": true,
+    "summary": [
+      {
+        "tech": "gunline",
+        "kills": 3,
+        "survived": 3,
+        "meanSeconds": 23.172,
+        "minSeconds": 23.15,
+        "maxSeconds": 23.183,
+        "meanHp": 100,
+        "minDashes": 3
+      },
+      {
+        "tech": "bloom",
+        "kills": 3,
+        "survived": 3,
+        "meanSeconds": 17.25,
+        "minSeconds": 17.25,
+        "maxSeconds": 17.25,
+        "meanHp": 120,
+        "minDashes": 2
+      },
+      {
+        "tech": "plague",
+        "kills": 3,
+        "survived": 3,
+        "meanSeconds": 23.483,
+        "minSeconds": 23.483,
+        "maxSeconds": 23.483,
+        "meanHp": 100,
+        "minDashes": 3
+      },
+      {
+        "tech": "executioner",
+        "kills": 3,
+        "survived": 3,
+        "meanSeconds": 29.389,
+        "minSeconds": 27.717,
+        "maxSeconds": 31.4,
+        "meanHp": 100,
+        "minDashes": 3
+      },
+      {
+        "tech": "butcher",
+        "kills": 3,
+        "survived": 3,
+        "meanSeconds": 33.245,
+        "minSeconds": 32.8,
+        "maxSeconds": 33.467,
+        "meanHp": 130,
+        "minDashes": 4
+      }
+    ],
+    "rows": [
+      {
+        "tech": "gunline",
+        "seed": 1,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 8,
+        "equivalentRunLevel": 9,
+        "weapons": [
+          {
+            "id": "shotgun",
+            "level": 4
+          },
+          {
+            "id": "rifle",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "magazine": 1,
+          "scope": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 23.183,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 3,
+        "dashes": 3,
+        "recoveries": 4,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "rifle": 1707.75,
+          "shotgun": 2519.88
+        }
+      },
+      {
+        "tech": "gunline",
+        "seed": 7,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 8,
+        "equivalentRunLevel": 9,
+        "weapons": [
+          {
+            "id": "shotgun",
+            "level": 4
+          },
+          {
+            "id": "rifle",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "magazine": 1,
+          "scope": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 23.183,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 3,
+        "dashes": 3,
+        "recoveries": 4,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "rifle": 1669.8,
+          "shotgun": 2535.06
+        }
+      },
+      {
+        "tech": "gunline",
+        "seed": 13,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 8,
+        "equivalentRunLevel": 9,
+        "weapons": [
+          {
+            "id": "shotgun",
+            "level": 4
+          },
+          {
+            "id": "rifle",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "magazine": 1,
+          "scope": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 23.15,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 3,
+        "dashes": 3,
+        "recoveries": 5,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "rifle": 1631.85,
+          "shotgun": 2595.78
+        }
+      },
+      {
+        "tech": "bloom",
+        "seed": 1,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 7,
+        "equivalentRunLevel": 8,
+        "weapons": [
+          {
+            "id": "thorns",
+            "level": 4
+          },
+          {
+            "id": "cannon",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "regen": 1,
+          "pollen": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 17.25,
+        "hp": 120,
+        "maxHp": 120,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 3,
+        "dashes": 2,
+        "recoveries": 4,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "cannon": 1653.08,
+          "thorns": 2620.8
+        }
+      },
+      {
+        "tech": "bloom",
+        "seed": 7,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 7,
+        "equivalentRunLevel": 8,
+        "weapons": [
+          {
+            "id": "thorns",
+            "level": 4
+          },
+          {
+            "id": "cannon",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "regen": 1,
+          "pollen": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 17.25,
+        "hp": 120,
+        "maxHp": 120,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 3,
+        "dashes": 2,
+        "recoveries": 4,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "cannon": 1653.08,
+          "thorns": 2620.8
+        }
+      },
+      {
+        "tech": "bloom",
+        "seed": 13,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 7,
+        "equivalentRunLevel": 8,
+        "weapons": [
+          {
+            "id": "thorns",
+            "level": 4
+          },
+          {
+            "id": "cannon",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "regen": 1,
+          "pollen": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 17.25,
+        "hp": 120,
+        "maxHp": 120,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 3,
+        "dashes": 2,
+        "recoveries": 4,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "cannon": 1653.08,
+          "thorns": 2620.8
+        }
+      },
+      {
+        "tech": "plague",
+        "seed": 1,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 8,
+        "equivalentRunLevel": 9,
+        "weapons": [
+          {
+            "id": "molotov",
+            "level": 4
+          },
+          {
+            "id": "gas",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "spread": 1,
+          "sap": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 23.483,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 4,
+        "dashes": 3,
+        "recoveries": 5,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "molotov": 2711.5,
+          "gas": 1491.75
+        }
+      },
+      {
+        "tech": "plague",
+        "seed": 7,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 8,
+        "equivalentRunLevel": 9,
+        "weapons": [
+          {
+            "id": "molotov",
+            "level": 4
+          },
+          {
+            "id": "gas",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "spread": 1,
+          "sap": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 23.483,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 4,
+        "dashes": 3,
+        "recoveries": 5,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "molotov": 2711.5,
+          "gas": 1491.75
+        }
+      },
+      {
+        "tech": "plague",
+        "seed": 13,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 8,
+        "equivalentRunLevel": 9,
+        "weapons": [
+          {
+            "id": "molotov",
+            "level": 4
+          },
+          {
+            "id": "gas",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "spread": 1,
+          "sap": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 23.483,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 4,
+        "dashes": 3,
+        "recoveries": 5,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "molotov": 2711.5,
+          "gas": 1491.75
+        }
+      },
+      {
+        "tech": "executioner",
+        "seed": 1,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 8,
+        "equivalentRunLevel": 9,
+        "weapons": [
+          {
+            "id": "pistols",
+            "level": 4
+          },
+          {
+            "id": "rifle",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "focus": 1,
+          "scope": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 29.05,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 5,
+        "dashes": 4,
+        "recoveries": 6,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "rifle": 762.6,
+          "pistols": 3495.66
+        }
+      },
+      {
+        "tech": "executioner",
+        "seed": 7,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 8,
+        "equivalentRunLevel": 9,
+        "weapons": [
+          {
+            "id": "pistols",
+            "level": 4
+          },
+          {
+            "id": "rifle",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "focus": 1,
+          "scope": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 27.717,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 5,
+        "dashes": 3,
+        "recoveries": 5,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "rifle": 836.4,
+          "pistols": 3380.04
+        }
+      },
+      {
+        "tech": "executioner",
+        "seed": 13,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 8,
+        "equivalentRunLevel": 9,
+        "weapons": [
+          {
+            "id": "pistols",
+            "level": 4
+          },
+          {
+            "id": "rifle",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "focus": 1,
+          "scope": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 31.4,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 5,
+        "dashes": 4,
+        "recoveries": 6,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "rifle": 910.2,
+          "pistols": 3303.78
+        }
+      },
+      {
+        "tech": "butcher",
+        "seed": 1,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 7,
+        "equivalentRunLevel": 8,
+        "weapons": [
+          {
+            "id": "sword",
+            "level": 4
+          },
+          {
+            "id": "saw",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "whet": 1,
+          "hide": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 33.467,
+        "hp": 130,
+        "maxHp": 130,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 5,
+        "dashes": 5,
+        "recoveries": 6,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "sword": 3326.4,
+          "saw": 880
+        }
+      },
+      {
+        "tech": "butcher",
+        "seed": 7,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 7,
+        "equivalentRunLevel": 8,
+        "weapons": [
+          {
+            "id": "sword",
+            "level": 4
+          },
+          {
+            "id": "saw",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "whet": 1,
+          "hide": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 33.467,
+        "hp": 130,
+        "maxHp": 130,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 5,
+        "dashes": 5,
+        "recoveries": 6,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "sword": 3326.4,
+          "saw": 880
+        }
+      },
+      {
+        "tech": "butcher",
+        "seed": 13,
+        "kiteRadius": 100,
+        "budget": 10,
+        "choiceCount": 7,
+        "equivalentRunLevel": 8,
+        "weapons": [
+          {
+            "id": "sword",
+            "level": 4
+          },
+          {
+            "id": "saw",
+            "level": 4
+          }
+        ],
+        "passives": {
+          "whet": 1,
+          "hide": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 32.8,
+        "hp": 130,
+        "maxHp": 130,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 5,
+        "dashes": 4,
+        "recoveries": 6,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "sword": 3326.4,
+          "saw": 880
+        }
+      }
+    ]
+  },
+  "lowerGrowth": {
+    "method": "Five actual techs, paired seeds 1/7/13; two route weapons Lv3 + two legal passives Lv1 = 8 item levels, 0 evolution rewards. Equivalent run level 6 for two-weapon starters, 7 for one-weapon starters. Actual finite HP 4200, no god mode, purchases, healing pickups, wave director or mid-fight choices. Same 100px circular movement policy with radial correction and real movement speed for all techs. This is a controlled dodge/TTK check, not a human clear-rate estimate. Simulation ignores rendering/hitstop wall-time.",
+    "sourceHashes": {
+      "src/game/attack-animation.js": "4192eac40471c31938e2c68a639c6053e9f539a99b490d6ed964173048dd024e",
+      "src/game/boss-appearance.js": "c5aab715be86af5330b9cc8fa2a269753526cd4707a18c1695bb4a9c42c3cb9d",
+      "src/game/boss-sheets.js": "89d97ff7f11ea0df718781d6831aa6db34ab344972d5b0a8bd05b8cc06b9bbb4",
+      "src/game/boss.js": "52ec5364f381eec41bed1d2238533e7d2a60e546edfc0269dcb3bc2a0d388a78",
+      "src/game/butcher-sword.js": "527dd8057a7509a976954ca4021fbe8d77c89208efc8c7b900896217d9105c41",
+      "src/game/cannon-targeting.js": "7bf73142fe7a382d706d9c11ee37efc67c5dc12d7e7a2530e851f5a381e43892",
+      "src/game/coin-drops.js": "eefa2e1e459304fe98efc639485d4ccfc8fcde2cb382832dfb4ef87bb3377e62",
+      "src/game/cosmetic-effects.js": "8e2ddcf25d506e70c27e67e79178d1112d47644191c65f0501040dbee23306ef",
+      "src/game/effects.js": "200f6c1dad5999bb3f3a1e67fcadd9fe7df8736fbb8547bd3a72388da33a51b4",
+      "src/game/encirclement.js": "5e1f64429215a41ac688b6530cc5b0b520b43c466a4480da64d6176096701102",
+      "src/game/enemies.js": "0ea501a12179abb20962e264164ecba6b12d166a0fc23423188ef623a3f25631",
+      "src/game/fusion.js": "e89223fdd86f892b5c91299f236b187458cacaf5e03ecb511c4297cae1b7acc8",
+      "src/game/game.js": "6265bd2b08cd06153de40f57c56c0aff611f3be1b7351195cbafafb8d866a9dc",
+      "src/game/hazards.js": "50bb0a6d83658b7422aa0b488aa75d8bcb66a4a48c0ea2ddf4823938e3341ff4",
+      "src/game/loadout-exchange.js": "0972a08a1ebdd0baee08e7e43396a4c7494d95a5f016606d8bb3ef944e518020",
+      "src/game/pet-sprite.js": "c33a4586bff04ccea06621ac25084915dcde027f5a4588306990711e09aa6221",
+      "src/game/petal-cannon.js": "59c05bcb82b561652e382477e3186ed7278ed0737a9198a94712d0807d5458e8",
+      "src/game/petal-charge.js": "14f0443a6cb81d1d933f87eb303ba55c373c7a9cc10c43c48e4a122d724d3d30",
+      "src/game/pets.js": "17cd1969a2bd17292ba814814cd8608e9a77073caf93cdeffda682974c42f464",
+      "src/game/pickups.js": "481bed658e80ce651d956af4c895bfceaec9507ee61d1f113cdb0d5190ed4209",
+      "src/game/plague-targeting.js": "f6450451d56a45389aacbab8eb6a0c005a05d2443ea16c516b51d7b59ddc9e12",
+      "src/game/player-appearance.js": "f8111463b97634b00bac1c525d18923d4b3fdcdefd032e5b7cfcad1112ce213d",
+      "src/game/player-motion.js": "c01be8479862a66d924b74f2f8d1da4954652e372b51fae8544ca33610babc1d",
+      "src/game/player.js": "28027e42c9ecd44f290ea46c66ae86b3d09de2865749f85b56c08781bca817d4",
+      "src/game/practice.js": "d99aba4870cf590b96219a425e893d0e7376854e0f2f00a290cb424aba34aa0d",
+      "src/game/progression.js": "f6f1e96b187efa2d9b73cd075227f7e1a098dccada70a32b4b68b43a64c2af64",
+      "src/game/render.js": "bc64dc54c088377c0738880722c678cf5305f4c1cf43063fafc9e8a0d6bd9b60",
+      "src/game/spawner.js": "14afa755af05b6b496dfe48d09fce634e02d0dd1070cf9be76dec574a6235a43",
+      "src/game/stage-checkpoint.js": "d6c7d9871ec096994eadb225a05c8fdf91ccd6b2ab1f5ec10d223d6364e63be7",
+      "src/game/state.js": "7a93d77cd14f24a5aaffc13171f064638d0565b7ab56fba6a5e456b9181f5e0a",
+      "src/game/supply-drops.js": "51b14003c88a27930d25f7212d42b92a2596ab99eac35c994bb8f1164cfa7e2e",
+      "src/game/targeting.js": "45aa2fc53493989466d74a8518be72611cddcdbb03d579e78224577231895c78",
+      "src/game/tech.js": "dbaa5cd57ec19048ebdb5722d24b98f3eab8ea9dca4ab45e27bb1626415eb076",
+      "src/game/thorn-charges.js": "1af66aa6597a77dc80a76f5486645f72a7264c61a4d7ea18658eb20afa0d305c",
+      "src/game/weapon-vfx.js": "4c006fdf8250df3ed71a84345af76fe46768f61109f06949ed0bbe8ea9d21819",
+      "src/game/weapons.js": "e7dfba3332d3511de10ef6ae27f1b4482573a572b9351b610b0541d6f18ee5bb",
+      "src/data/accessories.js": "84f8a3a99b2d8d50d9313783267f772fb708f863f47aff1a9dd292afb372e34b",
+      "src/data/bestiary.js": "bd5726adf9d66ab1a0c7a72bbbc3865fe868f93de997b544ac4fedc87b2c000f",
+      "src/data/boss-rewards.js": "6e9136371b9703f53af88945ef7f2b4d3a29ad9f2e36bc10c56ca1e28a358a7f",
+      "src/data/bosses.js": "0bffb0a684ffa692ee9446c1b526c6f61835da06114bd17859d381d20ddce5b7",
+      "src/data/cosmetics.js": "2cc3e200fe8bfeabbb57fc0d20048770c9a17d7fe398444886aea0b34da946da",
+      "src/data/difficulty.js": "d0b5386c2848d0edb9dcfd399f880c006ebad080532a1a52b839d984866d2da1",
+      "src/data/enemies.js": "4e6bac541c99f52ac29bfcb4a61fb23fbe7dafee2ab9667e981663bd9a66d365",
+      "src/data/fusions.js": "2839de13a987e922e73dbb51f76ab661f1b05532272578b752204c1a10682f0c",
+      "src/data/pet-upgrades.js": "0ecdff30490ba6ff88605d91e7bab69f3dafe0ddd84f9f00090be384730773b1",
+      "src/data/relics.js": "5474e4949733f8514c088f1ebf15f4989bcfea786e8ddcd1b237b0ea3926ba01",
+      "src/data/shop.js": "c706e0539c0a0ffcbc494cb8b97f69b8729e530ce5cf07ad6f866302b72c5026",
+      "src/data/sprites.js": "69b46a50ac6dccc2b528f03ce994e92ae44378d27b0e58f1711943a40cd247bd",
+      "src/data/stages.js": "7574185b50b603e2d69fbd94a5ca7bef168369c12e7f5d68599d6ba299295676",
+      "src/data/story.js": "5fe3e8466d949426c781a442d95b1866eafa2d4491bfb66e7112152273911aef",
+      "src/data/techs.js": "e51bd95514d75c73f835fe9e4c95f5f46b1e8a2c4837c73ec799264409a68149",
+      "src/data/titles.js": "f3788cf83075628afa1dea4a1d73a7959a134dcaf6b5a54381b65c73da108595",
+      "src/data/weapons.js": "a8d01b73e7e96a5a0e82fc5714566f98ac856069a2b8fda5d3a5455b0e6522e3"
+    },
+    "sourceHashGuardPassed": true,
+    "summary": [
+      {
+        "tech": "gunline",
+        "kills": 3,
+        "survived": 3,
+        "meanSeconds": 24.722,
+        "minSeconds": 24.717,
+        "maxSeconds": 24.733,
+        "meanHp": 100,
+        "minDashes": 3
+      },
+      {
+        "tech": "bloom",
+        "kills": 3,
+        "survived": 3,
+        "meanSeconds": 22.217,
+        "minSeconds": 22.217,
+        "maxSeconds": 22.217,
+        "meanHp": 120,
+        "minDashes": 3
+      },
+      {
+        "tech": "plague",
+        "kills": 3,
+        "survived": 3,
+        "meanSeconds": 27.967,
+        "minSeconds": 27.967,
+        "maxSeconds": 27.967,
+        "meanHp": 100,
+        "minDashes": 4
+      },
+      {
+        "tech": "executioner",
+        "kills": 3,
+        "survived": 3,
+        "meanSeconds": 53.139,
+        "minSeconds": 51.767,
+        "maxSeconds": 54.683,
+        "meanHp": 100,
+        "minDashes": 8
+      },
+      {
+        "tech": "butcher",
+        "kills": 3,
+        "survived": 3,
+        "meanSeconds": 33.611,
+        "minSeconds": 33.2,
+        "maxSeconds": 33.817,
+        "meanHp": 130,
+        "minDashes": 5
+      }
+    ],
+    "rows": [
+      {
+        "tech": "gunline",
+        "seed": 1,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 6,
+        "equivalentRunLevel": 7,
+        "weapons": [
+          {
+            "id": "shotgun",
+            "level": 3
+          },
+          {
+            "id": "rifle",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "magazine": 1,
+          "scope": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 24.717,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 3,
+        "dashes": 3,
+        "recoveries": 5,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "rifle": 1631.85,
+          "shotgun": 2595.78
+        }
+      },
+      {
+        "tech": "gunline",
+        "seed": 7,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 6,
+        "equivalentRunLevel": 7,
+        "weapons": [
+          {
+            "id": "shotgun",
+            "level": 3
+          },
+          {
+            "id": "rifle",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "magazine": 1,
+          "scope": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 24.733,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 4,
+        "dashes": 3,
+        "recoveries": 5,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "rifle": 1631.85,
+          "shotgun": 2580.6
+        }
+      },
+      {
+        "tech": "gunline",
+        "seed": 13,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 6,
+        "equivalentRunLevel": 7,
+        "weapons": [
+          {
+            "id": "shotgun",
+            "level": 3
+          },
+          {
+            "id": "rifle",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "magazine": 1,
+          "scope": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 24.717,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 4,
+        "dashes": 3,
+        "recoveries": 5,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "rifle": 1631.85,
+          "shotgun": 2595.78
+        }
+      },
+      {
+        "tech": "bloom",
+        "seed": 1,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 5,
+        "equivalentRunLevel": 6,
+        "weapons": [
+          {
+            "id": "thorns",
+            "level": 3
+          },
+          {
+            "id": "cannon",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "regen": 1,
+          "pollen": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 22.217,
+        "hp": 120,
+        "maxHp": 120,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 3,
+        "dashes": 3,
+        "recoveries": 5,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "cannon": 1404,
+          "thorns": 2808
+        }
+      },
+      {
+        "tech": "bloom",
+        "seed": 7,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 5,
+        "equivalentRunLevel": 6,
+        "weapons": [
+          {
+            "id": "thorns",
+            "level": 3
+          },
+          {
+            "id": "cannon",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "regen": 1,
+          "pollen": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 22.217,
+        "hp": 120,
+        "maxHp": 120,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 3,
+        "dashes": 3,
+        "recoveries": 5,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "cannon": 1404,
+          "thorns": 2808
+        }
+      },
+      {
+        "tech": "bloom",
+        "seed": 13,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 5,
+        "equivalentRunLevel": 6,
+        "weapons": [
+          {
+            "id": "thorns",
+            "level": 3
+          },
+          {
+            "id": "cannon",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "regen": 1,
+          "pollen": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 22.217,
+        "hp": 120,
+        "maxHp": 120,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 3,
+        "dashes": 3,
+        "recoveries": 5,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "cannon": 1404,
+          "thorns": 2808
+        }
+      },
+      {
+        "tech": "plague",
+        "seed": 1,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 6,
+        "equivalentRunLevel": 7,
+        "weapons": [
+          {
+            "id": "molotov",
+            "level": 3
+          },
+          {
+            "id": "gas",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "spread": 1,
+          "sap": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 27.967,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 4,
+        "dashes": 4,
+        "recoveries": 6,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "molotov": 2359.6,
+          "gas": 1843.65
+        }
+      },
+      {
+        "tech": "plague",
+        "seed": 7,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 6,
+        "equivalentRunLevel": 7,
+        "weapons": [
+          {
+            "id": "molotov",
+            "level": 3
+          },
+          {
+            "id": "gas",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "spread": 1,
+          "sap": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 27.967,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 4,
+        "dashes": 4,
+        "recoveries": 6,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "molotov": 2359.6,
+          "gas": 1843.65
+        }
+      },
+      {
+        "tech": "plague",
+        "seed": 13,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 6,
+        "equivalentRunLevel": 7,
+        "weapons": [
+          {
+            "id": "molotov",
+            "level": 3
+          },
+          {
+            "id": "gas",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "spread": 1,
+          "sap": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 27.967,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 4,
+        "dashes": 4,
+        "recoveries": 6,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "molotov": 2359.6,
+          "gas": 1843.65
+        }
+      },
+      {
+        "tech": "executioner",
+        "seed": 1,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 6,
+        "equivalentRunLevel": 7,
+        "weapons": [
+          {
+            "id": "pistols",
+            "level": 3
+          },
+          {
+            "id": "rifle",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "focus": 1,
+          "scope": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 54.683,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 9,
+        "dashes": 8,
+        "recoveries": 10,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "rifle": 1377.6,
+          "pistols": 2825.72
+        }
+      },
+      {
+        "tech": "executioner",
+        "seed": 7,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 6,
+        "equivalentRunLevel": 7,
+        "weapons": [
+          {
+            "id": "pistols",
+            "level": 3
+          },
+          {
+            "id": "rifle",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "focus": 1,
+          "scope": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 51.767,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 9,
+        "dashes": 8,
+        "recoveries": 10,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "rifle": 1426.8,
+          "pistols": 2781.44
+        }
+      },
+      {
+        "tech": "executioner",
+        "seed": 13,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 6,
+        "equivalentRunLevel": 7,
+        "weapons": [
+          {
+            "id": "pistols",
+            "level": 3
+          },
+          {
+            "id": "rifle",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "focus": 1,
+          "scope": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 52.967,
+        "hp": 100,
+        "maxHp": 100,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 9,
+        "dashes": 8,
+        "recoveries": 10,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "rifle": 1525.2,
+          "pistols": 2679.76
+        }
+      },
+      {
+        "tech": "butcher",
+        "seed": 1,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 5,
+        "equivalentRunLevel": 6,
+        "weapons": [
+          {
+            "id": "sword",
+            "level": 3
+          },
+          {
+            "id": "saw",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "whet": 1,
+          "hide": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 33.817,
+        "hp": 130,
+        "maxHp": 130,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 5,
+        "dashes": 5,
+        "recoveries": 7,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "sword": 3326.4,
+          "saw": 880
+        }
+      },
+      {
+        "tech": "butcher",
+        "seed": 7,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 5,
+        "equivalentRunLevel": 6,
+        "weapons": [
+          {
+            "id": "sword",
+            "level": 3
+          },
+          {
+            "id": "saw",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "whet": 1,
+          "hide": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 33.2,
+        "hp": 130,
+        "maxHp": 130,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 5,
+        "dashes": 5,
+        "recoveries": 6,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "sword": 3326.4,
+          "saw": 935
+        }
+      },
+      {
+        "tech": "butcher",
+        "seed": 13,
+        "kiteRadius": 100,
+        "budget": 8,
+        "choiceCount": 5,
+        "equivalentRunLevel": 6,
+        "weapons": [
+          {
+            "id": "sword",
+            "level": 3
+          },
+          {
+            "id": "saw",
+            "level": 3
+          }
+        ],
+        "passives": {
+          "whet": 1,
+          "hide": 1
+        },
+        "bossMaxHp": 4200,
+        "killed": true,
+        "playerAlive": true,
+        "seconds": 33.817,
+        "hp": 130,
+        "maxHp": 130,
+        "hpLoss": 0,
+        "remainingBossHp": 0,
+        "starts": 5,
+        "dashes": 5,
+        "recoveries": 7,
+        "firstStart": 3.017,
+        "firstDash": 4.517,
+        "shortestCompleteWarning": 1.5,
+        "shortestCompleteRecovery": 2.5,
+        "damageBy": {
+          "sword": 3326.4,
+          "saw": 880
+        }
+      }
+    ]
+  },
+  "alpha": {
+    "method": "Actual pre-stage-9 planner snapshot, 16s ordinary / 48s elite synthetic residency, 85% XP collection, real level choices/chests. 3 paired seeds, auto-aim and one explicit focus tap at encounter start. Actual moving boss, patterns, summons, player attacks, collisions and phase changes. Standing high-HP player isolates TTK; this is not survival or human clear-rate evidence. No purchases or mid-fight upgrades. Global HP multipliers unchanged.",
+    "sourceHashes": {
+      "src/game/attack-animation.js": "4192eac40471c31938e2c68a639c6053e9f539a99b490d6ed964173048dd024e",
+      "src/game/boss-appearance.js": "c5aab715be86af5330b9cc8fa2a269753526cd4707a18c1695bb4a9c42c3cb9d",
+      "src/game/boss-sheets.js": "89d97ff7f11ea0df718781d6831aa6db34ab344972d5b0a8bd05b8cc06b9bbb4",
+      "src/game/boss.js": "52ec5364f381eec41bed1d2238533e7d2a60e546edfc0269dcb3bc2a0d388a78",
+      "src/game/butcher-sword.js": "527dd8057a7509a976954ca4021fbe8d77c89208efc8c7b900896217d9105c41",
+      "src/game/cannon-targeting.js": "7bf73142fe7a382d706d9c11ee37efc67c5dc12d7e7a2530e851f5a381e43892",
+      "src/game/coin-drops.js": "eefa2e1e459304fe98efc639485d4ccfc8fcde2cb382832dfb4ef87bb3377e62",
+      "src/game/cosmetic-effects.js": "8e2ddcf25d506e70c27e67e79178d1112d47644191c65f0501040dbee23306ef",
+      "src/game/effects.js": "200f6c1dad5999bb3f3a1e67fcadd9fe7df8736fbb8547bd3a72388da33a51b4",
+      "src/game/encirclement.js": "5e1f64429215a41ac688b6530cc5b0b520b43c466a4480da64d6176096701102",
+      "src/game/enemies.js": "0ea501a12179abb20962e264164ecba6b12d166a0fc23423188ef623a3f25631",
+      "src/game/fusion.js": "e89223fdd86f892b5c91299f236b187458cacaf5e03ecb511c4297cae1b7acc8",
+      "src/game/game.js": "6265bd2b08cd06153de40f57c56c0aff611f3be1b7351195cbafafb8d866a9dc",
+      "src/game/hazards.js": "50bb0a6d83658b7422aa0b488aa75d8bcb66a4a48c0ea2ddf4823938e3341ff4",
+      "src/game/loadout-exchange.js": "0972a08a1ebdd0baee08e7e43396a4c7494d95a5f016606d8bb3ef944e518020",
+      "src/game/pet-sprite.js": "c33a4586bff04ccea06621ac25084915dcde027f5a4588306990711e09aa6221",
+      "src/game/petal-cannon.js": "59c05bcb82b561652e382477e3186ed7278ed0737a9198a94712d0807d5458e8",
+      "src/game/petal-charge.js": "14f0443a6cb81d1d933f87eb303ba55c373c7a9cc10c43c48e4a122d724d3d30",
+      "src/game/pets.js": "17cd1969a2bd17292ba814814cd8608e9a77073caf93cdeffda682974c42f464",
+      "src/game/pickups.js": "481bed658e80ce651d956af4c895bfceaec9507ee61d1f113cdb0d5190ed4209",
+      "src/game/plague-targeting.js": "f6450451d56a45389aacbab8eb6a0c005a05d2443ea16c516b51d7b59ddc9e12",
+      "src/game/player-appearance.js": "f8111463b97634b00bac1c525d18923d4b3fdcdefd032e5b7cfcad1112ce213d",
+      "src/game/player-motion.js": "c01be8479862a66d924b74f2f8d1da4954652e372b51fae8544ca33610babc1d",
+      "src/game/player.js": "28027e42c9ecd44f290ea46c66ae86b3d09de2865749f85b56c08781bca817d4",
+      "src/game/practice.js": "d99aba4870cf590b96219a425e893d0e7376854e0f2f00a290cb424aba34aa0d",
+      "src/game/progression.js": "f6f1e96b187efa2d9b73cd075227f7e1a098dccada70a32b4b68b43a64c2af64",
+      "src/game/render.js": "bc64dc54c088377c0738880722c678cf5305f4c1cf43063fafc9e8a0d6bd9b60",
+      "src/game/spawner.js": "14afa755af05b6b496dfe48d09fce634e02d0dd1070cf9be76dec574a6235a43",
+      "src/game/stage-checkpoint.js": "d6c7d9871ec096994eadb225a05c8fdf91ccd6b2ab1f5ec10d223d6364e63be7",
+      "src/game/state.js": "7a93d77cd14f24a5aaffc13171f064638d0565b7ab56fba6a5e456b9181f5e0a",
+      "src/game/supply-drops.js": "51b14003c88a27930d25f7212d42b92a2596ab99eac35c994bb8f1164cfa7e2e",
+      "src/game/targeting.js": "45aa2fc53493989466d74a8518be72611cddcdbb03d579e78224577231895c78",
+      "src/game/tech.js": "dbaa5cd57ec19048ebdb5722d24b98f3eab8ea9dca4ab45e27bb1626415eb076",
+      "src/game/thorn-charges.js": "1af66aa6597a77dc80a76f5486645f72a7264c61a4d7ea18658eb20afa0d305c",
+      "src/game/weapon-vfx.js": "4c006fdf8250df3ed71a84345af76fe46768f61109f06949ed0bbe8ea9d21819",
+      "src/game/weapons.js": "e7dfba3332d3511de10ef6ae27f1b4482573a572b9351b610b0541d6f18ee5bb",
+      "src/data/accessories.js": "84f8a3a99b2d8d50d9313783267f772fb708f863f47aff1a9dd292afb372e34b",
+      "src/data/bestiary.js": "bd5726adf9d66ab1a0c7a72bbbc3865fe868f93de997b544ac4fedc87b2c000f",
+      "src/data/boss-rewards.js": "6e9136371b9703f53af88945ef7f2b4d3a29ad9f2e36bc10c56ca1e28a358a7f",
+      "src/data/bosses.js": "0bffb0a684ffa692ee9446c1b526c6f61835da06114bd17859d381d20ddce5b7",
+      "src/data/cosmetics.js": "2cc3e200fe8bfeabbb57fc0d20048770c9a17d7fe398444886aea0b34da946da",
+      "src/data/difficulty.js": "d0b5386c2848d0edb9dcfd399f880c006ebad080532a1a52b839d984866d2da1",
+      "src/data/enemies.js": "4e6bac541c99f52ac29bfcb4a61fb23fbe7dafee2ab9667e981663bd9a66d365",
+      "src/data/fusions.js": "2839de13a987e922e73dbb51f76ab661f1b05532272578b752204c1a10682f0c",
+      "src/data/pet-upgrades.js": "0ecdff30490ba6ff88605d91e7bab69f3dafe0ddd84f9f00090be384730773b1",
+      "src/data/relics.js": "5474e4949733f8514c088f1ebf15f4989bcfea786e8ddcd1b237b0ea3926ba01",
+      "src/data/shop.js": "c706e0539c0a0ffcbc494cb8b97f69b8729e530ce5cf07ad6f866302b72c5026",
+      "src/data/sprites.js": "69b46a50ac6dccc2b528f03ce994e92ae44378d27b0e58f1711943a40cd247bd",
+      "src/data/stages.js": "7574185b50b603e2d69fbd94a5ca7bef168369c12e7f5d68599d6ba299295676",
+      "src/data/story.js": "5fe3e8466d949426c781a442d95b1866eafa2d4491bfb66e7112152273911aef",
+      "src/data/techs.js": "e51bd95514d75c73f835fe9e4c95f5f46b1e8a2c4837c73ec799264409a68149",
+      "src/data/titles.js": "f3788cf83075628afa1dea4a1d73a7959a134dcaf6b5a54381b65c73da108595",
+      "src/data/weapons.js": "a8d01b73e7e96a5a0e82fc5714566f98ac856069a2b8fda5d3a5455b0e6522e3"
+    },
+    "sourceHashGuardPassed": true,
+    "scenario": {
+      "level": 47,
+      "weapons": [
+        [
+          "scatter_rail",
+          5,
+          false
+        ],
+        [
+          "lotus_bloom",
+          3,
+          false
+        ]
+      ],
+      "passives": {
+        "magazine": 5,
+        "regen": 5,
+        "scope": 5,
+        "heart": 5,
+        "pollen": 5,
+        "whet": 5
+      },
+      "stats": {
+        "might": 1.5,
+        "area": 1,
+        "cooldown": 1,
+        "barrierCd": 6,
+        "duration": 1,
+        "growth": 1,
+        "projSpeed": 1.25,
+        "pierce": 3,
+        "amount": 0,
+        "amountMul": 0.5,
+        "crit": 0,
+        "regen": 1.5,
+        "magnet": 70,
+        "speed": 135,
+        "armor": 0,
+        "maxHp": 200,
+        "greed": 1,
+        "critMul": 3
+      },
+      "finals": 2,
+      "absolutes": 0,
+      "stage": 9,
+      "name": "pre-stage-9 actual two-final planner build"
+    },
+    "summary": [
+      {
+        "baseHp": 13000,
+        "focus": false,
+        "effectiveHp": 291200,
+        "allKilled": true,
+        "meanSeconds": 87.43333333332964,
+        "minSeconds": 83.49999999999655,
+        "maxSeconds": 93.24999999999599,
+        "minPatterns": 24
+      },
+      {
+        "baseHp": 13000,
+        "focus": true,
+        "effectiveHp": 291200,
+        "allKilled": true,
+        "meanSeconds": 73.01666666666381,
+        "minSeconds": 69.21666666666403,
+        "maxSeconds": 76.91666666666359,
+        "minPatterns": 21
+      }
+    ],
+    "rows": [
+      {
+        "baseHp": 13000,
+        "seed": 1,
+        "name": "pre-stage-9 actual two-final planner build",
+        "stage": 9,
+        "hp": 291200,
+        "distance": 200,
+        "focus": false,
+        "first": 4.166666666666657,
+        "death": 85.54999999999643,
+        "remainingHp": -316.84062386173855,
+        "starts": [
+          [
+            3.016666666666661,
+            "charge",
+            0
+          ],
+          [
+            7.383333333333312,
+            "summon",
+            0
+          ],
+          [
+            10.716666666666779,
+            "charge",
+            0
+          ],
+          [
+            14.56666666666697,
+            "summon",
+            0
+          ],
+          [
+            17.616666666666948,
+            "charge",
+            0
+          ],
+          [
+            21.766666666666712,
+            "summon",
+            0
+          ],
+          [
+            25.016666666666527,
+            "charge",
+            0
+          ],
+          [
+            29.09999999999963,
+            "summon",
+            0
+          ],
+          [
+            33.96666666666602,
+            "charge",
+            1
+          ],
+          [
+            37.44999999999916,
+            "summon",
+            1
+          ],
+          [
+            40.183333333332335,
+            "charge",
+            1
+          ],
+          [
+            43.999999999998785,
+            "summon",
+            1
+          ],
+          [
+            46.48333333333198,
+            "charge",
+            1
+          ],
+          [
+            50.19999999999843,
+            "ring",
+            1
+          ],
+          [
+            53.583333333331574,
+            "charge",
+            1
+          ],
+          [
+            56.98333333333138,
+            "summon",
+            1
+          ],
+          [
+            59.33333333333125,
+            "charge",
+            1
+          ],
+          [
+            63.06666666666437,
+            "aimed",
+            2
+          ],
+          [
+            65.59999999999756,
+            "charge",
+            2
+          ],
+          [
+            69.0333333333307,
+            "aimed",
+            2
+          ],
+          [
+            71.48333333333056,
+            "charge",
+            2
+          ],
+          [
+            74.69999999999705,
+            "ring",
+            2
+          ],
+          [
+            77.94999999999686,
+            "charge",
+            2
+          ],
+          [
+            81.38333333333,
+            "aimed",
+            2
+          ],
+          [
+            83.99999999999652,
+            "charge",
+            2
+          ]
+        ],
+        "phases": [
+          [
+            31.766666666666143,
+            1,
+            174654.07224636537
+          ],
+          [
+            60.86666666666449,
+            2,
+            72624.26989522863
+          ]
+        ]
+      },
+      {
+        "baseHp": 13000,
+        "seed": 7,
+        "name": "pre-stage-9 actual two-final planner build",
+        "stage": 9,
+        "hp": 291200,
+        "distance": 200,
+        "focus": false,
+        "first": 4.166666666666657,
+        "death": 83.49999999999655,
+        "remainingHp": -311.8762218168654,
+        "starts": [
+          [
+            3.016666666666661,
+            "charge",
+            0
+          ],
+          [
+            7.14999999999998,
+            "charge",
+            0
+          ],
+          [
+            11.466666666666816,
+            "summon",
+            0
+          ],
+          [
+            14.36666666666696,
+            "charge",
+            0
+          ],
+          [
+            18.316666666666908,
+            "summon",
+            0
+          ],
+          [
+            21.100000000000083,
+            "charge",
+            0
+          ],
+          [
+            25.216666666666516,
+            "charge",
+            0
+          ],
+          [
+            30.21666666666623,
+            "ring",
+            1
+          ],
+          [
+            33.566666666666045,
+            "charge",
+            1
+          ],
+          [
+            37.04999999999918,
+            "ring",
+            1
+          ],
+          [
+            40.43333333333232,
+            "charge",
+            1
+          ],
+          [
+            43.84999999999879,
+            "ring",
+            1
+          ],
+          [
+            47.2999999999986,
+            "charge",
+            1
+          ],
+          [
+            51.083333333331716,
+            "ring",
+            1
+          ],
+          [
+            54.166666666664874,
+            "charge",
+            1
+          ],
+          [
+            57.63333333333134,
+            "summon",
+            1
+          ],
+          [
+            61.89999999999777,
+            "charge",
+            2
+          ],
+          [
+            65.08333333333093,
+            "ring",
+            2
+          ],
+          [
+            67.98333333333076,
+            "charge",
+            2
+          ],
+          [
+            71.16666666666391,
+            "aimed",
+            2
+          ],
+          [
+            73.41666666666379,
+            "charge",
+            2
+          ],
+          [
+            76.58333333333027,
+            "aimed",
+            2
+          ],
+          [
+            79.06666666666347,
+            "charge",
+            2
+          ],
+          [
+            82.26666666666328,
+            "aimed",
+            2
+          ]
+        ],
+        "phases": [
+          [
+            28.016666666666357,
+            1,
+            174669.88931681984
+          ],
+          [
+            59.69999999999789,
+            2,
+            71773.07541841004
+          ]
+        ]
+      },
+      {
+        "baseHp": 13000,
+        "seed": 13,
+        "name": "pre-stage-9 actual two-final planner build",
+        "stage": 9,
+        "hp": 291200,
+        "distance": 200,
+        "focus": false,
+        "first": 4.166666666666657,
+        "death": 93.24999999999599,
+        "remainingHp": -8.277170225693425,
+        "starts": [
+          [
+            3.016666666666661,
+            "charge",
+            0
+          ],
+          [
+            7.24999999999998,
+            "summon",
+            0
+          ],
+          [
+            10.316666666666759,
+            "charge",
+            0
+          ],
+          [
+            14.516666666666968,
+            "charge",
+            0
+          ],
+          [
+            18.950000000000205,
+            "summon",
+            0
+          ],
+          [
+            21.983333333333366,
+            "charge",
+            0
+          ],
+          [
+            26.066666666666467,
+            "summon",
+            0
+          ],
+          [
+            29.316666666666283,
+            "charge",
+            0
+          ],
+          [
+            33.38333333333272,
+            "summon",
+            0
+          ],
+          [
+            36.96666666666585,
+            "charge",
+            1
+          ],
+          [
+            40.7833333333323,
+            "ring",
+            1
+          ],
+          [
+            44.199999999998774,
+            "charge",
+            1
+          ],
+          [
+            47.54999999999858,
+            "ring",
+            1
+          ],
+          [
+            50.78333333333173,
+            "charge",
+            1
+          ],
+          [
+            54.53333333333152,
+            "ring",
+            1
+          ],
+          [
+            57.91666666666466,
+            "charge",
+            1
+          ],
+          [
+            61.54999999999779,
+            "charge",
+            1
+          ],
+          [
+            64.91666666666427,
+            "summon",
+            1
+          ],
+          [
+            67.71666666666411,
+            "charge",
+            1
+          ],
+          [
+            70.61666666666395,
+            "aimed",
+            2
+          ],
+          [
+            72.81666666666382,
+            "charge",
+            2
+          ],
+          [
+            76.0833333333303,
+            "ring",
+            2
+          ],
+          [
+            78.98333333333014,
+            "charge",
+            2
+          ],
+          [
+            82.14999999999662,
+            "ring",
+            2
+          ],
+          [
+            85.44999999999644,
+            "charge",
+            2
+          ],
+          [
+            88.74999999999625,
+            "ring",
+            2
+          ],
+          [
+            91.99999999999606,
+            "charge",
+            2
+          ]
+        ],
+        "phases": [
+          [
+            34.76666666666598,
+            1,
+            174585.52878636518
+          ],
+          [
+            68.41666666666407,
+            2,
+            72769.14858568314
+          ]
+        ]
+      },
+      {
+        "baseHp": 13000,
+        "seed": 1,
+        "name": "pre-stage-9 actual two-final planner build",
+        "stage": 9,
+        "hp": 291200,
+        "distance": 200,
+        "focus": true,
+        "first": 4.166666666666657,
+        "death": 69.21666666666403,
+        "remainingHp": -66.60569363434401,
+        "starts": [
+          [
+            3.016666666666661,
+            "charge",
+            0
+          ],
+          [
+            6.833333333333314,
+            "charge",
+            0
+          ],
+          [
+            11.166666666666801,
+            "summon",
+            0
+          ],
+          [
+            14.316666666666958,
+            "charge",
+            0
+          ],
+          [
+            18.216666666666914,
+            "summon",
+            0
+          ],
+          [
+            21.11666666666675,
+            "charge",
+            0
+          ],
+          [
+            25.299999999999844,
+            "summon",
+            0
+          ],
+          [
+            27.61666666666638,
+            "charge",
+            1
+          ],
+          [
+            31.033333333332852,
+            "summon",
+            1
+          ],
+          [
+            33.7833333333327,
+            "charge",
+            1
+          ],
+          [
+            37.43333333333249,
+            "summon",
+            1
+          ],
+          [
+            39.96666666666568,
+            "charge",
+            1
+          ],
+          [
+            43.43333333333215,
+            "charge",
+            1
+          ],
+          [
+            47.266666666665266,
+            "charge",
+            1
+          ],
+          [
+            50.849999999998396,
+            "summon",
+            1
+          ],
+          [
+            53.11666666666493,
+            "charge",
+            1
+          ],
+          [
+            55.716666666664786,
+            "aimed",
+            2
+          ],
+          [
+            58.283333333331306,
+            "charge",
+            2
+          ],
+          [
+            61.31666666666447,
+            "aimed",
+            2
+          ],
+          [
+            63.88333333333099,
+            "charge",
+            2
+          ],
+          [
+            67.24999999999747,
+            "aimed",
+            2
+          ]
+        ],
+        "phases": [
+          [
+            25.416666666666504,
+            1,
+            174214.28190568357
+          ],
+          [
+            53.51666666666491,
+            2,
+            72783.37332091072
+          ]
+        ]
+      },
+      {
+        "baseHp": 13000,
+        "seed": 7,
+        "name": "pre-stage-9 actual two-final planner build",
+        "stage": 9,
+        "hp": 291200,
+        "distance": 200,
+        "focus": true,
+        "first": 4.166666666666657,
+        "death": 76.91666666666359,
+        "remainingHp": -894.717322270827,
+        "starts": [
+          [
+            3.016666666666661,
+            "charge",
+            0
+          ],
+          [
+            6.983333333333314,
+            "summon",
+            0
+          ],
+          [
+            10.300000000000091,
+            "charge",
+            0
+          ],
+          [
+            14.333333333333625,
+            "summon",
+            0
+          ],
+          [
+            17.283333333333633,
+            "charge",
+            0
+          ],
+          [
+            21.250000000000075,
+            "summon",
+            0
+          ],
+          [
+            23.94999999999992,
+            "charge",
+            0
+          ],
+          [
+            27.749999999999705,
+            "ring",
+            1
+          ],
+          [
+            30.599999999999543,
+            "charge",
+            1
+          ],
+          [
+            34.033333333332685,
+            "ring",
+            1
+          ],
+          [
+            37.44999999999916,
+            "charge",
+            1
+          ],
+          [
+            40.98333333333229,
+            "ring",
+            1
+          ],
+          [
+            43.93333333333212,
+            "charge",
+            1
+          ],
+          [
+            47.43333333333192,
+            "ring",
+            1
+          ],
+          [
+            50.86666666666506,
+            "charge",
+            1
+          ],
+          [
+            54.549999999998185,
+            "ring",
+            1
+          ],
+          [
+            57.94999999999799,
+            "charge",
+            2
+          ],
+          [
+            61.31666666666447,
+            "aimed",
+            2
+          ],
+          [
+            63.83333333333099,
+            "charge",
+            2
+          ],
+          [
+            66.8499999999975,
+            "aimed",
+            2
+          ],
+          [
+            69.36666666666402,
+            "charge",
+            2
+          ],
+          [
+            72.39999999999718,
+            "ring",
+            2
+          ],
+          [
+            75.79999999999698,
+            "charge",
+            2
+          ]
+        ],
+        "phases": [
+          [
+            25.54999999999983,
+            1,
+            173938.7738811376
+          ],
+          [
+            55.74999999999812,
+            2,
+            72744.82011091056
+          ]
+        ]
+      },
+      {
+        "baseHp": 13000,
+        "seed": 13,
+        "name": "pre-stage-9 actual two-final planner build",
+        "stage": 9,
+        "hp": 291200,
+        "distance": 200,
+        "focus": true,
+        "first": 4.166666666666657,
+        "death": 72.91666666666382,
+        "remainingHp": -837.2709399985893,
+        "starts": [
+          [
+            3.016666666666661,
+            "charge",
+            0
+          ],
+          [
+            7.299999999999979,
+            "summon",
+            0
+          ],
+          [
+            10.050000000000079,
+            "charge",
+            0
+          ],
+          [
+            14.000000000000275,
+            "summon",
+            0
+          ],
+          [
+            17.116666666666976,
+            "charge",
+            0
+          ],
+          [
+            21.533333333333392,
+            "charge",
+            0
+          ],
+          [
+            27.2666666666664,
+            "summon",
+            1
+          ],
+          [
+            29.699999999999594,
+            "charge",
+            1
+          ],
+          [
+            33.11666666666607,
+            "summon",
+            1
+          ],
+          [
+            35.433333333332605,
+            "charge",
+            1
+          ],
+          [
+            39.21666666666572,
+            "ring",
+            1
+          ],
+          [
+            42.49999999999887,
+            "charge",
+            1
+          ],
+          [
+            46.31666666666532,
+            "ring",
+            1
+          ],
+          [
+            49.766666666665124,
+            "charge",
+            1
+          ],
+          [
+            53.533333333331576,
+            "ring",
+            1
+          ],
+          [
+            55.949999999998106,
+            "charge",
+            2
+          ],
+          [
+            59.21666666666459,
+            "aimed",
+            2
+          ],
+          [
+            61.68333333333111,
+            "charge",
+            2
+          ],
+          [
+            64.76666666666428,
+            "charge",
+            2
+          ],
+          [
+            67.83333333333077,
+            "aimed",
+            2
+          ],
+          [
+            70.03333333333065,
+            "charge",
+            2
+          ]
+        ],
+        "phases": [
+          [
+            25.066666666666524,
+            1,
+            173743.26060568288
+          ],
+          [
+            53.74999999999823,
+            2,
+            71957.91152136461
+          ]
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,362 @@
+{
+  "commit": "bddb389",
+  "seconds": 30,
+  "seed": 1234567,
+  "method": "Captured before cannon and class-role changes. Existing simulateTech helper: stationary player, boss at 80 or 18 arranged enemies; all three family passives at Lv5. These are damage regression controls, not equal-budget starter or survival evidence. Immortal enemy fixtures now use elite:true to exclude newly introduced instant-execution procs.",
+  "tolerance": 0.000001,
+  "techs": {
+    "gunline:late": {
+      "boss": 90807.59505736828,
+      "scatter": 87758.20046891272,
+      "corridor": 507104.2269205749,
+      "swarm": 174019.6585366577
+    },
+    "gunline:fusion": {
+      "boss": 179987.1281721145,
+      "scatter": 161870.67410759628,
+      "corridor": 970498.1033744365,
+      "swarm": 335689.4947076142
+    },
+    "bloom:late": {
+      "boss": 22896.431999504566,
+      "scatter": 174983.32799687982,
+      "corridor": 204945.81119787693,
+      "swarm": 357244.99199569225
+    },
+    "bloom:fusion": {
+      "boss": 50499.157919600606,
+      "scatter": 361672.2676781565,
+      "corridor": 522375.8497915268,
+      "swarm": 720708.1459172964
+    },
+    "plague:late": {
+      "boss": 17029.81799647212,
+      "scatter": 142038.467972219,
+      "corridor": 267858.6299443543,
+      "swarm": 324378.0539325774
+    },
+    "plague:fusion": {
+      "boss": 64173.25312149525,
+      "scatter": 256219.62484955788,
+      "corridor": 802037.4338471293,
+      "swarm": 986511.6660029888
+    },
+    "executioner:late": {
+      "boss": 94044.00493744016,
+      "scatter": 97847.58941048384,
+      "corridor": 342373.89209374785,
+      "swarm": 157979.8936163485
+    },
+    "executioner:fusion": {
+      "boss": 215018.5210428387,
+      "scatter": 221682.31580644846,
+      "corridor": 744391.5418096185,
+      "swarm": 368254.2822521478
+    },
+    "butcher:late": {
+      "boss": 24460.137000530958,
+      "scatter": 190401.63462615013,
+      "corridor": 127893.3816871494,
+      "swarm": 287803.5055683553
+    },
+    "butcher:fusion": {
+      "boss": 63429.10446436703,
+      "scatter": 568061.096789673,
+      "corridor": 467932.75111691654,
+      "swarm": 715954.0639368147
+    }
+  },
+  "toleranceReason": "Floating-point comparison only. No historical damage floor is deliberately lowered.",
+  "weapons": {
+    "shotgun:1:false": {
+      "boss": 1350,
+      "scatter": 927,
+      "corridor": 1998
+    },
+    "shotgun:4:false": {
+      "boss": 2448,
+      "scatter": 1716,
+      "corridor": 3816
+    },
+    "shotgun:8:false": {
+      "boss": 6080,
+      "scatter": 4160,
+      "corridor": 12912
+    },
+    "shotgun:8:true": {
+      "boss": 16621.19999796152,
+      "scatter": 13183.226660206914,
+      "corridor": 60043.359975501895
+    },
+    "pistols:1:false": {
+      "boss": 380,
+      "scatter": 436,
+      "corridor": 436
+    },
+    "pistols:4:false": {
+      "boss": 1710,
+      "scatter": 2085,
+      "corridor": 2085
+    },
+    "pistols:8:false": {
+      "boss": 4626,
+      "scatter": 9936,
+      "corridor": 9972
+    },
+    "pistols:8:true": {
+      "boss": 8118.630000919104,
+      "scatter": 29590.35300014913,
+      "corridor": 74748.25800034404
+    },
+    "thorns:1:false": {
+      "boss": 256,
+      "scatter": 896,
+      "corridor": 472
+    },
+    "thorns:4:false": {
+      "boss": 506,
+      "scatter": 1936,
+      "corridor": 968
+    },
+    "thorns:8:false": {
+      "boss": 975,
+      "scatter": 3525,
+      "corridor": 1830
+    },
+    "thorns:8:true": {
+      "boss": 4422.600000426173,
+      "scatter": 17146.08000165224,
+      "corridor": 8845.200000852346
+    },
+    "rifle:1:false": {
+      "boss": 418,
+      "scatter": 418,
+      "corridor": 2090
+    },
+    "rifle:4:false": {
+      "boss": 660,
+      "scatter": 660,
+      "corridor": 3300
+    },
+    "rifle:8:false": {
+      "boss": 3120,
+      "scatter": 2760,
+      "corridor": 11920
+    },
+    "rifle:8:true": {
+      "boss": 5686.200000464916,
+      "scatter": 6415.200000524521,
+      "corridor": 39803.40000325441
+    },
+    "molotov:1:false": {
+      "boss": 265,
+      "scatter": 445,
+      "corridor": 1645
+    },
+    "molotov:4:false": {
+      "boss": 805,
+      "scatter": 1246,
+      "corridor": 6678
+    },
+    "molotov:8:false": {
+      "boss": 1260,
+      "scatter": 3860,
+      "corridor": 24300
+    },
+    "molotov:8:true": {
+      "boss": 10368,
+      "scatter": 18198,
+      "corridor": 118476
+    },
+    "cannon:1:false": {
+      "boss": 196,
+      "scatter": 196,
+      "corridor": 1764
+    },
+    "cannon:4:false": {
+      "boss": 320,
+      "scatter": 320,
+      "corridor": 3520
+    },
+    "cannon:8:false": {
+      "boss": 675,
+      "scatter": 1350,
+      "corridor": 8100
+    },
+    "cannon:8:true": {
+      "boss": 2187,
+      "scatter": 17010,
+      "corridor": 16038
+    },
+    "gas:1:false": {
+      "boss": 441,
+      "scatter": 699,
+      "corridor": 4422
+    },
+    "gas:4:false": {
+      "boss": 735,
+      "scatter": 2125,
+      "corridor": 10630
+    },
+    "gas:8:false": {
+      "boss": 1696,
+      "scatter": 5424,
+      "corridor": 31480
+    },
+    "gas:8:true": {
+      "boss": 2721.5999997854233,
+      "scatter": 16329.59999871254,
+      "corridor": 16329.59999871254
+    },
+    "saw:1:false": {
+      "boss": 20,
+      "scatter": 230,
+      "corridor": 50
+    },
+    "saw:4:false": {
+      "boss": 42,
+      "scatter": 644,
+      "corridor": 70
+    },
+    "saw:8:false": {
+      "boss": 133,
+      "scatter": 2014,
+      "corridor": 1577
+    },
+    "saw:8:true": {
+      "boss": 1200.4199999570847,
+      "scatter": 17725.272056132555,
+      "corridor": 19186.52005878091
+    },
+    "absolute_bloom:1:false": {
+      "boss": 50778.39937095344,
+      "scatter": 126319.53674313426,
+      "corridor": 414722.3437151611
+    },
+    "absolute_bloom:8:false": {
+      "boss": 75609.48037092388,
+      "scatter": 211945.5409451574,
+      "corridor": 601353.6457116902
+    },
+    "lotus_bloom:1:false": {
+      "boss": 12736.784999921918,
+      "scatter": 66347.65799936652,
+      "corridor": 56605.17000001669
+    },
+    "lotus_bloom:8:false": {
+      "boss": 22740.057000637054,
+      "scatter": 109302.08040264249,
+      "corridor": 111281.57640065253
+    },
+    "scatter_rail:1:false": {
+      "boss": 32529.989998608828,
+      "scatter": 27603.054660782218,
+      "corridor": 142505.9609796703
+    },
+    "scatter_rail:8:false": {
+      "boss": 50329.1339995265,
+      "scatter": 42448.30799470842,
+      "corridor": 211361.92231179774
+    },
+    "doom_barrage:1:false": {
+      "boss": 67868.82930211723,
+      "scatter": 112491.25532566011,
+      "corridor": 368258.1202671528
+    },
+    "doom_barrage:8:false": {
+      "boss": 99201.42882043123,
+      "scatter": 165557.77986428142,
+      "corridor": 546903.176364854
+    },
+    "plague_end:1:false": {
+      "boss": 49131.83756965399,
+      "scatter": 113647.06788925827,
+      "corridor": 453847.6017013639
+    },
+    "plague_end:8:false": {
+      "boss": 81278.96545739472,
+      "scatter": 208427.57226000726,
+      "corridor": 880750.3954613805
+    },
+    "guillotine:1:false": {
+      "boss": 47775.01143820584,
+      "scatter": 143505.8685848713,
+      "corridor": 381258.0437208861
+    },
+    "guillotine:8:false": {
+      "boss": 83482.51713345945,
+      "scatter": 251761.65193887055,
+      "corridor": 659130.6031599641
+    },
+    "carnage_saw:1:false": {
+      "boss": 68059.16774784029,
+      "scatter": 128732.4440857172,
+      "corridor": 259860.62884928286
+    },
+    "carnage_saw:8:false": {
+      "boss": 94028.98322997987,
+      "scatter": 172625.61733716726,
+      "corridor": 360521.99430063367
+    },
+    "plague_fire:1:false": {
+      "boss": 27712.737002521753,
+      "scatter": 49446.00450320542,
+      "corridor": 232818.03452260792
+    },
+    "plague_fire:8:false": {
+      "boss": 43805.032201856375,
+      "scatter": 80137.3302026093,
+      "corridor": 389651.8167194873
+    },
+    "burst_rail:1:false": {
+      "boss": 21188.12724813819,
+      "scatter": 53755.94710230827,
+      "corridor": 169367.54290811718
+    },
+    "burst_rail:8:false": {
+      "boss": 34158.19484652579,
+      "scatter": 79711.62608681619,
+      "corridor": 248362.02778947353
+    },
+    "venom_saw:1:false": {
+      "boss": 7436.258999943733,
+      "scatter": 65189.13055343926,
+      "corridor": 58235.38704608381
+    },
+    "venom_saw:8:false": {
+      "boss": 11072.983500480652,
+      "scatter": 98048.40285904706,
+      "corridor": 86907.43885566294
+    },
+    "ember_lance:1:false": {
+      "boss": 31109.38125255704,
+      "scatter": 58687.68750408292,
+      "corridor": 269759.51252295077
+    },
+    "ember_lance:8:false": {
+      "boss": 46443.464844211936,
+      "scatter": 76502.35709252954,
+      "corridor": 421833.1736470163
+    },
+    "orbit_saw:1:false": {
+      "boss": 9642.169124633074,
+      "scatter": 61191.387052580714,
+      "corridor": 52312.213305950165
+    },
+    "orbit_saw:8:false": {
+      "boss": 14631.947324886918,
+      "scatter": 111417.1075616777,
+      "corridor": 92588.0987098515
+    },
+    "toxic_scatter:1:false": {
+      "boss": 30537.26099655032,
+      "scatter": 35036.076557427645,
+      "corridor": 109377.18050418794
+    },
+    "toxic_scatter:8:false": {
+      "boss": 47208.10260167718,
+      "scatter": 53493.95316208899,
+      "corridor": 160941.4379285276
+    }
+  }
+}

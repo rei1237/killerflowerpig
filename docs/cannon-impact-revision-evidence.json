@@ -1,0 +1,872 @@
+{
+  "baseline": "e3d3b330c465c96cd1bc38f68c07127bd9b055da",
+  "before": {
+    "variant": "e3d3b330",
+    "method": "One real volley, same Cannon level and global stats, no other inventory, no pets/permanent upgrades. Actual tech affinity and level imprints remain active. Separate automatic/focused runs.",
+    "rows": [
+      {
+        "tech": "neutral",
+        "level": 1,
+        "focus": false,
+        "damage": 44,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 44
+      },
+      {
+        "tech": "neutral",
+        "level": 1,
+        "focus": true,
+        "damage": 55,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 44
+      },
+      {
+        "tech": "neutral",
+        "level": 4,
+        "focus": false,
+        "damage": 57.8,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 68
+      },
+      {
+        "tech": "neutral",
+        "level": 4,
+        "focus": true,
+        "damage": 95.88,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 68
+      },
+      {
+        "tech": "neutral",
+        "level": 8,
+        "focus": false,
+        "damage": 65,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 100
+      },
+      {
+        "tech": "neutral",
+        "level": 8,
+        "focus": true,
+        "damage": 141,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 100
+      },
+      {
+        "tech": "gunline",
+        "level": 1,
+        "focus": false,
+        "damage": 35.2,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2
+      },
+      {
+        "tech": "gunline",
+        "level": 1,
+        "focus": true,
+        "damage": 44,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2
+      },
+      {
+        "tech": "gunline",
+        "level": 4,
+        "focus": false,
+        "damage": 46.24,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006
+      },
+      {
+        "tech": "gunline",
+        "level": 4,
+        "focus": true,
+        "damage": 76.704,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006
+      },
+      {
+        "tech": "gunline",
+        "level": 8,
+        "focus": false,
+        "damage": 52,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80
+      },
+      {
+        "tech": "gunline",
+        "level": 8,
+        "focus": true,
+        "damage": 112.8,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80
+      },
+      {
+        "tech": "executioner",
+        "level": 1,
+        "focus": false,
+        "damage": 35.2,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2
+      },
+      {
+        "tech": "executioner",
+        "level": 1,
+        "focus": true,
+        "damage": 44,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2
+      },
+      {
+        "tech": "executioner",
+        "level": 4,
+        "focus": false,
+        "damage": 46.24,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006
+      },
+      {
+        "tech": "executioner",
+        "level": 4,
+        "focus": true,
+        "damage": 76.704,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006
+      },
+      {
+        "tech": "executioner",
+        "level": 8,
+        "focus": false,
+        "damage": 52,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80
+      },
+      {
+        "tech": "executioner",
+        "level": 8,
+        "focus": true,
+        "damage": 112.8,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80
+      },
+      {
+        "tech": "plague",
+        "level": 1,
+        "focus": false,
+        "damage": 35.2,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2
+      },
+      {
+        "tech": "plague",
+        "level": 1,
+        "focus": true,
+        "damage": 44,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2
+      },
+      {
+        "tech": "plague",
+        "level": 4,
+        "focus": false,
+        "damage": 46.24,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006
+      },
+      {
+        "tech": "plague",
+        "level": 4,
+        "focus": true,
+        "damage": 76.704,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006
+      },
+      {
+        "tech": "plague",
+        "level": 8,
+        "focus": false,
+        "damage": 52,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80
+      },
+      {
+        "tech": "plague",
+        "level": 8,
+        "focus": true,
+        "damage": 112.8,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80
+      },
+      {
+        "tech": "bloom",
+        "level": 1,
+        "focus": false,
+        "damage": 114.4,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 114.4
+      },
+      {
+        "tech": "bloom",
+        "level": 1,
+        "focus": true,
+        "damage": 143,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 114.4
+      },
+      {
+        "tech": "bloom",
+        "level": 4,
+        "focus": false,
+        "damage": 150.28,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 176.8
+      },
+      {
+        "tech": "bloom",
+        "level": 4,
+        "focus": true,
+        "damage": 249.288,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 176.8
+      },
+      {
+        "tech": "bloom",
+        "level": 8,
+        "focus": false,
+        "damage": 202.8,
+        "amount": 3,
+        "cd": 0.8658000000000002,
+        "baseStatDamage": 312
+      },
+      {
+        "tech": "bloom",
+        "level": 8,
+        "focus": true,
+        "damage": 439.92,
+        "amount": 3,
+        "cd": 0.8658000000000002,
+        "baseStatDamage": 312
+      },
+      {
+        "tech": "butcher",
+        "level": 1,
+        "focus": false,
+        "damage": 35.2,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2
+      },
+      {
+        "tech": "butcher",
+        "level": 1,
+        "focus": true,
+        "damage": 44,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2
+      },
+      {
+        "tech": "butcher",
+        "level": 4,
+        "focus": false,
+        "damage": 46.24,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006
+      },
+      {
+        "tech": "butcher",
+        "level": 4,
+        "focus": true,
+        "damage": 76.704,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006
+      },
+      {
+        "tech": "butcher",
+        "level": 8,
+        "focus": false,
+        "damage": 52,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80
+      },
+      {
+        "tech": "butcher",
+        "level": 8,
+        "focus": true,
+        "damage": 112.8,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80
+      }
+    ]
+  },
+  "after": {
+    "variant": "current",
+    "method": "One real volley, same Cannon level and global stats, no other inventory, no pets/permanent upgrades. Actual tech affinity and level imprints remain active. Separate automatic/focused runs.",
+    "rows": [
+      {
+        "tech": "neutral",
+        "level": 1,
+        "focus": false,
+        "damage": 88,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 44,
+        "shownAuto": 88,
+        "shownFocus": 96.80000000000001
+      },
+      {
+        "tech": "neutral",
+        "level": 1,
+        "focus": true,
+        "damage": 96.8,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 44,
+        "shownAuto": 88,
+        "shownFocus": 96.80000000000001
+      },
+      {
+        "tech": "neutral",
+        "level": 4,
+        "focus": false,
+        "damage": 115.6,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 68,
+        "shownAuto": 115.6,
+        "shownFocus": 448.8
+      },
+      {
+        "tech": "neutral",
+        "level": 4,
+        "focus": true,
+        "damage": 448.8,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 68,
+        "shownAuto": 115.6,
+        "shownFocus": 448.8
+      },
+      {
+        "tech": "neutral",
+        "level": 8,
+        "focus": false,
+        "damage": 130,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 100,
+        "shownAuto": 129.99999999999997,
+        "shownFocus": 660
+      },
+      {
+        "tech": "neutral",
+        "level": 8,
+        "focus": true,
+        "damage": 660,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 100,
+        "shownAuto": 129.99999999999997,
+        "shownFocus": 660
+      },
+      {
+        "tech": "gunline",
+        "level": 1,
+        "focus": false,
+        "damage": 83.6,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2,
+        "shownAuto": 83.6,
+        "shownFocus": 91.96000000000001
+      },
+      {
+        "tech": "gunline",
+        "level": 1,
+        "focus": true,
+        "damage": 91.96,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2,
+        "shownAuto": 83.6,
+        "shownFocus": 91.96000000000001
+      },
+      {
+        "tech": "gunline",
+        "level": 4,
+        "focus": false,
+        "damage": 109.82,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006,
+        "shownAuto": 109.82,
+        "shownFocus": 426.36
+      },
+      {
+        "tech": "gunline",
+        "level": 4,
+        "focus": true,
+        "damage": 426.36,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006,
+        "shownAuto": 109.82,
+        "shownFocus": 426.36
+      },
+      {
+        "tech": "gunline",
+        "level": 8,
+        "focus": false,
+        "damage": 123.5,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80,
+        "shownAuto": 123.49999999999997,
+        "shownFocus": 627
+      },
+      {
+        "tech": "gunline",
+        "level": 8,
+        "focus": true,
+        "damage": 627,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80,
+        "shownAuto": 123.49999999999997,
+        "shownFocus": 627
+      },
+      {
+        "tech": "executioner",
+        "level": 1,
+        "focus": false,
+        "damage": 83.6,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2,
+        "shownAuto": 83.6,
+        "shownFocus": 91.96000000000001
+      },
+      {
+        "tech": "executioner",
+        "level": 1,
+        "focus": true,
+        "damage": 91.96,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2,
+        "shownAuto": 83.6,
+        "shownFocus": 91.96000000000001
+      },
+      {
+        "tech": "executioner",
+        "level": 4,
+        "focus": false,
+        "damage": 109.82,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006,
+        "shownAuto": 109.82,
+        "shownFocus": 426.36
+      },
+      {
+        "tech": "executioner",
+        "level": 4,
+        "focus": true,
+        "damage": 426.36,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006,
+        "shownAuto": 109.82,
+        "shownFocus": 426.36
+      },
+      {
+        "tech": "executioner",
+        "level": 8,
+        "focus": false,
+        "damage": 123.5,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80,
+        "shownAuto": 123.49999999999997,
+        "shownFocus": 627
+      },
+      {
+        "tech": "executioner",
+        "level": 8,
+        "focus": true,
+        "damage": 627,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80,
+        "shownAuto": 123.49999999999997,
+        "shownFocus": 627
+      },
+      {
+        "tech": "plague",
+        "level": 1,
+        "focus": false,
+        "damage": 83.6,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2,
+        "shownAuto": 83.6,
+        "shownFocus": 91.96000000000001
+      },
+      {
+        "tech": "plague",
+        "level": 1,
+        "focus": true,
+        "damage": 91.96,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2,
+        "shownAuto": 83.6,
+        "shownFocus": 91.96000000000001
+      },
+      {
+        "tech": "plague",
+        "level": 4,
+        "focus": false,
+        "damage": 109.82,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006,
+        "shownAuto": 109.82,
+        "shownFocus": 426.36
+      },
+      {
+        "tech": "plague",
+        "level": 4,
+        "focus": true,
+        "damage": 426.36,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006,
+        "shownAuto": 109.82,
+        "shownFocus": 426.36
+      },
+      {
+        "tech": "plague",
+        "level": 8,
+        "focus": false,
+        "damage": 123.5,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80,
+        "shownAuto": 123.49999999999997,
+        "shownFocus": 627
+      },
+      {
+        "tech": "plague",
+        "level": 8,
+        "focus": true,
+        "damage": 627,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80,
+        "shownAuto": 123.49999999999997,
+        "shownFocus": 627
+      },
+      {
+        "tech": "bloom",
+        "level": 1,
+        "focus": false,
+        "damage": 228.8,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 114.4,
+        "shownAuto": 228.8,
+        "shownFocus": 251.68000000000004
+      },
+      {
+        "tech": "bloom",
+        "level": 1,
+        "focus": true,
+        "damage": 251.68,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 114.4,
+        "shownAuto": 228.8,
+        "shownFocus": 251.68000000000004
+      },
+      {
+        "tech": "bloom",
+        "level": 4,
+        "focus": false,
+        "damage": 300.56,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 176.8,
+        "shownAuto": 300.56,
+        "shownFocus": 1166.88
+      },
+      {
+        "tech": "bloom",
+        "level": 4,
+        "focus": true,
+        "damage": 1166.88,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 176.8,
+        "shownAuto": 300.56,
+        "shownFocus": 1166.88
+      },
+      {
+        "tech": "bloom",
+        "level": 8,
+        "focus": false,
+        "damage": 405.6,
+        "amount": 3,
+        "cd": 0.8658000000000002,
+        "baseStatDamage": 312,
+        "shownAuto": 405.59999999999997,
+        "shownFocus": 2059.2000000000003
+      },
+      {
+        "tech": "bloom",
+        "level": 8,
+        "focus": true,
+        "damage": 2059.2,
+        "amount": 3,
+        "cd": 0.8658000000000002,
+        "baseStatDamage": 312,
+        "shownAuto": 405.59999999999997,
+        "shownFocus": 2059.2000000000003
+      },
+      {
+        "tech": "butcher",
+        "level": 1,
+        "focus": false,
+        "damage": 83.6,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2,
+        "shownAuto": 83.6,
+        "shownFocus": 91.96000000000001
+      },
+      {
+        "tech": "butcher",
+        "level": 1,
+        "focus": true,
+        "damage": 91.96,
+        "amount": 1,
+        "cd": 2.6,
+        "baseStatDamage": 35.2,
+        "shownAuto": 83.6,
+        "shownFocus": 91.96000000000001
+      },
+      {
+        "tech": "butcher",
+        "level": 4,
+        "focus": false,
+        "damage": 109.82,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006,
+        "shownAuto": 109.82,
+        "shownFocus": 426.36
+      },
+      {
+        "tech": "butcher",
+        "level": 4,
+        "focus": true,
+        "damage": 426.36,
+        "amount": 3,
+        "cd": 1.898,
+        "baseStatDamage": 54.400000000000006,
+        "shownAuto": 109.82,
+        "shownFocus": 426.36
+      },
+      {
+        "tech": "butcher",
+        "level": 8,
+        "focus": false,
+        "damage": 123.5,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80,
+        "shownAuto": 123.49999999999997,
+        "shownFocus": 627
+      },
+      {
+        "tech": "butcher",
+        "level": 8,
+        "focus": true,
+        "damage": 627,
+        "amount": 3,
+        "cd": 0.9620000000000003,
+        "baseStatDamage": 80,
+        "shownAuto": 123.49999999999997,
+        "shownFocus": 627
+      }
+    ]
+  },
+  "lateBossBefore": [
+    {
+      "stage": 8,
+      "focus": false,
+      "hp": 637980,
+      "allKilled": true,
+      "meanSeconds": 111.61666666666162,
+      "minSeconds": 111.61666666666162,
+      "maxSeconds": 111.61666666666162,
+      "minPatterns": 26,
+      "minPhases": 2
+    },
+    {
+      "stage": 8,
+      "focus": true,
+      "hp": 637980,
+      "allKilled": true,
+      "meanSeconds": 89.66666666666286,
+      "minSeconds": 89.66666666666286,
+      "maxSeconds": 89.66666666666286,
+      "minPatterns": 21,
+      "minPhases": 2
+    },
+    {
+      "stage": 9,
+      "focus": false,
+      "hp": 291200,
+      "allKilled": true,
+      "meanSeconds": 48.91111111110962,
+      "minSeconds": 47.966666666665226,
+      "maxSeconds": 50.349999999998424,
+      "minPatterns": 13,
+      "minPhases": 2
+    },
+    {
+      "stage": 9,
+      "focus": true,
+      "hp": 291200,
+      "allKilled": true,
+      "meanSeconds": 40.961111111110064,
+      "minSeconds": 40.36666666666566,
+      "maxSeconds": 41.29999999999894,
+      "minPatterns": 11,
+      "minPhases": 2
+    },
+    {
+      "stage": 10,
+      "focus": false,
+      "hp": 2822400,
+      "allKilled": true,
+      "meanSeconds": 317.55000000003986,
+      "minSeconds": 317.55000000003986,
+      "maxSeconds": 317.55000000003986,
+      "minPatterns": 72,
+      "minPhases": 2
+    },
+    {
+      "stage": 10,
+      "focus": true,
+      "hp": 2822400,
+      "allKilled": true,
+      "meanSeconds": 271.8500000000814,
+      "minSeconds": 271.8500000000814,
+      "maxSeconds": 271.8500000000814,
+      "minPatterns": 63,
+      "minPhases": 2
+    }
+  ],
+  "lateBossAfter": [
+    {
+      "stage": 8,
+      "focus": false,
+      "hp": 637980,
+      "allKilled": true,
+      "meanSeconds": 92.5666666666627,
+      "minSeconds": 92.5166666666627,
+      "maxSeconds": 92.66666666666269,
+      "minPatterns": 21,
+      "minPhases": 2
+    },
+    {
+      "stage": 8,
+      "focus": true,
+      "hp": 637980,
+      "allKilled": true,
+      "meanSeconds": 38.666666666665755,
+      "minSeconds": 38.666666666665755,
+      "maxSeconds": 38.666666666665755,
+      "minPatterns": 9,
+      "minPhases": 2
+    },
+    {
+      "stage": 9,
+      "focus": false,
+      "hp": 291200,
+      "allKilled": true,
+      "meanSeconds": 42.749999999998856,
+      "minSeconds": 41.51666666666559,
+      "maxSeconds": 43.916666666665456,
+      "minPatterns": 11,
+      "minPhases": 2
+    },
+    {
+      "stage": 9,
+      "focus": true,
+      "hp": 291200,
+      "allKilled": true,
+      "meanSeconds": 18.050000000000257,
+      "minSeconds": 17.666666666666945,
+      "maxSeconds": 18.416666666666902,
+      "minPatterns": 4,
+      "minPhases": 2
+    },
+    {
+      "stage": 10,
+      "focus": false,
+      "hp": 2822400,
+      "allKilled": true,
+      "meanSeconds": 277.2166666667432,
+      "minSeconds": 277.2166666667432,
+      "maxSeconds": 277.2166666667432,
+      "minPatterns": 65,
+      "minPhases": 2
+    },
+    {
+      "stage": 10,
+      "focus": true,
+      "hp": 2822400,
+      "allKilled": true,
+      "meanSeconds": 136.91666666666777,
+      "minSeconds": 136.91666666666777,
+      "maxSeconds": 136.91666666666777,
+      "minPatterns": 32,
+      "minPhases": 2
+    }
+  ],
+  "lateBossMethod": "Same actual legal progression snapshots and current boss definitions in every variant, three paired seeds, stage8/9/10, Bloom tech, auto and explicit focus. Actual moving boss AI/phases/adds/hits/hitstop. Standing high-HP player isolates TTK; not survival or human clear-rate evidence. Historical combat loads 76d weapon/tech/player/enemy/hazard/targeting modules and data; boss definitions/runtime and noncombat service modules remain current. No purchases, pets, wave director or mid-fight upgrades."
+}

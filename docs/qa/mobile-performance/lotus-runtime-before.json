@@ -1,0 +1,88 @@
+{
+  "stats": {
+    "cd": 0.36,
+    "shots": 3,
+    "spread": 0.07,
+    "baseDmg": 40,
+    "dmgPerStage": 14,
+    "pierce": 7,
+    "speed": 960,
+    "crit": 0.1,
+    "bloomRadius": 90,
+    "bloomDamage": 1,
+    "bloomBossDamage": 0.75,
+    "bloomTargets": 8
+  },
+  "scenes": {
+    "1:boss": {
+      "damage": 10733,
+      "targetsHit": 1,
+      "peakShots": 9
+    },
+    "1:boss-far": {
+      "damage": 10733,
+      "targetsHit": 1,
+      "peakShots": 9
+    },
+    "1:moving-pack": {
+      "damage": 57780,
+      "targetsHit": 18,
+      "peakShots": 9
+    },
+    "1:focus": {
+      "damage": 60750,
+      "targetsHit": 16,
+      "peakShots": 9
+    },
+    "4:boss": {
+      "damage": 19080,
+      "targetsHit": 1,
+      "peakShots": 9
+    },
+    "4:boss-far": {
+      "damage": 19080,
+      "targetsHit": 1,
+      "peakShots": 9
+    },
+    "4:moving-pack": {
+      "damage": 102720,
+      "targetsHit": 18,
+      "peakShots": 9
+    },
+    "4:focus": {
+      "damage": 108000,
+      "targetsHit": 16,
+      "peakShots": 9
+    },
+    "10:boss": {
+      "damage": 35775,
+      "targetsHit": 1,
+      "peakShots": 9
+    },
+    "10:boss-far": {
+      "damage": 35775,
+      "targetsHit": 1,
+      "peakShots": 9
+    },
+    "10:moving-pack": {
+      "damage": 192600,
+      "targetsHit": 18,
+      "peakShots": 9
+    },
+    "10:focus": {
+      "damage": 202500,
+      "targetsHit": 16,
+      "peakShots": 9
+    }
+  },
+  "nonowner": {
+    "damage": 0,
+    "targetsHit": 0,
+    "peakShots": 0
+  },
+  "lowFps": {
+    "damage": 17640,
+    "targetsHit": 1,
+    "peakShots": 9
+  }
+}

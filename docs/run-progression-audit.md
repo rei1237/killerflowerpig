@@ -1,82 +1,44 @@
-# Ten-stage progression and boss-fixture audit
+# Ten-stage progression audit: expanded sword roster
 
-## Result
+## Current result
 
-Refreshed after the additional 12% population reduction, ordinary-HP 1.62 multiplier, new stage 5 suiciders/stage 6 gunners and late encirclement event. These results supersede the earlier higher-density tables.
+The registry has9 ordinary weapons and14 fusion/absolute recipes. Recomputed after the real sword, sword+saw final and Butcher dual start. This replaces the previous population/XP-era tables and removes their obsolete universal three-final claim.
 
-A focused player can reach three chosen finals, or one absolute plus one final, before boss 10 under all three tested XP scenarios. No engine, XP, drop-rate, choice-weight or boss-HP changes were made in this audit. This demonstrates reachability under stated budgets, not a guaranteed win or a hard three-final maximum. The focused policy deliberately stops acquiring new recipe families after its chosen goal; fast scattered runs sometimes reached four finals.
+For the regression's director seed7, central residency16seconds and85% XP collection, the40 focused runs now reach three finals37times and two finals3times before boss10 (previous fixture expectation34/6). The Butcher route reaches three34times and two6times. This change is an observed seeded planning result, not evidence the enlarged choice pool always makes combat easier.
 
-## Reproducible method
+A larger200-seed choice audit (director seed7, with three declared residency/collection scenarios) produces the distributions stored in the JSON artifact below. No gameplay balance was changed by this audit.
 
-Run `node tools/run-progression-audit.mjs 200 --sensitivity --compact` for the complete recorded result; `--fixtures` emits the exact boss fixture JSON. `docs/run-progression-audit-results.json` records the 200-seed distributions and sensitivity checks. `tests/run-progression-audit.mjs` verifies replayed snapshots, exact item-investment conservation, chest-before-fusion requirements, one-exchange use, and six weapon / six passive slot limits.
+## Reproduction and scope
 
-The tool calls real `updateSpawner`, `spawnEnemy`, `hitEnemy`, XP drops, `addXP`, `rollChoices`, choice sessions/rerolls, `applyChoice`, `rollBossChest`, exchange previews/commit and fusion previews/commit. It does not replace candidate weights with a simplified distribution. Each run starts with the real level-1 shotgun and no purchases.
+- `node tools/run-progression-audit.mjs 200 --compact > docs/run-progression-audit-results.json`
+- `node tools/run-progression-audit.mjs --fixtures > tests/fixtures/planned-boss-builds.json`
+- `node --test tests/run-progression-audit.mjs`
 
-XP estimation uses 0.1-second ticks and synthetic enemy residency from spawn to death. Elites live three times the ordinary assumption. Actual splitter deaths spawn children through the central cap. The empty spatial grid excludes unmodeled explosion-chain damage; corpses retain the actual gore-off 0.15-second budget. Late wave survivors receive no invented XP; boss-phase ordinary kills, survival, combat DPS, travel and dodging are not modeled. Encirclement clocks advance, but no movement/survival pressure is simulated. Suiciders and gunners use actual spawn weights and death XP; their attacks and self-detonation timing are outside the synthetic-residency model. The selected collection fraction is applied to both wave and boss XP. Actual boss drops contribute 24 × (5 + 2 × stage) XP. Coins and supplies do not add choices.
+The model calls the actual director, enemy death/XP drops, choice weights, reroll sessions, choice application, boss chest evolution and fusion validation. It uses synthetic residency, not autonomous combat. Elites remain alive3× ordinary residency. Split children and spawn caps are real; uncredited survivors do not become XP. Explosion chains, boss-phase ordinary kills, movement, actual DPS and survival are not simulated. Collected XP becomes available at wave end. Boss chests precede boss-drop XP; boss10 rewards never count toward its pre-fight snapshot.
 
-XP collection is treated as available by the end of each wave. The model does not predict when within a wave a level-up happens, and its assumed kill rate is independent of the selected build. Slow residency can therefore represent travel/avoidance, but is not a validated weak-build combat simulation.
+Baseline starts with one Lv1 shotgun. Butcher mode reads the actual techStartingWeapons helper, starts sword+saw at Lv1 plus whet Lv1, and enables the actual tech choice-family behavior. It targets sword_wheel, scatter_rail and lotus_bloom. Thus this is a real route comparison, not a starter-only controlled experiment. No permanent purchases are granted.
 
-Current XP cost is `8 + 7 × (level−1) + 10 × max(0, level−20) + 16 × max(0, level−40)`. Boss chests are opened before boss-drop XP choices by default, making the reward-order assumption explicit. The boss-10 reward is reported separately and never counted in its pre-fight build.
+Investment conservation subtracts each run's recorded initial weapon+passive levels (baseline1, Butcher3), then accounts exactly for every applied choice, boss upgrade, consumed fusion input and exchange loss. Every consumed evolution must have a prior actual chest evolution. All snapshots fit six weapon slots; passives follow the current12-item registry rather than the obsolete six-slot claim.
 
-### XP scenarios
+Current XP costs come directly from xpForLevel: base10+10×(level−1)+20×max(0,level−20)+40×max(0,level−35)+12×max(0,level−11)+25×max(0,level−25), multiplied by the active difficulty factor. XP-related passive choices can change the number of earned levels, so choice counts are distributions.
 
-| Scenario | Ordinary / elite residency | Collection | Total collected XP | XP choices through full run |
-| --- | --- | ---: | ---: | ---: |
-| Slow | 24 / 72 s | 70% | 26,777 | 61 |
-| Central | 16 / 48 s | 85% | 49,896 | 77 |
-| Fast | 8 / 24 s | 95% | 107,211 | 103 |
+## Before-boss10 results,200 choice seeds
 
-Central seed-7 director results, before collection scaling:
+| Residency / collection | Policy | 0 finals |1 final|2 finals|3 finals|1 absolute |
+|---|---|---:|---:|---:|---:|---:|
+|24s / 70%|planned|0|10|107|83|0|
+|24s / 70%|scattered|112|77|11|0|0|
+|24s / 70%|absolute|3|197|0|0|198|
+|24s / 70%|butcher|0|10|119|71|0|
+|16s / 85%|planned|0|0|23|177|0|
+|16s / 85%|scattered|69|113|18|0|0|
+|16s / 85%|absolute|0|200|0|0|200|
+|16s / 85%|butcher|0|0|40|160|0|
+|8s / 95%|planned|0|0|0|200|0|
+|8s / 95%|scattered|11|124|64|1|0|
+|8s / 95%|absolute|0|200|0|0|200|
+|8s / 95%|butcher|0|0|1|199|0|
 
-| Stage | Wave kills | Wave XP | Boss XP | Level before boss |
-| --- | ---: | ---: | ---: | ---: |
-| 1 | 97 | 190 | 168 | 7 |
-| 2 | 167 | 372 | 216 | 13 |
-| 3 | 324 | 1,406 | 264 | 23 |
-| 4 | 441 | 2,197 | 312 | 31 |
-| 5 | 512 | 3,448 | 360 | 39 |
-| 6 | 644 | 5,635 | 408 | 48 |
-| 7 | 743 | 6,204 | 456 | 54 |
-| 8 | 883 | 9,218 | 504 | 62 |
-| 9 | 977 | 11,539 | 552 | 70 |
-| 10 | 1,152 | 14,652 | 600 | 78 |
+Central focused and Butcher routes meet the2–3-final target in200/200 runs. Slow collection/residency leaves10/200 of each focused route at one final; this5% shortfall is disclosed, not hidden by snapshot updates. Fast focused reaches three in200/200, Butcher199/200. Scattered selection remains weaker because it does not prioritize recipes or use the planned reroll policy. Absolute counts are separate from ordinary finals.
 
-Ten alternate spawn seeds give total generated XP ranges 110,034–112,853 (8 s), 56,857–58,991 (16 s), 38,253–39,521 (24 s), before collection. Low-quality caps reduce the central collected estimate to 42,668, versus 49,896 high-quality;100 focused seeds still reached three finals. Opening boss XP before the chest also reached three finals in all 100 central seeds, but changed some first-fusion timing. These sensitivities do not establish the actual player kill-rate assumption.
-
-## Policies and reach distributions
-
-Focused planning prioritizes the first unfinished recipe's parent levels, acquires required passives, uses the one free reroll when a screen has no high-priority progress, and legally skips irrelevant choices instead of filling prerequisite slots with unrelated items. Fused upgrades and already-owned passives are fallback investments. Scattered selection chooses uniformly among the actual three cards, does not reroll or skip, recognizes available recipes, and uses at most one passive exchange to rescue a level-8 evolution. It accepts the first available ordinary fusion rather than deliberately holding three parents for an absolute. This compares player policies, not equal decision skill or equal reroll use.
-
-Counts below are out of 200 seeds, before boss 10:
-
-| XP scenario / policy | 0 finals | 1 final | 2 finals | 3 finals | 4 finals | Absolute |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Slow / focused | 0 | 0 | 0 | 200 | 0 | 0 |
-| Central / focused | 0 | 0 | 0 | 200 | 0 | 0 |
-| Fast / focused | 0 | 0 | 0 | 200 | 0 | 0 |
-| Slow / scattered | 9 | 97 | 88 | 6 | 0 | 0 |
-| Central / scattered | 11 | 68 | 107 | 14 | 0 | 0 |
-| Fast / scattered | 12 | 69 | 79 | 39 | 1 | 0 |
-| Each scenario / absolute-focused | 0 | 200 | 0 | 0 | 0 | 200 |
-
-Central focused pre-boss progression: stage 5 has 102 zero-final and 98 one-final builds; stage 6 has 26/130/44 zero/one/two-final builds; stage 7 has 32 one-final,129 two-final and 39 three-final; stage 8 has 52 two-final and 148 three-final. All reach three by stage 9. Thus three finals at stage 5 is an unsuitable representative benchmark. Central absolute-focused runs have an absolute in 14/200 by boss 5,104/200 by boss 6,195/200 by boss 7 and 200/200 by boss 8.
-
-Median skipped choices are 5/13/32 for slow/central/fast focused runs. These are forgone opportunities, not hidden extra levels. All 200 scattered runs in each scenario used the one repair exchange. Focused runs did not need it because they reserved prerequisite slots. Failures in scattered runs can therefore be inventory planning failures even with ample XP; one exchange does not repair several incompatible passives.
-
-## Allocation and chest constraints
-
-Three disjoint finals use shotgun + rifle → scatter rail, cannon + thorns → lotus bloom, and molotov + gas → plague fire. Their required passive slots are exactly magazine, scope, pollen, regen, spread and sap. Acquiring/upgrading six parents to level 8 costs 47 item steps after the starting shotgun; six passive acquisitions bring this to 53. Six separate evolution rewards are also required. Maxing all three outputs adds 21 steps; maxing those six passives adds 24. Chest upgrades may supply item steps; they are not counted twice as XP choices.
-
-Absolute bloom consumes evolved cannon + thorns + molotov, requiring pollen, regen and spread. Adding scatter rail uses shotgun/rifle and magazine/scope: five parents, five prerequisite passives, 44 pre-fusion item steps after the starting shotgun, and five evolutions. One passive slot remains for whetstone. Holding the three absolute ingredients delays simpler two-parent fusion and commits those inputs to the absolute. The output begins at level 1, never drops as a new random choice, and upgrades through level 8.
-
-Two finals can instead reserve four passive slots for magazine/scope/pollen/regen and spend the remaining two on whetstone/heart. The benchmark's actual level-78 two-final snapshot has both finals at 8, all six passives at 5, might 1.5 and HP 200. The three-final snapshot has scatter rail 8, plague fire 8 and lotus bloom 5; it uses all six prerequisites at 5 and has might 1.0 and HP 100. The absolute-plus-final snapshot has both outputs at 8 and five prerequisites plus whetstone at 5.
-
-Boss chests supply 2/2/3/3/3/5/5/5/5/5 guaranteed reward opportunities: 33 before boss 10 and 38 after its chest. They prioritize already-eligible evolutions; otherwise they upgrade owned items, and cannot discover missing weapons/passives. Premium +2 levels happen after guaranteed rewards, so a premium that first reaches level 8 may have to wait for the next boss chest to evolve. Expected premium wins are 3.6 before boss 10 and 4.25 through the full run; each yields at most two levels. Actual seeded outcomes use real rolls, not expected values.
-
-The planner tests conserve every item step, including consumed level-8 parents, level-1 fusion outputs and any lost exchange levels. No elite chest, free evolution, unlimited exchange or seventh passive is inserted.
-
-## Boss pacing and remaining limits
-
-See [boss-durability.md](boss-durability.md) for reachable mid/late fixtures and 144 real-AI encounters. Current stage-5 median is 16.92 seconds; stage-10 medians are 12.15 seconds with two finals, 11.02 with three, and 7.77 with absolute plus one final. Keep current boss HP based on this bounded evidence; do not inflate it against an impossible six-final fixture.
-
-These policies and finite seeds establish selected routes, not optimal play or an exhaustive maximum. Faster collection, extra boss-phase kills, other recipe combinations, purchased rerolls, and taking risks may change totals. Survival, within-wave timing and mobile movement still need human or full closed-loop combat validation. No hard cap of three crafted finals is claimed or introduced.
+Fixtures now include a fifth actual Butcher pre-boss build. Existing fixture levels/stats are regenerated from the real rollout, not manually strengthened. The prior recorded sensitivity batch is not retained as current evidence; rerun --sensitivity separately if needed. Tests verify exact artifact reproduction, conservation over160 seeded runs, legal evolutions, starter grants and boss-reward ordering.

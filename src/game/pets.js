@@ -1,3 +1,4 @@
+import { petTrainingStats } from '../data/pet-upgrades.js';
 import { images } from '../core/assets.js';
 import { getPetSprite, loadPetSprite, petSpriteRect, petVisualLimits, PET_ANIMATION } from './pet-sprite.js';
 import { G } from './state.js';
@@ -14,6 +15,7 @@ export function resetPets() { pet = null; }
 export function updatePets(dt) {
     if (!G.player || G.player.dead || save.equippedPet !== 'pet_yeongnyang' || !save.inventory.includes('pet_yeongnyang')) { pet = null; return; }
     const p = G.player;
+    const training = petTrainingStats(save);
     if (!pet) pet = { x: p.x - 32, y: p.y + 10, cd: 0.6, healCd: PET_POWER.healInterval, swipe: 0, animClock: 0, attackElapsed: 99, healElapsed: 99, moving: false, flip: p.flip };
     const tx = p.x - (p.flip ? -34 : 34), ty = p.y + 8;
     if (Math.hypot(tx - pet.x, ty - pet.y) > 300) { pet.x = tx; pet.y = ty; }
@@ -24,12 +26,12 @@ export function updatePets(dt) {
     pet.x += (tx - pet.x) * blend; pet.y += (ty - pet.y) * blend;
     pet.healCd -= dt;
     if (pet.healCd > 0 && pet.healCd <= PET_ANIMATION.healRelease && p.hp < p.maxHp) pet.healElapsed = PET_ANIMATION.healRelease - pet.healCd;
-    if (pet.healCd <= 1e-9) { const hp = p.hp; healPlayer(PET_POWER.heal); if (p.hp > hp) pet.healElapsed = PET_ANIMATION.healRelease; pet.healCd = PET_POWER.healInterval; }
+    if (pet.healCd <= 1e-9) { const hp = p.hp; healPlayer(training.heal); if (p.hp > hp) pet.healElapsed = PET_ANIMATION.healRelease; pet.healCd = PET_POWER.healInterval; }
     pet.cd -= dt; pet.swipe = Math.max(0, pet.swipe - dt);
     // Coin help is local and bounded; pet never auto-collects chests or dangerous pickups.
     for (let i = 0; i < G.pickups.count; i++) {
         const c = G.pickups.items[i];
-        if (c.kind === 'coin' && Math.hypot(c.x - pet.x, c.y - pet.y) < PET_POWER.coinRange) c.pull = true;
+        if (c.kind === 'coin' && Math.hypot(c.x - pet.x, c.y - pet.y) < training.coinRange) c.pull = true;
     }
     if (pet.cd > 1e-9) {
         if (pet.cd <= PET_ANIMATION.attackRelease) {
@@ -59,7 +61,7 @@ export function updatePets(dt) {
     if (targets.length) {
         pet.cd = PET_POWER.cooldown; pet.swipe = 0.18; pet.attackElapsed = PET_ANIMATION.attackRelease;
         pet.targetX = targets[0].enemy.x; pet.targetY = targets[0].enemy.y - targets[0].enemy.radius;
-        const damage = (PET_POWER.damage + Math.min(G.level, PET_POWER.maxLevel) * PET_POWER.levelDamage) * p.stats.might;
+        const damage = (training.damage + Math.min(G.level, PET_POWER.maxLevel) * PET_POWER.levelDamage) * p.stats.might;
         for (const { enemy } of targets) {
             const options = { weapon: 'pet_yeongnyang', silent: true, slow: 0.25 };
             if (enemy === G.boss) enemy.hurt(damage, options);

@@ -65,12 +65,12 @@ test('healthy real kills never drop heals; magnet guarantee at 36 with exact coi
  assert.ok(xp>0);close(G.gems.items[0].value,ENEMIES.shambler.xp*stageScaling(1,0,STAGES[1].duration).xp*5/3); // 스테이지 XP 배율(STAGE_XP_YIELD 포함)
 }));
 
-test('low HP real kills guarantee at8; elites drop their 6 coins on a winning roll without a chest',()=>withRandom(.99,()=>{
+test('low HP real kills guarantee at8; elites drop their 10 coins on a winning roll without a chest',()=>withRandom(.99,()=>{
  reset(1,20);for(let n=0;n<7;n++)kill();assert.equal(field('meat').length,0);
  kill();assert.equal(field('meat').length,1);
- // 네임드 금화는 30% 확률: 당첨 굴림(.29)을 주입해 6개 확인
+ // Elite80% coin roll: winning .29 produces10 coins without altering supplies.
  const before={...G.supplyDrought};coinRandom.next=()=>.29;try{kill(true);}finally{coinRandom.next=()=>.99;}assert.deepEqual(G.supplyDrought,before);
- assert.equal(field('chest').length,0);assert.equal(field('coin').at(-1).value,6);
+ assert.equal(field('chest').length,0);assert.equal(field('coin').at(-1).value,10);
 }));
 
 test('field cap retains pending guarantees and useful collection releases slots',()=>withRandom(.99,()=>{
@@ -109,7 +109,7 @@ test('ranged audit: boss summons cannot introduce ranged enemies before stage5; 
             const boss = new Boss(stage);
             boss.patternSummon(10);
         });
-        assert.equal(G.enemies.count, stage === 1 ? 4 : 6);
+        assert.equal(G.enemies.count, 6);
         assert.ok(active(G.enemies).every(enemy => stage < 5 ? !enemy.def.ranged : enemy.type === 'spitter'));
     }
 });

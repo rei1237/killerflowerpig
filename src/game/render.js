@@ -16,6 +16,7 @@ import { drawHUD } from '../ui/hud.js';
 import { focusedTarget, tapFocusAt } from './targeting.js';
 import { drawGroundProps, collectTallProps, drawProp, drawPropLights, drawAmbient, invalidateScenery } from './scenery.js';
 
+const reducedMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)');
 let canvas, ctx;
 let backdrop = null;
 let groundPattern = null;
@@ -145,7 +146,7 @@ export function render(dt) {
     // 카메라 (부드럽게 추적 + 흔들림)
     const enclosed = updateEncirclementCamera(dt);
     // A fixed active camera must not shake the far fog edge outside mobile view.
-    const sh = enclosed ? 0 : G.shake;
+    const sh = enclosed || reducedMotion?.matches ? 0 : G.shake;
     const sx = sh ? (Math.random() - 0.5) * sh : 0;
     const sy = sh ? (Math.random() - 0.5) * sh : 0;
     const z = screen.zoom;
@@ -243,7 +244,7 @@ export function render(dt) {
     // 저체력/피격: 혈관이 뻗은 붉은 가장자리
     const hpR = p.hp / p.maxHp;
     let edge = p.hurtT > 0 ? p.hurtT * 3 : 0;
-    if (hpR < 0.35 && !p.dead) edge = Math.max(edge, (0.35 - hpR) * 2.4 * (0.6 + 0.4 * Math.sin(G.clock * (6 + (0.35 - hpR) * 20))));
+    if (hpR < 0.35 && !p.dead) edge = Math.max(edge, (0.35 - hpR) * 2.4 * (reducedMotion?.matches ? 0.8 : 0.6 + 0.4 * Math.sin(G.clock * (6 + (0.35 - hpR) * 20))));
     if (goreProfile().screenBlood && hpR < 0.2) edge = Math.max(edge, 0.7);
     if (edge > 0.01) {
         ctx.globalAlpha = Math.min(1, edge);
@@ -254,14 +255,14 @@ export function render(dt) {
     // 환각 (사이코틱 킹/얼티메이트 원)
     if (G.hallucinate > 0) {
         ctx.globalCompositeOperation = 'difference';
-        ctx.globalAlpha = 0.18 + Math.sin(G.clock * 2.3) * 0.12;
+        ctx.globalAlpha = reducedMotion?.matches ? 0.18 : 0.18 + Math.sin(G.clock * 2.3) * 0.12;
         ctx.fillStyle = '#ff40c0';
         ctx.fillRect(0, 0, screen.w, screen.h);
         ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1;
     }
 
-    if (G.flash > 0) {
+    if (G.flash > 0 && !reducedMotion?.matches) {
         ctx.globalAlpha = Math.min(0.85, G.flash);
         ctx.fillStyle = G.flashColor;
         ctx.fillRect(0, 0, screen.w, screen.h);

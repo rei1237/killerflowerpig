@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { STAGES, EVENTS, POPULATION_BOOST } from '../src/data/stages.js';
 import { BOSSES, BOSS_HP_MULTIPLIER } from '../src/data/bosses.js';
-import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, SPARSE_ENEMY_HP, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, stageScaling } from '../src/data/enemies.js';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
 import { spawnEnemy } from '../src/game/enemies.js';
@@ -72,12 +72,12 @@ test('stage 1 and 2 have bounded density and refill; stage 1 introduces enemy ty
     assert.equal(G.enemies.count, 0, 'retry resets fractional spawn credit');
 });
 
-test('opening stages stay only slightly softer while tougher enemies retain base XP values', () => withFixedRandom(() => {
+test('opening stages keep movement grace while sparse enemies grant compensated XP', () => withFixedRandom(() => {
     for (const [stage, multipliers] of [[1, [0.95, 0.9, 0.85]], [2, [1, 0.95, 0.95]]]) {
         reset(stage, STAGES[stage].duration / 2);
         const enemy = spawnEnemy('shambler', 400, 0, { noAffix: true });
         const oldHp = (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + 0.5 * IN_STAGE_HP_RAMP);
-        close(enemy.hp, ENEMIES.shambler.hp * oldHp * multipliers[0] * ENEMY_TOUGHNESS_MULTIPLIER);
+        close(enemy.hp, ENEMIES.shambler.hp * oldHp * multipliers[0] * ENEMY_TOUGHNESS_MULTIPLIER * SPARSE_ENEMY_HP[stage]);
         close(enemy.speed, ENEMIES.shambler.speed * (1 + (stage - 1) * 0.035) * multipliers[1]);
         close(enemy.dmg, ENEMIES.shambler.dmg * (1 + (stage - 1) * 0.24) * multipliers[2]);
         close(enemy.xp, ENEMIES.shambler.xp * (1 + (stage - 1) * 0.15) * STAGE_XP_YIELD); // 개체 수 증가분만큼 적 1마리당 XP는 낮췄다
@@ -140,48 +140,22 @@ test('stage 1 leaves a 70-second learning window and smaller events run only onc
     });
 });
 
-test('first boss keeps slower, visibly matched charge warnings after the requested HP increase', () => withFixedRandom(() => {
-    reset(1);
-    const boss = new Boss(1);
-    assert.equal(BOSSES[1].hp, 1400);
-    assert.equal(boss.hp, 1400 * BOSS_HP_MULTIPLIER, 'live boss HP is the base value × multiplier');
-    assert.equal(boss.speed, 48);
-    assert.equal(boss.dmg, 10);
-    assert.equal(boss.attackT, 3);
-    close(boss.radius, 112 * 0.62 * 0.32);
+test('first boss has fixed readable timing and no phase summons', () => {
+    reset(1); const boss = new Boss(1);
+    assert.equal(boss.hp, 600 * BOSS_HP_MULTIPLIER);
+    assert.equal(boss.speed, 48); assert.equal(boss.dmg, 10); assert.equal(boss.attackT, 3);
     for (const phase of [0, 1, 2]) {
-        G.hazards.clear();
-        boss.phase = phase; boss.x = -200; boss.y = 0;
-        const task = boss.task_charge();
-        const warning = 1.15 / Math.sqrt(boss.phaseMul);
-        close(G.hazards.items[0].delay, warning);
-        task.t = warning - 0.001;
-        task.step(0.1, task);
-        assert.equal(boss.x, -200);
-        task.t = warning + 0.001;
-        task.step(0.1, task);
-        close(boss.x, -152);
-        boss.endTask(1.4);
-        close(boss.attackT, 1.4 / boss.phaseMul * 1.5);
+        G.hazards.clear(); boss.phase=phase; boss.x=-200; boss.y=0;
+        const task=boss.task_trainingCharge();
+        close(G.hazards.items[0].delay,1.5);
+        task.t=1.499; task.step(.1,task); assert.equal(boss.x,-200);
+        task.t=1.5; task.step(.1,task); assert.equal(boss.x,-200,'release frame does not erase the warning');
+        task.step(.1,task); close(boss.x,-170);
     }
-}));
-
-test('first boss phase transitions and summons allow time to recover', () => {
-    reset(1);
-    const boss = new Boss(1);
-    boss.enterPhase(1);
-    assert.equal(boss.attackT, 2.2);
-    assert.equal(G.enemies.count, 4);
-    G.enemies.clear();
-    boss.enterPhase(2);
-    assert.equal(boss.attackT, 2.2);
-    assert.equal(G.enemies.count, 5);
-    G.enemies.clear();
-    boss.phase = 0;
-    const task = boss.task_summon();
-    task.t = 0.61;
-    task.step(0.01, task);
-    assert.equal(G.enemies.count, 2);
+    for (const phase of [1,2]) {
+        boss.enterPhase(phase); assert.equal(G.enemies.count,0);
+        assert.equal(boss.attackT,2.5); assert.equal(boss.task.phase,'recover'); assert.equal(boss.speed,48);
+    }
 });
 
 test('later-stage damage, speed, event timing and legacy charges remain while population and HP are rebalanced', () => withFixedRandom(() => {
@@ -200,7 +174,7 @@ test('later-stage damage, speed, event timing and legacy charges remain while po
             const prog = Math.min(1, t / duration);
             assert.deepEqual(stageScaling(stage, t, duration), {
                 // 4스테이지부터 LATE_STAGE_SCALING만큼 추가 강화 (3스테이지는 late=0으로 기존 곡선)
-                hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * ENEMY_TOUGHNESS_MULTIPLIER * (1 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.hp),
+                hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * ENEMY_TOUGHNESS_MULTIPLIER * SPARSE_ENEMY_HP[stage] * (1 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.hp),
                 speed: 1 + (stage - 1) * 0.035 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.speed,
                 dmg: 1 + (stage - 1) * 0.24 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.dmg,
                 xp: (1 + (stage - 1) * 0.15) * STAGE_XP_YIELD,
@@ -208,6 +182,7 @@ test('later-stage damage, speed, event timing and legacy charges remain while po
         }
     }
     for (let stage = 2; stage <= 10; stage++) {
+        if (stage === 9) continue; // Alpha relocation is covered independently.
         const { speed, dmg } = BOSSES[stage];
         const old = baseline.bosses[stage];
         // Requested Hunter speed is the only later movement exception.

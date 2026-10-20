@@ -39,11 +39,14 @@ globalThis.document = { hidden: false, createElement(tag) {
 const state = await moduleAt('game/state.js');
 const { G, configureCaps, clearWorld } = state;
 const { settings, setSetting } = await moduleAt('core/settings.js');
-const { images, fx } = await moduleAt('core/assets.js');
+const { images, fx, atlases } = await moduleAt('core/assets.js');
 const effects = await moduleAt('game/effects.js');
 const renderer = await moduleAt('game/render.js');
 const { spawnHazard } = await moduleAt('game/hazards.js');
 const { input } = await moduleAt('core/input.js');
+const { Boss } = await moduleAt('game/boss.js');
+const { prepareBossSheets } = await moduleAt('game/boss-sheets.js');
+const { recordLotusBloom } = await moduleAt('game/weapon-vfx.js');
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 const sprite = { width: 64, height: 64, complete: true, naturalWidth: 64, naturalHeight: 64 };
@@ -57,7 +60,7 @@ function seedScene() {
     G.mode = 'play'; G.paused = false; G.clock = 20; G.stage = 7; G.time = 60;
     G.camera.x = 0; G.camera.y = -20; G.weapons = []; G.passives = {}; G.shake = 0;
     G.player = { x: 0, y: 0, vx: 0, vy: 0, hp: 100, maxHp: 100, dead: false, shotAt: 19.96, shotFlip: false, iframes: 0, hurtT: 0, anim: 0, stats: { magnet: 70 } };
-    images.playerFire = { width: 1536, height: 256 }; images.playerFireFlash = images.playerFire;
+    images.playerFire = { width: 3072, height: 256 }; images.playerFireFlash = images.playerFire;
     for (const key of ['bullet', 'rail', 'bossShot', 'enemyShot', 'petal', 'petalBlood', 'saw', 'bomb', 'meat', 'magnet', 'chest']) fx[key] = sprite;
     fx.gems = [sprite, sprite, sprite]; fx.splats = { red: [sprite] };
     for (let i = 0; i < 180; i++) Object.assign(G.enemies.spawn(), { ...place(i, i % 4 === 0), alive: true, atlas: enemyAtlas, radius: 14, state: 'walk', anim: i % 8, scale: .52, flip: false, tint: 'normal', id: i, hp: 10, maxHp: 10, flash: 0, elite: false });
@@ -79,16 +82,34 @@ function gameplaySnapshot() {
 
 if (process.env.RENDER_BENCHMARK) {
     seedScene();
+    const scenario = process.env.PERF_SCENE || 'dense';
+    if (scenario !== 'dense') {
+        // Same live draw path and pools as combat, including real King atlas slicing.
+        // Positions/lifetimes are controlled to keep before/after workloads identical.
+        globalThis.Image = class { constructor() { this.width=1024; this.height=512; } set src(v) { if(v) queueMicrotask(()=>this.onload?.()); } };
+        atlases.bossKing = enemyAtlas;
+        await prepareBossSheets(9);
+        G.stage=9; G.boss=new Boss(9); Object.assign(G.boss,{x:100,y:70,flash:.05});
+        if (scenario === 'sparse-king') { G.enemies.count=3; G.shots.count=18; G.particles.count=40; G.gems.count=12; G.decals.length=6; }
+        for(let i=0;i<G.shots.count;i++) G.shots.items[i].weapon='lotus_gun';
+        for(let i=0;i<3;i++) Object.assign(G.beams.spawn(),{weapon:i?'absolute_bloom':'cannon',x:0,y:-20,angle:(i-1)*.3,len:580,width:80,life:.25,max:.35,segments:[{length:580,width:40},{length:310,width:80}]});
+        for(let i=0;i<3;i++) recordLotusBloom((i-1)*100,40,118,G.clock);
+        G.weapons=[{id:'lotus_bloom',slot:0,level:8,angle:.5,activeT:2,s:{amount:5,area:1.5,radius:90,duration:3,dmg:10}}];
+        renderer.invalidateStageVisuals();
+    }
+    state.setVisualTier(Number(process.env.PERF_TIER || 1)); renderer.resize();
+    const benchmarkClock = G.clock;
+    const drawFrame = () => { G.clock=benchmarkClock; renderer.render(1/60); };
     const before = gameplaySnapshot();
-    for (let i = 0; i < 100; i++) { G.clock += 1 / 60; renderer.render(1 / 60); }
-    resetCounts(); G.clock += 1 / 60; renderer.render(1 / 60);
+    for (let i = 0; i < 100; i++) { drawFrame(); }
+    resetCounts(); drawFrame();
     const activeCalls = { ...ctx.counts };
     const samples = [];
-    for (let i = 0; i < 600; i++) { const t = hostClock.now(); G.clock += 1 / 60; renderer.render(1 / 60); samples.push(hostClock.now() - t); }
+    for (let i = 0; i < 600; i++) { const t = hostClock.now(); drawFrame(); samples.push(hostClock.now() - t); }
     samples.sort((a, b) => a - b);
     G.paused = true; renderer.render(0); resetCounts();
     for (let i = 0; i < 120; i++) renderer.render(0);
-    console.log(JSON.stringify({ environment: { node: process.version, platform: process.platform, cpu: os.cpus()[0]?.model, backend: 'counting Canvas shim; no browser/GPU/phone' }, fixture: { viewport: [390, 844], devicePixelRatio: 3, quality: 'auto/coarse', enemies: 180, friendlyShots: 150, hostileShots: 60, hazards: 12, gems: 300, particles: 260, decals: 72, texts: 44 }, rasterPixels: canvas.width * canvas.height, activeCanvasCalls: activeCalls, activeCallsTotal: Object.values(activeCalls).reduce((a,b) => a+b,0), paused120FramesCalls: calls(), jsShimMedianMs: samples[300], jsShimP95Ms: samples[570], gameplayUnchanged: gameplaySnapshot() === before, canvasCreates }, null, 2));
+    console.log(JSON.stringify({ environment: { node: process.version, platform: process.platform, cpu: os.cpus()[0]?.model, backend: 'counting Canvas shim; no browser/GPU/phone' }, fixture: { scenario, tier:G.visuals.tier, viewport: [390, 844], devicePixelRatio: 3, quality: 'auto/coarse', enemies:G.enemies.count, friendlyShots:G.shots.count, beams:G.beams.count, hostileShots:G.enemyShots.count, hazards:G.hazards.count, gems:G.gems.count, particles:G.particles.count, decals:G.decals.length, texts:G.texts.count }, rasterPixels: canvas.width * canvas.height, activeCanvasCalls: activeCalls, activeCallsTotal: Object.values(activeCalls).reduce((a,b) => a+b,0), paused120FramesCalls: calls(), jsShimMedianMs: samples[300], jsShimP95Ms: samples[570], gameplayUnchanged: gameplaySnapshot() === before, canvasCreates }, null, 2));
 } else {
     test('visual tiers never change enemy/spawn pools, damage or logical field of view', () => {
         seedScene(); const before = gameplaySnapshot(); const view = { ...G.view }; const lowQ = G.lowQ;
@@ -141,4 +162,11 @@ if (!process.env.RENDER_BENCHMARK) test('active enclosure keeps mobile fog wall 
   assert.ok(Math.abs(point.x-x)<1e-8 && Math.abs(point.y-y)<1e-8);
  }
  clearEncirclement();
+});
+
+if (!process.env.RENDER_BENCHMARK) test('reduced motion suppresses camera shake and flash without changing combat state',()=>{
+ seedScene();G.shake=40;G.flash=.8;const before=gameplaySnapshot();renderer.render(.016);
+ assert.equal(renderer.screen.worldTx,(G.view.w/2-G.camera.x)*renderer.screen.zoom);
+ assert.equal(renderer.screen.worldTy,(G.view.h/2-G.camera.y)*renderer.screen.zoom);
+ assert.equal(G.shake,40);assert.equal(G.flash,.8);assert.equal(gameplaySnapshot(),before);
 });

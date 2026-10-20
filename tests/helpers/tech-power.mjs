@@ -15,7 +15,9 @@ export function simulateTech(tech,weapons,scene){
  let seed=1234567;const original=Math.random;Math.random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
  const targets=[];const hp=1e8;
  if(scene==='boss'){G.boss={alive:true,x:80,y:0,radius:26,hp,hits:{},hurt(d,o={}){let a=d;const cc=(o.crit||0)+G.player.stats.crit;if(cc&&Math.random()<cc)a*=(G.player.stats.critMul||2)+(o.critBonus||0);this.hp-=a}};targets.push(G.boss);}
- else for(let i=0;i<18;i++){const angle=i*Math.PI*2/18,r=scene==='swarm'?40+(i%3)*18:85+(i%3)*80;const e=G.enemies.spawn();Object.assign(e,{id:i+1,x:scene==='corridor'?65+i*18:Math.cos(angle)*r,y:scene==='corridor'?(i%3-1)*16:Math.sin(angle)*r,radius:12,alive:true,hp,maxHp:hp,mass:1,kx:0,ky:0,slow:0,slowT:0,bleed:0,bleedT:0,hits:new Float32Array(16).fill(-99)});targets.push(e);G.grid.insert(e);}
+ // Immortal DPS probes exclude normal-enemy execute procs. Their kill chance is
+ // covered with finite-HP enemies in executioner-identity.mjs, not as 100M damage.
+ else for(let i=0;i<18;i++){const angle=i*Math.PI*2/18,r=scene==='swarm'?40+(i%3)*18:85+(i%3)*80;const e=G.enemies.spawn();Object.assign(e,{id:i+1,x:scene==='corridor'?65+i*18:Math.cos(angle)*r,y:scene==='corridor'?(i%3-1)*16:Math.sin(angle)*r,radius:12,alive:true,elite:true,hp,maxHp:hp,mass:1,kx:0,ky:0,slow:0,slowT:0,bleed:0,bleedT:0,hits:new Float32Array(16).fill(-99)});targets.push(e);G.grid.insert(e);}
  try{for(let f=0;f<1800;f++){G.clock+=1/60;updateWeapons(1/60);updateShots(1/60);updateHazards(1/60);for(const e of targets)if(e.bleedT>0){e.bleedT-=1/60;e.hp-=e.bleed/15;} }}finally{Math.random=original;}
  return targets.reduce((n,e)=>n+hp-e.hp,0);
 }

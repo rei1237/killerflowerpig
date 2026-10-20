@@ -1,3 +1,4 @@
+import { bossCoinValue, bossCoinReceipt } from './coin-drops.js';
 import { drawBossArtwork, drawBossSpriteSheet, initBossMotion, setBossMotion, hitBossMotion, recoverBossMotion, updateBossMotion } from './boss-appearance.js';
 import { prepareBossSheets, getBossSheet } from './boss-sheets.js';
 import { recordFusionHit } from './weapon-vfx.js';
@@ -11,7 +12,7 @@ import { audio } from '../core/audio.js';
 import { fireEnemyShot, spawnEnemy, edgePosition } from './enemies.js';
 import { spawnHazard } from './hazards.js';
 import { damagePlayer } from './player.js';
-import { dropGem, dropPickup } from './pickups.js';
+import { dropGem, dropPickup, dropCoin } from './pickups.js';
 import { BOSS_XP_GEMS, bossGemValue } from '../data/boss-rewards.js';
 import { blood, gibs, decal, damageText, shake, flash, hitstop, sparks, floatText, smoke } from './effects.js';
 
@@ -22,6 +23,7 @@ export class Boss {
         const def = BOSSES[stage];
         this.def = def;
         this.stage = stage;
+        this.artStage = def.artStage ?? stage;
         this.atlas = atlases[def.sheet];
         this.scale = def.scale;
         this.tint = def.tint;
@@ -75,6 +77,7 @@ export class Boss {
     enterPhase(n) {
         this.cancelPatternWarnings();
         this.phase = n;
+        if (this.def.signature === 'faultline') this.lastPattern = null;
         this.invuln = 1.0;
         this.task = null;
         this.attackT = this.def.pacing?.phaseRest ?? 1.4;
@@ -89,12 +92,14 @@ export class Boss {
         if (this.def.hallucinate) G.hallucinate = 1;
         if (this.def.phaseSummons) this.patternSummon(6 + n * 3);
         else setBossMotion(this, 'recover', .35);
-        this.speed = this.def.speed * (1 + n * 0.18);
+        this.speed = this.def.speed * (this.def.signature === 'trainingCharge' ? 1 : 1 + n * 0.18);
+        if (this.def.signature === 'trainingCharge') this.task = this.trainingRecoveryTask();
         if (this.def.signature === 'hunt') this.task = this.hunterRecoveryTask();
         emit('bossPhase', n);
     }
 
     die() {
+        if (!this.alive) return;
         this.cancelPatternWarnings();
         this.alive = false;
         this.state = 'dead';
@@ -111,6 +116,8 @@ export class Boss {
         gibs(this.x, this.y - this.radius, 30);
         for (let i = 0; i < 6; i++) decal(this.x + rand(-60, 60), this.y + rand(-30, 30), 'dark', 2);
         for (let i = 0; i < BOSS_XP_GEMS; i++) dropGem(this.x + rand(-80, 80), this.y + rand(-50, 50), bossGemValue(G.stage));
+        const coins = dropCoin(this.x, this.y, bossCoinValue(G.stage), bossCoinReceipt(G.runId,G.stage));
+        if (coins) coins.pull = true;
         const c = dropPickup('chest', this.x, this.y);
         c.boss = true;
         // 남은 적 탄 제거
@@ -119,9 +126,11 @@ export class Boss {
     }
 
     update(dt) {
+        const previousX = this.x, previousY = this.y;
+        this.motionVX = 0; this.motionVY = 0;
         // A discarded Hunter must not release its second lock into a new stage
         // or a replacement player. Other boss lifecycles are unchanged.
-        if (this.def.signature === 'hunt' && (G.stage !== this.stage || this.task?.target && this.task.target !== G.player)) {
+        if (['hunt', 'trainingCharge', 'faultline'].includes(this.def.signature) && (G.stage !== this.stage || this.task?.target && this.task.target !== G.player)) {
             this.cancelPatternWarnings(); this.task = null; return;
         }
         updateBossMotion(this, dt);
@@ -158,7 +167,7 @@ export class Boss {
             if (this.attackT <= 0 && this.invuln <= 0) this.startPattern();
         }
         // 화면 밖으로 너무 멀어지면 빠르게 복귀
-        if (this.def.signature !== 'hunt' && dist > Math.max(G.view.w, G.view.h) * 0.9) {
+        if ((this.def.signature !== 'faultline' || !this.task) && !['hunt', 'trainingCharge'].includes(this.def.signature) && dist > Math.max(G.view.w, G.view.h) * 0.9) {
             this.x += (dx / dist) * 300 * dt;
             this.y += (dy / dist) * 300 * dt;
         }
@@ -168,7 +177,7 @@ export class Boss {
         else if (this.def.stealth && !this.task) this.alpha += ((dist < 160 ? 1 : 0.18) - this.alpha) * Math.min(1, dt * 4);
         else this.alpha += (1 - this.alpha) * Math.min(1, dt * 6);
 
-        if (this.def.signature === 'hunt') {
+        if (['hunt', 'trainingCharge'].includes(this.def.signature)) {
             // Active dashes use their swept collision below. Windups and the
             // guaranteed stationary recovery are safe to punish at close range.
             if (!this.task && Math.hypot(p.x - this.x, p.y - this.y) < this.radius + p.radius + 6) damagePlayer(this.dmg, this.x, this.y);
@@ -179,6 +188,10 @@ export class Boss {
             this.animT = 0;
             this.anim++;
             if (this.state === 'attack' && this.anim >= this.atlas.frameCount('attack')) { this.state = 'walk'; this.anim = 0; }
+        }
+        // Measured world velocity for predictive aim; teleports are not travel.
+        if (dt > 0 && Math.hypot(this.x-previousX, this.y-previousY) <= 1200*dt) {
+            this.motionVX = (this.x-previousX)/dt; this.motionVY = (this.y-previousY)/dt;
         }
     }
 
@@ -225,9 +238,10 @@ export class Boss {
     }
 
     warn(kind, x, y, options, release) {
-        const epoch = this.patternEpoch;
+        const epoch = this.patternEpoch, target = G.player;
         const onFire = h => {
             if (!this.alive || this.patternEpoch !== epoch) return;
+            if (this.def.signature === 'faultline' && (G.stage !== this.stage || G.player !== target)) return;
             setBossMotion(this, 'attack', .2);
             release?.(h);
         };
@@ -488,7 +502,7 @@ export class Boss {
         return this.signatureTask(1.55 + (echoes - 1) * gapT, 2.1, 1.35);
     }
 
-    // 9: outer fault lines hit first; the center is safe, then the delayed
+    // 9: restored Brutus King. Outer fault lines hit first; then the delayed
     // hammer splits that center. The warning footprints are the damage test.
     task_faultline() {
         setBossMotion(this, 'windup');
@@ -517,8 +531,27 @@ export class Boss {
             }
             last = xDelay;
         }
+        // Mutation reacquires the player's NEW position after the fixed grid;
+        // frenzy repeats with an off-beat second verdict. Each circle gets its
+        // full warning after acquisition, never an invisible tracking hit.
+        const target = G.player, verdicts = this.phase, warning = 1.05;
+        let queued = 0, next = last + .15;
         audio.sfx('warn');
-        return this.signatureTask(last + .4, 2.3, 1.4);
+        return { t: 0, target, step: (dt, task) => {
+            if (queued < verdicts && task.t >= next) {
+                setBossMotion(this, 'windup');
+                this.warn('tcircle', target.x, target.y, { radius: 82, delay: warning, color: '#ffb36b' }, h => {
+                    this.circleHit(h, .9); shake(8); audio.sfx('explode');
+                });
+                queued++;
+                next = task.t + warning + .35;
+            }
+            const finish = verdicts ? next : last + .4;
+            if (queued === verdicts && task.t >= finish) {
+                this.endTask(2.3);
+                this.attackT = Math.max(1.5, this.attackT);
+            }
+        } };
     }
 
     // 10: a contract snapshots your position. Coin interest is paid first;
@@ -553,6 +586,45 @@ export class Boss {
         return this.signatureTask(2.35 + (marks - 1) * .65, 2.4, 1.5);
     }
 
+    // Beginner-only: one locked lane, no bullets or adds in any phase.
+    // Warning/recovery never shrink with HP. A hit ends the dash immediately.
+    trainingRecoveryTask() {
+        setBossMotion(this, 'recover');
+        return { t: 0, phase: 'recover', target: G.player, step: (dt, s) => {
+            if (s.t < this.def.pacing.safeRecovery) return;
+            this.task = null; this.attackT = 1.5; setBossMotion(this, 'walk');
+        } };
+    }
+
+    task_trainingCharge() {
+        const p = G.player, tuning = this.def.pacing;
+        const angle = Math.atan2(p.y - this.y, p.x - this.x);
+        const ux = Math.cos(angle), uy = Math.sin(angle);
+        const length = Math.min(tuning.dashRange, Math.max(80, Math.hypot(p.x - this.x, p.y - this.y)));
+        const radius = this.radius + p.radius + 6;
+        this.warn('tline', this.x - ux * radius, this.y - uy * radius,
+            { angle, len: length + radius * 2, width: radius * 2, delay: tuning.warning, color: '#f2d383' });
+        setBossMotion(this, 'windup'); audio.sfx('warn');
+        return { t: 0, phase: 'warning', target: p, angle, length, radius, dash: 0, step: (dt, s) => {
+            if (s.phase === 'warning') {
+                if (s.t + 1e-9 >= tuning.warning) {
+                    this.cancelPatternWarnings(); s.phase = 'dash'; setBossMotion(this, 'attack');
+                }
+                return; // A long frame cannot consume the tell and dash at once.
+            }
+            const distance = Math.min(tuning.dashSpeed * dt, length - s.dash);
+            const ox = this.x - p.x, oy = this.y - p.y, projection = ox * ux + oy * uy;
+            const c = ox * ox + oy * oy - radius * radius, disc = projection * projection - c;
+            const contact = c <= 0 ? 0 : disc >= 0 ? -projection - Math.sqrt(disc) : Infinity;
+            const hit = contact >= 0 && contact <= distance, moved = hit ? contact : distance;
+            this.x += ux * moved; this.y += uy * moved; s.dash += moved; this.flip = ux < 0;
+            if (hit) damagePlayer(this.dmg, this.x, this.y);
+            if (hit || s.dash + 1e-9 >= length) {
+                this.cancelPatternWarnings(); this.task = this.trainingRecoveryTask();
+            }
+        } };
+    }
+
     // ---- 패턴 ----
     task_charge() {
         setBossMotion(this, 'windup');
@@ -582,7 +654,24 @@ export class Boss {
         };
     }
 
+    // King's support volley: three locked fans with explicit shot lanes,
+    // never the generic rapid unmarked ring. Fifteen projectiles maximum.
+    task_royalVolley() {
+        setBossMotion(this, 'windup');
+        const a = Math.atan2(G.player.y - 18 - this.bodyY(), G.player.x - this.x);
+        const waves = this.phase === 2 ? 3 : 2;
+        for (let wave = 0; wave < waves; wave++) for (let i = 0; i < 5; i++) {
+            const angle = a + (i - 2) * .18 + (wave % 2 ? .09 : 0);
+            this.warn('tline', this.x, this.bodyY(), { angle, len: 760, width: 18, delay: 1.05 + wave * .65, color: '#ffd08b' }, h => {
+                this.fan(h.x, h.y, h.angle, 1, 0, 215, 'boss', 7);
+            });
+        }
+        audio.sfx('warn');
+        return this.signatureTask(1.4 + (waves - 1) * .65, 2.2, 1.5);
+    }
+
     task_ring() {
+        if (this.def.signature === 'faultline') return this.task_royalVolley();
         setBossMotion(this, 'windup');
         return {
             n: 0,
@@ -618,6 +707,7 @@ export class Boss {
     }
 
     task_aimed() {
+        if (this.def.signature === 'faultline') return this.task_royalVolley();
         setBossMotion(this, 'windup');
         return {
             n: 0,
@@ -763,8 +853,8 @@ export class Boss {
         if (this.alpha < 1) ctx.globalAlpha = this.alpha;
         if (!this.alive && this.deadT > 2.5) ctx.globalAlpha = Math.max(0, 1 - (this.deadT - 2.5));
         if (this.invuln > 0 && this.alive) ctx.globalAlpha = 0.6 + Math.sin(G.clock * 40) * 0.3;
-        if (!drawBossSpriteSheet(ctx, this, getBossSheet(this.stage))) {
-            if (!drawBossArtwork(ctx, this, G.clock, images[`bossArt${this.stage}`])) {
+        if (!drawBossSpriteSheet(ctx, this, getBossSheet(this.artStage))) {
+            if (!drawBossArtwork(ctx, this, G.clock, images[`bossArt${this.artStage}`])) {
                 // Keep the encounter playable if both art requests fail.
                 this.atlas.draw(ctx, anim, this.anim, this.x, this.y, this.scale, this.flip, tint);
             }

@@ -6,12 +6,12 @@ import { RELICS, RELIC_CHEST } from '../src/data/relics.js';
 import { PICKUP_ASSIST } from '../src/game/pickups.js';
 import { xpForLevel } from '../src/game/progression.js';
 const price = id => SHOP.find(i=>i.id===id).cost[0];
-test('rare ordinary coins retain prices and give deliberate long-term shop goals',()=>{
- const expectedCoins=100*.15*3;
- assert.equal(expectedCoins,45);assert.equal(price('magnet'),8);assert.equal(price('speed'),12);
- assert.equal(Math.ceil(price('magnet')/(.15*3)),18);
- assert.equal(Math.ceil(price('speed')/(.15*3)),27);
- assert.match(fs.readFileSync(new URL('../src/game/enemies.js',import.meta.url),'utf8'),/coinDropValue\(e.elite\)/);
+test('strong enemy rewards stay unchanged while permanent purchases require saving',async()=>{
+ const {coinTier,bossCoinValue}=await import('../src/game/coin-drops.js');
+ assert.equal(coinTier('shambler').chance,0);assert.ok(Math.abs(coinTier('brute').chance*coinTier('brute').value-.9)<1e-9);
+ assert.equal(bossCoinValue(1),25);assert.equal(price('magnet'),80);assert.equal(price('speed'),120);
+ assert.ok(bossCoinValue(1)<price('magnet'));
+ assert.match(fs.readFileSync(new URL('../src/game/enemies.js',import.meta.url),'utf8'),/coinDropValue\(e\)/);
 });
 test('coin and XP collection are friendlier without expanding chest/bomb activation radius',()=>{
  assert.equal(70*PICKUP_ASSIST.coinMultiplier,105);assert.equal(70*PICKUP_ASSIST.gemMultiplier,84);
@@ -28,9 +28,9 @@ test('tech progression requires more XP with steeper late growth',()=>{
  assert.equal(xpForLevel(41),ref(41));
 });
 test('random chest refunds remain strictly below cost and deterministic alternatives are available',()=>{
- assert.equal(RELIC_CHEST.cost,16);assert.deepEqual(RELIC_CHEST.rates,[.6,.3,.1]);assert.equal(RELIC_CHEST.pityAt,10);
+ assert.equal(RELIC_CHEST.cost,160);assert.deepEqual(RELIC_CHEST.rates,[.6,.3,.1]);assert.equal(RELIC_CHEST.pityAt,10);
  assert.deepEqual(RELICS.map(r=>r.duplicateCoins),[3,7,14]);
  for(const relic of RELICS){assert.ok(relic.duplicateCoins<RELIC_CHEST.cost);assert.ok(relic.price>0);}
- assert.deepEqual(RELICS.map(r=>r.price),[12,52,130]);
+ assert.deepEqual(RELICS.map(r=>r.price),[120,520,1300]);
  assert.equal(RELIC_CHEST.unlockStage,4);assert.equal(SHOP.find(i=>i.id==='pet_yeongnyang').unlockStage,2);
 });

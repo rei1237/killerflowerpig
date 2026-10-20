@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { G, clearWorld, configureCaps, setVisualTier } from '../src/game/state.js';
 import { settings } from '../src/core/settings.js';
 import { atlases } from '../src/core/assets.js';
-import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, SPARSE_ENEMY_HP, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, stageScaling } from '../src/data/enemies.js';
 import { STAGES, EVENTS, POPULATION_BOOST } from '../src/data/stages.js';
 import { spawnEnemy, hitEnemy } from '../src/game/enemies.js';
 import { Boss } from '../src/game/boss.js';
@@ -89,7 +89,7 @@ test('enemy HP rises11.7 percent from the previous1.45 tuning while speed, damag
                     G.enemies.clear();
                     const enemy = spawnEnemy(id, 100, 0, { elite, force: true, noAffix: true }); // 변이/엘리트 능력은 별도 테스트
                     if ((def.ranged && stage < 5) || stage < (def.unlockStage || 1)) { assert.equal(enemy, null); continue; }
-                    close(enemy.hp, def.hp * old.hp * 1.62 * (elite ? ELITE.hp : 1));
+                    close(enemy.hp, def.hp * old.hp * 1.62 * SPARSE_ENEMY_HP[stage] * (elite ? ELITE.hp : 1));
                     close(enemy.speed, def.speed * old.speed * (elite ? ELITE.speed : 1));
                     close(enemy.dmg, def.dmg * old.dmg * (elite ? ELITE.dmg : 1));
                     close(enemy.radius, def.radius * (elite ? ELITE.scale : 1));

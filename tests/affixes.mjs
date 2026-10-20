@@ -90,7 +90,9 @@ test('champions resist execute thresholds while ordinary enemies do not', () => 
     reset(3);
     const plain = spawnEnemy('shambler', 300, 0, { noAffix: true }), champ = spawnEnemy('shambler', 300, 0, { champion: 'armored' });
     for (const e of [plain, champ]) e.hp = e.maxHp * .1;
-    hitEnemy(plain, 1, { silent: true, execute: .2 }); hitEnemy(champ, 1, { silent: true, execute: .2 });
+    // 실행(처형)은 확률 방식(executeChance, 상한 8%): 난수를 0으로 고정해 확정 발동시킨다.
+    Math.random = () => 0;
+    hitEnemy(plain, 1, { silent: true, executeChance: .08 }); hitEnemy(champ, 1, { silent: true, executeChance: .08 });
     assert.equal(plain.alive, false); assert.equal(champ.alive, true);
 }));
 

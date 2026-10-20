@@ -50,9 +50,9 @@ test('ordinary cannon stats depend on item level, not archived character XP; gro
 test('lotus fusion actually fires piercing beam and activates damaging orbit together',()=>{
  const w=weapon('lotus_bloom',1);w.cd=0;G.weapons=[w];let damage=0;
  G.boss={alive:true,x:120,y:20,radius:20,hits:{},hurt(dmg){damage+=dmg;}};
- updateWeapons(.01);assert.ok(G.beams.count>0);assert.ok(damage>=50);assert.equal(w.activeT,2.8);assert.equal(orbitStats(w,w.s).amount,3);
+ updateWeapons(.01);const tp=TIER_POWER.fused.lotus_bloom;assert.ok(G.beams.count>0);assert.ok(damage>=50*tp-1e-9);const beamOnly=damage;assert.equal(w.activeT,2.8);assert.equal(orbitStats(w,w.s).amount,3);
  G.boss.x=Math.cos(w.angle+.034)*90;G.boss.y=Math.sin(w.angle+.034)*90*.8;G.clock=2;
- updateWeapons(.01);assert.ok(damage>50,'orbit adds close-range damage after beam');
+ updateWeapons(.01);assert.ok(damage>beamOnly,'orbit adds close-range damage after beam');
 });
 test('scatter fusion really creates spread with piercing bullets; plague lands slow-burning field',()=>{
  let w=weapon('scatter_rail',1);w.cd=0;G.weapons=[w];updateWeapons(.01);
@@ -70,8 +70,8 @@ test('preview signature binds exact recipe and damage modifiers',()=>{
  const p=previewFusion('lotus_bloom');assert.equal(fuseItems('scatter_rail',p.signature).code,'STALE_PREVIEW');
  G.player.stats.might=1.5;assert.equal(fuseItems('lotus_bloom',p.signature).code,'STALE_PREVIEW');assert.equal(G.weapons.length,4);
 });
-test('eight distinct recipes each lock low levels, consume two once, and restore output',()=>{
- assert.equal(FUSION_RECIPES.length,13);assert.equal(new Set(FUSION_RECIPES.map(r=>r.output)).size,13);
+test('fourteen distinct recipes lock low levels, consume ingredients once, and restore output',()=>{
+ assert.equal(FUSION_RECIPES.length,14);assert.equal(new Set(FUSION_RECIPES.map(r=>r.output)).size,14);
  for(const recipe of FUSION_RECIPES){
   G.weapons=recipe.inputs.map((x,i)=>weapon(x.id,4,i));assert.equal(previewFusion(recipe.id).code,'ITEM_LEVEL_REQUIRED');
   G.weapons.forEach(w=>{w.level=8;w.evolved=true;});const p=previewFusion(recipe.id);assert.equal(p.ok,true,recipe.id);
@@ -95,9 +95,9 @@ test('new toxic bullets and bouncing saws apply real slow on collision',()=>{
  }
 });
 test('ember lance fires beam and lasting fire field, both with its own damage attribution',()=>{
- const w=weapon('ember_lance',1);w.cd=0;G.weapons=[w];let dmg=0;G.boss={alive:true,x:120,y:20,radius:20,hits:{},hurt(v){dmg+=v;}};
- updateWeapons(.01);const tp=TIER_POWER.fused.ember_lance;assert.ok(dmg>=48*tp-1e-9);assert.equal(G.beams.count,1);assert.equal(G.shots.count,1);updateShots(.6);
- assert.equal(G.hazards.count,1);const h=G.hazards.items[0];assert.equal(h.kind,'fire');assert.equal(h.duration,3);assert.equal(h.radius,54);assert.ok(Math.abs(h.dmg-48*tp*.16)<1e-9);assert.equal(h.weapon,'ember_lance');
+ const w=weapon('ember_lance',1);w.cd=0;G.weapons=[w];let dmg=0;G.boss={alive:true,hp:10000,x:120,y:20,radius:20,hits:{},hurt(v){dmg+=v;this.hp-=v;}};
+ updateWeapons(.01);assert.ok(Math.abs(dmg-weaponStats(w).beamDamage*.65)<1e-9,'main beam applies its exact dispersed damage during the same update');assert.equal(G.beams.count,1);assert.equal(G.shots.count,1);updateShots(.6);
+ assert.equal(G.hazards.count,1);const h=G.hazards.items[0];assert.equal(h.kind,'fire');assert.equal(h.duration,3);assert.equal(h.radius,54);assert.ok(Math.abs(h.dmg-48*TIER_POWER.fused.ember_lance*.16)<1e-9,`fire field dmg ${h.dmg}`);assert.equal(h.weapon,'ember_lance');
  const p=previewFusion('ember_lance');assert.equal(p.output.stats.fieldDamage,h.dmg);assert.equal(p.output.stats.fieldDuration,h.duration);
 });
 test('orbit saw fires bouncing blades while activating its separate damaging orbit',()=>{

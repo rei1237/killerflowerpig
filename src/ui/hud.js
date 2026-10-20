@@ -73,7 +73,7 @@ export function drawHUD() {
     const b=G.boss;
     nodes['hud-boss'].hidden = !b || (!b.alive && b.deadT >= 1.2);
     if(b){
-        const portrait = `asset/bosses/boss-${String(G.stage).padStart(2,'0')}.webp`;
+        const portrait = `asset/bosses/boss-${String(b.def.artStage ?? G.stage).padStart(2,'0')}.webp`;
         if (nodes['hud-boss-portrait'].getAttribute?.('src') !== portrait) nodes['hud-boss-portrait'].src = portrait;
         nodes['hud-boss-name'].textContent=b.def.name+(b.phase?` · PHASE ${b.phase+1}`:'');
         nodes['hud-boss-hp'].style.width=Math.max(0,b.hp/b.maxHp)*100+'%';

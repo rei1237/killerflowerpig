@@ -1,5 +1,7 @@
 # Premium accessories: second-batch integration contract
 
+Current shop prices: [higher gold shop prices](shop-pricing.md). Price examples below describe earlier revisions and are superseded by catalog 6; reward rates and item effects remain unchanged.
+
 Accessory data, durable purchase/equip, save v5 migration, player stats and pickup-radius hooks are integrated in the second-batch working tree. Six dedicated WebP icons are present. Publication is owned by the integration lead; these files do not belong to the first bug-fix snapshot.
 
 ## Data and state

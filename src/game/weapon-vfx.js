@@ -3,10 +3,12 @@ import { glow, fx } from '../core/assets.js';
 import { settings } from '../core/settings.js';
 
 export const WEAPON_VFX = Object.freeze({
+ sword:{color:'#e7b9c2',light:'#fff2ce',shape:'blade'},
+ sword_wheel:{color:'#ef8d9e',light:'#fff2ce',accent:'#d6ac67',shape:'blade'},
  shotgun:{color:'#efb16e',light:'#fff0cf',trail:16,shape:'pellet'},
  pistols:{color:'#f6d679',light:'#fff7dc',trail:23,shape:'round'},
  rifle:{color:'#8ecde7',light:'#edfaff',trail:45,shape:'rail'},
- cannon:{color:'#ed75ad',light:'#ffe7f4',accent:'#bc91e8',shape:'petal'},
+ cannon:{color:'#e783bc',light:'#fff4dc',accent:'#dcb970',shape:'lotus'},
  thorns:{color:'#dc79ad',light:'#ffdae9',shape:'petal'},
  molotov:{color:'#f5a34f',light:'#ffe7b2',shape:'ember'},
  gas:{color:'#61c7ad',light:'#d3ffe5',shape:'gas'},
@@ -30,7 +32,7 @@ for(const value of Object.values(WEAPON_VFX))Object.freeze(value);
 export const EVOLVED_VFX = Object.freeze({ pistols: Object.freeze({color:'#ff3b5c',light:'#ffe6a8',trail:46,shape:'execution'}) });
 const motionPreference=typeof window!=='undefined'&&window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):null;
 const TAU=Math.PI*2;
-const FUSIONS=new Set(['absolute_bloom','doom_barrage','plague_end','guillotine','carnage_saw','lotus_bloom','scatter_rail','plague_fire','burst_rail','venom_saw','ember_lance','orbit_saw','toxic_scatter']);
+const FUSIONS=new Set(['sword_wheel','absolute_bloom','doom_barrage','plague_end','guillotine','carnage_saw','lotus_bloom','scatter_rail','plague_fire','burst_rail','venom_saw','ember_lance','orbit_saw','toxic_scatter']);
 // Actual hit events only. One weak entry per pooled object, guarded by spawn ID.
 // This metadata never applies damage, extends slow, or creates world residues.
 const fusionHits=new WeakMap();
@@ -45,16 +47,18 @@ export function recordFusionHit(target,weapon,now,slow=0) {
  lastFusionHitAt=now;
 }
 export function createWeaponVfxFrame(lowQ,clock,visuals) {
- return {motion:settings.flash&&!motionPreference?.matches,clock,lowQ,glow:visuals?.projectileGlow!==false,beamReserve:lowQ?4:8,
-  detailLeft:lowQ?24:72,petalLeft:lowQ?10:32,impactLeft:lowQ?3:8,scanLeft:lowQ?96:256,
-  fieldLeft:lowQ?3:8,fieldScanLeft:lowQ?32:64,fieldsUsed:0,statusUsed:0,
+ // Adaptive quality is draw-only. Keep simulation's lowQ/density untouched.
+ const tier=visuals?.tier ?? (lowQ?1:0),compact=tier>=1,minimal=tier>=2;
+ return {motion:settings.flash&&!motionPreference?.matches,clock,lowQ:compact,glow:visuals?.projectileGlow!==false,beamReserve:compact?4:8,
+  detailLeft:minimal?12:compact?24:72,petalLeft:minimal?6:compact?10:32,impactLeft:minimal?2:compact?3:8,scanLeft:compact?96:256,
+  fieldLeft:minimal?1:compact?3:8,fieldScanLeft:compact?32:64,fieldsUsed:0,statusUsed:0,
   detailsUsed:0,petalsUsed:0,impactsUsed:0};
 }
 function detail(frame,beam=false) {if(frame.detailLeft<=0||(!beam&&frame.detailLeft<=frame.beamReserve))return false;if(beam)frame.beamReserve=Math.max(0,frame.beamReserve-1);frame.detailLeft--;frame.detailsUsed++;return true;}
 function petal(ctx,x,y,size,angle,color){ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,size,size*.38,angle,0,TAU);ctx.fill();}
 function segment(ctx,x0,y0,x1,y1,color,width,alpha){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.globalAlpha=alpha;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();}
 // 슬롯 밖 보너스 무기(상점 전설 장비) 외형
-export const BONUS_VFX = Object.freeze({ lotus_gun: Object.freeze({color:'#5effc4',light:'#e9fff7',trail:34,shape:'execution'}) });
+export const BONUS_VFX = Object.freeze({ lotus_gun: Object.freeze({color:'#78e9c0',light:'#fff4d8',accent:'#f19acb',trail:44,shape:'regalia'}) });
 export function weaponVfxProfile(id){return WEAPON_VFX[id]||BONUS_VFX[id]||WEAPON_VFX.pistols;}
 
 export function drawWeaponProjectile(ctx,sh,frame) {
@@ -94,6 +98,18 @@ export function drawWeaponProjectile(ctx,sh,frame) {
     ctx.globalAlpha=.8;for(let n=0;n<3;n++)petal(ctx,0,0,sh.radius*.55,n*TAU/3,style.accent);
    }
   }
+  }else if(style.shape==='regalia'){
+  ctx.translate(sh.x,sh.y);ctx.rotate(sh.angle||0);
+  if(decor&&frame.motion){
+   segment(ctx,-44,0,0,0,style.color,5,.22);
+   segment(ctx,-30,0,0,0,style.light,1.2,.65);
+  }
+  // Jade seed, gold rim and pink opening petals remain legible at low quality.
+  ctx.globalAlpha=.95;ctx.fillStyle=style.color;ctx.strokeStyle=style.light;ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.ellipse(0,0,10,4.5,0,0,TAU);ctx.fill();ctx.stroke();
+  const count=Math.min(frame.petalLeft,decor?3:1);frame.petalLeft-=count;frame.petalsUsed+=count;
+  for(let n=0;n<count;n++){const a=(n-(count-1)/2)*.65;petal(ctx,-4,Math.sin(a)*5,7,a,style.accent);}
+  segment(ctx,0,0,9,0,style.light,1.4,1);
  }else{
   const img=sh.img,w=(img?.width||18)*(sh.radius/5),h=(img?.height||10)*(sh.radius/5);
   ctx.translate(sh.x,sh.y);ctx.rotate(sh.angle||0);
@@ -126,6 +142,7 @@ export function drawWeaponOrbit(ctx,w,s,p,frame) {
  const style=weaponVfxProfile(w.id),n=s.amount,R=s.radius*s.area,size=26*s.area;
  const img=w.id==='orbit_saw'?fx.saw:(w.evolved?fx.petalBlood:fx.petal);
  for(let i=0;i<n;i++){
+  if(w.id==='thorns'&&w.thornState&&!w.thornState.slots[i]?.ready)continue;
   const a=w.angle+(i/n)*Math.PI*2,ox=p.x+Math.cos(a)*R,oy=p.y-20+Math.sin(a)*R*.8;
   ctx.save();ctx.globalCompositeOperation='source-over';
   if(detail(frame)){
@@ -142,37 +159,68 @@ export function drawWeaponOrbit(ctx,w,s,p,frame) {
 }
 
 export function drawWeaponBeam(ctx,b,frame) {
+ // Coalesced releases may share an angle but not width/reach. Keep the real
+ // union outline: a short wide component never becomes a long wide beam.
+ if (Array.isArray(b.segments) && b.segments.length) {
+  for (let i=0;i<b.segments.length;i++) {
+   const segment=b.segments[i];
+   drawWeaponBeamLayer(ctx,b,frame,segment.length,segment.width,i>0);
+  }
+ } else drawWeaponBeamLayer(ctx,b,frame);
+}
+function drawWeaponBeamLayer(ctx,b,frame,len=b.len,beamWidth=b.width,secondary=false) {
+ const primary=b.focusPrimary&&!secondary;
  const style=weaponVfxProfile(b.weapon),k=Math.max(0,Math.min(1,b.life/b.max));
  if(!k)return;
- const width=b.width*(.6+.4*k),decor=detail(frame,true),time=frame.motion?frame.clock:0;
+ const intensity = (b.weapon === 'absolute_bloom' ? .72 : 1) * (secondary ? .65 : 1) * (b.focused && !primary ? .5 / Math.max(1, (b.focusCount || 1) - 1) : 1);
+ const width=beamWidth*(.6+.4*k),decor=!secondary&&(!b.focused||primary)&&detail(frame,true),time=frame.motion?frame.clock:0;
  ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.angle);ctx.globalCompositeOperation='source-over';ctx.lineCap='round';
  // Translucent tapered layers stay inside the real beam width and length.
- ctx.globalAlpha=k*.18;ctx.fillStyle=style.color;
- ctx.beginPath();ctx.moveTo(0,-width*.48);ctx.lineTo(b.len*.93,-width*.22);ctx.lineTo(b.len,0);ctx.lineTo(b.len*.93,width*.22);ctx.lineTo(0,width*.48);ctx.closePath();ctx.fill();
- ctx.globalAlpha=k*.23;ctx.fillStyle=style.accent||style.color;
- ctx.beginPath();ctx.moveTo(0,-width*.25);ctx.lineTo(b.len,0);ctx.lineTo(0,width*.25);ctx.closePath();ctx.fill();
- segment(ctx,0,0,b.len,0,style.light,Math.max(1,width*.055),k*.8);
+ ctx.globalAlpha=k*intensity*.18;ctx.fillStyle=style.color;
+ ctx.beginPath();ctx.moveTo(0,-width*.48);ctx.lineTo(len*.93,-width*.22);ctx.lineTo(len,0);ctx.lineTo(len*.93,width*.22);ctx.lineTo(0,width*.48);ctx.closePath();ctx.fill();
+ ctx.globalAlpha=k*intensity*.23;ctx.fillStyle=style.accent||style.color;
+ ctx.beginPath();ctx.moveTo(0,-width*.25);ctx.lineTo(len,0);ctx.lineTo(0,width*.25);ctx.closePath();ctx.fill();
+ segment(ctx,0,0,len,0,style.light,Math.max(1,width*.055),k*intensity*.8);
  if(decor){
-  segment(ctx,0,-width*.24,b.len*.95,-width*.09,style.color,1,k*.55);
-  segment(ctx,0,width*.24,b.len*.95,width*.09,style.color,1,k*.55);
+  // Five opening petals and a fine gold collar stay at the real muzzle.
+  // Reduced-motion keeps a stable bloom rather than a pulsing flash.
+  const opening=frame.motion?(.55+.45*Math.sin((1-k)*Math.PI/2)):1;
+  const collar=Math.min(19,width*.28)*opening;
+  ctx.globalAlpha=k*intensity*.6;ctx.strokeStyle=style.accent||style.light;ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.ellipse(0,0,collar*.48,collar,0,0,TAU);ctx.stroke();
+  const muzzlePetals=Math.min(frame.petalLeft,frame.lowQ?3:5);frame.petalLeft-=muzzlePetals;frame.petalsUsed+=muzzlePetals;
+  for(let i=0;i<muzzlePetals;i++){const a=(i-(muzzlePetals-1)/2)*.42;petal(ctx,-Math.cos(a)*collar*.5,Math.sin(a)*collar,Math.min(8,width*.14),a, i%2?style.light:style.accent||style.color);}
+  segment(ctx,0,0,len,0,style.accent||style.color,Math.max(2,width*.10),k*intensity*.34);
+  segment(ctx,0,0,len,0,style.light,Math.max(1,width*.035),k*intensity*.9);
+  segment(ctx,0,-width*.24,len*.95,-width*.09,style.color,1,k*intensity*.55);
+  segment(ctx,0,width*.24,len*.95,width*.09,style.color,1,k*intensity*.55);
   if(frame.glow){
    const g=glow(style.color,32),r=Math.min(34,width*.72);
-   ctx.globalAlpha=k*.48;ctx.drawImage(g,-r,-r,r*2,r*2);
+   ctx.globalAlpha=k*intensity*.48;ctx.drawImage(g,-r,-r,r*2,r*2);
   }
   // No fake impacts at the beam end. Petals decorate the light path only.
   const count=Math.min(frame.petalLeft,frame.lowQ?3:8);frame.petalLeft-=count;frame.petalsUsed+=count;
   const bloom=Math.min(count,style.shape==='absolute'?6:style.shape==='lotus'?4:style.shape==='petal'?3:0);
   for(let i=0;i<count;i++){
-   ctx.globalAlpha=k*(.42+(i%2)*.17);
+   ctx.globalAlpha=k*intensity*(.42+(i%2)*.17);
    if(i<bloom){
     const a=i/Math.max(1,bloom)*TAU+time*.2,r=width*.17;
     petal(ctx,Math.cos(a)*r,Math.sin(a)*r,Math.min(6,width*.16),a,i%2?style.light:style.color);
    }else{
     const phase=((i-bloom+.4)/Math.max(1,count-bloom)+(time*.32)%1)%1;
-    const x=Math.min(b.len-5,Math.max(5,phase*b.len)),y=Math.sin(i*2.4+time*1.3)*width*.25;
+    const x=Math.min(len-5,Math.max(5,phase*len)),y=Math.sin(i*2.4+time*1.3)*width*.25;
     petal(ctx,x,y,style.shape==='ember'?4.5:3.5,i*.7+time*.35,i%2?style.light:style.color);
    }
   }
+ }
+ // A focused bloom exists only where this volley actually applied damage.
+ if(b.focused&&primary&&b.focusHit&&frame.impactLeft>0){
+  const r=Math.min(18,Math.max(7,width*.2))*(frame.motion?(.7+.3*(1-k)):1);
+  ctx.globalAlpha=k*intensity*.72;ctx.strokeStyle=style.accent||style.light;ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.ellipse(len,0,r*.55,r,0,0,TAU);ctx.stroke();
+  const count=Math.min(frame.petalLeft,frame.lowQ?2:4);frame.petalLeft-=count;frame.petalsUsed+=count;
+  for(let i=0;i<count;i++){const a=i/Math.max(1,count)*TAU;petal(ctx,len+Math.cos(a)*r*.5,Math.sin(a)*r,4,a,style.light);}
+  frame.impactLeft--;frame.impactsUsed++;
  }
  ctx.restore();
 }
@@ -186,9 +234,10 @@ export function drawBeamHitAccents(ctx,beams,enemies,boss,frame) {
   frame.scanLeft--;const e=i===enemies.count?boss:enemies.items[i];
   if(!e||!(e.flash>0))continue;
   for(let j=0;j<beamCount;j++){
-   const b=beams.items[j];if(!(b.life>0)||FUSIONS.has(b.weapon))continue;
+   const b=beams.items[j];if(!(b.life>0)||b.focused||FUSIONS.has(b.weapon))continue;
    const dx=e.x-b.x,dy=e.y-e.radius-b.y,cx=Math.cos(b.angle),cy=Math.sin(b.angle),along=dx*cx+dy*cy;
-   if(along<0||along>b.len||Math.abs(dx*cy-dy*cx)>=b.width/2+e.radius)continue;
+   const segments=b.segments?.length?b.segments:[{length:b.len,width:b.width}];
+   if(!segments.some(s=>along>=0&&along<=s.length&&Math.abs(dx*cy-dy*cx)<s.width/2+e.radius))continue;
    const style=weaponVfxProfile(b.weapon),r=Math.min(13,Math.max(5,e.radius*.65));
    ctx.save();ctx.translate(e.x,e.y-e.radius);ctx.globalCompositeOperation='source-over';
    ctx.globalAlpha=.65;ctx.strokeStyle=style.light;ctx.lineWidth=1.2;
@@ -241,6 +290,37 @@ export function drawFusionHitAccents(ctx,enemies,boss,frame,bounds) {
    ctx.strokeStyle=style.color;ctx.lineWidth=1.8;ctx.beginPath();
    for(let n=0;n<2;n++){const y=e.y-5+n*5;ctx.moveTo(e.x-5,y-3);ctx.lineTo(e.x,y);ctx.lineTo(e.x+5,y-3);}ctx.stroke();frame.statusUsed++;
   }
+  ctx.restore();frame.impactLeft--;frame.impactsUsed++;
+ }
+}
+
+// A small fixed ring of actual gameplay bloom events, never a particle emitter.
+const lotusBlooms = [];
+export function resetLotusBlooms() { lotusBlooms.length = 0; }
+export function recordLotusBloom(x,y,radius,at) {
+ if(lotusBlooms.length===12)lotusBlooms.shift();
+ lotusBlooms.push({x,y,radius,at});
+}
+export function drawLotusBlooms(ctx,frame,bounds) {
+ const style=BONUS_VFX.lotus_gun;
+ for(let i=lotusBlooms.length-1;i>=0&&frame.impactLeft>0;i--){
+  const b=lotusBlooms[i],age=frame.clock-b.at;
+  if(age<0||age>.42)continue;
+  if(bounds&&(b.x+b.radius<bounds.x0||b.x-b.radius>bounds.x1||b.y+b.radius<bounds.y0||b.y-b.radius>bounds.y1))continue;
+  const fade=1-age/.42,opening=frame.motion?Math.min(1,.5+age*3):1;
+  ctx.save();ctx.translate(b.x,b.y);ctx.globalCompositeOperation='source-over';
+  // Fine fixed outer circle shows the real damage radius, with no opaque wash.
+  ctx.globalAlpha=fade*.32;ctx.strokeStyle=style.color;ctx.lineWidth=1.3;
+  ctx.beginPath();ctx.arc(0,0,b.radius,0,TAU);ctx.stroke();
+  const count=Math.min(Math.floor(frame.petalLeft/2),frame.lowQ?5:8);frame.petalLeft-=count*2;frame.petalsUsed+=count*2;
+  for(let n=0;n<count;n++){
+   const a=n*TAU/count-Math.PI/2,r=22*opening;
+   ctx.globalAlpha=fade*.7;
+   petal(ctx,Math.cos(a)*r,Math.sin(a)*r,23*opening,a,n%2?style.color:style.accent);
+   ctx.globalAlpha=fade*.85;petal(ctx,Math.cos(a)*r*.6,Math.sin(a)*r*.6,12*opening,a,style.light);
+  }
+  ctx.globalAlpha=fade*.9;ctx.strokeStyle=style.light;ctx.lineWidth=1.8;
+  ctx.beginPath();ctx.arc(0,0,8,0,TAU);ctx.stroke();
   ctx.restore();frame.impactLeft--;frame.impactsUsed++;
  }
 }
