@@ -2,6 +2,7 @@
 // - 아틀라스마다 색조 변형(일반/피격 플래시/엘리트 등)과 좌우 반전본을 로드 시 1회 생성
 //   → 매 프레임 ctx.filter / shadowBlur / scale(-1,1) 없이 drawImage 한 번으로 그린다.
 // - 글로우·핏자국·젬 등 절차적 스프라이트도 오프스크린 캔버스로 미리 그려 둔다.
+import { COSMETICS } from '../data/cosmetics.js';
 import { SPRITES } from '../data/sprites.js';
 import { BOSS_ART } from '../game/boss-appearance.js';
 
@@ -446,6 +447,16 @@ export async function loadAssets(onProgress, { signal, timeoutMs = 20000 } = {})
             for (const tint of ['normal', 'flash', 'elite', 'hallu']) atlases[key].variant(tint);
         });
     }
+    // Trim the generated source margin and cache compact runtime layers once.
+    // Full-resolution originals remain available for the shop cards.
+    for (const item of COSMETICS) add(`cosmetic_${item.id}`, item.sprite, img => {
+        if (!img) { images[`cosmetic_${item.id}`] = null; return; }
+        const crop = item.crop || [0, 0, img.width, img.height];
+        const width = 384, height = Math.round(width * crop[3] / crop[2]);
+        const layer = makeCanvas(width, height);
+        layer.getContext('2d').drawImage(img, ...crop, 0, 0, width, height);
+        images[`cosmetic_${item.id}`] = layer;
+    });
     add('petYeongnyang', 'asset/items/pet-yeongnyang.png', img => { images.petYeongnyang = img; });
     add('playerFire', 'asset/sprites/player-fire.png', (img) => {
         if (!img) return;

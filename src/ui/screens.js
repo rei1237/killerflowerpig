@@ -36,6 +36,7 @@ import { techSummary } from '../game/tech.js';
 import { difficultyOf } from '../data/difficulty.js';
 import { RESONANCE_STEPS } from '../data/techs.js';
 import { initTutorial, openTutorial, closeTutorial, shouldOfferTutorial } from './tutorial.js';
+import { renderCosmeticShop, startCosmeticPreview, stopCosmeticPreview } from './cosmetic-shop.js';
 
 let rewardSequence = 0;
 const rewardSession = Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -73,6 +74,7 @@ export function topModalId() { return modalStack.at(-1) || null; }
 
 function syncModalState() {
     const top = topModalId();
+    if (top === 'shop') startCosmeticPreview(); else stopCosmeticPreview();
     for (let i = 0; i < modalStack.length; i++) {
         const node = $(modalStack[i]);
         node.inert = modalStack[i] !== top;
@@ -168,6 +170,7 @@ export function showTitle() {
     modalStack.length = 0;
     modalFocus.clear();
     modalBasePaused = false;
+    stopCosmeticPreview();
     const run = loadRun();
     const cont = $('btn-continue');
     if (run && run.stage) {
@@ -582,7 +585,7 @@ function openSettings() { syncSettingsUI(); openModal('settings'); }
 
 // ─────────────────────────── 상점 ───────────────────────────
 let chestResultOpen = false;
-function renderShop() {
+function renderShop({ resetPreview = false } = {}) {
     retryPendingCoins();
     const pending = pendingCoinTotal();
     $('shop-status').textContent = pending ? `저장 대기 ${pending} 코인 · 새로고침 전에 다시 시도하세요.` : '청토끼 처치 후 코인을 회수하세요. 구매한 장비는 다음 작전부터 적용됩니다.';
@@ -595,7 +598,7 @@ function renderShop() {
         const lv = upgradeLevel(item.id);
         const access = shopAccess(save,item);
         const el = document.createElement('div');
-        el.className = 'shop-item';
+        el.className = 'shop-item' + (item.id === 'lotus_gun' ? ' shop-legendary' : '');
         el.innerHTML = '<div class="s-art"></div><div class="s-name"></div><div class="s-desc"></div><div class="s-pips"></div>';
         mountItemArt(el.querySelector('.s-art'), item.id, 'shop');
         el.querySelector('.s-name').textContent = item.name;
@@ -624,6 +627,7 @@ function renderShop() {
     }
     renderRelicShop();
     renderAccessoryShop();
+    renderCosmeticShop({ resetPreview, onChange: () => renderShop(), isActive: () => topModalId() === 'shop' });
 }
 
 function renderAccessoryShop(){
@@ -900,7 +904,7 @@ export function initUI() {
         if (!continueRun(run)) return showTitle();
         startPlaying();
     });
-    click('btn-shop', () => { renderShop(); openModal('shop'); });
+    click('btn-shop', () => { renderShop({ resetPreview: true }); openModal('shop'); });
     click('btn-shop-close', () => closeModal('shop'));
     click('btn-settings', openSettings);
     click('btn-intel', () => { renderBossArchive(); openModal('intel'); });

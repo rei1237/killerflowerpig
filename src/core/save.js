@@ -1,4 +1,5 @@
 import { purchaseAccessory, equipAccessory } from './accessories.js';
+import { purchaseCosmetic, equipCosmetic } from './cosmetics.js';
 import { awardCharacterXP } from './character-progression.js';
 import { SHOP } from '../data/shop.js';
 import { createGuestAdapter, itemLevel, purchase, validateProgress, openRelicChest, purchaseRelic } from './progression-store.js';
@@ -107,4 +108,18 @@ export function buyAccessory(itemId, expectedRevision = save.revision, requestId
 export function setAccessory(itemId, expectedRevision = save.revision) {
     if (expectedRevision !== save.revision) { lastSaveError = 'REVISION_CONFLICT'; return { ok: false, code: lastSaveError }; }
     return finishAccessoryAction(equipAccessory(save, itemId));
+}
+
+// Appearance changes do not recompute stats or touch current health.
+function finishCosmeticAction(result) {
+    if (!result.ok) { lastSaveError = result.code; return { ok: false, code: result.code }; }
+    if (!result.duplicate && !commit(result.state)) return { ok: false, code: lastSaveError };
+    lastSaveError = null;
+    return { ok: true, duplicate: !!result.duplicate };
+}
+export function buyCosmetic(itemId, expectedRevision = save.revision, requestId = `cosmetic:${itemId}`) {
+    return finishCosmeticAction(purchaseCosmetic(save, { itemId, expectedRevision, requestId }));
+}
+export function setCosmetic(slot, itemId, expectedRevision = save.revision, requestId = `cosmetic-equip:${slot}:${itemId}:${expectedRevision}`) {
+    return finishCosmeticAction(equipCosmetic(save, { slot, itemId, expectedRevision, requestId }));
 }

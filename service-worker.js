@@ -1,9 +1,14 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v16-declutter';
+const VERSION = 'v17-lotus-regalia';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
 const PRECACHE = [
+    './src/data/cosmetics.js',
+    './src/core/cosmetics.js',
+    './src/game/player-appearance.js',
+    './src/ui/cosmetic-shop.js',
+    './src/ui/cosmetic-shop.css',
     './src/data/bestiary.js',
     './src/ui/bestiary.js',
     './src/ui/bestiary.css',

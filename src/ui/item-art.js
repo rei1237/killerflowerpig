@@ -14,7 +14,7 @@ const passives = {
 };
 const shop = {
     wind_feather:'wing-common.png',moon_wings:'wing-rare.png',star_wings:'wing-epic.png',maxHp:'celestial-cloak.png',might:'violet-orb.png',speed:'paw-charm.png',magnet:'celestial-hat.png',
-    reroll:'star-charm.png',greed:'fish-snack.png',pet_yeongnyang:'pet-yeongnyang.png',lotus_gun:'lotus-gun.png',
+    reroll:'star-charm.png',greed:'fish-snack.png',pet_yeongnyang:'pet-yeongnyang.png',lotus_gun:'lotus-gun.png?v=lotus-regalia',
 };
 export function itemArt(id, kind) {
     const file = kind === 'shop' ? shop[id] : weapons[id] || passives[id] || shop[id];

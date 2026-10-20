@@ -1,3 +1,4 @@
+import { drawAppearance } from './player-appearance.js';
 import { constrainEncirclementPlayer } from './encirclement.js';
 import { accessoryStats, activeAccessory, accessoryEquipHP } from '../core/accessories.js';
 // 플레이어(연이): 8방향 이동, 피격/무적, 재생, 패시브·영구강화 반영 스탯
@@ -14,7 +15,7 @@ import { blood, flash, shake, damageText, hitstop, sparks, floatText } from './e
 export const POLLEN_BARRIER_CD = Object.freeze([0, 12, 10, 8.5, 7, 6]);
 const POLLEN_PUSH_RADIUS = 120;
 
-import { shotFrame, firingDrawRect, markPlayerShot, PLAYER_HIT_RADIUS, playerBob, advancePlayerMovement } from './player-motion.js';
+import { markPlayerShot, PLAYER_HIT_RADIUS, advancePlayerMovement } from './player-motion.js';
 
 const BASE = { hp: 100, speed: 135, magnet: 70, radius: PLAYER_HIT_RADIUS };
 
@@ -169,17 +170,6 @@ export function drawPlayer(ctx) {
     const blink = p.iframes > 0 && Math.floor(G.clock * 20) % 2 === 0;
     const tint = p.hurtT > 0 ? 'flash' : 'normal';
     if (blink && p.hurtT <= 0) ctx.globalAlpha = 0.55;
-    const bob = playerBob(p,G.clock);
-    if (images.playerFire) {
-        const frame = shotFrame(G.clock - p.shotAt);
-        const flip = frame ? p.shotFlip : p.flip;
-        ctx.save();
-        ctx.translate(p.x, p.y - bob);
-        if (flip) ctx.scale(-1, 1);
-        ctx.drawImage(tint === 'flash' ? images.playerFireFlash : images.playerFire, ...firingDrawRect(frame));
-        ctx.restore();
-    } else {
-        atlas.draw(ctx, 'walk', p.anim, p.x, p.y - bob, 0.48, p.flip, tint);
-    }
+    drawAppearance(ctx, { x: p.x, y: p.y, clock: G.clock, player: p, appearance: save.equippedCosmetics, tint });
     ctx.globalAlpha = 1;
 }
