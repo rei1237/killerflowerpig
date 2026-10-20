@@ -12,9 +12,16 @@ test('all six shipped complete body atlases contain eight fixed-size RGBA poses'
  }
 });
 test('every tech family ships eight complete poses for base, cape and jade',()=>{
- for(const outfit of ['base','cape','jade'])for(const family of ['dual','throw','cannon','blade','channel']){
+ for(const outfit of ['base','cape','jade'])for(const family of ['dual','throw','cannon','blade','channel','sword']){
   const file=`player-${outfit}-${family}.png`;
   const png=fs.readFileSync(new URL(`../asset/sprites/${file}`,import.meta.url));
+  assert.equal(png.readUInt32BE(16),3072,file);assert.equal(png.readUInt32BE(20),256,file);assert.equal(png[25],6,file);
+ }
+});
+
+test('all fifteen tech idle/walk atlases contain eight transparent fixed-anchor cells',()=>{
+ for(const outfit of ['base','cape','jade'])for(const family of ['fire','dual','throw','cannon','sword']){
+  const file=`player-${outfit}-${family}-move.png`,png=fs.readFileSync(new URL(`../asset/sprites/${file}`,import.meta.url));
   assert.equal(png.readUInt32BE(16),3072,file);assert.equal(png.readUInt32BE(20),256,file);assert.equal(png[25],6,file);
  }
 });

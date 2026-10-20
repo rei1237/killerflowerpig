@@ -306,7 +306,7 @@ test('fusion preview pauses safely and consumes two inputs only after explicit c
  freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>{w.level=8;w.evolved=true;});
  const before=JSON.stringify(G.weapons);togglePause();showFusion();
  assert.equal(topModalId(),'fusion');assert.equal(G.paused,true);assert.equal(JSON.stringify(G.weapons),before);
- assert.equal(node('fusion-recipes').children.length,13);
+ assert.equal(node('fusion-recipes').children.length,14);
  const button=node('fusion-recipes').children[0].querySelector('button');assert.equal(button.disabled,false);
  button.click();assert.deepEqual(G.weapons.map(w=>w.id),['lotus_bloom']);assert.equal(G.weapons[0].level,1);
  button.click();assert.equal(G.weapons.length,1);assert.match(node('fusion-status').textContent,/조합 완료/);
@@ -564,7 +564,7 @@ test('main menu bestiary opens its real modal and Escape restores launcher focus
  launcher.click();showTitle();assert.equal(isBestiaryOpen(),false);
 });
 
-test('new bloom runs receive two distinct Lv1 weapon slots once, while every other start stays unchanged',async()=>{
+test('new bloom and butcher runs receive two distinct Lv1 weapon slots once',async()=>{
  const {TECHS}=await import('../src/data/techs.js');
  const {resonanceCount,resonanceTier}=await import('../src/game/tech.js');
  const {loadRun,startStage}=await import('../src/game/game.js');
@@ -572,9 +572,9 @@ test('new bloom runs receive two distinct Lv1 weapon slots once, while every oth
  const inventory=()=>G.weapons.map(w=>[w.id,w.level,w.evolved,w.slot]);
  for(const id of Object.keys(TECHS)){
   newRun(1,id);
-  assert.deepEqual(inventory(),id==='bloom'?[['thorns',1,false,0],['cannon',1,false,1]]:[[TECHS[id].start.weapon,1,false,0]],id);
+  assert.deepEqual(inventory(),id==='bloom'?[['thorns',1,false,0],['cannon',1,false,1]]:id==='butcher'?[['sword',1,false,0],['saw',1,false,1]]:[[TECHS[id].start.weapon,1,false,0]],id);
   assert.deepEqual(G.passives,{[TECHS[id].start.passive]:1});
-  assert.equal(resonanceCount(),id==='bloom'?3:2);assert.equal(resonanceTier(),1);
+  assert.equal(resonanceCount(),['bloom','butcher'].includes(id)?3:2);assert.equal(resonanceTier(),1);
  }
  for(const id of [null,'missing-tech']){
   newRun(1,id);assert.equal(G.tech,null);assert.deepEqual(inventory(),[['shotgun',1,false,0]]);assert.deepEqual(G.passives,{});
@@ -619,4 +619,13 @@ test('bloom selection shows both starters and correct slot/resonance counts; can
  node('btn-tech-go').click();const runId=G.runId;node('btn-tech-go').click();
  assert.equal(starts,1);assert.equal(G.runId,runId);assert.deepEqual(G.weapons.map(w=>[w.id,w.level]),[['thorns',1],['cannon',1]]);
  openTechSelect(pick);node('btn-tech-back').click();assert.equal(starts,1);assert.equal(G.weapons.length,2);
+});
+
+test('pet training shop shows ownership, current-next values, exact price and capped state',async()=>{
+ const {renderPetUpgradeShop}=await import('../src/ui/pet-upgrade-shop.js');const {save}=await import('../src/core/save.js');
+ const prior={inventory:save.inventory,petUpgrades:save.petUpgrades,gold:save.gold};const list=document.createElement('div');
+ save.inventory=[];save.petUpgrades={attack:0,heal:0,support:0};save.gold=2000;renderPetUpgradeShop(list,()=>{});
+ assert.equal(list.children.length,3);assert.ok(list.querySelectorAll('button').every(b=>b.disabled));assert.match(list.querySelector('button').textContent,/보유 필요/);
+ list.replaceChildren();save.inventory=['pet_yeongnyang'];renderPetUpgradeShop(list,()=>{});assert.match(list.children[0].querySelector('.s-desc').textContent,/14 → 16/);assert.match(list.children[0].querySelector('button').textContent,/30/);
+ list.replaceChildren();save.petUpgrades={attack:5,heal:3,support:3};renderPetUpgradeShop(list,()=>{});assert.ok(list.querySelectorAll('button').every(b=>b.disabled));assert.match(list.children[1].querySelector('.s-desc').textContent,/회복 HP 6/);Object.assign(save,prior);
 });

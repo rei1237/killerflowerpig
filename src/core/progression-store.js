@@ -1,3 +1,4 @@
+import { normalizePetUpgrades, PET_UPGRADES } from '../data/pet-upgrades.js';
 import { normalizeAccessories } from './accessories.js';
 import { ACCESSORIES } from '../data/accessories.js';
 import { normalizeCosmetics, normalizeCosmeticAction } from './cosmetics.js';
@@ -13,7 +14,7 @@ const integer = (v, fallback = 0, max = MAX) => Number.isSafeInteger(v) && v >= 
 const clone = v => JSON.parse(JSON.stringify(v));
 const object = v => v && typeof v === 'object' && !Array.isArray(v);
 export function defaultProgress() {
-    return { cosmeticInventory: [], equippedCosmetics: { outfit: null, ornament: null }, lastCosmeticAction: null, accessoryInventory: [], equippedAccessory: null, characterXP: 0, characterRewardCount: 0, lastCharacterReward: null, maxClearedStage: 0, version: SAVE_VERSION, revision: 0, catalogVersion: CATALOG_VERSION, gold: 0, upgrades: {}, inventory: [], equippedPet: null, maxStage: 1, bestTime: 0, kills: 0, seenStory: {}, receipts: [], relics: [], chestPity: 0, chestCount: 0, relicDuplicates: 0, lastChest: null, ...defaultTitleProgress() };
+    return { petUpgrades: { attack: 0, heal: 0, support: 0 }, cosmeticInventory: [], equippedCosmetics: { outfit: null, ornament: null }, lastCosmeticAction: null, accessoryInventory: [], equippedAccessory: null, characterXP: 0, characterRewardCount: 0, lastCharacterReward: null, maxClearedStage: 0, version: SAVE_VERSION, revision: 0, catalogVersion: CATALOG_VERSION, gold: 0, upgrades: {}, inventory: [], equippedPet: null, maxStage: 1, bestTime: 0, kills: 0, seenStory: {}, receipts: [], relics: [], chestPity: 0, chestCount: 0, relicDuplicates: 0, lastChest: null, ...defaultTitleProgress() };
 }
 export function validateProgress(raw) {
     if (!object(raw)) throw new Error('INVALID_PROGRESS');
@@ -35,6 +36,7 @@ export function validateProgress(raw) {
     }
     s.inventory = SHOP.filter(i => i.kind === 'pet' && Array.isArray(raw.inventory) && raw.inventory.includes(i.id)).map(i => i.id);
     s.equippedPet = s.inventory.includes(raw.equippedPet) ? raw.equippedPet : null;
+    s.petUpgrades = normalizePetUpgrades({ ...raw, inventory: s.inventory });
     if (object(raw.seenStory)) for (const [k, v] of Object.entries(raw.seenStory)) if (/^[\w-]{1,80}$/.test(k) && v === true) s.seenStory[k] = true;
     s.receipts = Array.isArray(raw.receipts) ? raw.receipts.filter(r => typeof r === 'string' && r.length <= 160).slice(-128) : [];
     s.lastCosmeticAction = normalizeCosmeticAction({ ...s, lastCosmeticAction: raw.lastCosmeticAction }, s);
@@ -170,6 +172,11 @@ export function createServerAdapter({ baseUrl, fetchImpl = globalThis.fetch } = 
     }
     const validIntent = ({ expectedRevision, requestId }) => Number.isSafeInteger(expectedRevision) && expectedRevision >= 0 && typeof requestId === 'string' && requestId.length > 0 && requestId.length <= 160;
     return { mode: 'server', load: () => request('/progress'),
+        buyPetUpgrade: intent => {
+            const track = PET_UPGRADES.find(t => t.id === intent.trackId);
+            if (!validIntent(intent) || !track || !Number.isSafeInteger(intent.expectedLevel) || intent.expectedLevel < 0 || intent.expectedLevel >= track.max || intent.requestId !== `pet-training:${intent.trackId}:${intent.expectedLevel}`) throw new Error('INVALID_REQUEST');
+            return request('/pet-training', { trackId: intent.trackId, expectedLevel: intent.expectedLevel, expectedRevision: intent.expectedRevision, requestId: intent.requestId });
+        },
         buyAccessory: intent => {
             if (!validIntent(intent) || !ACCESSORIES.some(item => item.id === intent.itemId)) throw new Error('INVALID_REQUEST');
             return request('/accessory-purchases', { itemId: intent.itemId, expectedRevision: intent.expectedRevision, requestId: intent.requestId, catalogVersion: CATALOG_VERSION });

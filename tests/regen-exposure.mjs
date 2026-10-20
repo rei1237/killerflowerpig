@@ -10,7 +10,7 @@ const oldWeapons=['shotgun','pistols','rifle','thorns','molotov','cannon','gas',
 beforeEach(()=>{clearWorld();resetBuild();createPlayer();G.level=2;G.stage=1;G.mode='play';G.paused=false;G.hitstop=0;G.gold=0;G.events={};});
 test('all eight ordinary weapons and all twelve old passives remain available; fused outputs stay recipe-only',()=>{
  const choices=rollChoices(99);for(const id of [...oldWeapons,...oldPassives])assert.ok(choices.some(c=>c.id===id),id);
- assert.deepEqual(Object.keys(PASSIVES).sort(),oldPassives.sort());assert.equal(Object.values(WEAPONS).filter(w=>w.fusionOnly).length,13);assert.ok(choices.every(c=>!WEAPONS[c.id]?.fusionOnly));
+ assert.deepEqual(Object.keys(PASSIVES).sort(),oldPassives.sort());assert.equal(Object.values(WEAPONS).filter(w=>w.fusionOnly).length,14);assert.ok(choices.every(c=>!WEAPONS[c.id]?.fusionOnly));
 });
 test('eligible missing regeneration is offered at early and periodic protected choices including rerolls',()=>{
  for(const level of [5,10])for(let attempt=0;attempt<20;attempt++){G.level=level;const picks=rollChoices(3);assert.equal(picks.filter(c=>c.id==='regen').length,1);assert.equal(new Set(picks.map(c=>c.id)).size,3);}

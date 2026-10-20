@@ -4,18 +4,19 @@ import { COSMETICS } from '../data/cosmetics.js';
 import { save, buyCosmetic, setCosmetic } from '../core/save.js';
 import { shopAccess } from '../core/shop-access.js';
 import { drawAppearance, appearanceAssets } from '../game/player-appearance.js';
-import { ATTACK_FAMILIES, attackFrame, markPlayerAttack } from '../game/attack-animation.js';
+import { ATTACK_FAMILIES, attackFrame, markPlayerAttack, idleAttackFamily } from '../game/attack-animation.js';
 import { characterSheetKey, requestCharacterSheet } from '../core/assets.js';
 import { WEAPONS } from '../data/weapons.js';
 import { LOTUS_GUN } from '../game/weapons.js';
 import { audio } from '../core/audio.js';
+import { G } from '../game/state.js';
 
 const $ = id => document.getElementById(id);
 const SLOT_NAMES = { outfit: '의상', ornament: '장식' };
 let overrides = {};
 let animation = 'idle';
 let attackFamily = 'fire';
-const PREVIEW_WEAPONS = Object.freeze({ fire: 'shotgun', dual: 'pistols', throw: 'molotov', cannon: 'cannon', blade: 'saw', channel: 'thorns' });
+const PREVIEW_WEAPONS = Object.freeze({ fire: 'shotgun', dual: 'pistols', throw: 'molotov', cannon: 'cannon', blade: 'saw', channel: 'thorns', sword: 'sword' });
 let flipped = false;
 let animationStart = 0;
 let previewClock = 0;
@@ -82,6 +83,8 @@ function paintPreview(timestamp = 0) {
     previewPlayer.anim = Math.floor(previewClock * 7) % 8;
     previewPlayer.flip = flipped;
     previewPlayer.readyFamily = attackFamily;
+    previewPlayer.useLocomotion = true;
+    previewPlayer.vx = animation === 'walk' ? (flipped ? -100 : 100) : 0;
     if (animation === 'fire') {
         // Same timestamp-driven pose selection as combat, at the actual base
         // weapon cadence. Reduced motion plays one requested shot, then rests.
@@ -140,7 +143,7 @@ function preparePreview() {
         document.addEventListener('visibilitychange', () => document.hidden ? stopCosmeticPreview() : startCosmeticPreview());
         visibilityBound = true;
     }
-    for (const mode of ['idle', 'fire']) {
+    for (const mode of ['idle', 'walk', 'fire']) {
         const control = $(`cosmetic-preview-${mode}`);
         control.setAttribute('aria-pressed', String(animation === mode));
         control.onclick = () => {
@@ -268,7 +271,9 @@ export function renderCosmeticShop(options = {}) {
     if (options.onChange) refreshShop = options.onChange;
     if (options.isActive) isActive = options.isActive;
     if (options.resetPreview) {
-        overrides = {}; animation = 'idle'; attackFamily = 'fire'; flipped = false;
+        overrides = {}; animation = 'idle';
+        let tech = G.tech; try { tech ||= localStorage.getItem('kfp.tech.v1'); } catch {}
+        attackFamily = idleAttackFamily(tech); flipped = false;
         previewClock = animationStart = 0; lastTimestamp = null; previewPlayer.shotAt = -Infinity; previewPlayer.attackPose = null;
         announce('');
     }

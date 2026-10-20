@@ -1,3 +1,4 @@
+import { renderPetUpgradeShop } from './pet-upgrade-shop.js';
 import { initBestiary, openBestiary, closeBestiary } from './bestiary.js';
 import { clearEncirclement } from '../game/encirclement.js';
 // DOM UI: 타이틀/스토리/레벨업/상자/일시정지/설정/상점/결과 화면
@@ -625,6 +626,7 @@ function renderShop({ resetPreview = false } = {}) {
         el.appendChild(b);
         list.appendChild(el);
     }
+    renderPetUpgradeShop(list, () => renderShop());
     renderRelicShop();
     renderAccessoryShop();
     renderCosmeticShop({ resetPreview, onChange: () => renderShop(), isActive: () => topModalId() === 'shop' });

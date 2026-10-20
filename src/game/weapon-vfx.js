@@ -3,6 +3,8 @@ import { glow, fx } from '../core/assets.js';
 import { settings } from '../core/settings.js';
 
 export const WEAPON_VFX = Object.freeze({
+ sword:{color:'#e7b9c2',light:'#fff2ce',shape:'blade'},
+ sword_wheel:{color:'#ef8d9e',light:'#fff2ce',accent:'#d6ac67',shape:'blade'},
  shotgun:{color:'#efb16e',light:'#fff0cf',trail:16,shape:'pellet'},
  pistols:{color:'#f6d679',light:'#fff7dc',trail:23,shape:'round'},
  rifle:{color:'#8ecde7',light:'#edfaff',trail:45,shape:'rail'},
@@ -30,7 +32,7 @@ for(const value of Object.values(WEAPON_VFX))Object.freeze(value);
 export const EVOLVED_VFX = Object.freeze({ pistols: Object.freeze({color:'#ff3b5c',light:'#ffe6a8',trail:46,shape:'execution'}) });
 const motionPreference=typeof window!=='undefined'&&window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):null;
 const TAU=Math.PI*2;
-const FUSIONS=new Set(['absolute_bloom','doom_barrage','plague_end','guillotine','carnage_saw','lotus_bloom','scatter_rail','plague_fire','burst_rail','venom_saw','ember_lance','orbit_saw','toxic_scatter']);
+const FUSIONS=new Set(['sword_wheel','absolute_bloom','doom_barrage','plague_end','guillotine','carnage_saw','lotus_bloom','scatter_rail','plague_fire','burst_rail','venom_saw','ember_lance','orbit_saw','toxic_scatter']);
 // Actual hit events only. One weak entry per pooled object, guarded by spawn ID.
 // This metadata never applies damage, extends slow, or creates world residues.
 const fusionHits=new WeakMap();

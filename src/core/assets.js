@@ -48,8 +48,10 @@ const sheetDefinitions = {
 for (const item of COSMETICS) if (item.bodySprites) for (const [variant, src] of Object.entries(item.bodySprites))
     sheetDefinitions[`costume_${item.id}_${variant}`] = src;
 const OUTFIT_PREFIX = Object.freeze({ dusk_lotus_cape: 'cape', jade_lotus_guard: 'jade' });
-for (const outfit of [null, ...Object.keys(OUTFIT_PREFIX)]) for (const family of ['dual', 'throw', 'cannon', 'blade', 'channel'])
+for (const outfit of [null, ...Object.keys(OUTFIT_PREFIX)]) for (const family of ['dual', 'throw', 'cannon', 'blade', 'channel', 'sword'])
     sheetDefinitions[outfit ? `costume_${outfit}_${family}` : `player_${family}`] = `asset/sprites/player-${OUTFIT_PREFIX[outfit] || 'base'}-${family}.png`;
+for (const outfit of [null, ...Object.keys(OUTFIT_PREFIX)]) for (const family of ['fire', 'dual', 'throw', 'cannon', 'sword'])
+    sheetDefinitions[outfit ? `costume_${outfit}_${family}_move` : `player_${family}_move`] = `asset/sprites/player-${OUTFIT_PREFIX[outfit] || 'base'}-${family}-move.png`;
 export const CHARACTER_SHEETS = Object.freeze(sheetDefinitions);
 export function characterSheetKey(outfit, family = 'fire', lotus = false) {
     const validOutfit = OUTFIT_PREFIX[outfit] ? outfit : null;

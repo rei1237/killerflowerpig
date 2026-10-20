@@ -1,10 +1,12 @@
-import { applyTechWeaponBonus } from './tech.js';
+import { applyTechWeaponBonus, resonanceTier } from './tech.js';
 import { FUSION_RECIPES } from '../data/fusions.js';
 import { firingMuzzle } from './player-motion.js';
 import { markPlayerAttack } from './attack-animation.js';
 import { createWeaponVfxFrame, drawWeaponProjectile, drawWeaponOrbit, drawWeaponBeam, drawBeamHitAccents, drawFusionResidues, drawFusionHitAccents } from './weapon-vfx.js';
 // 무기 런타임: 쿨다운 → 발사 패턴, 플레이어 투사체/광선/궤도체 업데이트 및 충돌
 import { G, rand } from './state.js';
+import { fireSword, drawButcherSword } from './butcher-sword.js';
+import { choosePlagueLanding } from './plague-targeting.js';
 import { WEAPONS, tierPower } from '../data/weapons.js';
 import { fx, glow, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
@@ -12,7 +14,7 @@ import { hitEnemy } from './enemies.js';
 import { spawnHazard, limitFriendlyFields } from './hazards.js';
 import { sparks, petals, embers, shake, floatText } from './effects.js';
 import { healPlayer } from './player.js';
-import { preferredTarget } from './targeting.js';
+import { preferredTarget, focusedTarget } from './targeting.js';
 import { upgradeLevel } from '../core/save.js';
 
 export function createWeapon(id, slot) {
@@ -80,6 +82,16 @@ export function weaponStats(w) {
         result.amount = n;
     }
     applyTechWeaponBonus(w, result);
+    // Cannon is hitscan: cadence and coverage grow, never fictitious travel speed.
+    // Bound excess rays now; apply their compensation once after source damage caps
+    // so the ray budget does not erase ordinary equipment-might growth.
+    let cannonOverflow = 1;
+    if (w.id === 'cannon') {
+        const count = Math.min(16, result.amount);
+        cannonOverflow = Math.min(2, result.amount / count);
+        result.amount = count;
+        result.cd = Math.max(0.3, result.cd);
+    }
     if (w.sourceId) {
         result.dmg = Math.min(600, result.dmg * ((WEAPONS[w.sourceId]?.tier === 'absolute' ? 1.65 : 1.35) + 0.08 * (Math.min(8, Math.max(1, w.fusionLevel || 1)) - 1)));
         result.amount = Math.min(20, result.amount); result.area = Math.min(3, result.area);
@@ -92,7 +104,13 @@ export function weaponStats(w) {
         result.pierce = Math.min(12, result.pierce); result.slow = Math.min(0.65, result.slow);
     }
     // 등급 보정: 상위 등급 무기가 하위 등급보다 약해지지 않도록. 피해 상한(220/420/600)은 보정 전 값에 적용된다.
-    result.dmg *= tierPower(w);
+    result.dmg *= tierPower(w) * cannonOverflow;
+    result.executeChance = 0;
+    if (G.tech === 'executioner' && ['pistols', 'burst_rail', 'guillotine'].includes(w.id)) {
+        result.critBonus += 0.75;
+        result.executeChance = 0.03 + (w.level >= 5 ? 0.02 : 0) + (resonanceTier() >= 3 ? 0.03 : 0);
+        result.precision = true;
+    }
     return result;
 }
 
@@ -120,12 +138,13 @@ export function nearestEnemy(x, y, maxR = 480) {
     return best;
 }
 
-function aimAt(w, target) {
+function aimAt(w, target, useMuzzle = true) {
     const p = G.player;
     if (!target) return [p.facingX, p.facingY];
-    const dx = target.x - p.x, dy = (target.y - (target.radius || 20)) - (p.y - 22);
+    const origin = useMuzzle && images.playerFire ? firingMuzzle(p, G.clock, target.x-p.x) : null;
+    const dx = target.x - (origin?.x ?? p.x), dy = (target.y - (target.radius || 20)) - (origin?.y ?? p.y-22);
     const d = Math.hypot(dx, dy) || 1;
-    return [dx / d, dy / d];
+    return [dx / d, dy / d, origin];
 }
 
 // 탄환 피격 판정: 발밑 원 하나가 아니라 스프라이트 높이만큼의 세로 캡슐.
@@ -137,6 +156,39 @@ export function bodyDist2(t, x, y) {
     const cy = Math.max(top, Math.min(bottom, y));
     const dx = t.x - x, dy = cy - y;
     return dx * dx + dy * dy;
+}
+
+// Exact swept distance to the same vertical body capsule, not a larger hitbox.
+function pointSegmentDist2(px, py, ax, ay, bx, by) {
+    const dx = bx - ax, dy = by - ay, d = dx * dx + dy * dy;
+    const t = d ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / d)) : 0;
+    return (px - ax - t * dx) ** 2 + (py - ay - t * dy) ** 2;
+}
+export function sweptBodyDist2(target, x0, y0, x1, y1) {
+    const spriteH = (target.atlas?.walkH || 0) * (target.scale || 0);
+    const top = target.y - Math.max(target.radius, spriteH * .85 - target.radius);
+    const bottom = target.y - target.radius;
+    if (x1 !== x0) {
+        const t = (target.x - x0) / (x1 - x0), y = y0 + t * (y1 - y0);
+        if (t >= 0 && t <= 1 && y >= top && y <= bottom) return 0;
+    }
+    return Math.min(bodyDist2(target, x0, y0), bodyDist2(target, x1, y1),
+        pointSegmentDist2(target.x, top, x0, y0, x1, y1), pointSegmentDist2(target.x, bottom, x0, y0, x1, y1));
+}
+export function sawAimDirection(player, target, speed, origin = null) {
+    const x = target.x - (origin?.x ?? player.x), y = target.y - (target.radius || 20) - (origin?.y ?? player.y - 22);
+    const vx = target.motionVX ?? target.vx ?? 0, vy = target.motionVY ?? target.vy ?? 0;
+    const a = vx * vx + vy * vy - speed * speed, b = 2 * (x * vx + y * vy), c = x * x + y * y;
+    let time = 0;
+    if (Math.abs(a) < 1e-8) { if (b < -1e-8) time = -c / b; }
+    else {
+        const d = b * b - 4 * a * c;
+        if (d >= 0) { const r = Math.sqrt(d), t1 = (-b - r) / (2 * a), t2 = (-b + r) / (2 * a);
+            time = Math.min(t1 > 0 ? t1 : Infinity, t2 > 0 ? t2 : Infinity); }
+    }
+    time = Number.isFinite(time) ? Math.max(0, Math.min(1, time)) : 0;
+    const dx = x + vx * time, dy = y + vy * time, length = Math.hypot(dx, dy) || 1;
+    return [dx / length, dy / length];
 }
 
 // 처형인의 쌍권총 적중 연출: 치명타는 진홍 파편, 처형은 큰 문구와 화면 흔들림
@@ -152,20 +204,26 @@ function executionerHitFx(e) {
     }
 }
 
+export function precisionCrit(sh, target) {
+    return (sh.crit || 0) + (sh.precision && sh.precisionTarget === target && sh.precisionTargetId === target.id && focusedTarget() === target ? 0.12 : 0);
+}
+
 function shoot(w, s, dirX, dirY, opts) {
     const p = G.player;
     const sh = G.shots.spawn();
     sh.kind = 'bullet';
     sh.weapon = ownerId(w); sh.coreId = w.sourceId ? w.id : null; sh.coreIndex = w.coreIndex || 0;
     sh.slot = w.slot;
-    const muzzle = images.playerFire ? firingMuzzle(p, G.clock, dirX) : { x: p.x + dirX * 16, y: p.y - 22 + dirY * 10 };
+    const muzzle = opts.origin || (images.playerFire ? firingMuzzle(p, G.clock, dirX) : { x: p.x + dirX * 16, y: p.y - 22 + dirY * 10 });
     sh.x = muzzle.x; sh.y = muzzle.y;
     sh.vx = dirX * s.speed; sh.vy = dirY * s.speed;
     sh.angle = Math.atan2(dirY, dirX);
     sh.dmg = s.dmg; sh.pierce = s.pierce; sh.life = s.duration;
     sh.radius = (opts.radius || 5) * s.area;
     sh.img = opts.img;
-    sh.crit = s.crit; sh.critBonus = s.critBonus || 0; sh.execute = s.execute; sh.bleed = s.bleed; sh.slow = s.slow || 0;
+    sh.crit = s.crit; sh.critBonus = s.critBonus || 0; sh.execute = 0; sh.executeChance = s.executeChance || 0; sh.precision = !!s.precision;
+    sh.precisionTarget = s.precision ? preferredTarget(G.player.x, G.player.y, 520) : null;
+    sh.precisionTargetId = sh.precisionTarget?.id; sh.bleed = s.bleed; sh.slow = s.slow || 0;
     sh.knock = opts.knock ?? 60;
     sh.bounce = false;
     sh.spin = 0;
@@ -183,7 +241,7 @@ function lob(w, s, tx, ty, hazardKind) {
     animateAttack(w, tx - p.x, { family: 'throw' });
     sh.sx = p.x; sh.sy = p.y - 30; sh.tx = tx; sh.ty = ty;
     sh.x = sh.sx; sh.y = sh.sy;
-    sh.t = 0; sh.dur = 0.55; sh.life = 1;
+    sh.t = 0; sh.dur = G.tech === 'plague' ? 0.35 : 0.55; sh.life = 1;
     sh.hazard = hazardKind;
     sh.s = s;
     sh.img = (hazardKind === 'fire' || hazardKind === 'firegas') ? fx.bomb : null;
@@ -215,9 +273,11 @@ export function orbitStats(w, s) {
 // 같은 무기의 장판은 한 번 투척 수 + 2 (최소 3)까지만 동시에 유지한다.
 // 융합 무기는 자체 상한이 있으므로 제외.
 const fieldCap = (s, id) => WEAPONS[id]?.fusionOnly ? Infinity : Math.max(3, Math.round(s.amount) + 2);
-export function hellfireTrailStats(s) { return { radius: 64 * s.area, duration: Math.min(10, 6 * (s.durationScale || 1)), dmg: s.dmg * 0.6, tick: 0.3 }; }
+export function hellfireTrailStats(s) { return { radius: 64 * s.area, duration: Math.min(10, 6 * (s.durationScale || 1)), dmg: s.dmg * 0.6, tick: 0.3, slow: s.slow || 0 }; }
 export function emberFieldStats(s) { return { ...s, dmg: s.dmg * 0.16, amount: Math.min(2, s.amount), duration: Math.min(6, 3 * (s.durationScale || 1)), radius: 54, tick: 0.3 }; }
 const FIRE = {
+    sword(w, s) { fireSword(w, s); },
+    sword_wheel(w, s) { fireSword(w, s); },
     absolute_bloom(w, s) { FIRE.cannon(w, s); },
     // 절대 무기: 탄막 사수 — 360도 관통 탄환 + 조준 레일탄 3발
     doom_barrage(w, s) {
@@ -227,16 +287,17 @@ const FIRE = {
             shoot(w, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: 5, knock: 60 });
         }
         const t = nearestEnemy(p.x, p.y, 700);
-        const [dx, dy] = aimAt(w, t);
-        animateAttack(w, dx);
+        const [dx, dy, origin] = aimAt(w, t);
+        animateAttack(w, origin ? origin.x-G.player.x : dx);
         const base = Math.atan2(dy, dx);
-        for (const off of [-0.08, 0, 0.08]) shoot(w, { ...s, dmg: s.dmg * 2 }, Math.cos(base + off), Math.sin(base + off), { img: fx.rail, radius: 7, knock: 120 });
+        for (const off of [-0.08, 0, 0.08]) shoot(w, { ...s, dmg: s.dmg * 2 }, Math.cos(base + off), Math.sin(base + off), { img: fx.rail, radius: 7, knock: 120, origin });
         shake(2); audio.sfx('zap');
     },
     // 절대 무기: 역병 화염 — 거대한 역병 화염 장판 다발
     plague_end(w, s) {
         for (let i = 0; i < s.amount; i++) {
-            const e = randomEnemyNear(420, i === 0), p = G.player;
+            const p = G.player, landing = G.tech === 'plague' ? choosePlagueLanding(p, 420, .35, i, { radius: s.radius * s.area, kind: 'fire', weapon: ownerId(w) }) : null;
+            const e = landing || randomEnemyNear(420, i === 0);
             lob(w, s, e ? e.x : p.x + rand(-220, 220), e ? e.y : p.y + rand(-170, 170), 'firegas');
         }
     },
@@ -253,19 +314,20 @@ const FIRE = {
     scatter_rail(w, s) { FIRE.shotgun(w, s); },
     plague_fire(w, s) {
         for (let i = 0; i < s.amount; i++) {
-            const e = randomEnemyNear(340, !!WEAPONS[w.id].fusionOnly), p = G.player;
+            const p = G.player, landing = G.tech === 'plague' ? choosePlagueLanding(p, 340, .35, i, { radius: s.radius * s.area, kind: 'fire', weapon: ownerId(w) }) : null;
+            const e = landing || randomEnemyNear(340, !!WEAPONS[w.id].fusionOnly);
             lob(w, s, e ? e.x : p.x + rand(-180, 180), e ? e.y : p.y + rand(-140, 140), 'firegas');
         }
     },
     shotgun(w, s) {
         const t = nearestEnemy(G.player.x, G.player.y, 420);
-        const [dx, dy] = aimAt(w, t);
-        animateAttack(w, dx);
+        const [dx, dy, origin] = aimAt(w, t);
+        animateAttack(w, origin ? origin.x-G.player.x : dx);
         const base = Math.atan2(dy, dx);
         const n = s.amount;
         for (let i = 0; i < n; i++) {
             const a = base + (n > 1 ? (i / (n - 1) - 0.5) * s.spread : 0) + rand(-0.05, 0.05);
-            const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: w.evolved ? fx.bossShot : fx.pellet, radius: 4, knock: 90 });
+            const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: w.evolved ? fx.bossShot : fx.pellet, radius: 4, knock: 90, origin });
             sh.vx *= rand(0.85, 1.1); sh.vy *= rand(0.85, 1.1);
         }
         if (!images.playerFire) sparks(G.player.x + dx * 22, G.player.y - 22 + dy * 10, 5, '#ffcf6b', 140);
@@ -278,12 +340,12 @@ const FIRE = {
     },
     rifle(w, s) {
         const t = nearestEnemy(G.player.x, G.player.y, 700);
-        const [dx, dy] = aimAt(w, t);
-        animateAttack(w, dx);
+        const [dx, dy, origin] = aimAt(w, t);
+        animateAttack(w, origin ? origin.x-G.player.x : dx);
         const base = Math.atan2(dy, dx);
         for (let i = 0; i < s.amount; i++) {
             const a = base + (i === 0 ? 0 : rand(-0.35, 0.35));
-            shoot(w, s, Math.cos(a), Math.sin(a), { img: fx.rail, radius: w.evolved ? 9 : 6, knock: 120 });
+            shoot(w, s, Math.cos(a), Math.sin(a), { img: fx.rail, radius: w.evolved ? 9 : 6, knock: 120, origin });
         }
         audio.sfx(w.evolved ? 'zap' : 'shot');
     },
@@ -294,7 +356,8 @@ const FIRE = {
     molotov(w, s) {
         const p = G.player;
         for (let i = 0; i < s.amount; i++) {
-            const e = randomEnemyNear(320, !!w.sourceId);
+            const landing = G.tech === 'plague' ? choosePlagueLanding(p, 320, .35, i, { radius: s.radius * s.area, kind: 'fire', weapon: ownerId(w) }) : null;
+            const e = landing || randomEnemyNear(320, !!w.sourceId);
             const tx = e ? e.x : p.x + rand(-200, 200);
             const ty = e ? e.y : p.y + rand(-150, 150);
             lob(w, s, tx, ty, 'fire');
@@ -306,13 +369,15 @@ const FIRE = {
         const focused = preferredTarget(p.x, p.y, 520);
         const t = focused || nearestEnemy(p.x, p.y, 520);
         if (!focused && (p.vx || p.vy || !t)) base = Math.atan2(p.facingY, p.facingX);
-        else { const [dx, dy] = aimAt(w, t); base = Math.atan2(dy, dx); }
+        else { const [dx, dy] = aimAt(w, t, false); base = Math.atan2(dy, dx); }
         const n = s.amount;
         const firstBeamAngle = base + (w.evolved && !focused ? G.clock * 0.6 : 0);
         animateAttack(w, Math.cos(firstBeamAngle), { family: 'cannon' });
+        const volleyHits = w.id === 'cannon' ? new Set() : null;
+        const particleCount = Math.min(10, Math.floor(24 / n));
         for (let i = 0; i < n; i++) {
             const a = base + (i / n) * Math.PI * 2 + (w.evolved && !focused ? G.clock * 0.6 : 0);
-            fireBeam(w, s, a);
+            fireBeam(w, s, a, volleyHits, particleCount);
         }
         shake(4);
         audio.sfx('zap');
@@ -329,12 +394,17 @@ const FIRE = {
             return;
         }
         for (let i = 0; i < s.amount; i++) {
-            const e = randomEnemyNear(300);
+            const landing = G.tech === 'plague' ? choosePlagueLanding(p, 300, .35, i, { radius: s.radius * s.area, kind: 'gas', weapon: ownerId(w) }) : null;
+            const e = landing || randomEnemyNear(300);
             lob(w, s, e ? e.x : p.x + rand(-180, 180), e ? e.y : p.y + rand(-140, 140), 'gas');
         }
     },
     saw(w, s) {
-        animateAttack(w, G.player.facingX, { family: 'blade' });
+        const p = G.player;
+        const aimed = G.tech === 'butcher' ? preferredTarget(p.x, p.y, 520) || nearestEnemy(p.x, p.y, 520) : null;
+        const origin = aimed && images.playerFire ? firingMuzzle(p, G.clock, aimed.x-p.x) : null;
+        const firstAim = aimed ? sawAimDirection(p, aimed, s.speed, origin) : null;
+        animateAttack(w, origin ? origin.x-p.x : firstAim ? firstAim[0] : p.facingX, { family: 'blade' });
         // 화면 정리: 이전 톱날 묶음은 짧게 사라지고, 한 번에 최대 SAW_VISUAL_CAP개만 날린다.
         // 상한을 넘는 톱날 수는 피해로 환산해 총 화력은 유지한다.
         const owner = ownerId(w);
@@ -345,9 +415,10 @@ const FIRE = {
         const n = Math.min(SAW_VISUAL_CAP, s.amount);
         if (s.amount > n) s = { ...s, dmg: s.dmg * s.amount / n };
         for (let i = 0; i < n; i++) {
-            const a = Math.random() * Math.PI * 2;
+            const randomAngle = Math.random() * Math.PI * 2;
+            const a = i === 0 && firstAim ? Math.atan2(firstAim[1], firstAim[0]) : randomAngle;
             const big = w.id === 'carnage_saw';
-            const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: w.evolved || big ? fx.sawBone : fx.saw, radius: big ? 18 : 14, knock: big ? 70 : 40 });
+            const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: w.evolved || big ? fx.sawBone : fx.saw, radius: big ? 18 : 14, knock: big ? 70 : 40, origin: i === 0 ? origin : null });
             sh.kind = 'saw';
             sh.pierce = 9999;
             sh.bounce = true;
@@ -357,7 +428,7 @@ const FIRE = {
     },
 };
 
-function fireBeam(w, s, angle) {
+function fireBeam(w, s, angle, volleyHits = null, particleCount = 10) {
     const p = G.player;
     const b = G.beams.spawn();
     const muzzle = images.playerFire ? firingMuzzle(p, G.clock, Math.cos(angle)) : { x: p.x, y: p.y - 22 };
@@ -374,20 +445,20 @@ function fireBeam(w, s, angle) {
     const pool = G.enemies;
     for (let i = 0; i < pool.count; i++) {
         const e = pool.items[i];
-        if (!e.alive) continue;
+        if (!e.alive || volleyHits?.has(e)) continue;
         const ex = e.x - b.x, ey = (e.y - e.radius) - b.y;
         const along = ex * cx + ey * cy;
         if (along < 0 || along > b.len) continue;
         const perp = Math.abs(ex * cy - ey * cx);
-        if (perp < hw + e.radius) hitEnemy(e, s.dmg, { weapon: ownerId(w), kx: cx, ky: cy, knock: 160, crit: s.crit });
+        if (perp < hw + e.radius) { volleyHits?.add(e); hitEnemy(e, s.dmg, { weapon: ownerId(w), kx: cx, ky: cy, knock: 160, crit: s.crit }); }
     }
     const boss = G.boss;
-    if (boss && boss.alive) {
+    if (boss && boss.alive && !volleyHits?.has(boss)) {
         const ex = boss.x - b.x, ey = (boss.y - boss.radius) - b.y;
         const along = ex * cx + ey * cy;
-        if (along > 0 && along < b.len && Math.abs(ex * cy - ey * cx) < hw + boss.radius) boss.hurt(s.dmg, { weapon: ownerId(w) });
+        if (along > 0 && along < b.len && Math.abs(ex * cy - ey * cx) < hw + boss.radius) { volleyHits?.add(boss); boss.hurt(s.dmg, { weapon: ownerId(w) }); }
     }
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < particleCount; i++) {
         const t = Math.random() * b.len;
         petals(b.x + cx * t, b.y + cy * t, 1);
     }
@@ -408,11 +479,11 @@ function updateLotusGun(dt) {
     const p = G.player, t = nearestEnemy(p.x, p.y, 520);
     if (!t) { lotusGun.cd = 0.15; return; }
     lotusGun.cd = LOTUS_GUN.cd * (p.stats.cooldown || 1);
-    const s = lotusGunStats(), [dx, dy] = aimAt(lotusGun, t), base = Math.atan2(dy, dx);
-    animateAttack(lotusGun, dx); // Pose/flash starts on the actual lotus volley, never before it.
+    const s = lotusGunStats(), [dx, dy, origin] = aimAt(lotusGun, t), base = Math.atan2(dy, dx);
+    animateAttack(lotusGun, origin ? origin.x-G.player.x : dx); // Pose/flash starts on the actual lotus volley, never before it.
     for (let i = 0; i < LOTUS_GUN.shots; i++) {
         const a = base + (i - (LOTUS_GUN.shots - 1) / 2) * LOTUS_GUN.spread;
-        shoot(lotusGun, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: 7, knock: 70 });
+        shoot(lotusGun, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: 7, knock: 70, origin });
     }
 }
 
@@ -429,14 +500,14 @@ export function updateWeapons(dt) {
             if (w.burstT <= 0) {
                 w.burstT = BURST_INTERVAL; // 쌍권총 계열 연발 간격 (초고속 연사)
                 const t = nearestEnemy(p.x, p.y, 520);
-                const [dx, dy] = aimAt(w, t);
+                const [dx, dy, origin] = aimAt(w, t);
                 const side = (w.burst % 2 ? 1 : -1) * 0.06;
                 const a = Math.atan2(dy, dx) + side;
                 const executioner = (w.id === 'pistols' && w.evolved) || w.id === 'guillotine';
-                const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: executioner ? 7 : 5, knock: executioner ? 80 : 50 });
+                const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: executioner ? 7 : 5, knock: executioner ? 80 : 50, origin });
                 // 처형인의 쌍권총: 진홍빛 총구 섬광
                 if (executioner) sparks(sh.x, sh.y, 4, w.burst % 2 ? '#ff3b5c' : '#ffd36b', 180);
-                animateAttack(w, dx);
+                animateAttack(w, origin ? origin.x-G.player.x : dx);
                 audio.sfx('shot');
                 w.burst--;
             }
@@ -523,7 +594,7 @@ export function updateShots(dt) {
                 const s = sh.s;
                 if (sh.hazard === 'fire' || sh.hazard === 'firegas') {
                     limitFriendlyFields('fire', sh.weapon, fieldCap(s, sh.weapon));
-                    spawnHazard('fire', sh.tx, sh.ty, { radius: s.radius * s.area, duration: s.duration, dmg: s.dmg, tick: s.tick, slow: sh.hazard === 'firegas' ? s.slow : 0, weapon: sh.weapon });
+                    spawnHazard('fire', sh.tx, sh.ty, { radius: s.radius * s.area, duration: s.duration, dmg: s.dmg, tick: s.tick, slow: s.slow, weapon: sh.weapon });
                     embers(sh.tx, sh.ty, 10);
                     audio.sfx('fire');
                 } else {
@@ -536,6 +607,7 @@ export function updateShots(dt) {
         }
         sh.life -= dt;
         if (sh.life <= 0) { pool.release(i); continue; }
+        const previousX = sh.x, previousY = sh.y;
         sh.x += sh.vx * dt;
         sh.y += sh.vy * dt;
         if (sh.kind === 'saw') {
@@ -548,13 +620,15 @@ export function updateShots(dt) {
             }
         }
         // 몸통 캡슐 판정에 맞춰 발밑 좌표 기준으로 넉넉히 조회
-        const list = G.grid.query(sh.x, sh.y + 45, sh.radius + 95, shotList);
+        const swept = sh.kind === 'saw';
+        const travel = swept ? Math.hypot(sh.x - previousX, sh.y - previousY) : 0;
+        const list = G.grid.query(swept ? (sh.x + previousX) / 2 : sh.x, (swept ? (sh.y + previousY) / 2 : sh.y) + 45, sh.radius + 95 + travel / 2, shotList);
         let dead = false;
         for (let k = 0; k < list.length && !dead; k++) {
             const e = list[k];
             if (!e.alive) continue;
             const rr = sh.radius + e.radius;
-            if (bodyDist2(e, sh.x, sh.y) > rr * rr) continue;
+            if ((swept ? sweptBodyDist2(e, previousX, previousY, sh.x, sh.y) : bodyDist2(e, sh.x, sh.y)) > rr * rr) continue;
             if (sh.kind === 'saw') {
                 ensureHitChannels(e);
                 if (now - e.hits[hitChannel(sh)] < sh.hitCd) continue;
@@ -564,19 +638,19 @@ export function updateShots(dt) {
                 sh.lastHit.push(e.id);
             }
             const sp = Math.hypot(sh.vx, sh.vy) || 1;
-            hitEnemy(e, sh.dmg, { weapon: sh.weapon, kx: sh.vx / sp, ky: sh.vy / sp, knock: sh.knock, crit: sh.crit, critBonus: sh.critBonus, execute: sh.execute, bleed: sh.bleed, slow: sh.slow });
-            if ((sh.weapon === 'pistols' && sh.evolved) || sh.weapon === 'guillotine') executionerHitFx(e);
+            hitEnemy(e, sh.dmg, { weapon: sh.weapon, kx: sh.vx / sp, ky: sh.vy / sp, knock: sh.knock, crit: precisionCrit(sh, e), critBonus: sh.critBonus, executeChance: sh.executeChance, bleed: sh.bleed, slow: sh.slow });
+            if (sh.precision || (sh.weapon === 'pistols' && sh.evolved) || sh.weapon === 'guillotine') executionerHitFx(e);
             if (--sh.pierce <= 0) dead = true;
         }
         const boss = G.boss;
         if (!dead && boss && boss.alive) {
             const rr = sh.radius + boss.radius;
-            if (bodyDist2(boss, sh.x, sh.y) < rr * rr) {
+            if ((swept ? sweptBodyDist2(boss, previousX, previousY, sh.x, sh.y) : bodyDist2(boss, sh.x, sh.y)) < rr * rr) {
                 if (sh.kind === 'saw') {
-                    if (now - (boss.hits[hitChannel(sh)] || -9) >= sh.hitCd) { boss.hits[hitChannel(sh)] = now; boss.hurt(sh.dmg, { weapon: sh.weapon, crit: sh.crit, critBonus: sh.critBonus }); }
+                    if (now - (boss.hits[hitChannel(sh)] || -9) >= sh.hitCd) { boss.hits[hitChannel(sh)] = now; boss.hurt(sh.dmg, { weapon: sh.weapon, crit: precisionCrit(sh, boss), critBonus: sh.critBonus }); }
                 } else if (!sh.lastHit.includes(-1)) {
                     sh.lastHit.push(-1);
-                    boss.hurt(sh.dmg, { weapon: sh.weapon, crit: sh.crit, critBonus: sh.critBonus });
+                    boss.hurt(sh.dmg, { weapon: sh.weapon, crit: precisionCrit(sh, boss), critBonus: sh.critBonus });
                     sparks(sh.x, sh.y, 3, '#ff5a6a');
                     if (--sh.pierce <= 0) dead = true;
                 }
@@ -612,6 +686,7 @@ export function drawShots(ctx) {
         if (Math.abs(b.x - cam.x) > hw + bound || Math.abs(b.y - cam.y) > hh + bound) continue;
         drawWeaponBeam(ctx, b, frame);
     }
+    drawButcherSword(ctx, !frame.motion);
     drawFusionHitAccents(ctx, G.enemies, G.boss, frame, bounds);
     drawBeamHitAccents(ctx, G.beams, G.enemies, G.boss, frame);
     ctx.restore();

@@ -4,7 +4,8 @@ import { BOSS_XP_GEMS, bossGemValue } from '../src/data/boss-rewards.js';
 // assumptions. Choices, rerolls, chest evolution, exchanges and fusion are real.
 import { pathToFileURL } from 'node:url';
 import { G, clearWorld } from '../src/game/state.js';
-import { createPlayer } from '../src/game/player.js';
+import { TECHS, techStartingWeapons } from '../src/data/techs.js';
+import { createPlayer, recomputeStats } from '../src/game/player.js';
 import { createWeapon } from '../src/game/weapons.js';
 import { STARTING_WEAPON, WEAPONS, MAX_WEAPONS } from '../src/data/weapons.js';
 import { STAGES } from '../src/data/stages.js';
@@ -24,6 +25,7 @@ export const XP_SCENARIOS = [
 ];
 export const PLAN_RECIPES = {
     planned: ['scatter_rail', 'lotus_bloom', 'plague_fire'],
+    butcher: ['sword_wheel', 'scatter_rail', 'lotus_bloom'],
     twoFinal: ['scatter_rail', 'lotus_bloom'],
     absolute: ['absolute_bloom', 'scatter_rail'],
 };
@@ -111,8 +113,13 @@ export function simulatePlan({ rows, collection = .85, mode = 'planned', seed = 
     if (!Array.isArray(rows) || rows.length !== 10) throw Error('Exactly ten XP rows required');
     const original = Math.random; Math.random = seeded(seed);
     try {
-        world(); G.weapons = [createWeapon(STARTING_WEAPON, 0)];
-        const log = { choices: 0, rerolls: 0, skips: 0, itemChoices: {}, fusions: [], exchanges: [],
+        world(); G.tech = mode === 'butcher' ? 'butcher' : null;
+        const starts = G.tech ? techStartingWeapons(TECHS[G.tech]) : [STARTING_WEAPON];
+        G.weapons = starts.map((id, slot) => createWeapon(id, slot));
+        if (G.tech) G.passives[TECHS[G.tech].start.passive] = 1;
+        recomputeStats(true);
+        const initialInvestment = G.weapons.reduce((n,w) => n+w.level,0) + Object.values(G.passives).reduce((a,b)=>a+b,0);
+        const log = { initialInvestment, choices: 0, rerolls: 0, skips: 0, itemChoices: {}, fusions: [], exchanges: [],
             evolutions: [], chestUpgrades: 0, premiumUpgrades: 0, stages: [] };
         function processXP(xp) {
             addXP(xp);
@@ -177,14 +184,14 @@ export function runAudit({ seeds = 200 } = {}) {
         scenarios: XP_SCENARIOS.map(s => {
             const rows = estimateWaveXP(s);
             return { ...s, rows, collectedXP: rows.reduce((n, r) => n + (r.waveXP + r.bossXP) * s.collection, 0),
-                plans: Object.fromEntries(['planned', 'scattered', 'absolute'].map(mode => [mode,
+                plans: Object.fromEntries(['planned', 'scattered', 'absolute', 'butcher'].map(mode => [mode,
                     summarizePlans(Array.from({ length: seeds }, (_, i) => simulatePlan({ rows, collection: s.collection, mode, seed: i + 1 }))) ])) };
         }) };
 }
 export function makeBossBuildFixtures() {
     const rows = estimateWaveXP({ residency: 16, seed: 7 });
     const specs = [['mid invested/evolved build', 'planned', 1, 5], ['late two-final build', 'twoFinal', 101, 10],
-        ['late three-final build', 'planned', 101, 10], ['late absolute plus one final', 'absolute', 101, 10]];
+        ['late three-final build', 'planned', 101, 10], ['late absolute plus one final', 'absolute', 101, 10], ['late Butcher sword-wheel route', 'butcher', 101, 10]];
     return { method: 'Actual rollChoices/rollBossChest; 16s ordinary/48s elite synthetic residency, 85% collected XP, spawn seed7, chest before boss XP, no permanent purchases. Pre-boss snapshots.',
         builds: specs.map(([name, mode, seed, stage]) => ({ name, mode, seed, stage, distance: 130,
             ...simulatePlan({ rows, collection: .85, mode, seed }).stages[stage - 1].beforeBoss })) };

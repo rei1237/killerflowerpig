@@ -119,6 +119,8 @@ export class Boss {
     }
 
     update(dt) {
+        const previousX = this.x, previousY = this.y;
+        this.motionVX = 0; this.motionVY = 0;
         // A discarded Hunter must not release its second lock into a new stage
         // or a replacement player. Other boss lifecycles are unchanged.
         if (this.def.signature === 'hunt' && (G.stage !== this.stage || this.task?.target && this.task.target !== G.player)) {
@@ -179,6 +181,10 @@ export class Boss {
             this.animT = 0;
             this.anim++;
             if (this.state === 'attack' && this.anim >= this.atlas.frameCount('attack')) { this.state = 'walk'; this.anim = 0; }
+        }
+        // Measured world velocity for predictive aim; teleports are not travel.
+        if (dt > 0 && Math.hypot(this.x-previousX, this.y-previousY) <= 1200*dt) {
+            this.motionVX = (this.x-previousX)/dt; this.motionVY = (this.y-previousY)/dt;
         }
     }
 

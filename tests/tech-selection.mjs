@@ -28,12 +28,12 @@ test('every tech starts with a real weapon and its evolution partner passive, al
         assert.equal(WEAPONS[t.start.weapon].evolve.with, t.start.passive, `${id}: start passive evolves the start weapon`);
         assert.ok(t.family.weapons.includes(t.start.weapon) && t.family.passives.includes(t.start.passive));
         const starters = techStartingWeapons(t);
-        assert.deepEqual(starters, id === 'bloom' ? ['thorns', 'cannon'] : [t.start.weapon]);
+        assert.deepEqual(starters, id === 'bloom' ? ['thorns', 'cannon'] : id === 'butcher' ? ['sword', 'saw'] : [t.start.weapon]);
         for (const weaponId of starters) {
             assert.ok(WEAPONS[weaponId] && !WEAPONS[weaponId].fusionOnly && t.family.weapons.includes(weaponId));
             assert.ok(WEAPON_TAGS[weaponId].some(tag => t.tags.includes(tag)), `${id}: ${weaponId} benefits from its own tech`);
         }
-        assert.equal(t.family.weapons.length, 3); assert.equal(t.family.passives.length, 3);
+        assert.equal(t.family.weapons.length, id === 'butcher' ? 4 : 3); assert.equal(t.family.passives.length, 3);
         assert.equal(t.tiers.length, 3);
         for (const w of t.family.weapons) assert.ok(WEAPON_TAGS[w], `${id}: ${w} tagged`);
         assert.ok(WEAPON_TAGS[t.start.weapon].some(tag => t.tags.includes(tag)), `${id}: start weapon benefits from its own tech`);
@@ -174,7 +174,7 @@ test('imprints make the same weapon grow in a tech-specific direction at Lv3/5/7
     G.tech = null; recomputeStats(); const plain = weaponStats(Object.assign(createWeapon('shotgun', 0), { level: 8 }));
     assert.equal(gun.amount, plain.amount + 2); assert.equal(gun.pierce, plain.pierce + 2);
     assert.ok(Math.abs(butcher.dmg - plain.dmg * MISMATCH_DAMAGE) < 1e-9, 'shotgun is off-tag for the butcher (blade/orbit)');
-    assert.ok(exe.crit >= 0.16 && exe.execute >= 0.08);
+    assert.ok(exe.crit >= 0.16); assert.equal(exe.executeChance, 0, 'shotgun does not inherit the pistol-only execution identity');
     const below = at('gunline', 'shotgun', 2), lv3 = at('gunline', 'shotgun', 3);
     G.tech = null; recomputeStats(); const p2 = weaponStats(Object.assign(createWeapon('shotgun', 0), { level: 2 })), p3 = weaponStats(Object.assign(createWeapon('shotgun', 0), { level: 3 }));
     assert.equal(below.amount - p2.amount, 0); assert.equal(lv3.amount - p3.amount, 1, 'Lv3 imprint adds exactly one projectile');

@@ -1,18 +1,19 @@
 // Cosmetic-only attack state: no projectile, hitbox, damage, cooldown or input writes.
 import { WEAPONS } from '../data/weapons.js';
+import { FUSION_RECIPES } from '../data/fusions.js';
 import { TECHS, WEAPON_TAGS } from '../data/techs.js';
 import { markPlayerShot, shotFrame } from './player-motion.js';
 
-export const ATTACK_FAMILIES = Object.freeze(['fire', 'dual', 'throw', 'cannon', 'blade', 'channel']);
+export const ATTACK_FAMILIES = Object.freeze(['fire', 'dual', 'throw', 'cannon', 'blade', 'channel', 'sword']);
 export const WEAPON_POSES = Object.freeze({
     shotgun: 'fire', rifle: 'fire', scatter_rail: 'fire', toxic_scatter: 'fire', doom_barrage: 'fire',
     pistols: 'dual', burst_rail: 'dual', guillotine: 'dual',
     molotov: 'throw', gas: 'throw', plague_fire: 'throw', plague_end: 'throw',
     cannon: 'cannon', lotus_bloom: 'cannon', ember_lance: 'cannon', absolute_bloom: 'cannon',
     saw: 'blade', venom_saw: 'blade', orbit_saw: 'blade', carnage_saw: 'blade',
-    thorns: 'channel', lotus_gun: 'fire',
+    thorns: 'channel', lotus_gun: 'fire', sword: 'sword', sword_wheel: 'sword',
 });
-export const TECH_IDLE_POSES = Object.freeze({ gunline: 'fire', executioner: 'dual', plague: 'throw', bloom: 'cannon', butcher: 'blade' });
+export const TECH_IDLE_POSES = Object.freeze({ gunline: 'fire', executioner: 'dual', plague: 'throw', bloom: 'cannon', butcher: 'sword' });
 export const ATTACK_HOLD = 0.110;
 export function attackMinimumHold(tier) { return tier === 'absolute' ? .180 : tier === 'fusion' ? .150 : tier === 'evolved' ? .125 : ATTACK_HOLD; }
 export const ATTACK_RECOVERY = 0.400;
@@ -23,6 +24,7 @@ const FAMILY_PHASES = Object.freeze({
     cannon: Object.freeze([.045,.090,.145,.200,.250,.300,.360]),
     blade: Object.freeze([.045,.080,.125,.170,.220,.260,.300]),
     channel: Object.freeze([.050,.095,.140,.190,.235,.275,.320]),
+    sword: Object.freeze([.045,.085,.135,.185,.235,.285,.340]),
 });
 export function attackFrame(elapsed, family = 'fire', tier = 'normal') {
     if (!Number.isFinite(elapsed) || elapsed < 0) return 0;
@@ -54,7 +56,14 @@ export function attackPriority(w, techId, family = weaponPose(w)) {
     return TIER_RANK[attackTier(w)] * 4 + (affinity ? 3 : 0) + (w?.sourceId ? 0 : 2)
         + (family === 'channel' ? 0 : 1);
 }
-export function idleAttackFamily(techId) { return TECH_IDLE_POSES[techId] || 'fire'; }
+export function idleAttackFamily(techId, weapons = null) {
+    const preferred = TECH_IDLE_POSES[techId] || 'fire';
+    if (!weapons?.length) return preferred;
+    const ids = weapons.flatMap(w => [w.id, ...(FUSION_RECIPES.find(r=>r.output===w.id)?.inputs.map(input=>input.id) || [])]);
+    if (techId === 'butcher' && ids.includes('sword')) return 'sword';
+    const families = ids.map(id => WEAPON_POSES[id]).filter(Boolean);
+    return families.includes(preferred) ? preferred : families[0] || preferred;
+}
 
 export function markPlayerAttack(player, clock, w, dx, { tech = null, family, follow = false, activation = false } = {}) {
     if (!player || player.dead || !w?.id || !Number.isFinite(clock)) return false;
@@ -70,7 +79,8 @@ export function markPlayerAttack(player, clock, w, dx, { tech = null, family, fo
     // rifle/saw cores. Its first real main bullet may replace that same-owner
     // core, rather than hiding the new dual-pistol weapon for a whole hold.
     const mainReplacesOwnCore = old && old.weapon === w.id && !w.sourceId && old.core !== old.weapon && priority > old.priority;
-    if (withinHold && !mainReplacesOwnCore && (!sameTick || priority <= old.priority)) {
+    const meleeOverride = pose === 'sword' && old?.family !== 'sword';
+    if (withinHold && !meleeOverride && !mainReplacesOwnCore && (!sameTick || priority <= old.priority)) {
         if (same && !activation) markPlayerShot(player, clock, dx);
         return false;
     }
@@ -83,9 +93,9 @@ export function markPlayerAttack(player, clock, w, dx, { tech = null, family, fo
     return true;
 }
 
-export function playerAttackPose(player = {}, clock = 0, tech = null) {
+export function playerAttackPose(player = {}, clock = 0, tech = null, weapons = null) {
     const attack = player.attackPose;
-    const ready = ATTACK_FAMILIES.includes(player.readyFamily) ? player.readyFamily : idleAttackFamily(tech);
+    const ready = ATTACK_FAMILIES.includes(player.readyFamily) ? player.readyFamily : idleAttackFamily(tech, weapons);
     if (attack && Number.isFinite(attack.at)) {
         const elapsed = clock - attack.at;
         const frame = attackFrame(elapsed, attack.family, attack.tier);

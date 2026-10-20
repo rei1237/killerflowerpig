@@ -41,22 +41,21 @@
         }
       ],
       "passives": {
-        "magazine": 1,
-        "sap": 2,
-        "pollen": 1,
+        "magazine": 2,
+        "pollen": 2,
         "scope": 1
       },
       "stats": {
         "might": 1,
         "area": 1,
         "cooldown": 1,
-        "barrierCd": 12,
+        "barrierCd": 10,
         "duration": 1,
-        "growth": 1.16,
+        "growth": 1,
         "projSpeed": 1.05,
         "pierce": 1,
         "amount": 0,
-        "amountMul": 0.1,
+        "amountMul": 0.2,
         "crit": 0,
         "regen": 0,
         "magnet": 70,
@@ -79,7 +78,7 @@
       "weapons": [
         {
           "id": "scatter_rail",
-          "level": 8,
+          "level": 6,
           "evolved": false
         },
         {
@@ -92,9 +91,9 @@
         "magazine": 5,
         "regen": 5,
         "scope": 5,
+        "heart": 5,
         "pollen": 5,
-        "whet": 5,
-        "heart": 5
+        "whet": 5
       },
       "stats": {
         "might": 1.5,
@@ -129,7 +128,7 @@
       "weapons": [
         {
           "id": "scatter_rail",
-          "level": 4,
+          "level": 1,
           "evolved": false
         },
         {
@@ -139,7 +138,7 @@
         },
         {
           "id": "plague_fire",
-          "level": 1,
+          "level": 2,
           "evolved": false
         }
       ],
@@ -148,8 +147,8 @@
         "regen": 5,
         "scope": 5,
         "sap": 5,
-        "spread": 5,
-        "pollen": 5
+        "pollen": 5,
+        "spread": 5
       },
       "stats": {
         "might": 1,
@@ -184,12 +183,12 @@
       "weapons": [
         {
           "id": "scatter_rail",
-          "level": 1,
+          "level": 2,
           "evolved": false
         },
         {
           "id": "absolute_bloom",
-          "level": 8,
+          "level": 5,
           "evolved": false
         }
       ],
@@ -198,8 +197,8 @@
         "spread": 5,
         "magazine": 5,
         "pollen": 5,
-        "scope": 5,
-        "whet": 5
+        "whet": 5,
+        "scope": 5
       },
       "stats": {
         "might": 1.5,
@@ -223,6 +222,60 @@
       },
       "finals": 1,
       "absolutes": 1
+    },
+    {
+      "name": "late Butcher sword-wheel route",
+      "mode": "butcher",
+      "seed": 101,
+      "stage": 10,
+      "distance": 130,
+      "level": 51,
+      "weapons": [
+        {
+          "id": "sword_wheel",
+          "level": 8,
+          "evolved": false
+        },
+        {
+          "id": "lotus_bloom",
+          "level": 1,
+          "evolved": false
+        },
+        {
+          "id": "scatter_rail",
+          "level": 4,
+          "evolved": false
+        }
+      ],
+      "passives": {
+        "whet": 5,
+        "scope": 5,
+        "regen": 5,
+        "magazine": 5,
+        "pollen": 5
+      },
+      "stats": {
+        "might": 1.5,
+        "area": 1,
+        "cooldown": 1,
+        "barrierCd": 6,
+        "duration": 1,
+        "growth": 1,
+        "projSpeed": 1.25,
+        "pierce": 3,
+        "amount": 0,
+        "amountMul": 0.5,
+        "crit": 0,
+        "regen": 1.5,
+        "magnet": 70,
+        "speed": 135,
+        "armor": 1,
+        "maxHp": 130,
+        "greed": 1,
+        "critMul": 3
+      },
+      "finals": 3,
+      "absolutes": 0
     }
   ]
 }

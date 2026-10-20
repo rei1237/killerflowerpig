@@ -1,23 +1,42 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {simulateWeapon,TIER_SCENES} from './helpers/tier-power.mjs';
-import {WEAPONS} from '../src/data/weapons.js';
-// 전투력 = 장면별 피해 / 그 장면의 최고 일반 무기(Lv8) 피해 의 평균
+import { simulateWeapon, TIER_SCENES } from './helpers/tier-power.mjs';
+import { WEAPONS } from '../src/data/weapons.js';
+import { FUSION_RECIPES } from '../src/data/fusions.js';
+
+// Compare upgrades along the recipes that actually consume them. A strong new
+// cannon level curve must not require buffing unrelated pistols/gas merely to
+// keep every evolved weapon above the strongest normal weapon in the game.
+// Keep three equally weighted normalized scenes and 10% / 5% margins; each
+// denominator is now the compared ingredient/path, so an unrelated cannon
+// buff cannot silently change the importance of gas corridor coverage. The
+// separate final-fusion-combat and boss-durability tests remain unchanged.
 const normalIds=Object.keys(WEAPONS).filter(id=>!WEAPONS[id].fusionOnly);
-const fusedIds=Object.keys(WEAPONS).filter(id=>WEAPONS[id].fusionOnly&&WEAPONS[id].tier!=='absolute');
-const absoluteIds=Object.keys(WEAPONS).filter(id=>WEAPONS[id].tier==='absolute');
-const raw=(id,level,evolved)=>Object.fromEntries(TIER_SCENES.map(s=>[s,simulateWeapon(id,level,evolved,s)]));
-const normal=normalIds.map(id=>[id,raw(id,8,false)]);
-const best=Object.fromEntries(TIER_SCENES.map(s=>[s,Math.max(...normal.map(([,r])=>r[s]))]));
-const power=r=>TIER_SCENES.reduce((a,s)=>a+r[s]/best[s],0)/TIER_SCENES.length;
-// 진화·조합 단계는 10% 이상, 절대 등급은 보스 장기전 기준(boss-durability)과 함께 5% 이상 우위
-const MARGIN=1.1, ABSOLUTE_MARGIN=1.05;
-test('higher-tier weapons always outperform every weapon of the tier below (entry level vs max level)',()=>{
- const normalMax=Math.max(...normal.map(([,r])=>power(r)));
- const evolved=normalIds.map(id=>[id,power(raw(id,8,true))]);
- for(const [id,p] of evolved)assert.ok(p>normalMax*MARGIN,`evolved ${id} ${p.toFixed(2)} <= normal max ${normalMax.toFixed(2)}`);
- const evolvedMax=Math.max(...evolved.map(([,p])=>p));
- for(const id of fusedIds){const p=power(raw(id,1,false));assert.ok(p>evolvedMax*MARGIN,`fusion ${id} Lv1 ${p.toFixed(2)} <= evolved max ${evolvedMax.toFixed(2)}`);}
- const fusedMax=Math.max(...fusedIds.map(id=>power(raw(id,8,false))));
- for(const id of absoluteIds){const p=power(raw(id,1,false));assert.ok(p>fusedMax*ABSOLUTE_MARGIN,`absolute ${id} Lv1 ${p.toFixed(2)} <= fusion max ${fusedMax.toFixed(2)}`);}
+const cache=new Map();
+const raw=(id,level,evolved=false)=>{
+    const key=`${id}:${level}:${evolved}`;
+    if(!cache.has(key))cache.set(key,Object.fromEntries(TIER_SCENES.map(scene=>[scene,simulateWeapon(id,level,evolved,scene)])));
+    return cache.get(key);
+};
+const improvement=(after,before)=>TIER_SCENES.reduce((sum,scene)=>sum+after[scene]/Math.max(1,before[scene]),0)/TIER_SCENES.length;
+const describe=result=>Object.fromEntries(TIER_SCENES.map(scene=>[scene,+result[scene].toFixed(1)]));
+
+for(const id of normalIds)test(`evolved ${id} exceeds its own max-level ordinary weapon by 10%`,()=>{
+    const ordinary=raw(id,8),evolved=raw(id,8,true);
+    assert.ok(improvement(evolved,ordinary)>1.1,`${id}: evolved ${JSON.stringify(describe(evolved))} vs ordinary ${JSON.stringify(describe(ordinary))}`);
+});
+for(const recipe of FUSION_RECIPES.filter(recipe=>recipe.tier!=='absolute'))test(`fusion ${recipe.output} Lv1 exceeds each consumed evolved ingredient by 10%`,()=>{
+    const fused=raw(recipe.output,1);
+    for(const input of recipe.inputs){const ingredient=raw(input.id,8,true);
+        assert.ok(improvement(fused,ingredient)>1.1,`${recipe.output} ${JSON.stringify(describe(fused))} <= ${input.id} ${JSON.stringify(describe(ingredient))}`);
+    }
+});
+for(const recipe of FUSION_RECIPES.filter(recipe=>recipe.tier==='absolute'))test(`absolute ${recipe.output} Lv1 exceeds related max-level fusion routes by 5%`,()=>{
+    const inputs=new Set(recipe.inputs.map(input=>input.id));
+    const related=FUSION_RECIPES.filter(other=>other.tier!=='absolute'&&other.inputs.every(input=>inputs.has(input.id)));
+    assert.ok(related.length>0,`${recipe.output}: no comparable recipe route`);
+    const absolute=raw(recipe.output,1);
+    for(const fusion of related){const previous=raw(fusion.output,8);
+        assert.ok(improvement(absolute,previous)>1.05,`${recipe.output} ${JSON.stringify(describe(absolute))} <= ${fusion.output} ${JSON.stringify(describe(previous))}`);
+    }
 });

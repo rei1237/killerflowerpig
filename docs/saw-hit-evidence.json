@@ -1,0 +1,1164 @@
+{
+  "method": "Paired seeds, real Lv1 butcher saw firing and collision. Before is the same current runtime with only predictive aim, shared aiming/spawn muzzle and swept collision disabled through an isolated in-memory module hook. Targets use real runner movement, finite but deliberately high HP, normal dimensions, slow and knockback. One volley per trial; no sword equipped, pets, upgrades or DOT damage counted. This measures contact reliability, not kill balance or survival.",
+  "scenarios": "1 or3 runner enemies at180–410px, with horizontal and vertical initial bearings. Lateral uses supported straight-line enemy motion; approach uses normal pursuit; kiting uses normal pursuit plus full-speed diagonal player movement. Focus chooses the last enemy; auto chooses normally. Modern visible muzzle and actual camera ricochet remain enabled.",
+  "trials": 40,
+  "seconds": 2.4,
+  "before": {
+    "horizontal:lateral:1enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 11,
+      "hitRate": 0.275,
+      "hitWithin1_2s": 0.225,
+      "firstHitMeanSeconds": 0.7591,
+      "firstHitP90Seconds": 1.95,
+      "meanTargetsHit": 0.275,
+      "meanHitEvents": 0.3
+    },
+    "horizontal:lateral:1enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 11,
+      "hitRate": 0.275,
+      "hitWithin1_2s": 0.225,
+      "firstHitMeanSeconds": 0.7591,
+      "firstHitP90Seconds": 1.95,
+      "meanTargetsHit": 0.275,
+      "meanHitEvents": 0.3
+    },
+    "horizontal:approach:1enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.4971,
+      "firstHitP90Seconds": 0.6667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.25
+    },
+    "horizontal:approach:1enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.4971,
+      "firstHitP90Seconds": 0.6667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.25
+    },
+    "horizontal:kiting:1enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5071,
+      "firstHitP90Seconds": 0.6667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.475
+    },
+    "horizontal:kiting:1enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5071,
+      "firstHitP90Seconds": 0.6667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.475
+    },
+    "horizontal:lateral:3enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 13,
+      "hitRate": 0.325,
+      "hitWithin1_2s": 0.275,
+      "firstHitMeanSeconds": 0.7718,
+      "firstHitP90Seconds": 1.95,
+      "meanTargetsHit": 0.325,
+      "meanHitEvents": 0.375
+    },
+    "horizontal:lateral:3enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 16,
+      "hitRate": 0.4,
+      "hitWithin1_2s": 0.125,
+      "firstHitMeanSeconds": 1.5042,
+      "firstHitP90Seconds": 1.95,
+      "meanTargetsHit": 0.525,
+      "meanHitEvents": 0.525
+    },
+    "horizontal:approach:3enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5046,
+      "firstHitP90Seconds": 0.6667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.225
+    },
+    "horizontal:approach:3enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.6088,
+      "firstHitP90Seconds": 0.7833,
+      "meanTargetsHit": 1.05,
+      "meanHitEvents": 1.05
+    },
+    "horizontal:kiting:3enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5121,
+      "firstHitP90Seconds": 0.6667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.425
+    },
+    "horizontal:kiting:3enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5967,
+      "firstHitP90Seconds": 0.7667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1
+    },
+    "horizontal:lateral:1enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 11,
+      "hitRate": 0.275,
+      "hitWithin1_2s": 0.15,
+      "firstHitMeanSeconds": 1.3,
+      "firstHitP90Seconds": 2.3,
+      "meanTargetsHit": 0.275,
+      "meanHitEvents": 0.3
+    },
+    "horizontal:lateral:1enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 11,
+      "hitRate": 0.275,
+      "hitWithin1_2s": 0.15,
+      "firstHitMeanSeconds": 1.3,
+      "firstHitP90Seconds": 2.3,
+      "meanTargetsHit": 0.275,
+      "meanHitEvents": 0.3
+    },
+    "horizontal:approach:1enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.4975,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.225
+    },
+    "horizontal:approach:1enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.4975,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.225
+    },
+    "horizontal:kiting:1enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5625,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.15
+    },
+    "horizontal:kiting:1enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5625,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.15
+    },
+    "horizontal:lateral:3enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 11,
+      "hitRate": 0.275,
+      "hitWithin1_2s": 0.175,
+      "firstHitMeanSeconds": 1.1727,
+      "firstHitP90Seconds": 2.3,
+      "meanTargetsHit": 0.275,
+      "meanHitEvents": 0.3
+    },
+    "horizontal:lateral:3enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 11,
+      "hitRate": 0.275,
+      "hitWithin1_2s": 0.025,
+      "firstHitMeanSeconds": 1.9273,
+      "firstHitP90Seconds": 2.1,
+      "meanTargetsHit": 0.3,
+      "meanHitEvents": 0.3
+    },
+    "horizontal:approach:3enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5025,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.175
+    },
+    "horizontal:approach:3enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.615,
+      "firstHitP90Seconds": 0.8,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1
+    },
+    "horizontal:kiting:3enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 32,
+      "hitRate": 0.8,
+      "hitWithin1_2s": 0.8,
+      "firstHitMeanSeconds": 0.4875,
+      "firstHitP90Seconds": 0.6,
+      "meanTargetsHit": 0.8,
+      "meanHitEvents": 0.8
+    },
+    "horizontal:kiting:3enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.53,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1
+    },
+    "vertical:lateral:1enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 14,
+      "hitRate": 0.35,
+      "hitWithin1_2s": 0.35,
+      "firstHitMeanSeconds": 0.5702,
+      "firstHitP90Seconds": 0.7167,
+      "meanTargetsHit": 0.35,
+      "meanHitEvents": 0.45
+    },
+    "vertical:lateral:1enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 14,
+      "hitRate": 0.35,
+      "hitWithin1_2s": 0.35,
+      "firstHitMeanSeconds": 0.5702,
+      "firstHitP90Seconds": 0.7167,
+      "meanTargetsHit": 0.35,
+      "meanHitEvents": 0.45
+    },
+    "vertical:approach:1enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 16,
+      "hitRate": 0.4,
+      "hitWithin1_2s": 0.275,
+      "firstHitMeanSeconds": 0.8333,
+      "firstHitP90Seconds": 1.3833,
+      "meanTargetsHit": 0.4,
+      "meanHitEvents": 0.4
+    },
+    "vertical:approach:1enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 16,
+      "hitRate": 0.4,
+      "hitWithin1_2s": 0.275,
+      "firstHitMeanSeconds": 0.8333,
+      "firstHitP90Seconds": 1.3833,
+      "meanTargetsHit": 0.4,
+      "meanHitEvents": 0.4
+    },
+    "vertical:kiting:1enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 19,
+      "hitRate": 0.475,
+      "hitWithin1_2s": 0.475,
+      "firstHitMeanSeconds": 0.5632,
+      "firstHitP90Seconds": 0.7167,
+      "meanTargetsHit": 0.475,
+      "meanHitEvents": 0.625
+    },
+    "vertical:kiting:1enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 19,
+      "hitRate": 0.475,
+      "hitWithin1_2s": 0.475,
+      "firstHitMeanSeconds": 0.5632,
+      "firstHitP90Seconds": 0.7167,
+      "meanTargetsHit": 0.475,
+      "meanHitEvents": 0.625
+    },
+    "vertical:lateral:3enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 13,
+      "hitRate": 0.325,
+      "hitWithin1_2s": 0.325,
+      "firstHitMeanSeconds": 0.5628,
+      "firstHitP90Seconds": 0.7167,
+      "meanTargetsHit": 0.325,
+      "meanHitEvents": 0.425
+    },
+    "vertical:lateral:3enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 12,
+      "hitRate": 0.3,
+      "hitWithin1_2s": 0.05,
+      "firstHitMeanSeconds": 1.9625,
+      "firstHitP90Seconds": 2.3333,
+      "meanTargetsHit": 0.3,
+      "meanHitEvents": 0.3
+    },
+    "vertical:approach:3enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 23,
+      "hitRate": 0.575,
+      "hitWithin1_2s": 0.35,
+      "firstHitMeanSeconds": 1.0138,
+      "firstHitP90Seconds": 1.95,
+      "meanTargetsHit": 0.675,
+      "meanHitEvents": 0.675
+    },
+    "vertical:approach:3enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 12,
+      "hitRate": 0.3,
+      "hitWithin1_2s": 0,
+      "firstHitMeanSeconds": 1.2597,
+      "firstHitP90Seconds": 1.3,
+      "meanTargetsHit": 0.3,
+      "meanHitEvents": 0.3
+    },
+    "vertical:kiting:3enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 25,
+      "hitRate": 0.625,
+      "hitWithin1_2s": 0.5,
+      "firstHitMeanSeconds": 0.8193,
+      "firstHitP90Seconds": 1.9667,
+      "meanTargetsHit": 0.7,
+      "meanHitEvents": 0.85
+    },
+    "vertical:kiting:3enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 11,
+      "hitRate": 0.275,
+      "hitWithin1_2s": 0.175,
+      "firstHitMeanSeconds": 0.9621,
+      "firstHitP90Seconds": 1.7,
+      "meanTargetsHit": 0.35,
+      "meanHitEvents": 0.35
+    },
+    "vertical:lateral:1enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 16,
+      "hitRate": 0.4,
+      "hitWithin1_2s": 0.4,
+      "firstHitMeanSeconds": 0.6563,
+      "firstHitP90Seconds": 1.2,
+      "meanTargetsHit": 0.4,
+      "meanHitEvents": 0.575
+    },
+    "vertical:lateral:1enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 16,
+      "hitRate": 0.4,
+      "hitWithin1_2s": 0.4,
+      "firstHitMeanSeconds": 0.6563,
+      "firstHitP90Seconds": 1.2,
+      "meanTargetsHit": 0.4,
+      "meanHitEvents": 0.575
+    },
+    "vertical:approach:1enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 9,
+      "hitRate": 0.225,
+      "hitWithin1_2s": 0.1,
+      "firstHitMeanSeconds": 1.1222,
+      "firstHitP90Seconds": 1.5,
+      "meanTargetsHit": 0.225,
+      "meanHitEvents": 0.225
+    },
+    "vertical:approach:1enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 9,
+      "hitRate": 0.225,
+      "hitWithin1_2s": 0.1,
+      "firstHitMeanSeconds": 1.1222,
+      "firstHitP90Seconds": 1.5,
+      "meanTargetsHit": 0.225,
+      "meanHitEvents": 0.225
+    },
+    "vertical:kiting:1enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 15,
+      "hitRate": 0.375,
+      "hitWithin1_2s": 0.375,
+      "firstHitMeanSeconds": 0.58,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 0.375,
+      "meanHitEvents": 0.525
+    },
+    "vertical:kiting:1enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 15,
+      "hitRate": 0.375,
+      "hitWithin1_2s": 0.375,
+      "firstHitMeanSeconds": 0.58,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 0.375,
+      "meanHitEvents": 0.525
+    },
+    "vertical:lateral:3enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 14,
+      "hitRate": 0.35,
+      "hitWithin1_2s": 0.35,
+      "firstHitMeanSeconds": 0.6143,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 0.35,
+      "meanHitEvents": 0.5
+    },
+    "vertical:lateral:3enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 13,
+      "hitRate": 0.325,
+      "hitWithin1_2s": 0,
+      "firstHitMeanSeconds": 2.2846,
+      "firstHitP90Seconds": 2.4,
+      "meanTargetsHit": 0.325,
+      "meanHitEvents": 0.325
+    },
+    "vertical:approach:3enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 18,
+      "hitRate": 0.45,
+      "hitWithin1_2s": 0.15,
+      "firstHitMeanSeconds": 1.4278,
+      "firstHitP90Seconds": 2.2,
+      "meanTargetsHit": 0.55,
+      "meanHitEvents": 0.55
+    },
+    "vertical:approach:3enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 12,
+      "hitRate": 0.3,
+      "hitWithin1_2s": 0,
+      "firstHitMeanSeconds": 1.3083,
+      "firstHitP90Seconds": 1.3,
+      "meanTargetsHit": 0.3,
+      "meanHitEvents": 0.3
+    },
+    "vertical:kiting:3enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 11,
+      "hitRate": 0.275,
+      "hitWithin1_2s": 0.275,
+      "firstHitMeanSeconds": 0.5818,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 0.275,
+      "meanHitEvents": 0.325
+    },
+    "vertical:kiting:3enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 5,
+      "hitRate": 0.125,
+      "hitWithin1_2s": 0.125,
+      "firstHitMeanSeconds": 0.58,
+      "firstHitP90Seconds": 0.6,
+      "meanTargetsHit": 0.15,
+      "meanHitEvents": 0.15
+    }
+  },
+  "after": {
+    "horizontal:lateral:1enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.6163,
+      "firstHitP90Seconds": 0.8167,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.35
+    },
+    "horizontal:lateral:1enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.6163,
+      "firstHitP90Seconds": 0.8167,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.35
+    },
+    "horizontal:approach:1enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.4975,
+      "firstHitP90Seconds": 0.6667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.2
+    },
+    "horizontal:approach:1enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.4975,
+      "firstHitP90Seconds": 0.6667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.2
+    },
+    "horizontal:kiting:1enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5088,
+      "firstHitP90Seconds": 0.6667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.4
+    },
+    "horizontal:kiting:1enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5088,
+      "firstHitP90Seconds": 0.6667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.4
+    },
+    "horizontal:lateral:3enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.6225,
+      "firstHitP90Seconds": 0.8167,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.325
+    },
+    "horizontal:lateral:3enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.755,
+      "firstHitP90Seconds": 0.95,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.1
+    },
+    "horizontal:approach:3enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5029,
+      "firstHitP90Seconds": 0.6667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.2
+    },
+    "horizontal:approach:3enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.6112,
+      "firstHitP90Seconds": 0.7833,
+      "meanTargetsHit": 1.05,
+      "meanHitEvents": 1.05
+    },
+    "horizontal:kiting:3enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5121,
+      "firstHitP90Seconds": 0.6667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.35
+    },
+    "horizontal:kiting:3enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5983,
+      "firstHitP90Seconds": 0.7667,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1
+    },
+    "horizontal:lateral:1enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.675,
+      "firstHitP90Seconds": 0.9,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.475
+    },
+    "horizontal:lateral:1enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.675,
+      "firstHitP90Seconds": 0.9,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.475
+    },
+    "horizontal:approach:1enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.4975,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.175
+    },
+    "horizontal:approach:1enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.4975,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.175
+    },
+    "horizontal:kiting:1enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5625,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.125
+    },
+    "horizontal:kiting:1enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5625,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.125
+    },
+    "horizontal:lateral:3enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.685,
+      "firstHitP90Seconds": 0.9,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.475
+    },
+    "horizontal:lateral:3enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.805,
+      "firstHitP90Seconds": 1,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.2
+    },
+    "horizontal:approach:3enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5025,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.125
+    },
+    "horizontal:approach:3enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.6175,
+      "firstHitP90Seconds": 0.8,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1
+    },
+    "horizontal:kiting:3enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.4825,
+      "firstHitP90Seconds": 0.6,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1
+    },
+    "horizontal:kiting:3enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5325,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1
+    },
+    "vertical:lateral:1enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 39,
+      "hitRate": 0.975,
+      "hitWithin1_2s": 0.975,
+      "firstHitMeanSeconds": 0.6641,
+      "firstHitP90Seconds": 0.8667,
+      "meanTargetsHit": 0.975,
+      "meanHitEvents": 1.575
+    },
+    "vertical:lateral:1enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 39,
+      "hitRate": 0.975,
+      "hitWithin1_2s": 0.975,
+      "firstHitMeanSeconds": 0.6641,
+      "firstHitP90Seconds": 0.8667,
+      "meanTargetsHit": 0.975,
+      "meanHitEvents": 1.575
+    },
+    "vertical:approach:1enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5442,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.85
+    },
+    "vertical:approach:1enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5442,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.85
+    },
+    "vertical:kiting:1enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 36,
+      "hitRate": 0.9,
+      "hitWithin1_2s": 0.9,
+      "firstHitMeanSeconds": 0.5278,
+      "firstHitP90Seconds": 0.6833,
+      "meanTargetsHit": 0.9,
+      "meanHitEvents": 1.25
+    },
+    "vertical:kiting:1enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 36,
+      "hitRate": 0.9,
+      "hitWithin1_2s": 0.9,
+      "firstHitMeanSeconds": 0.5278,
+      "firstHitP90Seconds": 0.6833,
+      "meanTargetsHit": 0.9,
+      "meanHitEvents": 1.25
+    },
+    "vertical:lateral:3enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 39,
+      "hitRate": 0.975,
+      "hitWithin1_2s": 0.975,
+      "firstHitMeanSeconds": 0.6658,
+      "firstHitP90Seconds": 0.8667,
+      "meanTargetsHit": 0.975,
+      "meanHitEvents": 1.5
+    },
+    "vertical:lateral:3enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 16,
+      "hitRate": 0.4,
+      "hitWithin1_2s": 0.4,
+      "firstHitMeanSeconds": 0.6573,
+      "firstHitP90Seconds": 0.7333,
+      "meanTargetsHit": 0.4,
+      "meanHitEvents": 0.45
+    },
+    "vertical:approach:3enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5442,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1.3,
+      "meanHitEvents": 2.075
+    },
+    "vertical:approach:3enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 32,
+      "hitRate": 0.8,
+      "hitWithin1_2s": 0.8,
+      "firstHitMeanSeconds": 0.599,
+      "firstHitP90Seconds": 0.7167,
+      "meanTargetsHit": 0.975,
+      "meanHitEvents": 1.425
+    },
+    "vertical:kiting:3enemies:60Hz:auto": {
+      "trials": 40,
+      "volleysHit": 37,
+      "hitRate": 0.925,
+      "hitWithin1_2s": 0.9,
+      "firstHitMeanSeconds": 0.5671,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1.075,
+      "meanHitEvents": 1.375
+    },
+    "vertical:kiting:3enemies:60Hz:focused": {
+      "trials": 40,
+      "volleysHit": 30,
+      "hitRate": 0.75,
+      "hitWithin1_2s": 0.7,
+      "firstHitMeanSeconds": 0.6678,
+      "firstHitP90Seconds": 0.8,
+      "meanTargetsHit": 1.025,
+      "meanHitEvents": 1.05
+    },
+    "vertical:lateral:1enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 38,
+      "hitRate": 0.95,
+      "hitWithin1_2s": 0.95,
+      "firstHitMeanSeconds": 0.7053,
+      "firstHitP90Seconds": 0.9,
+      "meanTargetsHit": 0.95,
+      "meanHitEvents": 1.65
+    },
+    "vertical:lateral:1enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 38,
+      "hitRate": 0.95,
+      "hitWithin1_2s": 0.95,
+      "firstHitMeanSeconds": 0.7053,
+      "firstHitP90Seconds": 0.9,
+      "meanTargetsHit": 0.95,
+      "meanHitEvents": 1.65
+    },
+    "vertical:approach:1enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5375,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.9
+    },
+    "vertical:approach:1enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5375,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1,
+      "meanHitEvents": 1.9
+    },
+    "vertical:kiting:1enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 38,
+      "hitRate": 0.95,
+      "hitWithin1_2s": 0.95,
+      "firstHitMeanSeconds": 0.5368,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 0.95,
+      "meanHitEvents": 1.3
+    },
+    "vertical:kiting:1enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 38,
+      "hitRate": 0.95,
+      "hitWithin1_2s": 0.95,
+      "firstHitMeanSeconds": 0.5368,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 0.95,
+      "meanHitEvents": 1.3
+    },
+    "vertical:lateral:3enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 38,
+      "hitRate": 0.95,
+      "hitWithin1_2s": 0.95,
+      "firstHitMeanSeconds": 0.7132,
+      "firstHitP90Seconds": 0.9,
+      "meanTargetsHit": 0.95,
+      "meanHitEvents": 1.525
+    },
+    "vertical:lateral:3enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 19,
+      "hitRate": 0.475,
+      "hitWithin1_2s": 0.475,
+      "firstHitMeanSeconds": 0.7316,
+      "firstHitP90Seconds": 0.8,
+      "meanTargetsHit": 0.475,
+      "meanHitEvents": 0.525
+    },
+    "vertical:approach:3enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5375,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1.35,
+      "meanHitEvents": 2.2
+    },
+    "vertical:approach:3enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.64,
+      "firstHitP90Seconds": 0.8,
+      "meanTargetsHit": 1.35,
+      "meanHitEvents": 1.675
+    },
+    "vertical:kiting:3enemies:10Hz:auto": {
+      "trials": 40,
+      "volleysHit": 40,
+      "hitRate": 1,
+      "hitWithin1_2s": 1,
+      "firstHitMeanSeconds": 0.5375,
+      "firstHitP90Seconds": 0.7,
+      "meanTargetsHit": 1.125,
+      "meanHitEvents": 1.175
+    },
+    "vertical:kiting:3enemies:10Hz:focused": {
+      "trials": 40,
+      "volleysHit": 37,
+      "hitRate": 0.925,
+      "hitWithin1_2s": 0.7,
+      "firstHitMeanSeconds": 0.8459,
+      "firstHitP90Seconds": 1.7,
+      "meanTargetsHit": 1.2,
+      "meanHitEvents": 1.225
+    }
+  },
+  "changes": {
+    "horizontal:lateral:1enemies:60Hz:auto": {
+      "hitRateDelta": 0.725,
+      "firstHitMeanDeltaSeconds": -0.1428
+    },
+    "horizontal:lateral:1enemies:60Hz:focused": {
+      "hitRateDelta": 0.725,
+      "firstHitMeanDeltaSeconds": -0.1428
+    },
+    "horizontal:approach:1enemies:60Hz:auto": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0.0004
+    },
+    "horizontal:approach:1enemies:60Hz:focused": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0.0004
+    },
+    "horizontal:kiting:1enemies:60Hz:auto": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0.0017
+    },
+    "horizontal:kiting:1enemies:60Hz:focused": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0.0017
+    },
+    "horizontal:lateral:3enemies:60Hz:auto": {
+      "hitRateDelta": 0.675,
+      "firstHitMeanDeltaSeconds": -0.1493
+    },
+    "horizontal:lateral:3enemies:60Hz:focused": {
+      "hitRateDelta": 0.6,
+      "firstHitMeanDeltaSeconds": -0.7492
+    },
+    "horizontal:approach:3enemies:60Hz:auto": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": -0.0017
+    },
+    "horizontal:approach:3enemies:60Hz:focused": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0.0024
+    },
+    "horizontal:kiting:3enemies:60Hz:auto": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0
+    },
+    "horizontal:kiting:3enemies:60Hz:focused": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0.0016
+    },
+    "horizontal:lateral:1enemies:10Hz:auto": {
+      "hitRateDelta": 0.725,
+      "firstHitMeanDeltaSeconds": -0.625
+    },
+    "horizontal:lateral:1enemies:10Hz:focused": {
+      "hitRateDelta": 0.725,
+      "firstHitMeanDeltaSeconds": -0.625
+    },
+    "horizontal:approach:1enemies:10Hz:auto": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0
+    },
+    "horizontal:approach:1enemies:10Hz:focused": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0
+    },
+    "horizontal:kiting:1enemies:10Hz:auto": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0
+    },
+    "horizontal:kiting:1enemies:10Hz:focused": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0
+    },
+    "horizontal:lateral:3enemies:10Hz:auto": {
+      "hitRateDelta": 0.725,
+      "firstHitMeanDeltaSeconds": -0.4877
+    },
+    "horizontal:lateral:3enemies:10Hz:focused": {
+      "hitRateDelta": 0.725,
+      "firstHitMeanDeltaSeconds": -1.1223
+    },
+    "horizontal:approach:3enemies:10Hz:auto": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0
+    },
+    "horizontal:approach:3enemies:10Hz:focused": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0.0025
+    },
+    "horizontal:kiting:3enemies:10Hz:auto": {
+      "hitRateDelta": 0.2,
+      "firstHitMeanDeltaSeconds": -0.005
+    },
+    "horizontal:kiting:3enemies:10Hz:focused": {
+      "hitRateDelta": 0,
+      "firstHitMeanDeltaSeconds": 0.0025
+    },
+    "vertical:lateral:1enemies:60Hz:auto": {
+      "hitRateDelta": 0.625,
+      "firstHitMeanDeltaSeconds": 0.0939
+    },
+    "vertical:lateral:1enemies:60Hz:focused": {
+      "hitRateDelta": 0.625,
+      "firstHitMeanDeltaSeconds": 0.0939
+    },
+    "vertical:approach:1enemies:60Hz:auto": {
+      "hitRateDelta": 0.6,
+      "firstHitMeanDeltaSeconds": -0.2891
+    },
+    "vertical:approach:1enemies:60Hz:focused": {
+      "hitRateDelta": 0.6,
+      "firstHitMeanDeltaSeconds": -0.2891
+    },
+    "vertical:kiting:1enemies:60Hz:auto": {
+      "hitRateDelta": 0.425,
+      "firstHitMeanDeltaSeconds": -0.0354
+    },
+    "vertical:kiting:1enemies:60Hz:focused": {
+      "hitRateDelta": 0.425,
+      "firstHitMeanDeltaSeconds": -0.0354
+    },
+    "vertical:lateral:3enemies:60Hz:auto": {
+      "hitRateDelta": 0.65,
+      "firstHitMeanDeltaSeconds": 0.103
+    },
+    "vertical:lateral:3enemies:60Hz:focused": {
+      "hitRateDelta": 0.1,
+      "firstHitMeanDeltaSeconds": -1.3052
+    },
+    "vertical:approach:3enemies:60Hz:auto": {
+      "hitRateDelta": 0.425,
+      "firstHitMeanDeltaSeconds": -0.4696
+    },
+    "vertical:approach:3enemies:60Hz:focused": {
+      "hitRateDelta": 0.5,
+      "firstHitMeanDeltaSeconds": -0.6607
+    },
+    "vertical:kiting:3enemies:60Hz:auto": {
+      "hitRateDelta": 0.3,
+      "firstHitMeanDeltaSeconds": -0.2522
+    },
+    "vertical:kiting:3enemies:60Hz:focused": {
+      "hitRateDelta": 0.475,
+      "firstHitMeanDeltaSeconds": -0.2943
+    },
+    "vertical:lateral:1enemies:10Hz:auto": {
+      "hitRateDelta": 0.55,
+      "firstHitMeanDeltaSeconds": 0.049
+    },
+    "vertical:lateral:1enemies:10Hz:focused": {
+      "hitRateDelta": 0.55,
+      "firstHitMeanDeltaSeconds": 0.049
+    },
+    "vertical:approach:1enemies:10Hz:auto": {
+      "hitRateDelta": 0.775,
+      "firstHitMeanDeltaSeconds": -0.5847
+    },
+    "vertical:approach:1enemies:10Hz:focused": {
+      "hitRateDelta": 0.775,
+      "firstHitMeanDeltaSeconds": -0.5847
+    },
+    "vertical:kiting:1enemies:10Hz:auto": {
+      "hitRateDelta": 0.575,
+      "firstHitMeanDeltaSeconds": -0.0432
+    },
+    "vertical:kiting:1enemies:10Hz:focused": {
+      "hitRateDelta": 0.575,
+      "firstHitMeanDeltaSeconds": -0.0432
+    },
+    "vertical:lateral:3enemies:10Hz:auto": {
+      "hitRateDelta": 0.6,
+      "firstHitMeanDeltaSeconds": 0.0989
+    },
+    "vertical:lateral:3enemies:10Hz:focused": {
+      "hitRateDelta": 0.15,
+      "firstHitMeanDeltaSeconds": -1.553
+    },
+    "vertical:approach:3enemies:10Hz:auto": {
+      "hitRateDelta": 0.55,
+      "firstHitMeanDeltaSeconds": -0.8903
+    },
+    "vertical:approach:3enemies:10Hz:focused": {
+      "hitRateDelta": 0.7,
+      "firstHitMeanDeltaSeconds": -0.6683
+    },
+    "vertical:kiting:3enemies:10Hz:auto": {
+      "hitRateDelta": 0.725,
+      "firstHitMeanDeltaSeconds": -0.0443
+    },
+    "vertical:kiting:3enemies:10Hz:focused": {
+      "hitRateDelta": 0.8,
+      "firstHitMeanDeltaSeconds": 0.2659
+    }
+  }
+}

@@ -88,7 +88,10 @@ function renderDetail() {
     const startingItems = [...startingWeapons, t.start.passive];
     const startingResonance = startingWeapons.filter(id => t.family.weapons.includes(id)).length + Number(t.family.passives.includes(t.start.passive));
     combo.textContent = `시작 조합 · ${startingItems.map(id => `${itemName(id)} Lv1`).join(' + ')} (무기 ${startingWeapons.length}/6칸 · 공명 ${startingResonance}/6 · I단계 즉시 활성)`;
-    head.append(combo);
+    const role = document.createElement('p');
+    role.className = 'tech-combo';
+    role.textContent = `강점 · ${t.strength} / 약점 · ${t.weakness}`;
+    head.append(combo, role);
 
     const tiers = document.createElement('ol');
     tiers.className = 'tech-tiers';

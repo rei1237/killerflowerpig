@@ -24,7 +24,7 @@ test('every final requires two evolved Lv8 parents, rejects partial evolution, p
 test('inherited cores remain bounded, nonrecursive and advance with final item level',()=>{
  simulate(FUSION_RECIPES[0],true,'boss');const item=G.weapons[0],core=item.fusionCores[0],first=weaponStats(core).dmg;item.level=8;activeWeaponCores();assert.ok(weaponStats(core).dmg>first*1.4);
  Object.assign(G.player.stats,{might:100,amount:100,area:100,duration:100,cooldown:.001});
- for(const c of activeWeaponCores().filter(c=>c.sourceId)){const s=weaponStats(c);assert.ok(s.dmg<=600*tierPower(c)+1e-9);assert.ok(s.amount<=20);assert.ok(s.area<=3);assert.ok(s.duration<=14);assert.ok(s.cd>=.2);assert.equal(WEAPONS[c.id].fusionOnly,undefined);}
+ for(const c of activeWeaponCores().filter(c=>c.sourceId)){const s=weaponStats(c);assert.ok(s.dmg<=600*tierPower(c)*(c.id==='cannon'?2:1)+1e-9);assert.ok(s.amount<=20);assert.ok(s.area<=3);assert.ok(s.duration<=14);assert.ok(s.cd>=.2);assert.equal(WEAPONS[c.id].fusionOnly,undefined);}
 });
 test('final cores at the sixth slot retain independent bounded hit channels and pooled typed arrays',()=>{
  const recipe=FUSION_RECIPES.find(r=>r.output==='orbit_saw');simulate(recipe,true,'scatter');

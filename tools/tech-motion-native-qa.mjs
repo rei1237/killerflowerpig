@@ -9,9 +9,9 @@ globalThis.fetch=async url=>{if((fail==='metadata'||fail==='all') && String(url)
 const assets=await import('../src/core/assets.js'),{drawAppearance,appearanceAssets}=await import('../src/game/player-appearance.js');
 const {markPlayerAttack,attackFrame,playerAttackPose}=await import('../src/game/attack-animation.js');
 await assets.loadAssets();
-const families=[['fire','shotgun','gunline'],['dual','pistols','executioner'],['throw','molotov','plague'],['cannon','cannon','bloom'],['blade','saw','butcher'],['channel','thorns','bloom']];
+const families=[['fire','shotgun','gunline'],['dual','pistols','executioner'],['throw','molotov','plague'],['cannon','cannon','bloom'],['blade','saw','butcher'],['channel','thorns','bloom'],['sword','sword','butcher']];
 const outfits=[null,'dusk_lotus_cape','jade_lotus_guard'];
-const contact=createCanvas(1920,4300),g=contact.getContext('2d');g.fillStyle='#101722';g.fillRect(0,0,1920,4300);g.fillStyle='#f8deaa';g.font='27px sans-serif';g.fillText('FLOWERPIG / SIX ATTACK FAMILIES / THREE COSTUMES / 144 POSES',25,40);
+const contact=createCanvas(1920,5000),g=contact.getContext('2d');g.fillStyle='#101722';g.fillRect(0,0,1920,5000);g.fillStyle='#f8deaa';g.font='27px sans-serif';g.fillText('FLOWERPIG / SEVEN ATTACK FAMILIES / THREE COSTUMES / 168 POSES',25,40);
 let checks=0,peakBytes=0;
 for(let f=0;f<families.length;f++)for(let o=0;o<outfits.length;o++){
  const [family,id,tech]=families[f],outfit=outfits[o],key=assets.characterSheetKey(outfit,family,false);
@@ -21,8 +21,8 @@ for(let f=0;f<families.length;f++)for(let o=0;o<outfits.length;o++){
  for(let frame=0;frame<8;frame++){assert.equal(appearanceAssets({outfit},false,family).key,key);const p={shotAt:-Infinity,attackPose:null,readyFamily:family,flip:o===2};markPlayerAttack(p,10,{id},o===2?-1:1,{tech});drawAppearance(g,{x:120+frame*240,y,clock:10+times[frame],player:p,appearance:{outfit,ornament:'dawn_petal_halo'},scale:2.3,tech:null});checks++;}
  const info=assets.characterCacheInfo();peakBytes=Math.max(peakBytes,info.decodedBytes);assert.ok(info.bodies.length<=4);assert.ok(info.flashes.length<=2);
 }
-fs.writeFileSync('/workspace/shared/flowerpig-tech-motion-144poses.png',contact.toBuffer('image/png'));
-const folder='/workspace/shared/flowerpig-tech-motion-video';fs.mkdirSync(folder,{recursive:true});
+fs.writeFileSync('/workspace/shared/flowerpig-tech-role-168poses.png',contact.toBuffer('image/png'));
+const folder='/workspace/shared/flowerpig-tech-role-video';fs.mkdirSync(folder,{recursive:true});
 const movie=createCanvas(1200,520),m=movie.getContext('2d');let sequence=0;
 for(const [family,id,tech] of families){
  for(const outfit of outfits)assert.ok(await assets.requestCharacterSheet(assets.characterSheetKey(outfit,family,false)));
@@ -33,4 +33,4 @@ for(const [family,id,tech] of families){
   fs.writeFileSync(`${folder}/${String(sequence++).padStart(4,'0')}.png`,movie.toBuffer('image/png'));
  }
 }
-console.log(JSON.stringify({status:'PASS',families:6,outfits:3,poseChecks:checks,peakDecodedBytes:peakBytes,bodyCacheCap:4,flashCacheCap:2,videoFrames:sequence,captureFPS:50,seconds:sequence/50}));
+console.log(JSON.stringify({status:'PASS',families:7,outfits:3,poseChecks:checks,peakDecodedBytes:peakBytes,bodyCacheCap:4,flashCacheCap:2,videoFrames:sequence,captureFPS:50,seconds:sequence/50}));

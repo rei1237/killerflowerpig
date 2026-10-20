@@ -55,6 +55,7 @@ export function spawnEnemy(typeId, x, y, opts = {}) {
     e.flip = x > G.player.x;
     e.slow = 0; e.slowT = 0;
     e.bleed = 0; e.bleedT = 0;
+    e.motionVX = 0; e.motionVY = 0;
     e.shootT = def.ranged ? rand(0.5, def.ranged.cooldown) : 0;
     e.attackT = 0;
     e.rolePhase = 'approach'; e.roleT = 0; e.aimX = 0; e.aimY = 0;
@@ -84,7 +85,7 @@ export function hitEnemy(e, dmg, opts = {}) {
     const critChance = (opts.crit || 0) + G.player.stats.crit;
     if (critChance > 0 && Math.random() < critChance) { amount *= (G.player.stats.critMul || 3) + (opts.critBonus || 0); crit = true; }
     e.lastCrit = crit; e.lastExecute = false;
-    if (opts.execute && !e.elite && e.hp - amount < e.maxHp * opts.execute) { amount = e.hp; e.lastExecute = true; }
+    if (opts.executeChance > 0 && !e.elite && Math.random() < Math.min(0.08, opts.executeChance)) { amount = Math.max(amount, e.hp); e.lastExecute = true; }
     e.hp -= amount;
     e.flash = 0.08;
     if (amount > 0) recordFusionHit(e, opts.weapon, G.clock, opts.slow || 0);
@@ -311,12 +312,15 @@ export function updateEnemies(dt) {
             if (dist > recycleR && !e.elite) {
                 const pos = edgePosition(0.8);
                 e.x = pos.x; e.y = pos.y;
+                e.motionVX = 0; e.motionVY = 0;
                 continue;
             }
         }
         const sp = e.speed * slowMul;
+        const beforeX = e.x, beforeY = e.y;
         e.x += (mvx * sp + e.kx) * movementDt;
         e.y += (mvy * sp + e.ky) * movementDt;
+        e.motionVX = dt > 0 ? (e.x-beforeX)/dt : 0; e.motionVY = dt > 0 ? (e.y-beforeY)/dt : 0;
         const damp = Math.exp(-8 * dt);
         e.kx *= damp; e.ky *= damp;
         if (Math.abs(mvx) > 0.1) e.flip = mvx < 0;

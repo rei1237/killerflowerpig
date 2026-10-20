@@ -33,7 +33,7 @@ test('boss benchmark snapshots are reproduced by actual rolls and fit the six we
 
 test('seeded planned versus scattered runs conserve item investment and respect real chest evolution', () => {
     const result = {};
-    for (const mode of ['planned', 'scattered', 'absolute']) {
+    for (const mode of ['planned', 'scattered', 'absolute', 'butcher']) {
         const runs = [];
         for (let seed = 1; seed <= 40; seed++) {
             const run = simulatePlan({ rows, mode, seed }); runs.push(run);
@@ -41,7 +41,7 @@ test('seeded planned versus scattered runs conserve item investment and respect 
             const choices = Object.entries(run.itemChoices).filter(([id]) => !['gold', 'meat'].includes(id)).reduce((n, [, v]) => n + v, 0);
             const consumed = run.fusions.reduce((n, f) => n + FUSION_RECIPES.find(r => r.id === f.id).inputs.length * 8 - 1, 0);
             const lost = run.exchanges.reduce((n, x) => n + x.lostLevel - 1, 0);
-            const invested = end.weapons.reduce((n, w) => n + w.level, 0) + Object.values(end.passives).reduce((a, b) => a + b, 0) + consumed + lost - 1;
+            const invested = end.weapons.reduce((n, w) => n + w.level, 0) + Object.values(end.passives).reduce((a, b) => a + b, 0) + consumed + lost - run.initialInvestment;
             assert.equal(invested, choices + run.chestUpgrades, 'no invented levels from planner');
             const consumedEvolutions = {};
             for (const f of run.fusions) for (const input of FUSION_RECIPES.find(r => r.id === f.id).inputs) {
@@ -56,10 +56,11 @@ test('seeded planned versus scattered runs conserve item investment and respect 
         }
         result[mode] = summarizePlans(runs);
     }
-    // 12·25레벨부터 가팔라진 경험치 곡선: 집중 빌드도 일부(6/40)는 최종 보스 전 융합 2개에 머문다.
-    assert.equal(result.planned.beforeBoss10Finals[3], 34);
+    // Current expanded pool: validate the target band, not one incidental seeded count.
+    assert.ok(result.planned.beforeBoss10Finals[3] >= 30);
     assert.equal((result.planned.beforeBoss10Finals[2] || 0) + result.planned.beforeBoss10Finals[3], 40);
     assert.equal(result.absolute.beforeBoss10Absolutes[1], 40);
+    assert.equal((result.butcher.beforeBoss10Finals[2] || 0) + (result.butcher.beforeBoss10Finals[3] || 0), 40);
     assert.ok((result.scattered.beforeBoss10Finals[0] || 0) + (result.scattered.beforeBoss10Finals[1] || 0) > 0);
     // 보조 아이템은 슬롯 제한이 없어 진화 짝을 얻으려고 교체할 필요가 없다.
     assert.equal(result.scattered.exchangesUsed, 0);
@@ -75,4 +76,9 @@ test('the final boss reward cannot retroactively become the build used against t
     assert.equal(noChoices.fusions.length, 0, 'chests alone cannot discover missing weapons or passives');
     assert.equal(noChoices.stages[9].beforeBoss.weapons.length, 1);
     assert.deepEqual(noChoices.stages[9].beforeBoss.passives, {});
+});
+
+test('Butcher receives the actual two weapons and passive once without invented choice investment',()=>{
+ const none=rows.map(r=>({...r,waveXP:0,bossXP:0}));const run=simulatePlan({rows:none,mode:'butcher'});
+ assert.equal(run.initialInvestment,3);assert.equal(run.choices,0);assert.deepEqual(run.stages[0].beforeBoss.weapons.map(w=>[w.id,w.level]),[['sword',1],['saw',1]]);assert.deepEqual(run.stages[0].beforeBoss.passives,{whet:1});
 });

@@ -1,3 +1,4 @@
+import { purchasePetUpgrade } from './pet-upgrades.js';
 import { purchaseAccessory, equipAccessory } from './accessories.js';
 import { purchaseCosmetic, equipCosmetic } from './cosmetics.js';
 import { awardCharacterXP } from './character-progression.js';
@@ -143,4 +144,16 @@ export function buyCosmetic(itemId, expectedRevision = save.revision, requestId 
 }
 export function setCosmetic(slot, itemId, expectedRevision = save.revision, requestId = `cosmetic-equip:${slot}:${itemId}:${expectedRevision}`) {
     return finishCosmeticAction(equipCosmetic(save, { slot, itemId, expectedRevision, requestId }));
+}
+
+export function buyPetUpgrade(trackId, expectedLevel, expectedRevision = save.revision) {
+    const result = purchasePetUpgrade(save, { trackId, expectedLevel, expectedRevision, requestId: `pet-training:${trackId}:${expectedLevel}` });
+    if (!result.ok) { lastSaveError = result.code; return { ok: false, code: result.code }; }
+    if (!result.duplicate && !commit(result.state)) {
+        const code = lastSaveError;
+        if (code === 'REVISION_CONFLICT') { const fresh = adapter.refresh(); if (fresh.ok) Object.assign(save, fresh.state); }
+        return { ok: false, code };
+    }
+    lastSaveError = null;
+    return { ok: true, duplicate: !!result.duplicate };
 }

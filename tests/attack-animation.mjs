@@ -16,10 +16,10 @@ import { drawAppearance } from '../src/game/player-appearance.js';
 const expected = {
     fire: ['shotgun','rifle','scatter_rail','toxic_scatter','doom_barrage'], dual: ['pistols','burst_rail','guillotine'],
     throw: ['molotov','gas','plague_fire','plague_end'], cannon: ['cannon','lotus_bloom','ember_lance','absolute_bloom'],
-    blade: ['saw','venom_saw','orbit_saw','carnage_saw'], channel: ['thorns'],
+    blade: ['saw','venom_saw','orbit_saw','carnage_saw'], channel: ['thorns'], sword: ['sword','sword_wheel'],
 };
-test('all 21 weapons, every fusion core and each of five techs have an explicit semantically correct pose', () => {
-    assert.equal(Object.keys(WEAPONS).length, 21);
+test('all 23 weapons, every fusion core and each of five techs have an explicit semantically correct pose', () => {
+    assert.equal(Object.keys(WEAPONS).length, 23);
     for (const [family, weapons] of Object.entries(expected)) for (const id of weapons) {
         assert.equal(weaponPose({id}), family, id); assert.equal(WEAPON_POSES[id], family);
         assert.equal(weaponPose({id, sourceId:'absolute_bloom'}), family, 'inherited cores retain their real attack type');
@@ -87,12 +87,13 @@ test('real runtime attack emissions select correct body families without delayin
     const old=save.upgrades.lotus_gun;
     try {
         for (const [family, ids] of Object.entries(expected)) for (const id of ids) {
-            const w=setup(id); updateWeapons(.016);
+            const w=setup(id); if(family==='sword'){const e=G.enemies.spawn();Object.assign(e,{id:777,x:60,y:0,radius:10,hp:100000,maxHp:100000,alive:true,elite:true,mass:1,kx:0,ky:0,def:{}});} updateWeapons(.016);
             if (family==='dual') { if (!WEAPONS[id].fusionOnly) assert.equal(G.shots.count,0,'burst scheduling remains unchanged'); G.clock+=.016;updateWeapons(.016); }
             assert.equal(G.player.attackPose.family,family,id); assert.equal(G.player.attackPose.weapon,id);
             assert.equal(G.player.attackPose.at,G.clock,id);
             if (family==='cannon') assert.ok(G.beams.count>0,id);
             else if(family==='channel') assert.ok(w.activeT>0,id);
+            else if(family==='sword') assert.ok(G.player.swordSwing,id);
             else assert.ok(G.shots.count>0,id);
             assert.equal(G.player.x,0); assert.equal(G.player.y,0); assert.equal(G.player.radius,10);
         }
@@ -139,7 +140,7 @@ test('all new family/outfit keys use full fixed-size sheets, with only 4 bodies 
     clearCharacterCache(); const seen=[];
     globalThis.Image=class{constructor(){this.width=3072;this.height=256;}set src(value){seen.push(value);queueMicrotask(()=>this.onload?.());}removeAttribute(){}};
     globalThis.document={createElement:()=>({getContext:()=>canvasContext()})};
-    assert.equal(Object.keys(CHARACTER_SHEETS).length,21);
+    assert.equal(Object.keys(CHARACTER_SHEETS).length,39);
     for(const outfit of [null,'dusk_lotus_cape','jade_lotus_guard']) for(const family of ATTACK_FAMILIES){
         const key=characterSheetKey(outfit,family);
         const [a,b]=await Promise.all([requestCharacterSheet(key),requestCharacterSheet(key)]);
@@ -162,7 +163,7 @@ test('throw never selects a legendary gun sheet; unavailable families show only 
     assert.deepEqual(p,before);
     delete images.player_throw; const fallback=canvasContext();
     drawAppearance(fallback,{player:p,clock:1.02,lotusGun:true,appearance:{},tech:null,reducedMotion:true});
-    draw=fallback.calls.find(c=>c[0]==='drawImage');assert.equal(draw[1].id,'fallback');assert.equal(draw[2],0,'fallback never fires the wrong prop');
+    draw=fallback.calls.find(c=>c[0]==='drawImage');assert.equal(draw,undefined,'missing non-gun art never substitutes a held rifle');assert.ok(fallback.calls.some(c=>c[0]==='ellipse'),'failure fallback remains a visible neutral pig');
 });
 
 test('off-tech active sheets survive renderer warmup and all cache resources remain bounded', async () => {

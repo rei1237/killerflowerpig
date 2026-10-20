@@ -21,15 +21,15 @@ export const WEAPONS = {
     },
     pistols: {
         name: '쌍권총', icon: '🔫', color: '#ffd27a',
-        desc: '치명타 특화 초고속 연사. 양손으로 가장 가까운 적에게 탄을 쏟아붓고, 치명타는 3배 피해 (레벨업으로 최대 4배).',
-        base: { dmg: 4, cd: 0.3, amount: 1, speed: 720, duration: 0.9, pierce: 1, area: 1, crit: 0.1, critBonus: 0 },
+        desc: '치명타 특화 초고속 연사. 양손으로 가장 가까운 적에게 탄을 쏟아붓고, 기본 치명타 확률 15%, 피해 3.25배 (레벨업으로 최대 4.25배).',
+        base: { dmg: 4, cd: 0.3, amount: 1, speed: 720, duration: 0.9, pierce: 1, area: 1, crit: 0.15, critBonus: 0.25 },
         levels: [
             { amount: 1, t: '탄 +1' }, { critBonus: 0.5, t: '치명타 피해 +50%' }, { amount: 1, dmg: 2, t: '탄 +1, 피해 +2' },
             { crit: 0.1, t: '치명타 확률 +10%' }, { cd: -0.15, crit: 0.1, t: '연사 +15%, 치명타 확률 +10%' }, { dmg: 3, critBonus: 0.5, t: '피해 +3, 치명타 피해 +50%' },
             { amount: 1, crit: 0.1, cd: -0.1, t: '탄 +1, 치명타 확률 +10%, 연사 +10%' },
         ],
-        evolve: { with: 'focus', name: '처형인의 쌍권총', icon: '☠️', desc: '연사 +40%, 피해 +30%, 치명타 확률 +30%, 치명타 피해 +80%, 관통 +2. 체력 15% 이하의 적은 즉시 처형.',
-            mods: { dmg: 1.3, crit: 0.3, critBonus: 0.8, execute: 0.15, cd: 0.6, pierce: 2 } },
+        evolve: { with: 'focus', name: '처형인의 쌍권총', icon: '☠️', desc: '연사 +40%, 피해 +30%, 치명타 확률 +30%, 치명타 피해 +80%, 관통 +2. 처형자 테크에서는 일반 적 확률 처형과 전용 치명타 보너스.',
+            mods: { dmg: 1.3, crit: 0.3, critBonus: 0.8, cd: 0.6, pierce: 2 } },
     },
     thorns: {
         name: '연꽃 가시', icon: '🌸', color: '#ff4fa0',
@@ -69,15 +69,19 @@ export const WEAPONS = {
     },
     cannon: {
         name: '꽃잎포', icon: '🌺', color: '#ff69b4',
-        desc: '진행 방향으로 꽃잎 광선을 일직선 발사.',
-        base: { dmg: 28, cd: 4.6, amount: 1, speed: 1, duration: 0.35, area: 1, length: 520, width: 38 },
+        desc: '즉시 명중하는 관통 광선. 레벨마다 재발사가 빨라지고 광선이 1개씩 늘어나 Lv.8에 8방향을 덮는다.',
+        base: { dmg: 28, cd: 2.6, amount: 1, speed: 1, duration: 0.35, area: 1, length: 520, width: 38 },
         levels: [
-            { dmg: 12, t: '피해 +12' }, { area: 0.25, t: '굵기 +25%' }, { cd: -0.12, t: '재사용 -12%' },
-            { amount: 1, t: '반대 방향 동시 발사' }, { dmg: 15, t: '피해 +15' }, { cd: -0.15, t: '재사용 -15%' },
-            { dmg: 20, area: 0.2, t: '피해 +20, 굵기 +20%' },
+            { dmg: 12, amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%, 피해 +12' },
+            { area: 0.25, amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%, 굵기 +25%' },
+            { amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%' },
+            { amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%' },
+            { dmg: 15, amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%, 피해 +15' },
+            { amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%' },
+            { dmg: 20, area: 0.2, amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%, 피해 +20, 굵기 +20%' },
         ],
-        evolve: { with: 'pollen', name: '개화 꽃잎포', icon: '💮', desc: '네 방향으로 피어나는 진화 꽃잎 광선. 절대 만개의 재료가 된다.',
-            mods: { dmg: 1.5, amount: 2, area: 1.25 } },
+        evolve: { with: 'pollen', name: '개화 꽃잎포', icon: '💮', desc: '재발사 간격 15% 단축, 최대 16방향 진화 광선. 추가 발수는 상한에서 피해로 전환. 절대 만개의 재료가 된다.',
+            mods: { dmg: 1.5, amount: 2, area: 1.25, cd: 0.85 } },
     },
     gas: {
         name: '독가스 수류탄', icon: '☣️', color: '#7dff4a',
@@ -103,6 +107,18 @@ export const WEAPONS = {
         evolve: { with: 'whet', name: '척추 분쇄기', icon: '🦴', desc: '척추뼈를 이어 만든 거대 톱날. 출혈을 일으킨다.',
             mods: { dmg: 1.8, amount: 2, area: 1.35, bleed: 3 } },
     },
+    sword: {
+        name: '도살검', icon: '🗡️', color: '#ffd8df',
+        desc: '가까운 적을 향해 넓게 베는 근접 무기. 독립된 무기 슬롯을 사용하며 피해·공격 간격·베기 범위가 성장한다.',
+        base: { dmg: 24, cd: 0.95, amount: 1, speed: 1, duration: 0.18, area: 1, radius: 100 },
+        levels: [
+            { dmg: 6, t: '베기 피해 +6' }, { cd: -0.08, t: '공격 간격 -8%' }, { area: 0.15, t: '베기 범위 +15%' },
+            { dmg: 8, t: '베기 피해 +8' }, { cd: -0.08, t: '공격 간격 -8%' }, { dmg: 10, t: '베기 피해 +10' },
+            { area: 0.15, cd: -0.08, t: '베기 범위 +15%, 공격 간격 -8%' },
+        ],
+        evolve: { with: 'whet', name: '핏빛 연꽃검', icon: '⚔️', desc: '피해와 범위가 커지고 더 빠르게 베며 출혈을 남긴다. 척추 분쇄기와 학살자의 검륜으로 조합할 수 있다.',
+            mods: { dmg: 1.55, cd: 0.82, area: 1.25, bleed: 4 } },
+    },
     ...FUSED_WEAPONS,
 };
 
@@ -127,15 +143,19 @@ export const MAGAZINE_BONUS = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
 export const STARTING_WEAPON = 'shotgun';
 
 // 등급 역전 방지 보정 (피해 배율).
-// 규칙: 진화 무기 > 모든 일반 무기 Lv8, 조합 무기 Lv1 > 모든 진화 무기, 절대 등급 Lv1 > 모든 조합 무기 Lv8.
-// tests/tier-order.mjs 가 실제 전투 시뮬레이션으로 이 순서를 검증한다.
+// 규칙: 진화는 해당 일반 무기 Lv8보다, 조합 Lv1은 해당 진화 재료보다,
+// 절대 Lv1은 같은 재료 계통의 조합 Lv8보다 강해진다. 서로 다른 역할의 모든 무기를 한 줄로 비교하지 않는다.
+// tests/tier-order.mjs 가 실제 전투 시뮬레이션으로 각 성장 경로를 검증한다.
 export const TIER_POWER = Object.freeze({
     evolved: Object.freeze({ thorns: 2.4, cannon: 1.6, gas: 1.75, saw: 1.3 }),
-    fused: Object.freeze({ lotus_bloom: 2.4, venom_saw: 2.25, orbit_saw: 2.25, toxic_scatter: 1.15, plague_fire: 0.85, absolute_bloom: 1.1,
-        doom_barrage: 1.2, plague_end: 0.95, guillotine: 1.45, carnage_saw: 2.1 }),
+    fused: Object.freeze({ lotus_bloom: 2.4, venom_saw: 2.25, orbit_saw: 2.25, sword_wheel: 1.65, toxic_scatter: 1.15, plague_fire: 0.85, absolute_bloom: 1.4,
+        doom_barrage: 1.2, plague_end: 1.0, guillotine: 1.45, carnage_saw: 2.1 }),
 });
 // 조합 무기가 계승한 코어(sourceId)는 조합 무기의 보정을 함께 받는다.
 export function tierPower(w) {
+    // A retained cannon is the same evolved core in every fusion; owner-specific
+    // old compensation must not invert final vs absolute power.
+    if (w.sourceId && w.id === 'cannon') return TIER_POWER.evolved.cannon;
     if (w.sourceId) return TIER_POWER.fused[w.sourceId] || 1;
     if (WEAPONS[w.id]?.fusionOnly) return TIER_POWER.fused[w.id] || 1;
     return w.evolved ? (TIER_POWER.evolved[w.id] || 1) : 1;
