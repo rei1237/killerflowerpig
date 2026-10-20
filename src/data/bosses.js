@@ -28,7 +28,7 @@ export const BOSSES = {
         signature: 'toxicTide', signatureHint: '독 웅덩이 사이 비어 있는 출구로 빠져나가세요.', phaseSummons: true,
         phases: [['toxicTide'], ['toxicTide', 'summon', 'ring'], ['toxicTide', 'summon', 'aimed']] },
     7: { name: '어쌔신 퀸', title: '뒤에서 날카로운 기척이...', sheet: 'boss2', tint: 'shadow', scale: 0.6, hp: 24800, speed: 78, dmg: 28,
-        signature: 'crosscut', signatureHint: '첫 칼날을 피한 뒤 교차하는 두 번째 선도 확인하세요.',
+        signature: 'crosscut', signatureHint: '교차 칼날 뒤 멈추지 마세요. 분홍 추격 칼날과 그림자 단검이 따라옵니다.',
         phases: [['crosscut'], ['crosscut', 'aimed'], ['crosscut', 'ring', 'aimed']] },
     8: { name: '사이코틱 킹', title: '정신이 흔들린다...', sheet: 'boss2', tint: 'hallu', scale: 0.64, hp: 32550, speed: 58, dmg: 30, hallucinate: true,
         signature: 'echo', signatureHint: '환영의 탄막 틈으로 이동하고 반대쪽 메아리를 대비하세요.',

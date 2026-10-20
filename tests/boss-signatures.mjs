@@ -187,3 +187,14 @@ test('every boss mixes a bullet pattern after mutation and its signature escalat
   assert.ok(threat(2)>threat(0),`stage ${stage}: frenzy signature is harder than the opening`);
  }
 });
+
+test('assassin pursuit slashes re-aim at the moved player and every cut throws a shadow-dagger fan',()=>{
+ const b=reset(7);begin(b);
+ updateHazards(1.051);assert.equal(shots().length,3,'first cut throws 3 daggers');
+ G.player.x=520;G.player.y=-140;
+ updateHazards(.8);assert.equal(shots().length,6,'second cut throws 3 more');
+ const pursuit=hazards().find(h=>h.kind==='tline'&&h.color==='#ff6fd0');assert.ok(pursuit,'pursuit slash appears after the locked cuts');
+ assert.ok(lineContains(pursuit,520,-140),'pursuit line passes through the player position at that moment');
+ G.player.iframes=0;updateHazards(.61);assert.ok(G.player.hp<10000,'standing still under the pursuit slash is punished');
+ const rage=reset(7,2);begin(rage);assert.equal(hazards().length,4,'rage phase locks four cuts');
+});

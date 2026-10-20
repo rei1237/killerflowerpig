@@ -418,23 +418,45 @@ export class Boss {
         return this.signatureTask(1.55 + (waves - 1) * 1.0, 2.5, 1.6);
     }
 
-    // 7: two locked crossing slashes. The queen relocates to the advertised
-    // lane's beginning, leaving two large safe quadrants throughout.
+    // 7: locked crossing slashes, then pursuit slashes re-aimed at the
+    // player's current position. Every cut ends with a shadow-dagger fan from
+    // the queen's landing point, so standing still in a safe quadrant fails.
     task_crosscut() {
         setBossMotion(this, 'windup');
         const x = G.player.x, y = G.player.y, angle = this.signatureCount % 2 ? Math.PI / 4 : -Math.PI / 4;
-        // 변이: 세 번째 칼날. 광폭화: 칼날 간격이 짧아진다.
-        const cuts = this.phase ? 3 : 2, gapT = this.phase === 2 ? .6 : .8;
+        // 기본: 교차 2줄 + 추격 1회 / 변이: 3줄 + 추격 1회 / 광폭화: 4줄(간격 단축) + 추격 2회
+        const cuts = [2, 3, 4][this.phase] || 2, gapT = this.phase === 2 ? .55 : .8;
+        const pursuits = this.phase === 2 ? 2 : 1, daggers = [3, 3, 5][this.phase] || 3;
+        const len = 480, width = 50, pursuitWarn = .6;
+        const strike = h => {
+            this.x = h.x; this.y = h.y; this.alpha = 1; this.flip = Math.cos(h.angle) < 0;
+            this.lineHit(h); audio.sfx('zap');
+            // 그림자 단검: 착지 지점에서 연이를 향한 부채꼴
+            const tx = G.player.x - h.x, ty = G.player.y - 18 - h.y, aim = Math.atan2(ty, tx);
+            for (let k = 0; k < daggers; k++) {
+                const a = aim + (daggers > 1 ? (k / (daggers - 1) - .5) * .5 : 0);
+                fireEnemyShot(h.x, h.y, Math.cos(a), Math.sin(a), 230, this.dmg * .45, 'boss', 6);
+            }
+        };
+        const pursue = left => {
+            // 추격 베기: 현재 연이 위치를 지나가는 새 칼날 (예고 0.6초)
+            const a = (this.signatureCount + left) % 2 ? Math.PI / 4 : -Math.PI / 4;
+            const px = G.player.x, py = G.player.y;
+            this.warn('tline', px - Math.cos(a) * len / 2, py - Math.sin(a) * len / 2, { angle: a, len, width, delay: pursuitWarn, color: '#ff6fd0' }, h => {
+                strike(h);
+                if (left > 1) pursue(left - 1);
+            });
+        };
         for (let i = 0; i < cuts; i++) {
-            const a = angle + i * Math.PI / 2, len = 440;
+            const a = angle + i * Math.PI / 2 + (i >= 2 ? Math.PI / 4 : 0);
             const sx = x - Math.cos(a) * len / 2, sy = y - Math.sin(a) * len / 2;
-            this.warn('tline', sx, sy, { angle: a, len, width: 46, delay: 1.05 + i * gapT, color: '#c68cff' }, h => {
-                this.x = h.x; this.y = h.y; this.alpha = 1; this.flip = Math.cos(h.angle) < 0;
-                this.lineHit(h); audio.sfx('zap');
+            this.warn('tline', sx, sy, { angle: a, len, width, delay: 1.05 + i * gapT, color: '#c68cff' }, h => {
+                strike(h);
+                if (i === cuts - 1) pursue(pursuits);
             });
         }
         audio.sfx('warn');
-        return this.signatureTask(1.4 + (cuts - 1) * gapT, 2.2, 1.4);
+        return this.signatureTask(1.05 + (cuts - 1) * gapT + pursuits * pursuitWarn + .4, 2.0, 1.3);
     }
 
     // 8: two spatially separate echoes, each with a broad missing wedge.
