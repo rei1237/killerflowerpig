@@ -464,7 +464,7 @@ function flushCannonVolleys() {
         const left = images.playerFire ? firingMuzzle(p, G.clock, -1) : right;
         const center = images.playerFire ? firingMuzzle(p, G.clock, 0) : right;
         const volley = chooseCannonVolley({ targets, focus, count, length, width, rayProfiles,
-            fallbackAngle: Math.atan2(p.facingY, p.facingX),
+            fallbackAngle: Math.atan2(p.facingY, p.facingX), straight: true,
             muzzleAt: dx => Math.abs(dx) <= .08 ? center : dx < 0 ? left : right });
         const damageTo = target => {
             const contributions = new Map();
@@ -479,7 +479,7 @@ function flushCannonVolleys() {
                     const impact = (volley.focused ? s.focusBeamDamage : s.beamDamage) * ratio;
                     if (old) { old.damage += impact; old.crit = Math.max(old.crit, s.crit); }
                     else contributions.set(owner, { damage: impact, crit: s.crit });
-                    break;
+                    if (!volley.straight) break; // 일직선: 겹친 광선은 모두 적중으로 합산
                 }
             }
             return contributions;

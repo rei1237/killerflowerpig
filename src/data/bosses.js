@@ -49,6 +49,6 @@ export const PHASE_THRESHOLDS = [0.6, 0.25];
 export const BOSS_HP_MULTIPLIER = 7;
 // 무기 진화 단계에 맞춘 4스테이지 이후 보스 체력 추가 배율 (진화 → 조합 → 절대 무기 화력 증가에 비례).
 // 1~3스테이지는 1배(기존 유지). 10스테이지 최종 보스는 기본 체력 자체도 크게 높다.
-export const BOSS_EVOLUTION_HP = Object.freeze({ 4: 1.0, 5: 1.15, 6: 1.4, 7: 1.5, 8: 1.7, 9: 1.9, 10: 1.2 });
+export const BOSS_EVOLUTION_HP = Object.freeze({ 4: 1.3, 5: 1.6, 6: 1.95, 7: 2.15, 8: 2.45, 9: 2.75, 10: 1.9 });
 // 실제 전투 체력 (도감 표시와 보스 생성이 같은 값을 쓰도록)
 export const bossMaxHp = stage => (BOSSES[stage]?.hp || 0) * BOSS_HP_MULTIPLIER * (BOSS_EVOLUTION_HP[stage] || 1);

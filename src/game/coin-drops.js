@@ -25,7 +25,9 @@ else entropy[0] = Date.now() >>> 0;
 // Dedicated stream: coin rolls never consume combat, supply or cosmetic Math.random draws.
 export const coinRandom = { next: createCoinRandom(entropy[0]) };
 // 보물 상자: 아주 드물게, 어떤 적에게서든 떨어질 수 있다 (엘리트 > 챔피언 > 일반). 필드에는 한 번에 1개만.
-export const TREASURE_DROPS = Object.freeze({ ordinary: .0005, champion: .012, elite: .08, maxOnField: 1, bonusPassiveChance: .25 });
+export const TREASURE_DROPS = Object.freeze({ ordinary: .0005, champion: .012, elite: .08, maxOnField: 1, bonusPassiveChance: .25,
+    // 열면 금화는 반드시 나오고, 장비 강화는 드물게만 나온다 (보스 회수 물자보다 후하지 않게).
+    goldBase: 8, goldPerStage: 2, itemChance: .12 });
 // 전용 난수 스트림: 전투·코인·보급 난수를 소비하지 않는다.
 export const treasureRandom = { next: createCoinRandom((entropy[0] ^ 0x51ed270b) >>> 0) };
 export function treasureDropped(kind, random = treasureRandom.next) {

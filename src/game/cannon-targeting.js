@@ -52,9 +52,9 @@ export function cannonBeamHits(target, ray) {
     return along <= ray.length && across < ray.width / 2 + radius;
 }
 
-function writeRays(rays, base, count, length, width, muzzleAt, profiles) {
+function writeRays(rays, base, count, length, width, muzzleAt, profiles, spread = TAU / count) {
     for (let i = 0; i < count; i++) {
-        const angle = base + i * TAU / count, dx = Math.cos(angle), dy = Math.sin(angle);
+        const angle = base + i * spread, dx = Math.cos(angle), dy = Math.sin(angle);
         const muzzle = muzzleAt(dx);
         const ray = rays[i];
         ray.x = muzzle.x; ray.y = muzzle.y; ray.angle = angle;
@@ -70,7 +70,7 @@ function writeRays(rays, base, count, length, width, muzzleAt, profiles) {
 // converges the entire volley exclusively on that target. Otherwise maximize
 // distinct targets across the whole volley, with a stable facing-angle tie.
 export function chooseCannonVolley({ targets = [], focus = null, count = 1, length = 520, width = 38,
-    fallbackAngle = 0, muzzleAt = () => ({ x: 0, y: 0 }), rayProfiles = null } = {}) {
+    fallbackAngle = 0, muzzleAt = () => ({ x: 0, y: 0 }), rayProfiles = null, straight = false } = {}) {
     count = Math.max(1, Math.min(CANNON_RAY_LIMIT, Math.floor(finite(count))));
     length = Math.max(0, finite(length)); width = Math.max(0, finite(width));
     // A profile is the exact union of at most twelve same-axis source rectangles.
@@ -113,6 +113,13 @@ export function chooseCannonVolley({ targets = [], focus = null, count = 1, leng
                 focusEndX: ray.x + dx * along, focusEndY: ray.y + dy * along,
                 damageMultiplier: cannonFocusMultiplier(count), inspected, candidateCount: angles.length };
         }
+    }
+    // 일직선 모드: 자동 다중 조준 없이 모든 광선이 한 방향(조준 방향) 한 줄로만 나간다.
+    if (straight) {
+        const rays = Array.from({ length: count }, () => ({ x: 0, y: 0, angle: 0, dx: 0, dy: 0, length, width }));
+        writeRays(rays, finite(fallbackAngle), count, length, width, muzzleAt, profiles, 0);
+        return { rays, targets: live.filter(target => rays.some(ray => cannonBeamHits(target, ray))),
+            focusHit: false, focused: false, straight: true, damageMultiplier: 1, inspected, candidateCount: 1 };
     }
     const candidates = [reference];
     const period = symmetric ? TAU / count : TAU, equivalent = new Map();

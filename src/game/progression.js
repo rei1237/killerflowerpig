@@ -2,6 +2,7 @@ import { FUSION_RECIPES } from '../data/fusions.js';
 import { upgradeLevel } from '../core/save.js';
 import { bossRewardTier } from '../data/boss-rewards.js';
 import { supplyState } from './supply-drops.js';
+import { TREASURE_DROPS } from './coin-drops.js';
 // 경험치/레벨업, 레벨업 카드 생성, 무기·패시브 적용, 진화, 상자 보상
 import { G, emit } from './state.js';
 import { WEAPONS, PASSIVES, MAX_WEAPONS, WEAPON_MAX_LEVEL, PASSIVE_MAX_LEVEL } from '../data/weapons.js';
@@ -271,9 +272,13 @@ export function rollChest(count, random = Math.random) {
     return rewards;
 }
 
-// 보물 상자: 강화 2회(진화 우선) + 확률로 새 보조 아이템 1개. 아주 드물게 얻는 보너스 보상.
-export function rollTreasure(random = Math.random, bonusChance = 0.25) {
-    const rewards = rollChest(2, random);
+// 보물 상자: 금화는 반드시, 장비 강화(진화 우선) 1회는 드물게, 그 안에서 다시 확률로 새 보조 아이템 1개.
+export function rollTreasure(random = Math.random, bonusChance = TREASURE_DROPS.bonusPassiveChance, itemChance = TREASURE_DROPS.itemChance) {
+    const coins = TREASURE_DROPS.goldBase + TREASURE_DROPS.goldPerStage * Math.max(1, G.stage || 1);
+    G.gold += coins;
+    const rewards = [{ kind: 'gold', id: 'gold', name: '보물 상자 금화', icon: '🪙', desc: `금화 +${coins}`, amount: coins }];
+    if (random() >= itemChance) return rewards;
+    rewards.push(...rollChest(1, random));
     if (random() < bonusChance) {
         const fresh = candidates().filter(c => c.kind === 'passive' && c.isNew);
         if (fresh.length) {

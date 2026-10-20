@@ -66,32 +66,60 @@ function predict(w) {
     const s = weaponStats(w), p = G.player;
     return chooseCannonVolley({ targets: G.enemies.items.slice(0, G.enemies.count), count: s.amount,
         length: s.length * Math.sqrt(s.area), width: s.width * s.area,
-        fallbackAngle: Math.atan2(p.facingY, p.facingX), muzzleAt: dx => firingMuzzle(p, G.clock, dx) });
+        fallbackAngle: Math.atan2(p.facingY, p.facingX), straight: true, muzzleAt: dx => firingMuzzle(p, G.clock, dx) });
 }
-test('actual ordinary/evolved/inherited/final beam collisions exactly match predicted target unions while moving', () => {
+test('straight option: every ray shares the facing angle and muzzle, ignoring off-line targets and the multi-target search', () => {
+    const targets = [target(1, 200, 12), target(2, 300, 8), target(3, -250, 0), target(4, 0, 250), target(5, 0, -250)];
+    for (const angle of [0, Math.PI, Math.PI / 2, -2.2]) for (const count of [1, 2, 3, 999]) {
+        const v = chooseCannonVolley({ targets, count, width: 30, length: 500, fallbackAngle: angle, muzzleAt: origin, straight: true });
+        assert.equal(v.rays.length, Math.min(3, count)); assert.equal(v.straight, true);
+        assert.equal(v.focused, false); assert.equal(v.damageMultiplier, 1); assert.equal(v.candidateCount, 1);
+        for (const r of v.rays) { assert.equal(r.angle, angle); assert.equal(r.x, 0); assert.equal(r.y, 0); }
+        assert.deepEqual(ids(v.targets), ids(targets.filter(t => cannonBeamHits(t, v.rays[0]))));
+    }
+    // Without straight the same scene still auto-aims at the best lane instead of the facing angle.
+    const auto = chooseCannonVolley({ targets, count: 1, width: 30, length: 500, fallbackAngle: Math.PI, muzzleAt: origin });
+    assert.deepEqual(ids(auto.targets), [1, 2]);
+    // Straight with explicit focus still converges on the focus target (focus overrides the facing).
+    const focus = targets[3];
+    const focused = chooseCannonVolley({ targets, focus, count: 3, width: 30, length: 500, fallbackAngle: 0, muzzleAt: origin, straight: true });
+    assert.equal(focused.focused, true); assert.deepEqual(focused.targets, [focus]);
+});
+test('actual ordinary/evolved/inherited/final straight beam collisions exactly match predicted target unions while moving', () => {
     for (const [id, evolved] of [['cannon', false], ['cannon', true], ['lotus_bloom', false], ['absolute_bloom', false]]) {
         const parent = setup(id, 8, evolved); Object.assign(G.player, { vx: -120, vy: 65, facingX: -1, facingY: 0 });
-        const enemies = [enemy(1, 210, 15), enemy(2, 280, 28), enemy(3, -240, 70), enemy(4, 340, -190), enemy(5, 900, 0)];
+        // 1-3 stand on the leftward facing line (the first two overlap the whole volley); the rest are off-line or out of reach.
+        const enemies = [enemy(1, -210, -8), enemy(2, -280, 2), enemy(3, -340, -12), enemy(4, 210, 15), enemy(5, 20, 190), enemy(6, -240, 170), enemy(7, -1500, 0)];
         const core = id === 'cannon' ? parent : activeWeaponCores().find(w => w.id === 'cannon');
         // Isolate each real retained core from its owner's other attacks.
         G.weapons = [core]; core.cd = 0;
         const expected = predict(core); updateWeapons(.001);
+        assert.deepEqual(ids(expected.targets), [1, 2, 3], id);
         assert.deepEqual(ids(enemies.filter(e => e.hp < e.maxHp)), ids(expected.targets), id);
         assert.equal(G.beams.count, expected.rays.length);
         for (let i = 0; i < G.beams.count; i++) {
             const beam = G.beams.items[i], ray = expected.rays[i];
             assert.equal(beam.x, ray.x); assert.equal(beam.y, ray.y); assert.equal(beam.angle, ray.angle);
+            assert.ok(Math.abs(Math.abs(beam.angle) - Math.PI) < 1e-9, 'beams point along the facing direction');
         }
     }
 });
-test('Lv1→4→8 moving coverage improves then respects the explicit three-ray limit', () => {
-    const kills = [];
+test('Lv1→4→8 straight fire stacks overlapping rays on the facing line and respects the explicit three-ray limit', () => {
+    const lost = [], rays = [];
     for (const level of [1, 4, 8]) {
-        setup('cannon', level); Object.assign(G.player, { vx: -130, vy: 20, facingX: -1, facingY: 0 });
-        for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8; enemy(i + 1, 280 * Math.cos(a), 12 + 280 * Math.sin(a), 40); }
-        updateWeapons(.001); kills.push(G.kills);
+        const w = setup('cannon', level); Object.assign(G.player, { vx: -130, vy: 20, facingX: -1, facingY: 0 });
+        const online = [enemy(1, -150, 12), enemy(2, -300, 12)], off = [enemy(3, 150, 12), enemy(4, 0, 200), enemy(5, 0, -200)];
+        const s = weaponStats(w); updateWeapons(.001);
+        const ratio = 1 - .05 * (level - 1), stacked = s.beamDamage * ratio * s.amount;
+        assert.ok(s.amount <= 3 && G.beams.count === s.amount, `level ${level}`);
+        for (const e of online) assert.ok(Math.abs(e.maxHp - e.hp - stacked) < 1e-6, `level ${level}: ${e.maxHp - e.hp} vs ${stacked}`);
+        for (const e of off) assert.equal(e.hp, e.maxHp, 'off-line enemies are never auto-targeted');
+        const a0 = G.beams.items[0].angle;
+        for (let i = 0; i < G.beams.count; i++) assert.equal(G.beams.items[i].angle, a0, 'all rays collinear');
+        lost.push(online[0].maxHp - online[0].hp); rays.push(G.beams.count);
     }
-    assert.ok(kills[0] < kills[1] && kills[1] <= kills[2], JSON.stringify(kills));
+    assert.ok(lost[0] < lost[1] && lost[1] < lost[2], JSON.stringify(lost));
+    assert.deepEqual(rays, [1, 3, 3]);
 });
 test('visible far-edge enemies remain candidates, entirely unseen ones do not, and explicit focus may override', () => {
     setup('cannon', 8); const visible = enemy(1, 508, 0), unseen = enemy(2, 540, 0);
@@ -204,12 +232,14 @@ test('live final beam profiles preserve long-narrow primary and short-wide inher
 });
 
 
-test('unfocused targets between the authored hands still receive real vertical auto-aim hits', () => {
+test('unfocused fire goes straight along vertical facing between the authored hands and ignores off-axis targets', () => {
     for(const y of [-200,200]) {
-        const w=setup('cannon',1),e=enemy(1,0,y);
-        Object.assign(G.player,{facingX:1,facingY:0,vx:100,vy:0});
+        const w=setup('cannon',1),e=enemy(1,0,y),aside=enemy(2,200,0);
+        Object.assign(G.player,{facingX:0,facingY:Math.sign(y),vx:100,vy:0});
         const expected=predict(w);assert.deepEqual(expected.targets,[e]);
-        updateWeapons(.001);assert.ok(e.hp<e.maxHp);assert.equal(G.beams.count,1);
+        updateWeapons(.001);assert.ok(e.hp<e.maxHp);assert.equal(aside.hp,aside.maxHp);assert.equal(G.beams.count,1);
         assert.ok(Math.abs(Math.cos(G.beams.items[0].angle))<1e-8);
     }
+    const w=setup('cannon',1),e=enemy(1,0,200);Object.assign(G.player,{facingX:1,facingY:0,vx:100,vy:0});
+    updateWeapons(.001);assert.equal(e.hp,e.maxHp,'a target off the facing line is no longer auto-aimed');
 });

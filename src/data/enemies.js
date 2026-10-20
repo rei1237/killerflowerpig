@@ -48,7 +48,7 @@ const STANDARD_SCALING = { hp: 1, speed: 1, dmg: 1 };
 // 적 한 마리당 경험치 배율. 개체 수를 늘린 만큼 낮춰서 레벨업 속도를 억제한다.
 export const STAGE_XP_YIELD = 0.55;
 // 4스테이지 이후 스테이지당 추가 강화 (late = stage - 3)
-export const LATE_STAGE_SCALING = Object.freeze({ hp: 0.22, speed: 0.02, dmg: 0.1 });
+export const LATE_STAGE_SCALING = Object.freeze({ hp: 0.35, speed: 0.02, dmg: 0.1 });
 export function stageScaling(stage, t, duration) {
     const prog = Math.min(1, t / duration), late = Math.max(0, stage - 3);
     // Opening grace remains gentle; fixed sparse-stage HP and per-kill XP budgets follow below.

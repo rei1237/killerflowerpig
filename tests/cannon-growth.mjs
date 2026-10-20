@@ -65,12 +65,16 @@ test('three-ray cap preserves meaningful equipment might growth before the sourc
     near(high.dmg/low.dmg,2.15/1.5);assert.equal(high.amount,3);assert.ok(high.dmg>low.dmg*1.4);
 });
 
-test('each ordinary or evolved cannon volley hits each enemy and boss once even when many rays overlap',()=>{
+test('a straight volley applies ONE aggregated hit per owner; overlapping rays all land and stack, and lingering beams do not repeat',()=>{
     for(const evolved of [false,true]){
         const w=setup('cannon',8,evolved);G.player.stats.area=3;
         const hits=boss(),e=enemy(1,35), s=weaponStats(w);
         updateWeapons(.001);
-        assert.equal(G.beams.count,s.amount);assert.equal(hits.length,1);near(hits[0].dmg,s.beamDamage*.65);near(1e9-e.hp,s.beamDamage*.65);
+        assert.equal(G.beams.count,s.amount);assert.equal(s.amount,3);assert.equal(hits.length,1,'one aggregated hit per owner');
+        const stacked=s.beamDamage*.65*s.amount;
+        near(hits[0].dmg,stacked);near(1e9-e.hp,stacked);
+        const angle=G.beams.items[0].angle;
+        for(const beam of G.beams.items.slice(0,G.beams.count))near(beam.angle,angle,'all rays share one angle');
         const hp=e.hp,bossHp=G.boss.hp;updateShots(.1);
         assert.equal(e.hp,hp);assert.equal(G.boss.hp,bossHp,'visible lifetime is not repeating DoT');
         w.cd=0;G.clock+=.01;updateWeapons(.001);assert.equal(hits.length,2,'dedup expires with the volley, not the weapon');
@@ -99,11 +103,15 @@ test('high-count cannon volleys emit at most 24 decorative petals and expose all
     }
 });
 
-test('the primary ray respects explicit focus while moving and autoaim does not surrender targets to movement facing',()=>{
+test('the primary ray respects explicit focus while moving and unfocused fire goes straight along facing',()=>{
     const w=setup('cannon',8,true);G.player.vx=-135;G.player.facingX=-1;G.player.facingY=0;
     boss(200);tapFocusAt(G.boss.x,G.boss.y-G.boss.radius);const x=G.player.x,y=G.player.y;
     updateWeapons(.001);assert.ok(Math.cos(G.beams.items[0].angle)>0);assert.equal(G.player.x,x);assert.equal(G.player.y,y);
-    clearFocus();w.evolved=false;w.cd=0;G.beams.clear();const hp=G.boss.hp;updateWeapons(.001);assert.ok(G.boss.hp<hp);
+    // Straight fire: without a focus the beam follows the facing direction only and never auto-aims at the boss.
+    clearFocus();w.evolved=false;w.cd=0;G.beams.clear();let hp=G.boss.hp;updateWeapons(.001);
+    assert.equal(G.boss.hp,hp,'boss behind the facing direction is not auto-targeted');near(Math.abs(G.beams.items[0].angle),Math.PI,'beam follows facing');
+    G.player.facingX=1;G.player.facingY=0;w.cd=0;G.beams.clear();hp=G.boss.hp;updateWeapons(.001);
+    assert.ok(G.boss.hp<hp,'boss in the facing line is hit');near(G.beams.items[0].angle,0);
 });
 
 test('focused Cannon progression keeps evolved, final-entry and absolute-entry premiums with the same legal passives', () => {
@@ -125,7 +133,8 @@ test('requested double impact and count-based focus apply exactly once at Lv1/4/
             const s=weaponStats(w), hits=boss(250);
             if(focused)tapFocusAt(G.boss.x,G.boss.y-G.boss.radius);
             updateWeapons(.001);
-            const oldImpact=base*might*(focused?cannonFocusMultiplier(s.amount):ratio);
+            // Straight (unfocused) volleys stack every overlapping ray: amount x per-ray ratio.
+            const oldImpact=base*might*(focused?cannonFocusMultiplier(s.amount):ratio*s.amount);
             near(s.beamDamage,s.dmg*2,'derived beam damage');
             assert.equal(hits.length,1);near(hits[0].dmg,oldImpact*2);
             assert.ok(G.beams.count<=3);
