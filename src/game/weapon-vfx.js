@@ -53,7 +53,9 @@ export function createWeaponVfxFrame(lowQ,clock,visuals) {
 function detail(frame,beam=false) {if(frame.detailLeft<=0||(!beam&&frame.detailLeft<=frame.beamReserve))return false;if(beam)frame.beamReserve=Math.max(0,frame.beamReserve-1);frame.detailLeft--;frame.detailsUsed++;return true;}
 function petal(ctx,x,y,size,angle,color){ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,size,size*.38,angle,0,TAU);ctx.fill();}
 function segment(ctx,x0,y0,x1,y1,color,width,alpha){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.globalAlpha=alpha;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();}
-export function weaponVfxProfile(id){return WEAPON_VFX[id]||WEAPON_VFX.pistols;}
+// 슬롯 밖 보너스 무기(상점 전설 장비) 외형
+export const BONUS_VFX = Object.freeze({ lotus_gun: Object.freeze({color:'#5effc4',light:'#e9fff7',trail:34,shape:'execution'}) });
+export function weaponVfxProfile(id){return WEAPON_VFX[id]||BONUS_VFX[id]||WEAPON_VFX.pistols;}
 
 export function drawWeaponProjectile(ctx,sh,frame) {
  const style=(sh.evolved&&EVOLVED_VFX[sh.weapon])||weaponVfxProfile(sh.weapon),decor=detail(frame);

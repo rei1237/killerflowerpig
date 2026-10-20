@@ -730,7 +730,7 @@ function statsHTML(extra = []) {
     if (dmg.length) {
         const max = dmg[0][1] || 1;
         html += '<div class="stat dmg-table"><span>무기별 피해</span>' + dmg.map(([id, v]) => {
-            const d = WEAPONS[id] || { name: id === 'petalCannon' ? '꽃잎포' : '동행 펫 · 영냥이', icon: '', evolve: {} };
+            const d = WEAPONS[id] || { name: id === 'petalCannon' ? '꽃잎포' : id === 'lotus_gun' ? '전설의 연꽃 총' : '동행 펫 · 영냥이', icon: '', evolve: {} };
             const w = G.weapons.find(x => x.id === id);
             const name = w && w.evolved ? d.evolve.name : d.name;
             return `<div class="dmg-row"><span><img class="inventory-art" src="${itemArt(id)}" alt=""></span><div><div>${name}</div><div class="dmg-bar" style="width:${Math.max(4, (v / max) * 100)}%"></div></div><b style="font-size:10px">${Math.round(v).toLocaleString()}</b></div>`;

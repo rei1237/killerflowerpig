@@ -12,6 +12,7 @@ import { spawnHazard, limitFriendlyFields } from './hazards.js';
 import { sparks, petals, embers, shake, floatText } from './effects.js';
 import { healPlayer, triggerPlayerShot } from './player.js';
 import { preferredTarget } from './targeting.js';
+import { upgradeLevel } from '../core/save.js';
 
 export function createWeapon(id, slot) {
     return { id, slot, level: 1, evolved: false, cd: 0.4, activeT: 0, angle: 0, burst: 0, burstT: 0, trailT: 0, follow: null };
@@ -379,9 +380,32 @@ function fireBeam(w, s, angle) {
     }
 }
 
+// 상점 전설 장비 「연꽃 총」: 슬롯 밖에서 자동 발사 (보유 시)
+export const LOTUS_GUN = Object.freeze({ cd: 0.45, shots: 3, spread: 0.16, baseDmg: 18, dmgPerStage: 8, pierce: 4, speed: 820, crit: 0.1 });
+const lotusGun = { id: 'lotus_gun', slot: 99, level: 1, evolved: false, coreIndex: 0, cd: 0.5 };
+export function lotusGunStats() {
+    const ps = G.player.stats;
+    return { dmg: (LOTUS_GUN.baseDmg + LOTUS_GUN.dmgPerStage * (G.stage || 1)) * (ps.might || 1), speed: LOTUS_GUN.speed * (ps.projSpeed || 1),
+        duration: 0.9, pierce: LOTUS_GUN.pierce, area: 1, crit: LOTUS_GUN.crit, critBonus: 0, execute: 0, bleed: 0, slow: 0 };
+}
+function updateLotusGun(dt) {
+    if (upgradeLevel('lotus_gun') <= 0) return;
+    lotusGun.cd -= dt;
+    if (lotusGun.cd > 0) return;
+    const p = G.player, t = nearestEnemy(p.x, p.y, 520);
+    if (!t) { lotusGun.cd = 0.15; return; }
+    lotusGun.cd = LOTUS_GUN.cd * (p.stats.cooldown || 1);
+    const s = lotusGunStats(), [dx, dy] = aimAt(lotusGun, t), base = Math.atan2(dy, dx);
+    for (let i = 0; i < LOTUS_GUN.shots; i++) {
+        const a = base + (i - (LOTUS_GUN.shots - 1) / 2) * LOTUS_GUN.spread;
+        shoot(lotusGun, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: 7, knock: 70 });
+    }
+}
+
 export function updateWeapons(dt) {
     const p = G.player;
     if (p.dead) return;
+    updateLotusGun(dt);
     for (const w of activeWeaponCores()) {
         const s = weaponStats(w);
         w.s = s;
