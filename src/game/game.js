@@ -1,3 +1,7 @@
+import { pinRewardRun } from '../core/save.js';
+import { validateStageCheckpoint } from './stage-checkpoint.js';
+import { clearFocus } from './targeting.js';
+import { resetInput } from '../core/input.js';
 import { updateEncirclement, clearEncirclement, constrainEncirclementPlayer } from './encirclement.js';
 import { resetPets, updatePets } from './pets.js';
 // 게임 흐름 제어: 런 시작/스테이지 시작/스텝 업데이트/보스·클리어·사망 전환
@@ -7,8 +11,8 @@ import { STARTING_WEAPON, PASSIVES } from '../data/weapons.js';
 import { TECHS, techStartingWeapons } from '../data/techs.js';
 import { DIFFICULTIES } from '../data/difficulty.js';
 import { createPlayer, updatePlayer, recomputeStats } from './player.js';
-import { updateEnemies, updateEnemyShots, flushExplosions } from './enemies.js';
-import { updateWeapons, updateShots, createWeapon } from './weapons.js';
+import { updateEnemies, updateEnemyShots, flushExplosions, clearPendingExplosions } from './enemies.js';
+import { updateWeapons, updateShots, createWeapon, resetWeaponRuntime } from './weapons.js';
 import { updateHazards } from './hazards.js';
 import { updatePickups, magnetAll } from './pickups.js';
 import { updateEffects, refreshGore } from './effects.js';
@@ -24,44 +28,46 @@ const DEAD_RUNS_KEY = 'kfp.dead-runs.v1';
 let clearTimer = 0;
 let heartbeatT = 0;
 let stageSnapshot = null;
+let checkpointUnsaved = false;
 let runSerial = 0;
 const deadRuns = new Set();
+const createRunId = () => globalThis.crypto?.randomUUID?.() || `run:${Date.now()}:${++runSerial}:${Math.random().toString(36).slice(2)}`;
 const runToken = snap => snap?.runId || (snap ? `legacy:${JSON.stringify(snap)}` : null);
 function readDeadRuns() {
     try { const list = JSON.parse(localStorage.getItem(DEAD_RUNS_KEY) || '[]'); if (Array.isArray(list)) for (const id of list) if (typeof id === 'string') deadRuns.add(id); } catch { /* In-memory invalidation still applies. */ }
 }
 function isDeadRun(snap) { readDeadRuns(); return !snap || snap.dead === true || deadRuns.has(runToken(snap)); }
 export function loadRun() {
-    try { const r = localStorage.getItem(RUN_KEY); const snap = r ? JSON.parse(r) : null; return isDeadRun(snap) ? null : snap; } catch { return null; }
+    if (checkpointUnsaved && stageSnapshot) return validateStageCheckpoint(stageSnapshot);
+    try { const r = localStorage.getItem(RUN_KEY); const snap = r ? JSON.parse(r) : null; return isDeadRun(snap) ? null : validateStageCheckpoint(snap); } catch { return null; }
 }
-function saveRun(snap) { try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); } catch { emit('runSaveError'); } }
+function saveRun(snap) { try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); checkpointUnsaved = false; return true; } catch { checkpointUnsaved = true; emit('runSaveError'); return false; } }
 export function markLoadoutExchangeSpent() {
     G.loadoutExchangesUsed = 1;
     if (stageSnapshot) { stageSnapshot.loadoutExchangesUsed = 1; saveRun(stageSnapshot); }
 }
-export function clearRun() { stageSnapshot = null; try { localStorage.removeItem(RUN_KEY); } catch { /* A new run overwrites this checkpoint. */ } }
-function invalidateDeadRun() {
-    const token = G.runId || runToken(stageSnapshot);
-    readDeadRuns(); if (token) deadRuns.add(token);
-    // Keep a tombstone independent of checkpoint removal. Either successful
-    // write is enough to reject the stale checkpoint on the next page load.
-    let failed = false;
-    try { localStorage.setItem(DEAD_RUNS_KEY, JSON.stringify([...deadRuns])); } catch { failed = true; }
-    try { localStorage.removeItem(RUN_KEY); } catch {
-        failed = true;
-        try { localStorage.setItem(RUN_KEY, JSON.stringify({ dead: true, runId: token })); } catch { /* Warn below; current session remains invalidated. */ }
-    }
-    stageSnapshot = null;
-    if (failed) emit('runSaveError');
+export function clearRun() { stageSnapshot = null; checkpointUnsaved = false; try { localStorage.removeItem(RUN_KEY); } catch { /* A new run overwrites this checkpoint. */ } }
+function captureCheckpoint(stage = G.stage) {
+    return { ...snapshotBuild(), stage, runId: G.runId, checkpointVersion: 2,
+        pendingLevelUps: G.pendingLevelUps, banished: [...G.banished], retry: false };
 }
-
+export function finalizeEntryCheckpoint() {
+    if (!stageSnapshot?.pendingLevelUps || G.pendingLevelUps || (G.choiceSession && !G.choiceSession.closed)) return false;
+    stageSnapshot = captureCheckpoint(); return saveRun(stageSnapshot);
+}
+// Called only once reward choices/chest settlement have finished, before the next story.
+export function checkpointStageClear() {
+    if (G.pendingLevelUps || (G.choiceSession && !G.choiceSession.closed)) return false;
+    if (G.stage >= 10) { clearRun(); return true; }
+    stageSnapshot = captureCheckpoint(G.stage + 1); return saveRun(stageSnapshot);
+}
 // techId 를 생략하면 기존과 동일하게 산탄총 단독으로 시작 (호환용). difficulty 생략 시 쉬움.
 export function newRun(stage = 1, techId = null, difficulty = 'easy') {
     G.difficulty = DIFFICULTIES[difficulty] ? difficulty : 'easy';
     configureCaps();
     refreshGore();
     resetBuild();
-    G.runId = globalThis.crypto?.randomUUID?.() || `run:${Date.now()}:${++runSerial}:${Math.random().toString(36).slice(2)}`;
+    G.runId = createRunId();
     G.gold = 0;
     G.kills = 0;
     G.damageBy = {};
@@ -83,28 +89,43 @@ export function newRun(stage = 1, techId = null, difficulty = 'easy') {
     startStage(stage);
 }
 
-export function continueRun(snap) {
-    if (isDeadRun(snap)) return false;
-    G.runId = snap.runId || runToken(snap);
-    configureCaps();
-    refreshGore();
-    G.damageBy = {};
-    createPlayer();
-    restoreBuild(snap);
+export function continueRun(raw) {
+    const snap = validateStageCheckpoint(raw);
+    const latest = loadRun();
+    if (latest?.runId && latest.runId === snap?.runId && latest.stage > snap.stage) return false;
+    if (!snap || isDeadRun(raw)) return false;
+    G.runId = snap.runId || createRunId();
+    G.godMode = false;
+    configureCaps(); refreshGore(); resetBuild(); G.damageBy = {};
+    createPlayer(); restoreBuild(snap);
+    G.pendingLevelUps = snap.pendingLevelUps;
+    G.banished = new Set(snap.banished);
+    G.rerolls = snap.rerolls;
     startStage(snap.stage, true);
+    G.player.iframes = 0;
     return true;
 }
 
 export function retryStage() {
-    // Death ends the build; this compatibility name now starts a new run.
-    return newRun(1);
+    if (G.mode === 'play' || G.mode === 'boss') return false;
+    let snap = validateStageCheckpoint(stageSnapshot) || loadRun();
+    if (!snap) {
+        // Old sessions with no entry snapshot retain their current valid build/stage.
+        // Never silently send a valid stage5/10 session back to stage1.
+        snap = validateStageCheckpoint(captureCheckpoint());
+        if (!snap) { emit('runSaveError'); return false; }
+        snap.pendingLevelUps = 0; snap.choiceSession = null;
+    }
+    return continueRun({ ...snap, retry: true });
 }
 
 export function startStage(stage, restored = false) {
     if (G.player?.dead || deadRuns.has(G.runId)) return false;
+    pinRewardRun(G.runId);
     G.stage = stage;
     prepareBossSheets(stage);
     clearWorld();
+    clearPendingExplosions(); clearFocus(); resetInput(); resetWeaponRuntime();
     resetSpawner();
     invalidateStageVisuals();
     for (const w of G.weapons) { w.fusionCores = null; w.follow = null; w.cd = 0.5; w.activeT = 0; w.burst = 0; }
@@ -114,13 +135,14 @@ export function startStage(stage, restored = false) {
     resetPets();
     G.camera.x = 0; G.camera.y = -20;
     G.time = 0;
+    G.deadT = 0; G.deathShown = false; heartbeatT = 0;
     G.mode = 'play';
     G.paused = false;
     G.stageKillsStart = G.kills;
     G.settlement = null;
     G.stageStartTime = performance.now();
     clearTimer = 0;
-    stageSnapshot = { ...snapshotBuild(), runId: G.runId };
+    stageSnapshot = captureCheckpoint();
     saveRun(stageSnapshot);
     audio.setBGMRate(1);
     audio.playBGM();
@@ -207,7 +229,11 @@ export function beginStageClear() {
 export function onPlayerDeath() {
     if (G.mode === 'dead') return;
     clearEncirclement();
-    invalidateDeadRun();
+    // Keep the immutable stage-entry build; discard only the failed attempt's world.
+    if (!stageSnapshot || stageSnapshot.stage !== G.stage) stageSnapshot = validateStageCheckpoint(captureCheckpoint());
+    if (stageSnapshot) { stageSnapshot.retry = true; saveRun(stageSnapshot); }
+    else emit('runSaveError');
+    G.player.dead = true;
     G.mode = 'dead';
     G.deadT = 0;
     G.deathShown = false;

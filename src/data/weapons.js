@@ -33,15 +33,15 @@ export const WEAPONS = {
     },
     thorns: {
         name: '연꽃 가시', icon: '🌸', color: '#ff4fa0',
-        desc: '날카로운 꽃잎이 몸 주위를 돌며 베어낸다.',
-        base: { dmg: 8, cd: 3.6, amount: 2, speed: 3.4, duration: 3.0, area: 1, radius: 68, hitCd: 0.45 },
+        desc: '강력한 가시 꽃잎이 몸 주위를 돈다. 꽃잎 하나가 적 하나에 닿으면 피해를 주고 사라지며, 각각 1.6초 후 재생한다.',
+        base: { dmg: 54, cd: 3.3, amount: 2, speed: 3.4, duration: 3.0, area: 1, radius: 68, hitCd: 0.45, regrow: 1.6 },
         levels: [
-            { amount: 1, t: '꽃잎 +1' }, { area: 0.15, t: '반경 +15%' }, { dmg: 3, t: '피해 +3' },
-            { duration: 0.3, t: '지속 +30%' }, { amount: 1, t: '꽃잎 +1' }, { dmg: 4, t: '피해 +4' },
-            { amount: 1, duration: 0.3, t: '꽃잎 +1, 지속 +30%' },
+            { amount: 1, t: '가시 꽃잎 +1' }, { area: 0.15, t: '반경 +15%' }, { dmg: 18, regrow: -0.4, t: '접촉 피해 +18, 기본 재생 -0.4초' },
+            { dmg: 6, t: '접촉 피해 +6' }, { amount: 1, t: '가시 꽃잎 +1' }, { dmg: 18, t: '접촉 피해 +18' },
+            { amount: 1, t: '가시 꽃잎 +1' },
         ],
-        evolve: { with: 'regen', name: '피의 연꽃', icon: '🥀', desc: '멈추지 않고 회전하며, 벤 살점으로 체력을 흡수한다.',
-            mods: { dmg: 1.4, amount: 1.25, permanent: 1, lifesteal: 0.3 } },
+        evolve: { with: 'regen', name: '피의 연꽃', icon: '🥀', desc: '강한 접촉 피해와 흡혈. 닿은 꽃잎은 하나씩 사라지고 재생 간격이 15% 짧아진다 (Lv.8 기본 1.02초).',
+            mods: { dmg: 1.4, amount: 1.25, permanent: 1, lifesteal: 0.3, regrow: 0.85 } },
     },
     rifle: {
         name: '노획 소총', icon: '🎯', color: '#e8f0ff',
@@ -58,39 +58,39 @@ export const WEAPONS = {
     molotov: {
         name: '화염병', icon: '🔥', color: '#ff7a1a',
         desc: '적에게 화염병을 던져 불바다를 만든다.',
-        base: { dmg: 5, cd: 3.0, amount: 1, speed: 1, duration: 2.6, area: 1, radius: 46, tick: 0.3 },
+        base: { dmg: 8, cd: 2.65, amount: 1, speed: 1, duration: 2.6, area: 1, radius: 60, tick: 0.3 },
         levels: [
-            { amount: 1, t: '화염병 +1' }, { area: 0.2, t: '범위 +20%' }, { dmg: 2, t: '피해 +2' },
+            { amount: 1, t: '화염병 +1' }, { area: 0.2, t: '범위 +20%' }, { dmg: 3, t: '피해 +3' },
             { duration: 0.35, t: '지속 +35%' }, { amount: 1, t: '화염병 +1' }, { cd: -0.15, t: '재사용 -15%' },
-            { dmg: 3, area: 0.15, t: '피해 +3, 범위 +15%' },
+            { dmg: 4, area: 0.15, t: '피해 +4, 범위 +15%' },
         ],
         evolve: { with: 'spread', name: '지옥 불꽃길', icon: '🌋', desc: '걸어간 자리마다 지옥불이 남는다.',
             mods: { dmg: 2, area: 1.6, duration: 2.2, trail: 1 } },
     },
     cannon: {
         name: '꽃잎포', icon: '🌺', color: '#ff69b4',
-        desc: '즉시 명중하는 관통 광선. 레벨마다 재발사가 빨라지고 광선이 1개씩 늘어나 Lv.8에 8방향을 덮는다.',
-        base: { dmg: 28, cd: 2.6, amount: 1, speed: 1, duration: 0.35, area: 1, length: 520, width: 38 },
+        desc: '다수 적 자동 조준 또는 한 표적 집중 사격. 모든 등급과 추가 발수 효과를 포함해 광선은 최대 3개. 분산 피해율은 100%→65%, 집중 사격은 기본 위력의 1.25~1.41배를 한 표적에 준다.',
+        base: { dmg: 44, cd: 2.6, amount: 1, speed: 1, duration: 0.35, area: 1, length: 520, width: 44 },
         levels: [
-            { dmg: 12, amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%, 피해 +12' },
-            { area: 0.25, amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%, 굵기 +25%' },
-            { amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%' },
-            { amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%' },
-            { dmg: 15, amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%, 피해 +15' },
-            { amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%' },
-            { dmg: 20, area: 0.2, amount: 1, cd: -0.09, t: '광선 +1, 기본 간격 -9%, 피해 +20, 굵기 +20%' },
+            { dmg: 12, width: 2, length: 20, amount: 1, cd: -0.09, t: '피해 +12 · 광선 +1 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 95%' },
+            { dmg: 4, width: 2, length: 20, area: 0.25, cd: -0.09, t: '피해 +4 · 굵기 +2 · 사거리 +20 · 범위 +25% · 간격 -9% · 분산 90%' },
+            { dmg: 8, width: 2, length: 20, amount: 1, cd: -0.09, t: '피해 +8 · 광선 +1 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 85%' },
+            { dmg: 6, width: 2, length: 20, cd: -0.09, t: '피해 +6 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 80%' },
+            { dmg: 10, width: 2, length: 20, cd: -0.09, t: '피해 +10 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 75%' },
+            { dmg: 8, width: 2, length: 20, cd: -0.09, t: '피해 +8 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 70%' },
+            { dmg: 8, width: 2, length: 20, area: 0.2, cd: -0.09, t: '피해 +8 · 굵기 +2 · 사거리 +20 · 범위 +20% · 간격 -9% · 분산 65%' },
         ],
-        evolve: { with: 'pollen', name: '개화 꽃잎포', icon: '💮', desc: '재발사 간격 15% 단축, 최대 16방향 진화 광선. 추가 발수는 상한에서 피해로 전환. 절대 만개의 재료가 된다.',
-            mods: { dmg: 1.5, amount: 2, area: 1.25, cd: 0.85 } },
+        evolve: { with: 'pollen', name: '개화 꽃잎포', icon: '💮', desc: '재발사 간격 15% 단축과 피해·범위 강화. 진화해도 광선은 최대 3개. 분산 피해율 65%, 집중 시 기본 위력의 최대 1.41배. 초과 발수를 피해로 바꾸지 않는다.',
+            mods: { dmg: 1.5, area: 1.25, cd: 0.85 } },
     },
     gas: {
         name: '독가스 수류탄', icon: '☣️', color: '#7dff4a',
         desc: '독구름이 적을 느리게 하고 녹인다.',
-        base: { dmg: 3, cd: 4.5, amount: 1, speed: 1, duration: 20, area: 1, radius: 98, tick: 0.4, slow: 0.4 }, // 독안개 지속 4초 → 20초
+        base: { dmg: 6, cd: 3.8, amount: 1, speed: 1, duration: 20, area: 1, radius: 106, tick: 0.4, slow: 0.4 },
         levels: [
-            { area: 0.15, t: '범위 +15%' }, { dmg: 2, t: '피해 +2' }, { duration: 0.25, t: '지속 +25%' },
+            { area: 0.15, t: '범위 +15%' }, { dmg: 3, t: '피해 +3' }, { duration: 0.25, t: '지속 +25%' },
             { amount: 1, t: '수류탄 +1' }, { slow: 0.1, t: '둔화 +10%' }, { cd: -0.15, t: '재사용 -15%' },
-            { dmg: 3, amount: 1, t: '피해 +3, 수류탄 +1' },
+            { dmg: 4, amount: 1, t: '피해 +4, 수류탄 +1' },
         ],
         evolve: { with: 'sap', name: '역병 안개', icon: '🦠', desc: '안개가 연이를 따라다니며 모든 것을 부패시킨다.',
             mods: { dmg: 2, area: 1.4, slow: 0.2, follow: 1 } },
@@ -98,11 +98,11 @@ export const WEAPONS = {
     saw: {
         name: '뼈 톱날', icon: '⚙️', color: '#e9dcc0',
         desc: '화면 가장자리에 튕기는 회전 톱날.',
-        base: { dmg: 10, cd: 3.4, amount: 1, speed: 360, duration: 3, area: 1, hitCd: 0.3 },
+        base: { dmg: 18, cd: 2.8, amount: 1, speed: 410, duration: 3.2, area: 1, hitCd: 0.3 },
         levels: [
-            { amount: 1, t: '톱날 +1' }, { dmg: 4, t: '피해 +4' }, { speed: 0.2, t: '속도 +20%' },
-            { duration: 0.3, t: '지속 +30%' }, { amount: 1, t: '톱날 +1' }, { dmg: 5, t: '피해 +5' },
-            { amount: 1, area: 0.2, t: '톱날 +1, 크기 +20%' },
+            { amount: 1, t: '톱날 +1' }, { dmg: 7, t: '피해 +7' }, { speed: 0.2, cd: -0.08, t: '속도 +20%, 재사용 -8%' },
+            { duration: 0.3, area: 0.15, t: '지속 +30%, 크기 +15%' }, { amount: 1, t: '톱날 +1' }, { dmg: 9, t: '피해 +9' },
+            { amount: 1, area: 0.25, cd: -0.08, t: '톱날 +1, 크기 +25%, 재사용 -8%' },
         ],
         evolve: { with: 'whet', name: '척추 분쇄기', icon: '🦴', desc: '척추뼈를 이어 만든 거대 톱날. 출혈을 일으킨다.',
             mods: { dmg: 1.8, amount: 2, area: 1.35, bleed: 3 } },
@@ -110,10 +110,10 @@ export const WEAPONS = {
     sword: {
         name: '도살검', icon: '🗡️', color: '#ffd8df',
         desc: '가까운 적을 향해 넓게 베는 근접 무기. 독립된 무기 슬롯을 사용하며 피해·공격 간격·베기 범위가 성장한다.',
-        base: { dmg: 24, cd: 0.95, amount: 1, speed: 1, duration: 0.18, area: 1, radius: 100 },
+        base: { dmg: 28, cd: 0.95, amount: 1, speed: 1, duration: 0.18, area: 1, radius: 110 },
         levels: [
-            { dmg: 6, t: '베기 피해 +6' }, { cd: -0.08, t: '공격 간격 -8%' }, { area: 0.15, t: '베기 범위 +15%' },
-            { dmg: 8, t: '베기 피해 +8' }, { cd: -0.08, t: '공격 간격 -8%' }, { dmg: 10, t: '베기 피해 +10' },
+            { dmg: 8, t: '베기 피해 +8' }, { cd: -0.08, t: '공격 간격 -8%' }, { area: 0.15, t: '베기 범위 +15%' },
+            { dmg: 10, t: '베기 피해 +10' }, { cd: -0.08, t: '공격 간격 -8%' }, { dmg: 12, t: '베기 피해 +12' },
             { area: 0.15, cd: -0.08, t: '베기 범위 +15%, 공격 간격 -8%' },
         ],
         evolve: { with: 'whet', name: '핏빛 연꽃검', icon: '⚔️', desc: '피해와 범위가 커지고 더 빠르게 베며 출혈을 남긴다. 척추 분쇄기와 학살자의 검륜으로 조합할 수 있다.',
@@ -123,7 +123,7 @@ export const WEAPONS = {
 };
 
 export const PASSIVES = {
-    magazine: { name: '탄창 확장', icon: '📦', desc: '모든 무기의 투사체 수가 무기 투사체에 비례해 증가 (Lv5 +50%). 투사체가 적은 무기는 남는 비율만큼 피해가 늘어난다.', per: '투사체 +10%' },
+    magazine: { name: '탄창 확장', icon: '📦', desc: '모든 무기의 투사체 수가 무기 투사체에 비례해 증가 (Lv5 +50%). 투사체가 적은 무기는 남는 비율만큼 피해가 늘어난다. 꽃잎포 계열은 최대 3개이며 초과분 피해 전환 없음.', per: '투사체 +10%' },
     focus: { name: '집중', icon: '👁️', desc: '치명타 확률 +7% (피해 3배)', per: '치명타 +7%' },
     sap: { name: '회전 수액', icon: '🧪', desc: '경험치 획득 +8%', per: '경험치 +8%' },
     scope: { name: '조준경', icon: '🔭', desc: '관통 투사체의 관통 +1 (Lv1·3·5) · 탄속 +5%', per: '관통 +1 (Lv1·3·5) · 탄속 +5%' },
@@ -148,7 +148,7 @@ export const STARTING_WEAPON = 'shotgun';
 // tests/tier-order.mjs 가 실제 전투 시뮬레이션으로 각 성장 경로를 검증한다.
 export const TIER_POWER = Object.freeze({
     evolved: Object.freeze({ thorns: 2.4, cannon: 1.6, gas: 1.75, saw: 1.3 }),
-    fused: Object.freeze({ lotus_bloom: 2.4, venom_saw: 2.25, orbit_saw: 2.25, sword_wheel: 1.65, toxic_scatter: 1.15, plague_fire: 0.85, absolute_bloom: 1.4,
+    fused: Object.freeze({ lotus_bloom: 2.4, venom_saw: 2.25, orbit_saw: 2.25, sword_wheel: 1.65, toxic_scatter: 1.25, plague_fire: 0.85, absolute_bloom: 1.4,
         doom_barrage: 1.2, plague_end: 1.0, guillotine: 1.45, carnage_saw: 2.1 }),
 });
 // 조합 무기가 계승한 코어(sourceId)는 조합 무기의 보정을 함께 받는다.

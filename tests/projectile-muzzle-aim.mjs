@@ -5,6 +5,7 @@ import { createPlayer, recomputeStats } from '../src/game/player.js';
 import { resetBuild } from '../src/game/progression.js';
 import { createWeapon, updateWeapons, updateShots } from '../src/game/weapons.js';
 import { firingMuzzle } from '../src/game/player-motion.js';
+import { cannonBeamHits } from '../src/game/cannon-targeting.js';
 import { clearFocus, tapFocusAt } from '../src/game/targeting.js';
 import { images } from '../src/core/assets.js';
 import { save } from '../src/core/save.js';
@@ -89,8 +90,12 @@ test('the no-sprite fallback retains its previous direction-relative origin', ()
     near(sh.y, -22 + sh.vy / speed * 10);
 });
 
-test('cannon keeps its existing player-origin aiming contract', () => {
+test('Cannon scores the actual authored muzzle and hits during its release update', () => {
     const e = setup('cannon', 20, 150);
     assert.ok(G.beams.count > 0);
-    near(G.beams.items[0].angle, Math.atan2(e.y - e.radius + 22, e.x));
+    const beam=G.beams.items[0];
+    assert.ok(cannonBeamHits(e,{...beam,dx:Math.cos(beam.angle),dy:Math.sin(beam.angle),length:beam.len}));
+    const muzzle=firingMuzzle(G.player,G.clock,Math.cos(beam.angle));near(beam.x,muzzle.x);near(beam.y,muzzle.y);
+    assert.ok(e.hp<e.maxHp,'hitscan damage must already be applied before updateShots');
+    near(beam.len,(e.x-beam.x)*Math.cos(beam.angle)+(e.y-e.radius-beam.y)*Math.sin(beam.angle));
 });

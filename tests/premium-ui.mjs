@@ -484,37 +484,26 @@ test('loadout evolution helper describes fused maxima and CSS retains mobile rea
  assert.match(css,/min-height:44px/);assert.match(css,/overflow:auto/);assert.match(css,/@media\(max-width:600px\)/);assert.match(css,/focus-visible/);assert.match(css,/\[hidden\]/);
 });
 
-test('death immediately tombstones checkpoint; retry starts stage one fresh while permanent shop progress survives',async()=>{
- const {loadRun,continueRun,onPlayerDeath,startStage}=await import('../src/game/game.js');
- const {save}=await import('../src/core/save.js');
- freshRun();const checkpoint=loadRun(),oldId=G.runId;assert.equal(continueRun(checkpoint),true);
- G.weapons=[Object.assign(createWeapon('lotus_bloom',0),{level:8})];G.passives={heart:5};G.stage=5;G.loadoutExchangesUsed=1;
- const permanent=JSON.stringify({gold:save.gold,upgrades:save.upgrades,accessories:save.accessories,relics:save.relics});
- onPlayerDeath();assert.equal(loadRun(),null);assert.equal(continueRun(checkpoint),false);assert.equal(G.mode,'dead');assert.equal(startStage(6),false);
- showTitle();node('btn-retry').click();assert.equal(G.stage,1);assert.notEqual(G.runId,oldId);assert.equal(G.level,1);assert.deepEqual(G.passives,{});
- assert.equal(G.weapons.length,1);assert.equal(G.weapons[0].level,1);assert.equal(G.weapons[0].evolved,false);assert.equal(G.loadoutExchangesUsed,0);
- assert.equal(JSON.stringify({gold:save.gold,upgrades:save.upgrades,accessories:save.accessories,relics:save.relics}),permanent);
- assert.equal(continueRun(checkpoint),false,'dead build cannot be loaded after a new run');assert.match(html,/id="btn-retry"[^>]*>[^<]*STAGE 1/);
+test('death keeps stage-entry build and retry restores stage5 without rolling back purchases',async()=>{
+ const {loadRun,onPlayerDeath,startStage}=await import('../src/game/game.js');const {save}=await import('../src/core/save.js');
+ freshRun();G.level=14;G.weapons=[Object.assign(createWeapon('lotus_bloom',0),{level:3})];G.passives={heart:2};startStage(5);const checkpoint=loadRun(),oldId=G.runId;
+ G.weapons[0].level=8;G.passives.heart=5;const permanent=JSON.stringify(save);
+ onPlayerDeath();assert.equal(loadRun().stage,5);assert.equal(G.mode,'dead');assert.equal(startStage(6),false);showGameOver();node('btn-retry').click();
+ assert.equal(G.stage,5);assert.equal(G.runId,oldId);assert.equal(G.level,checkpoint.level);assert.deepEqual(G.passives,{heart:2});assert.equal(G.weapons[0].level,3);assert.equal(G.player.iframes,0);assert.equal(G.player.hp,G.player.maxHp);
+ const after=JSON.parse(permanent);assert.equal(save.gold,after.gold);assert.deepEqual(save.upgrades,after.upgrades);assert.match(html,/해당 스테이지 처음부터 재도전/);
 });
-test('death storage failure retains in-memory invalidation and tombstone protection with warning',async()=>{
- const {loadRun,continueRun,onPlayerDeath}=await import('../src/game/game.js');freshRun();const checkpoint=loadRun();
- const remove=localStorage.removeItem;let warnings=0;const handler=G.events.runSaveError;G.events.runSaveError=()=>warnings++;
- localStorage.removeItem=()=>{throw new Error('storage blocked');};
- try{onPlayerDeath();assert.equal(loadRun(),null);assert.equal(continueRun(checkpoint),false);assert.equal(warnings,1);assert.ok(JSON.parse(localStorage.getItem('kfp.dead-runs.v1')).includes(checkpoint.runId));}
- finally{localStorage.removeItem=remove;G.events.runSaveError=handler;}
+test('death checkpoint write failure retains in-memory retry and warns',async()=>{
+ const {loadRun,onPlayerDeath,retryStage}=await import('../src/game/game.js');freshRun();const checkpoint=loadRun();
+ const write=localStorage.setItem;let warnings=0;const handler=G.events.runSaveError;G.events.runSaveError=()=>warnings++;
+ localStorage.setItem=()=>{throw new Error('storage blocked');};
+ try{onPlayerDeath();assert.equal(loadRun().stage,checkpoint.stage);assert.equal(warnings,1);assert.equal(retryStage(),true);assert.equal(G.player.dead,false);}
+ finally{localStorage.setItem=write;G.events.runSaveError=handler;}
 });
 test('fusion UI requires both evolved inputs and displays the actual final tech requirement',()=>{
  freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>w.level=8);showFusion();
  assert.equal(node('fusion-recipes').children[0].querySelector('button').disabled,true);assert.match(node('fusion-summary').textContent,/진화 2개 → 최종.*진화 3개 → 절대/);
  assert.match(node('fusion-recipes').children[0].textContent,/진화 필요/);const before=JSON.stringify(G.weapons);
  node('fusion-recipes').children[0].querySelector('button').click();assert.equal(JSON.stringify(G.weapons),before);
-});
-test('when all death storage operations fail, current session still blocks old continuation and warns',async()=>{
- const {loadRun,continueRun,onPlayerDeath}=await import('../src/game/game.js');freshRun();const checkpoint=loadRun();
- const put=localStorage.setItem,remove=localStorage.removeItem,handler=G.events.runSaveError;let warnings=0;
- G.events.runSaveError=()=>warnings++;localStorage.setItem=localStorage.removeItem=()=>{throw new Error('storage unavailable');};
- try{onPlayerDeath();assert.equal(loadRun(),null);assert.equal(continueRun(checkpoint),false);assert.equal(warnings,1);}
- finally{localStorage.setItem=put;localStorage.removeItem=remove;G.events.runSaveError=handler;}
 });
 test('absolute recipe UI consumes three evolved ingredients and reveals three-to-one with two freed slots',()=>{
  freshRun();G.weapons=['cannon','thorns','molotov'].map((id,i)=>Object.assign(createWeapon(id,i),{level:8,evolved:true}));showFusion();
@@ -628,4 +617,23 @@ test('pet training shop shows ownership, current-next values, exact price and ca
  assert.equal(list.children.length,3);assert.ok(list.querySelectorAll('button').every(b=>b.disabled));assert.match(list.querySelector('button').textContent,/보유 필요/);
  list.replaceChildren();save.inventory=['pet_yeongnyang'];renderPetUpgradeShop(list,()=>{});assert.match(list.children[0].querySelector('.s-desc').textContent,/14 → 16/);assert.match(list.children[0].querySelector('button').textContent,/30/);
  list.replaceChildren();save.petUpgrades={attack:5,heal:3,support:3};renderPetUpgradeShop(list,()=>{});assert.ok(list.querySelectorAll('button').every(b=>b.disabled));assert.match(list.children[1].querySelector('.s-desc').textContent,/회복 HP 6/);Object.assign(save,prior);
+});
+
+test('retry cancels a stale chest timer and repeated clear settlement cannot duplicate permanent gold',async()=>{
+ const {onPlayerDeath,startStage,loadRun}=await import('../src/game/game.js');const {save}=await import('../src/core/save.js');
+ freshRun();startStage(5);showChest('boss');node('btn-chest').click();onPlayerDeath();showGameOver();node('btn-retry').click();const before=G.weapons.map(w=>w.level);advanceTime(2000);assert.deepEqual(G.weapons.map(w=>w.level),before);assert.equal(topModalId(),null);assert.equal(G.stage,5);
+ const gold=save.gold;showStageClear();const credited=save.gold;assert.ok(credited>gold);assert.equal(loadRun().stage,6);showStageClear();assert.equal(save.gold,credited);
+ G.settlement=null;showStageClear();assert.equal(save.gold,credited,'durable run-stage receipt blocks repeated settlement even after in-memory guard loss');
+});
+
+test('boss bundle and clear fallback share a receipt so collection is never paid twice',async()=>{
+ const {startStage}=await import('../src/game/game.js');const {dropCoin,updatePickups}=await import('../src/game/pickups.js');const {bossCoinReceipt,bossCoinValue}=await import('../src/game/coin-drops.js');const {save}=await import('../src/core/save.js');freshRun();startStage(5);
+ const before=save.gold,amount=Math.round(bossCoinValue(5)*G.player.stats.greed);dropCoin(0,-14,bossCoinValue(5),bossCoinReceipt(G.runId,5));updatePickups(.01);assert.equal(save.gold,before+amount);showStageClear();assert.equal(save.gold,before+amount);showStageClear();assert.equal(save.gold,before+amount);
+});
+test('clear settlement atomically saves bounty, receipt, unlock and kills before checkpoint advancement',async()=>{
+ const {startStage,loadRun}=await import('../src/game/game.js');const {save}=await import('../src/core/save.js');const {hasRunReward}=await import('../src/core/run-rewards.js');freshRun();startStage(5);G.kills+=7;
+ const before={gold:save.gold,kills:save.kills,max:save.maxClearedStage},id=`stage-clear:${G.runId}:5`,put=localStorage.setItem;let writes=0;
+ localStorage.setItem=(key,value)=>{if(key==='kfp.progress.v5.guest'){writes++;throw Error('metadata quota');}return put(key,value);};
+ try{showStageClear();assert.equal(writes,1);assert.equal(save.gold,before.gold);assert.equal(save.kills,before.kills);assert.equal(save.maxClearedStage,before.max);assert.equal(hasRunReward(save,id),false);assert.equal(loadRun().stage,5);assert.equal(G.settlement.pending,true);assert.match(node('btn-next').textContent,/저장/);}finally{localStorage.setItem=put;}
+ node('btn-next').click();assert.equal(G.settlement.pending,undefined);assert.equal(hasRunReward(save,id),true);assert.equal(save.kills,before.kills+7);assert.ok(save.maxClearedStage>=5);assert.equal(loadRun().stage,6);
 });

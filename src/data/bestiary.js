@@ -3,7 +3,7 @@ import { ENCIRCLEMENT } from '../game/encirclement.js';
 import { BOSSES, HUNTER_TUNING, bossMaxHp } from './bosses.js';
 import { STAGES } from './stages.js';
 import { SPRITES } from './sprites.js';
-import { COIN_DROPS } from '../game/coin-drops.js';
+import { coinTier, bossCoinValue } from '../game/coin-drops.js';
 const notes={
  shambler:['추적형','몸을 향해 천천히 접근합니다.','접촉 공격으로 이동 공간을 줄입니다.','넓게 돌며 한쪽에 모으고 빈 방향으로 이동하세요.'],
  runner:['고속 추적형','작은 몸으로 빠르게 거리를 좁힙니다.','다른 적 뒤에서 빈틈으로 파고듭니다.','뒤로만 달리지 말고 옆으로 공간을 확보하세요.'],
@@ -15,7 +15,7 @@ const notes={
  suicider:['고정 돌진·자폭형','노란 돌진선과 폭발 원이 먼저 표시됩니다.','방향을 고정해 돌진한 뒤 정지하여 점화하고 폭발합니다. 접촉 피해나 독 장판은 없습니다.','예고선 옆으로 피한 뒤 원 밖으로 나가세요. 폭발 전에 처치하면 해제됩니다.'],
  gunner:['조준 사격형','조준이 고정된 뒤 붉은 탄환 3발을 부채꼴로 동시에 쏩니다.','녹색 산성탄과 달리 빠르고 붉은 직선 탄환입니다.','선이 멈추면 옆으로 움직이거나 조준 중 처치하세요.'],
 };
-const bossTells={charge:'긴 직선 돌진 예고',barrage:"고정된 사격선과 재장전 · 변이 후 부채꼴, 광폭화 시 측면 교차 사격",hunt:`첫 돌진 ${HUNTER_TUNING.warning}초 · 두 번째 ${HUNTER_TUNING.secondWarning}초 예고 · 변이 후 3연속, 광폭화 시 엇박자`,lockshot:'정지하는 저격선과 연속 사격',artillery:'전방에 표시되는 포격 원',toxicTide:'독 웅덩이 사이 출구',crosscut:'연달아 교차하는 칼날 선',echo:'환영 탄막 이후 반대편 메아리',faultline:'양옆 균열 이후 중앙 강타'};
+const bossTells={trainingCharge:'1.5초 고정 예고 · 단일 돌진 · 2.5초 안전한 회복',charge:'긴 직선 돌진 예고',barrage:"고정된 사격선과 재장전 · 변이 후 부채꼴, 광폭화 시 측면 교차 사격",hunt:`첫 돌진 ${HUNTER_TUNING.warning}초 · 두 번째 ${HUNTER_TUNING.secondWarning}초 예고 · 변이 후 3연속, 광폭화 시 엇박자`,lockshot:'정지하는 저격선과 연속 사격',artillery:'전방에 표시되는 포격 원',toxicTide:'독 웅덩이 사이 출구',crosscut:'연달아 교차하는 칼날 선',echo:'환영 탄막 이후 반대편 메아리',faultline:'양옆 균열 이후 중앙 강타'};
 export function firstEnemyStage(id){
  const def=ENEMIES[id];if(!def)return null;
  const minimum=Math.max(def.unlockStage||1,def.ranged?RANGED_UNLOCK_STAGE:1);
@@ -33,12 +33,12 @@ export function bestiaryEntries(){
   entries.push({id:`${elite?'elite':'enemy'}-${id}`,enemyId:id,name:(elite?'정예 · ':'')+def.name,kind:elite?'elite':'ordinary',stage:firstEnemyStage(id),role,tell,pattern,counter,details,
    hp:def.hp*(elite?ELITE.hp:1),speed:def.speed*(elite?ELITE.speed:1),damage:def.charge?0:def.dmg*(elite?ELITE.dmg:1),sprite:SPRITES[def.sheet],sheet:def.sheet,tint:elite?'elite':def.tint,
    image:id==='suicider'?'asset/enemies/rabbit-suicider.png':id==='gunner'?'asset/enemies/rabbit-gunner.png':null,
-   reward:elite?`경험치 + 코인 ${COIN_DROPS.eliteValue}개 · 장비 상자 없음`:`경험치 · 코인 ${COIN_DROPS.ordinaryChance*100}% 확률 · 회복/자석은 별도 조건`,
+   reward:`경험치 · 코인 ${coinTier({type:id,elite}).chance*100}% 확률로 ${coinTier({type:id,elite}).value}개 · ${elite?'장비 상자 없음':'회복/자석은 별도 조건'}`,
    statNote:'스테이지·시간 배율 적용 전 기본값. 정예는 정예 배율 포함. 실제 체력·피해는 구역과 이벤트에 따라 달라집니다.'+(elite?' 정예화 가능한 변종이며 실제 출현은 이벤트 편성을 따릅니다.':'')});
  }
  // Deliberate allowlist: final boss never enters guide data/search/detail/navigation.
  for(let stage=1;stage<=9;stage++){const def=BOSSES[stage];if(!def)continue;
-  entries.push({id:`boss-${stage}`,name:def.name,kind:'boss',stage,role:'구역 보스',tell:bossTells[def.signature]||'바닥 예고 표시를 확인하세요.',pattern:stage===3?`빠른 추적 후 방향을 각각 고정하는 2연속 돌진. 돌진 속도 ${[0,1,2].map(p=>Math.round(HUNTER_TUNING.dashSpeed*(1+p*HUNTER_TUNING.phaseSpeedStep))).join(' / ')} (페이즈별), 회복 ${HUNTER_TUNING.recovery}초.`:`고유 패턴: ${bossTells[def.signature]||def.signature}. 체력이 줄면 후속 공격이 강화됩니다.`,counter:def.signatureHint,details:[],hp:bossMaxHp(stage),speed:def.speed,damage:def.dmg,image:`asset/bosses/boss-${String(stage).padStart(2,'0')}.webp`,reward:'처치 시 보스 장비 상자 확정',statNote:'보스 정의의 기본 능력치입니다. 개별 기술의 피해·속도는 접촉 능력치와 다릅니다.'});
+  entries.push({id:`boss-${stage}`,name:def.name,kind:'boss',stage,role:'구역 보스',tell:bossTells[def.signature]||'바닥 예고 표시를 확인하세요.',pattern:stage===1?'같은 단일 돌진만 사용합니다. 체력이 줄어도 예고와 회복 시간은 줄지 않으며 소환·탄막이 없습니다.':stage===3?`빠른 추적 후 방향을 각각 고정하는 2연속 돌진. 돌진 속도 ${[0,1,2].map(p=>Math.round(HUNTER_TUNING.dashSpeed*(1+p*HUNTER_TUNING.phaseSpeedStep))).join(' / ')} (페이즈별), 회복 ${HUNTER_TUNING.recovery}초.`:`고유 패턴: ${bossTells[def.signature]||def.signature}. 체력이 줄면 후속 공격이 강화됩니다.`,counter:def.signatureHint,details:[],hp:bossMaxHp(stage),speed:def.speed,damage:def.dmg,image:`asset/bosses/boss-${String(def.artStage??stage).padStart(2,'0')}.webp`,reward:`처치 시 코인 ${bossCoinValue(stage)}개 + 보스 장비 상자 확정`,statNote:'보스 정의의 기본 능력치입니다. 개별 기술의 피해·속도는 접촉 능력치와 다릅니다.'});
  }
  return entries;
 }

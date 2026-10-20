@@ -1,3 +1,4 @@
+import { BOSSES } from '../data/bosses.js';
 import { BOSS_SHEETS } from './boss-appearance.js';
 
 // At most the current encounter and the next encounter stay decoded (~4 MiB).
@@ -28,7 +29,7 @@ export class BossSheetCache {
     }
 
     prepare(stage) {
-        const wanted = new Set([stage, stage + 1].filter(n => BOSS_SHEETS[n]));
+        const wanted = new Set([stage, stage + 1].filter(n => BOSSES[n]).map(n => BOSSES[n].artStage ?? n).filter(n => BOSS_SHEETS[n]));
         for (const [n, entry] of this.entries) {
             if (wanted.has(n)) continue;
             this.entries.delete(n);

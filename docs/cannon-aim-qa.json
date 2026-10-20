@@ -1,0 +1,765 @@
+{
+  "method": "Cannon-only finite volleys against real midpoint-of-stage enemy HP; neutral no-gear curve; Bloom stage fixtures include starter thorns disabled, regen1, listed whet, and pollen1 when evolved. Before executes the published76d85937 Cannon runtime and data against the same current-stage HP and authored muzzle. This is an isolated weapon comparison, not a complete old-game snapshot. No critical hits, permanent upgrades, pets, or outgoing thorns damage. Focus hierarchy uses identical legal evolution-passive budget (regen3/pollen3/spread3); final retains its distinct source attacks. Crowd probes use16 real shambler bodies on a280px ring,40 or70HP each, rotating targets and a constant moving-player stance/no focus. The10-second probe measures coverage/clearance, not incoming-pressure survival. Focused comparison is a neutral Lv8 Cannon-only30-second250px boss target, no passives or critical hits.",
+  "generatedAt": "2026-10-20T13:29:14.609Z",
+  "sources": {
+    "cannonTargeting": "00513e9d420c546923a55a98aeb8739d388697ca5699acea8e92b5cd1e7186c7",
+    "weaponRuntime": "e7dfba3332d3511de10ef6ae27f1b4482573a572b9351b610b0541d6f18ee5bb",
+    "fusions": "2839de13a987e922e73dbb51f76ab661f1b05532272578b752204c1a10682f0c",
+    "techs": "e51bd95514d75c73f835fe9e4c95f5f46b1e8a2c4837c73ec799264409a68149",
+    "allWeaponDefinitions": "a8d01b73e7e96a5a0e82fc5714566f98ac856069a2b8fda5d3a5455b0e6522e3",
+    "cannonDefinition": "78ea88bde3e732aad368c6e5348a28a120828c9cab2c84e67cca0973329121cf"
+  },
+  "allDefinitionsUnchangedDuringReport": true,
+  "runtimeUnchangedDuringReport": true,
+  "curve": [
+    {
+      "level": 1,
+      "damage": 44,
+      "interval": 2.6,
+      "rays": 1,
+      "width": 44,
+      "range": 520,
+      "automaticDamage": 44,
+      "spreadRatio": 1,
+      "focusMultiplier": 1.25,
+      "focusedDamage": 55,
+      "before": {
+        "damage": 28,
+        "interval": 2.6,
+        "rays": 1,
+        "width": 38,
+        "range": 520
+      }
+    },
+    {
+      "level": 2,
+      "damage": 56,
+      "interval": 2.366,
+      "rays": 2,
+      "width": 46,
+      "range": 540,
+      "automaticDamage": 53.2,
+      "spreadRatio": 0.95,
+      "focusMultiplier": 1.33,
+      "focusedDamage": 74.48,
+      "before": {
+        "damage": 40,
+        "interval": 2.366,
+        "rays": 2,
+        "width": 38,
+        "range": 520
+      }
+    },
+    {
+      "level": 3,
+      "damage": 60,
+      "interval": 2.132,
+      "rays": 2,
+      "width": 60,
+      "range": 626.099,
+      "automaticDamage": 54,
+      "spreadRatio": 0.9,
+      "focusMultiplier": 1.33,
+      "focusedDamage": 79.8,
+      "before": {
+        "damage": 40,
+        "interval": 2.132,
+        "rays": 3,
+        "width": 47.5,
+        "range": 581.378
+      }
+    },
+    {
+      "level": 4,
+      "damage": 68,
+      "interval": 1.898,
+      "rays": 3,
+      "width": 62.5,
+      "range": 648.46,
+      "automaticDamage": 57.8,
+      "spreadRatio": 0.85,
+      "focusMultiplier": 1.41,
+      "focusedDamage": 95.88,
+      "before": {
+        "damage": 40,
+        "interval": 1.898,
+        "rays": 4,
+        "width": 47.5,
+        "range": 581.378
+      }
+    },
+    {
+      "level": 5,
+      "damage": 74,
+      "interval": 1.664,
+      "rays": 3,
+      "width": 65,
+      "range": 670.82,
+      "automaticDamage": 59.2,
+      "spreadRatio": 0.8,
+      "focusMultiplier": 1.41,
+      "focusedDamage": 104.34,
+      "before": {
+        "damage": 40,
+        "interval": 1.664,
+        "rays": 5,
+        "width": 47.5,
+        "range": 581.378
+      }
+    },
+    {
+      "level": 6,
+      "damage": 84,
+      "interval": 1.43,
+      "rays": 3,
+      "width": 67.5,
+      "range": 693.181,
+      "automaticDamage": 63,
+      "spreadRatio": 0.75,
+      "focusMultiplier": 1.41,
+      "focusedDamage": 118.44,
+      "before": {
+        "damage": 55,
+        "interval": 1.43,
+        "rays": 6,
+        "width": 47.5,
+        "range": 581.378
+      }
+    },
+    {
+      "level": 7,
+      "damage": 92,
+      "interval": 1.196,
+      "rays": 3,
+      "width": 70,
+      "range": 715.542,
+      "automaticDamage": 64.4,
+      "spreadRatio": 0.7,
+      "focusMultiplier": 1.41,
+      "focusedDamage": 129.72,
+      "before": {
+        "damage": 55,
+        "interval": 1.196,
+        "rays": 7,
+        "width": 47.5,
+        "range": 581.378
+      }
+    },
+    {
+      "level": 8,
+      "damage": 100,
+      "interval": 0.962,
+      "rays": 3,
+      "width": 84.1,
+      "range": 794.745,
+      "automaticDamage": 65,
+      "spreadRatio": 0.65,
+      "focusMultiplier": 1.41,
+      "focusedDamage": 141,
+      "before": {
+        "damage": 75,
+        "interval": 0.962,
+        "rays": 8,
+        "width": 55.1,
+        "range": 626.163
+      }
+    }
+  ],
+  "stageVolleys": [
+    {
+      "stage": 1,
+      "level": 1,
+      "evolved": false,
+      "whet": 0,
+      "role": "ordinary",
+      "type": "shambler",
+      "before": {
+        "hp": 20.777,
+        "statDamage": 72.8,
+        "firstVolleyDamage": 72.8,
+        "interval": 2.6,
+        "volleys": 1,
+        "earliestSecondsAfterFirstShot": 0
+      },
+      "after": {
+        "hp": 20.777,
+        "statDamage": 114.4,
+        "firstVolleyDamage": 114.4,
+        "interval": 2.6,
+        "volleys": 1,
+        "earliestSecondsAfterFirstShot": 0
+      },
+      "focusedAfter": {
+        "hp": 20.777,
+        "statDamage": 114.4,
+        "firstVolleyDamage": 143,
+        "interval": 2.6,
+        "volleys": 1,
+        "earliestSecondsAfterFirstShot": 0
+      }
+    },
+    {
+      "stage": 1,
+      "level": 1,
+      "evolved": false,
+      "whet": 0,
+      "role": "strong",
+      "type": "hulk",
+      "before": {
+        "hp": 270.095,
+        "statDamage": 72.8,
+        "firstVolleyDamage": 72.8,
+        "interval": 2.6,
+        "volleys": 4,
+        "earliestSecondsAfterFirstShot": 7.8
+      },
+      "after": {
+        "hp": 270.095,
+        "statDamage": 114.4,
+        "firstVolleyDamage": 114.4,
+        "interval": 2.6,
+        "volleys": 3,
+        "earliestSecondsAfterFirstShot": 5.2
+      },
+      "focusedAfter": {
+        "hp": 270.095,
+        "statDamage": 114.4,
+        "firstVolleyDamage": 143,
+        "interval": 2.6,
+        "volleys": 2,
+        "earliestSecondsAfterFirstShot": 2.6
+      }
+    },
+    {
+      "stage": 1,
+      "level": 1,
+      "evolved": false,
+      "whet": 0,
+      "role": "elite",
+      "type": "brute",
+      "before": {
+        "hp": 673.159,
+        "statDamage": 72.8,
+        "firstVolleyDamage": 72.8,
+        "interval": 2.6,
+        "volleys": 10,
+        "earliestSecondsAfterFirstShot": 23.4
+      },
+      "after": {
+        "hp": 673.159,
+        "statDamage": 114.4,
+        "firstVolleyDamage": 114.4,
+        "interval": 2.6,
+        "volleys": 6,
+        "earliestSecondsAfterFirstShot": 13
+      },
+      "focusedAfter": {
+        "hp": 673.159,
+        "statDamage": 114.4,
+        "firstVolleyDamage": 143,
+        "interval": 2.6,
+        "volleys": 5,
+        "earliestSecondsAfterFirstShot": 10.4
+      }
+    },
+    {
+      "stage": 3,
+      "level": 4,
+      "evolved": false,
+      "whet": 1,
+      "role": "ordinary",
+      "type": "shambler",
+      "before": {
+        "hp": 61.586,
+        "statDamage": 114.4,
+        "firstVolleyDamage": 114.4,
+        "interval": 1.898,
+        "volleys": 1,
+        "earliestSecondsAfterFirstShot": 0
+      },
+      "after": {
+        "hp": 61.586,
+        "statDamage": 194.48,
+        "firstVolleyDamage": 165.308,
+        "interval": 1.898,
+        "volleys": 1,
+        "earliestSecondsAfterFirstShot": 0
+      },
+      "focusedAfter": {
+        "hp": 61.586,
+        "statDamage": 194.48,
+        "firstVolleyDamage": 274.217,
+        "interval": 1.898,
+        "volleys": 1,
+        "earliestSecondsAfterFirstShot": 0
+      }
+    },
+    {
+      "stage": 3,
+      "level": 4,
+      "evolved": false,
+      "whet": 1,
+      "role": "strong",
+      "type": "hulk",
+      "before": {
+        "hp": 800.617,
+        "statDamage": 114.4,
+        "firstVolleyDamage": 114.4,
+        "interval": 1.898,
+        "volleys": 7,
+        "earliestSecondsAfterFirstShot": 11.388
+      },
+      "after": {
+        "hp": 800.617,
+        "statDamage": 194.48,
+        "firstVolleyDamage": 165.308,
+        "interval": 1.898,
+        "volleys": 5,
+        "earliestSecondsAfterFirstShot": 7.592
+      },
+      "focusedAfter": {
+        "hp": 800.617,
+        "statDamage": 194.48,
+        "firstVolleyDamage": 274.217,
+        "interval": 1.898,
+        "volleys": 3,
+        "earliestSecondsAfterFirstShot": 3.796
+      }
+    },
+    {
+      "stage": 3,
+      "level": 4,
+      "evolved": false,
+      "whet": 1,
+      "role": "elite",
+      "type": "brute",
+      "before": {
+        "hp": 1995.384,
+        "statDamage": 114.4,
+        "firstVolleyDamage": 114.4,
+        "interval": 1.898,
+        "volleys": 18,
+        "earliestSecondsAfterFirstShot": 32.266
+      },
+      "after": {
+        "hp": 1995.384,
+        "statDamage": 194.48,
+        "firstVolleyDamage": 165.308,
+        "interval": 1.898,
+        "volleys": 13,
+        "earliestSecondsAfterFirstShot": 22.776
+      },
+      "focusedAfter": {
+        "hp": 1995.384,
+        "statDamage": 194.48,
+        "firstVolleyDamage": 274.217,
+        "interval": 1.898,
+        "volleys": 8,
+        "earliestSecondsAfterFirstShot": 13.286
+      }
+    },
+    {
+      "stage": 6,
+      "level": 8,
+      "evolved": false,
+      "whet": 3,
+      "role": "ordinary",
+      "type": "shambler",
+      "before": {
+        "hp": 246.869,
+        "statDamage": 304.2,
+        "firstVolleyDamage": 304.2,
+        "interval": 0.866,
+        "volleys": 1,
+        "earliestSecondsAfterFirstShot": 0
+      },
+      "after": {
+        "hp": 246.869,
+        "statDamage": 405.6,
+        "firstVolleyDamage": 263.64,
+        "interval": 0.866,
+        "volleys": 1,
+        "earliestSecondsAfterFirstShot": 0
+      },
+      "focusedAfter": {
+        "hp": 246.869,
+        "statDamage": 405.6,
+        "firstVolleyDamage": 571.896,
+        "interval": 0.866,
+        "volleys": 1,
+        "earliestSecondsAfterFirstShot": 0
+      }
+    },
+    {
+      "stage": 6,
+      "level": 8,
+      "evolved": false,
+      "whet": 3,
+      "role": "strong",
+      "type": "hulk",
+      "before": {
+        "hp": 3209.291,
+        "statDamage": 304.2,
+        "firstVolleyDamage": 304.2,
+        "interval": 0.866,
+        "volleys": 11,
+        "earliestSecondsAfterFirstShot": 8.658
+      },
+      "after": {
+        "hp": 3209.291,
+        "statDamage": 405.6,
+        "firstVolleyDamage": 263.64,
+        "interval": 0.866,
+        "volleys": 13,
+        "earliestSecondsAfterFirstShot": 10.39
+      },
+      "focusedAfter": {
+        "hp": 3209.291,
+        "statDamage": 405.6,
+        "firstVolleyDamage": 571.896,
+        "interval": 0.866,
+        "volleys": 6,
+        "earliestSecondsAfterFirstShot": 4.329
+      }
+    },
+    {
+      "stage": 6,
+      "level": 8,
+      "evolved": false,
+      "whet": 3,
+      "role": "elite",
+      "type": "brute",
+      "before": {
+        "hp": 7998.541,
+        "statDamage": 304.2,
+        "firstVolleyDamage": 304.2,
+        "interval": 0.866,
+        "volleys": 27,
+        "earliestSecondsAfterFirstShot": 22.511
+      },
+      "after": {
+        "hp": 7998.541,
+        "statDamage": 405.6,
+        "firstVolleyDamage": 263.64,
+        "interval": 0.866,
+        "volleys": 31,
+        "earliestSecondsAfterFirstShot": 25.974
+      },
+      "focusedAfter": {
+        "hp": 7998.541,
+        "statDamage": 405.6,
+        "firstVolleyDamage": 571.896,
+        "interval": 0.866,
+        "volleys": 14,
+        "earliestSecondsAfterFirstShot": 11.255
+      }
+    },
+    {
+      "stage": 9,
+      "level": 8,
+      "evolved": true,
+      "whet": 4,
+      "role": "ordinary",
+      "type": "shambler",
+      "before": {
+        "hp": 623.879,
+        "statDamage": 1061.424,
+        "firstVolleyDamage": 1061.424,
+        "interval": 0.638,
+        "volleys": 1,
+        "earliestSecondsAfterFirstShot": 0
+      },
+      "after": {
+        "hp": 623.879,
+        "statDamage": 1415.232,
+        "firstVolleyDamage": 919.901,
+        "interval": 0.638,
+        "volleys": 1,
+        "earliestSecondsAfterFirstShot": 0
+      },
+      "focusedAfter": {
+        "hp": 623.879,
+        "statDamage": 1415.232,
+        "firstVolleyDamage": 1995.477,
+        "interval": 0.638,
+        "volleys": 1,
+        "earliestSecondsAfterFirstShot": 0
+      }
+    },
+    {
+      "stage": 9,
+      "level": 8,
+      "evolved": true,
+      "whet": 4,
+      "role": "strong",
+      "type": "hulk",
+      "before": {
+        "hp": 8110.432,
+        "statDamage": 1061.424,
+        "firstVolleyDamage": 1061.424,
+        "interval": 0.638,
+        "volleys": 8,
+        "earliestSecondsAfterFirstShot": 4.465
+      },
+      "after": {
+        "hp": 8110.432,
+        "statDamage": 1415.232,
+        "firstVolleyDamage": 919.901,
+        "interval": 0.638,
+        "volleys": 9,
+        "earliestSecondsAfterFirstShot": 5.102
+      },
+      "focusedAfter": {
+        "hp": 8110.432,
+        "statDamage": 1415.232,
+        "firstVolleyDamage": 1995.477,
+        "interval": 0.638,
+        "volleys": 5,
+        "earliestSecondsAfterFirstShot": 2.551
+      }
+    },
+    {
+      "stage": 9,
+      "level": 8,
+      "evolved": true,
+      "whet": 4,
+      "role": "elite",
+      "type": "brute",
+      "before": {
+        "hp": 20213.691,
+        "statDamage": 1061.424,
+        "firstVolleyDamage": 1061.424,
+        "interval": 0.638,
+        "volleys": 20,
+        "earliestSecondsAfterFirstShot": 12.118
+      },
+      "after": {
+        "hp": 20213.691,
+        "statDamage": 1415.232,
+        "firstVolleyDamage": 919.901,
+        "interval": 0.638,
+        "volleys": 22,
+        "earliestSecondsAfterFirstShot": 13.394
+      },
+      "focusedAfter": {
+        "hp": 20213.691,
+        "statDamage": 1415.232,
+        "firstVolleyDamage": 1995.477,
+        "interval": 0.638,
+        "volleys": 11,
+        "earliestSecondsAfterFirstShot": 6.378
+      }
+    }
+  ],
+  "hierarchy": [
+    {
+      "id": "cannon",
+      "level": 8,
+      "evolved": false,
+      "focusedBossDps": 513.24,
+      "damage": 15397.2
+    },
+    {
+      "id": "cannon",
+      "level": 8,
+      "evolved": true,
+      "focusedBossDps": 1900.454,
+      "damage": 57013.632
+    },
+    {
+      "id": "lotus_bloom",
+      "level": 1,
+      "evolved": false,
+      "focusedBossDps": 2884.36,
+      "damage": 86530.8
+    },
+    {
+      "id": "lotus_bloom",
+      "level": 8,
+      "evolved": false,
+      "focusedBossDps": 3053.36,
+      "damage": 91600.8
+    },
+    {
+      "id": "absolute_bloom",
+      "level": 1,
+      "evolved": false,
+      "focusedBossDps": 4282.372,
+      "damage": 128471.16
+    },
+    {
+      "id": "absolute_bloom",
+      "level": 8,
+      "evolved": false,
+      "focusedBossDps": 4872.766,
+      "damage": 146182.98
+    }
+  ],
+  "arrangedKills": [
+    {
+      "level": 1,
+      "targets": 16,
+      "hpEach": 40,
+      "before": {
+        "firstKills": 0,
+        "firstEffectiveDamage": 28,
+        "firstBeams": 1,
+        "killsBy10Seconds": 0,
+        "clearSeconds": null,
+        "peakBeams": 1
+      },
+      "after": {
+        "firstKills": 1,
+        "firstEffectiveDamage": 40,
+        "firstBeams": 1,
+        "killsBy10Seconds": 4,
+        "clearSeconds": null,
+        "peakBeams": 1
+      }
+    },
+    {
+      "level": 1,
+      "targets": 16,
+      "hpEach": 70,
+      "before": {
+        "firstKills": 0,
+        "firstEffectiveDamage": 28,
+        "firstBeams": 1,
+        "killsBy10Seconds": 0,
+        "clearSeconds": null,
+        "peakBeams": 1
+      },
+      "after": {
+        "firstKills": 0,
+        "firstEffectiveDamage": 44,
+        "firstBeams": 1,
+        "killsBy10Seconds": 2,
+        "clearSeconds": null,
+        "peakBeams": 1
+      }
+    },
+    {
+      "level": 4,
+      "targets": 16,
+      "hpEach": 40,
+      "before": {
+        "firstKills": 4,
+        "firstEffectiveDamage": 160,
+        "firstBeams": 4,
+        "killsBy10Seconds": 12,
+        "clearSeconds": null,
+        "peakBeams": 4
+      },
+      "after": {
+        "firstKills": 3,
+        "firstEffectiveDamage": 120,
+        "firstBeams": 3,
+        "killsBy10Seconds": 16,
+        "clearSeconds": 9.5,
+        "peakBeams": 3
+      }
+    },
+    {
+      "level": 4,
+      "targets": 16,
+      "hpEach": 70,
+      "before": {
+        "firstKills": 0,
+        "firstEffectiveDamage": 160,
+        "firstBeams": 4,
+        "killsBy10Seconds": 6,
+        "clearSeconds": null,
+        "peakBeams": 4
+      },
+      "after": {
+        "firstKills": 0,
+        "firstEffectiveDamage": 173.4,
+        "firstBeams": 3,
+        "killsBy10Seconds": 9,
+        "clearSeconds": null,
+        "peakBeams": 3
+      }
+    },
+    {
+      "level": 8,
+      "targets": 16,
+      "hpEach": 40,
+      "before": {
+        "firstKills": 8,
+        "firstEffectiveDamage": 320,
+        "firstBeams": 8,
+        "killsBy10Seconds": 16,
+        "clearSeconds": 4.833,
+        "peakBeams": 8
+      },
+      "after": {
+        "firstKills": 4,
+        "firstEffectiveDamage": 160,
+        "firstBeams": 3,
+        "killsBy10Seconds": 16,
+        "clearSeconds": 3.867,
+        "peakBeams": 3
+      }
+    },
+    {
+      "level": 8,
+      "targets": 16,
+      "hpEach": 70,
+      "before": {
+        "firstKills": 8,
+        "firstEffectiveDamage": 560,
+        "firstBeams": 8,
+        "killsBy10Seconds": 16,
+        "clearSeconds": 4.833,
+        "peakBeams": 8
+      },
+      "after": {
+        "firstKills": 0,
+        "firstEffectiveDamage": 260,
+        "firstBeams": 3,
+        "killsBy10Seconds": 16,
+        "clearSeconds": 8.7,
+        "peakBeams": 3
+      }
+    }
+  ],
+  "focusedComparison": [
+    {
+      "level": 8,
+      "evolved": false,
+      "before": {
+        "dps": 80,
+        "damage": 2400,
+        "peakBeams": 8
+      },
+      "after": {
+        "dps": 150.4,
+        "damage": 4512,
+        "peakBeams": 3
+      }
+    },
+    {
+      "level": 8,
+      "evolved": true,
+      "before": {
+        "dps": 291.6,
+        "damage": 8748,
+        "peakBeams": 16
+      },
+      "after": {
+        "dps": 548.208,
+        "damage": 16446.24,
+        "peakBeams": 3
+      }
+    }
+  ],
+  "performance": {
+    "targets": 64,
+    "rays": 3,
+    "candidates": 180,
+    "runs": 500,
+    "medianMs": 0.967,
+    "p95Ms": 1.917,
+    "maxMs": 8.577
+  }
+}

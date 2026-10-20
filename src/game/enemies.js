@@ -16,6 +16,7 @@ import { recordFusionHit } from './weapon-vfx.js';
 
 let nextId = 1;
 const explosionQueue = [];
+export function clearPendingExplosions() { explosionQueue.length = 0; }
 const HIT_CHANNELS = 16;
 let sepFrame = 0;
 const roleReducedMotion = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
@@ -121,7 +122,7 @@ function killEnemy(e, opts) {
     if (e.elite) { shake(6); hitstop(0.06); }
 
     dropGem(e.x, e.y, e.xp * KILL_OPPORTUNITY * (G.boss && G.boss.alive ? BOSS_FIGHT_XP_MULTIPLIER : 1));
-    const coinValue = coinDropValue(e.elite);
+    const coinValue = coinDropValue(e);
     if (coinValue) dropCoin(e.x, e.y, coinValue);
     // Elite enemies award only XP and coins; gear chests are boss-exclusive.
     if (!e.elite) {

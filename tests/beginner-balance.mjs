@@ -137,48 +137,22 @@ test('stage 1 leaves a 70-second learning window and smaller events run only onc
     });
 });
 
-test('first boss keeps slower, visibly matched charge warnings after the requested HP increase', () => withFixedRandom(() => {
-    reset(1);
-    const boss = new Boss(1);
-    assert.equal(BOSSES[1].hp, 1400);
-    assert.equal(boss.hp, 1400 * BOSS_HP_MULTIPLIER, 'live boss HP is the base value × multiplier');
-    assert.equal(boss.speed, 48);
-    assert.equal(boss.dmg, 10);
-    assert.equal(boss.attackT, 3);
-    close(boss.radius, 112 * 0.62 * 0.32);
+test('first boss has fixed readable timing and no phase summons', () => {
+    reset(1); const boss = new Boss(1);
+    assert.equal(boss.hp, 600 * BOSS_HP_MULTIPLIER);
+    assert.equal(boss.speed, 48); assert.equal(boss.dmg, 10); assert.equal(boss.attackT, 3);
     for (const phase of [0, 1, 2]) {
-        G.hazards.clear();
-        boss.phase = phase; boss.x = -200; boss.y = 0;
-        const task = boss.task_charge();
-        const warning = 1.15 / Math.sqrt(boss.phaseMul);
-        close(G.hazards.items[0].delay, warning);
-        task.t = warning - 0.001;
-        task.step(0.1, task);
-        assert.equal(boss.x, -200);
-        task.t = warning + 0.001;
-        task.step(0.1, task);
-        close(boss.x, -152);
-        boss.endTask(1.4);
-        close(boss.attackT, 1.4 / boss.phaseMul * 1.5);
+        G.hazards.clear(); boss.phase=phase; boss.x=-200; boss.y=0;
+        const task=boss.task_trainingCharge();
+        close(G.hazards.items[0].delay,1.5);
+        task.t=1.499; task.step(.1,task); assert.equal(boss.x,-200);
+        task.t=1.5; task.step(.1,task); assert.equal(boss.x,-200,'release frame does not erase the warning');
+        task.step(.1,task); close(boss.x,-170);
     }
-}));
-
-test('first boss phase transitions and summons allow time to recover', () => {
-    reset(1);
-    const boss = new Boss(1);
-    boss.enterPhase(1);
-    assert.equal(boss.attackT, 2.2);
-    assert.equal(G.enemies.count, 4);
-    G.enemies.clear();
-    boss.enterPhase(2);
-    assert.equal(boss.attackT, 2.2);
-    assert.equal(G.enemies.count, 5);
-    G.enemies.clear();
-    boss.phase = 0;
-    const task = boss.task_summon();
-    task.t = 0.61;
-    task.step(0.01, task);
-    assert.equal(G.enemies.count, 2);
+    for (const phase of [1,2]) {
+        boss.enterPhase(phase); assert.equal(G.enemies.count,0);
+        assert.equal(boss.attackT,2.5); assert.equal(boss.task.phase,'recover'); assert.equal(boss.speed,48);
+    }
 });
 
 test('later-stage damage, speed, event timing and legacy charges remain while population and HP are rebalanced', () => withFixedRandom(() => {
@@ -203,6 +177,7 @@ test('later-stage damage, speed, event timing and legacy charges remain while po
         }
     }
     for (let stage = 2; stage <= 10; stage++) {
+        if (stage === 9) continue; // Alpha relocation is covered independently.
         const { speed, dmg } = BOSSES[stage];
         const old = baseline.bosses[stage];
         // Requested Hunter speed is the only later movement exception.

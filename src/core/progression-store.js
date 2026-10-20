@@ -1,3 +1,4 @@
+import { normalizeRunRewards, recordRunReward } from './run-rewards.js';
 import { normalizePetUpgrades, PET_UPGRADES } from '../data/pet-upgrades.js';
 import { normalizeAccessories } from './accessories.js';
 import { ACCESSORIES } from '../data/accessories.js';
@@ -14,7 +15,7 @@ const integer = (v, fallback = 0, max = MAX) => Number.isSafeInteger(v) && v >= 
 const clone = v => JSON.parse(JSON.stringify(v));
 const object = v => v && typeof v === 'object' && !Array.isArray(v);
 export function defaultProgress() {
-    return { petUpgrades: { attack: 0, heal: 0, support: 0 }, cosmeticInventory: [], equippedCosmetics: { outfit: null, ornament: null }, lastCosmeticAction: null, accessoryInventory: [], equippedAccessory: null, characterXP: 0, characterRewardCount: 0, lastCharacterReward: null, maxClearedStage: 0, version: SAVE_VERSION, revision: 0, catalogVersion: CATALOG_VERSION, gold: 0, upgrades: {}, inventory: [], equippedPet: null, maxStage: 1, bestTime: 0, kills: 0, seenStory: {}, receipts: [], relics: [], chestPity: 0, chestCount: 0, relicDuplicates: 0, lastChest: null, ...defaultTitleProgress() };
+    return { pinnedRewardRunId: null, runRewards: [], petUpgrades: { attack: 0, heal: 0, support: 0 }, cosmeticInventory: [], equippedCosmetics: { outfit: null, ornament: null }, lastCosmeticAction: null, accessoryInventory: [], equippedAccessory: null, characterXP: 0, characterRewardCount: 0, lastCharacterReward: null, maxClearedStage: 0, version: SAVE_VERSION, revision: 0, catalogVersion: CATALOG_VERSION, gold: 0, upgrades: {}, inventory: [], equippedPet: null, maxStage: 1, bestTime: 0, kills: 0, seenStory: {}, receipts: [], relics: [], chestPity: 0, chestCount: 0, relicDuplicates: 0, lastChest: null, ...defaultTitleProgress() };
 }
 export function validateProgress(raw) {
     if (!object(raw)) throw new Error('INVALID_PROGRESS');
@@ -39,6 +40,9 @@ export function validateProgress(raw) {
     s.petUpgrades = normalizePetUpgrades({ ...raw, inventory: s.inventory });
     if (object(raw.seenStory)) for (const [k, v] of Object.entries(raw.seenStory)) if (/^[\w-]{1,80}$/.test(k) && v === true) s.seenStory[k] = true;
     s.receipts = Array.isArray(raw.receipts) ? raw.receipts.filter(r => typeof r === 'string' && r.length <= 160).slice(-128) : [];
+    s.pinnedRewardRunId = typeof raw.pinnedRewardRunId === 'string' && raw.pinnedRewardRunId.length <= 96 ? raw.pinnedRewardRunId : null;
+    s.runRewards = normalizeRunRewards(raw.runRewards,s.pinnedRewardRunId);
+    for (const receipt of s.receipts) s.runRewards = recordRunReward(s, receipt);
     s.lastCosmeticAction = normalizeCosmeticAction({ ...s, lastCosmeticAction: raw.lastCosmeticAction }, s);
     s.relics = RELICS.filter(r => Array.isArray(raw.relics) && raw.relics.includes(r.id)).map(r => r.id);
     Object.assign(s, normalizeTitleProgress(raw));

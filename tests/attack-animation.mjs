@@ -89,7 +89,10 @@ test('real runtime attack emissions select correct body families without delayin
         for (const [family, ids] of Object.entries(expected)) for (const id of ids) {
             const w=setup(id); if(family==='sword'){const e=G.enemies.spawn();Object.assign(e,{id:777,x:60,y:0,radius:10,hp:100000,maxHp:100000,alive:true,elite:true,mass:1,kx:0,ky:0,def:{}});} updateWeapons(.016);
             if (family==='dual') { if (!WEAPONS[id].fusionOnly) assert.equal(G.shots.count,0,'burst scheduling remains unchanged'); G.clock+=.016;updateWeapons(.016); }
-            assert.equal(G.player.attackPose.family,family,id); assert.equal(G.player.attackPose.weapon,id);
+            // A hybrid's real bottle release precedes the same-frame coalesced beam flush.
+            // Its existing minimum hold may retain the throw pose; neither attack waits.
+            const emittedFamily=['ember_lance','absolute_bloom'].includes(id)?'throw':family;
+            assert.equal(G.player.attackPose.family,emittedFamily,id); assert.equal(G.player.attackPose.weapon,id);
             assert.equal(G.player.attackPose.at,G.clock,id);
             if (family==='cannon') assert.ok(G.beams.count>0,id);
             else if(family==='channel') assert.ok(w.activeT>0,id);
@@ -192,9 +195,9 @@ test('absolute peak remains readable through ordinary intervening fire while str
     assert.equal(p.attackPose.weapon,'doom_barrage');
 });
 
-test('an evolved cannon faces its first actual rotated beam without changing that beam angle or emission time', () => {
+test('an evolved cannon faces its actual scored beam with no clock rotation or emission delay', () => {
     setup('cannon',true);G.clock=5.5;updateWeapons(.016);
-    assert.ok(G.beams.count>0);assert.equal(G.beams.items[0].angle,5.5*.6);
+    assert.ok(G.beams.count>0);assert.equal(G.beams.items[0].angle,0,'no targets uses facing, never an unscored clock rotation');
     assert.equal(G.player.attackPose.flip,Math.cos(G.beams.items[0].angle)<0);
     assert.equal(G.player.attackPose.at,5.5);
 });

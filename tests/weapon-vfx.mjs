@@ -24,7 +24,7 @@ function beam(id='cannon'){return {weapon:id,x:0,y:0,angle:0,len:420,width:38,li
 test('all nine ordinary and fourteen final or absolute weapons have explicit distinct visual identities',()=>{
  assert.equal(Object.keys(WEAPON_VFX).length,23);for(const id of Object.keys(WEAPONS))assert.ok(WEAPON_VFX[id],id);
  const fused=FUSION_RECIPES.map(r=>WEAPON_VFX[r.id]);assert.equal(new Set(fused.map(p=>p.color+':'+p.shape)).size,14);
- assert.equal(WEAPON_VFX.cannon.shape,'petal');assert.equal(WEAPON_VFX.lotus_bloom.shape,'lotus');assert.equal(WEAPON_VFX.ember_lance.shape,'ember');
+ assert.equal(WEAPON_VFX.cannon.shape,'lotus');assert.equal(WEAPON_VFX.lotus_bloom.shape,'lotus');assert.equal(WEAPON_VFX.ember_lance.shape,'ember');
 });
 
 test('rendering all projectile and beam shapes leaves damage, collision and lifetime state untouched',()=>{
@@ -114,4 +114,21 @@ test('fusion residue motion freezes with reduced motion and actual fields never 
 test('fused hit and slow cues share the existing strict impact budget',()=>{
  reset();const pool={count:30,items:Array.from({length:30},(_,i)=>({id:i,alive:true,x:i*3,y:10,radius:10,flash:.08,slow:.4,slowT:.5}))};for(const e of pool.items)recordFusionHit(e,'venom_saw',2,.4);
  for(const low of [true,false]){const f=createWeaponVfxFrame(low,2);drawFusionHitAccents(context(),pool,null,f);assert.equal(f.impactsUsed,low?3:8);assert.equal(f.statusUsed,low?3:8);assert.ok(f.scanLeft>=0);}
+});
+
+test('focused lotus adds one confirmed endpoint bloom within shared visual budgets',()=>{
+ reset();const b={...beam(),focused:true,focusPrimary:true,focusHit:true},before=JSON.stringify(b);
+ for(const low of [false,true]){const f=createWeaponVfxFrame(low,2,{projectileGlow:false}),ctx=context();drawWeaponBeam(ctx,b,f);assert.equal(f.impactsUsed,1);assert.ok(f.petalsUsed<=(low?10:32));assert.ok(ctx.ops.some(op=>op.name==='ellipse'&&op.args[0]===b.len));assert.equal(JSON.stringify(b),before);}
+ const f=createWeaponVfxFrame(false,2,{});drawWeaponBeam(context(),{...b,focusPrimary:false},f);assert.equal(f.impactsUsed,0);
+ const missed=createWeaponVfxFrame(false,2,{});drawWeaponBeam(context(),{...b,focusHit:false},missed);assert.equal(missed.impactsUsed,0);
+});
+test('focused beams never decorate incidental bystanders as damaged impacts',()=>{
+ reset();const b={...beam(),focused:true,focusPrimary:true,focusHit:true};const f=createWeaponVfxFrame(false,2,{});
+ drawBeamHitAccents(context(),{count:1,items:[b]},{count:1,items:[{x:100,y:16,radius:16,flash:1}]},null,f);assert.equal(f.impactsUsed,0);
+});
+
+test('merged short-wide and long-narrow components keep their real visible union',()=>{
+ reset();const b={...beam(),len:760,width:120,segments:[{length:760,width:12},{length:180,width:120}]},before=JSON.stringify(b),ctx=context(),f=createWeaponVfxFrame(false,2,{projectileGlow:false});
+ drawWeaponBeam(ctx,b,f);const far=ctx.ops.filter(o=>o.name==='lineTo'&&o.args[0]>300);assert.ok(far.length);assert.ok(far.every(o=>Math.abs(o.args[1])<8));assert.equal(JSON.stringify(b),before);
+ const impacts=createWeaponVfxFrame(false,2,{});drawBeamHitAccents(context(),{count:1,items:[b]},{count:1,items:[{x:600,y:56,radius:16,flash:1}]},null,impacts);assert.equal(impacts.impactsUsed,0,'phantom wide-far target is not decorated as a hit');
 });

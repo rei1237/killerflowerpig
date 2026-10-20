@@ -6,12 +6,12 @@ import { RELICS, RELIC_CHEST } from '../src/data/relics.js';
 import { PICKUP_ASSIST } from '../src/game/pickups.js';
 import { xpForLevel } from '../src/game/progression.js';
 const price = id => SHOP.find(i=>i.id===id).cost[0];
-test('rare ordinary coins retain prices and give deliberate long-term shop goals',()=>{
- const expectedCoins=100*.15*3;
- assert.equal(expectedCoins,45);assert.equal(price('magnet'),8);assert.equal(price('speed'),12);
- assert.equal(Math.ceil(price('magnet')/(.15*3)),18);
- assert.equal(Math.ceil(price('speed')/(.15*3)),27);
- assert.match(fs.readFileSync(new URL('../src/game/enemies.js',import.meta.url),'utf8'),/coinDropValue\(e.elite\)/);
+test('strong enemy rewards fund starter and pet training without weak-mob coin floods',async()=>{
+ const {coinTier,bossCoinValue}=await import('../src/game/coin-drops.js');
+ assert.equal(coinTier('shambler').chance,0);assert.ok(Math.abs(coinTier('brute').chance*coinTier('brute').value-.9)<1e-9);
+ assert.equal(bossCoinValue(1),25);assert.equal(price('magnet'),8);assert.equal(price('speed'),12);
+ assert.ok(bossCoinValue(1)>=price('magnet')+price('speed'));
+ assert.match(fs.readFileSync(new URL('../src/game/enemies.js',import.meta.url),'utf8'),/coinDropValue\(e\)/);
 });
 test('coin and XP collection are friendlier without expanding chest/bomb activation radius',()=>{
  assert.equal(70*PICKUP_ASSIST.coinMultiplier,105);assert.equal(70*PICKUP_ASSIST.gemMultiplier,84);

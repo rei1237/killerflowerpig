@@ -39,13 +39,13 @@ test('sword has eight real growth levels, a defined evolution and an ordinary we
     assert.equal(WEAPONS.sword.evolve.with, 'whet');
     assert.equal(WEAPONS.sword.evolve.name, '핏빛 연꽃검');
     const expected = [
-        [24, .95, 1], [30, .95, 1], [30, .874, 1], [30, .874, 1.15],
-        [38, .874, 1.15], [38, .798, 1.15], [48, .798, 1.15], [48, .722, 1.30],
+        [28, .95, 1], [36, .95, 1], [36, .874, 1], [36, .874, 1.15],
+        [46, .874, 1.15], [46, .798, 1.15], [58, .798, 1.15], [58, .722, 1.30],
     ];
     for (let level = 1; level <= 8; level++) {
         const stats = weaponStats(Object.assign(createWeapon('sword', 0), { level }));
         near(stats.dmg, expected[level - 1][0]); near(stats.cd, expected[level - 1][1]); near(stats.area, expected[level - 1][2]);
-        assert.equal(stats.radius, 100); assert.equal(stats.amount, 1);
+        assert.equal(stats.radius, 110); assert.equal(stats.amount, 1);
     }
     assert.equal(applyChoice({ kind: 'weapon', id: 'sword', level: 1 }), true);
     assert.deepEqual(inventory(), [['sword', 1, false, 0]]);

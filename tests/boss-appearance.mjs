@@ -26,10 +26,10 @@ test('boss motion stays bounded, deterministic when paused and supports collapse
 });
 test('boss renderer selects stage artwork with old atlas only as missing-image fallback',()=>{
  const code=fs.readFileSync(new URL('../src/game/boss.js',import.meta.url),'utf8');
- assert.match(code,/if \(!drawBossArtwork\(ctx, this, G.clock, images\[`bossArt\$\{this.stage\}`\]\)\)/);
+ assert.match(code,/if \(!drawBossArtwork\(ctx, this, G.clock, images\[`bossArt\$\{this.artStage\}`\]\)\)/);
  assert.doesNotMatch(code,/drawBossSignature/);
 });
 test('ordinary mob appearance remains original while kills drop coins',()=>{
  const code=fs.readFileSync(new URL('../src/game/enemies.js',import.meta.url),'utf8');
- assert.match(code,/e.tint = elite \? 'elite' : def.tint/);assert.doesNotMatch(code,/enemyAppearance|drawBossSignature/);assert.match(code,/coinDropValue\(e.elite\)/);
+ assert.match(code,/e.tint = elite \? 'elite' : def.tint/);assert.doesNotMatch(code,/enemyAppearance|drawBossSignature/);assert.match(code,/coinDropValue\(e\)/);
 });

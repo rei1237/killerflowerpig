@@ -31,8 +31,8 @@ export const FUSED_WEAPONS = {
     },
     absolute_bloom: {
         name: '절대 만개', icon: '💮', color: '#fff0b8', fusionOnly: true, tier: 'absolute', amountCap: 12,
-        desc: '세 진화 무기의 공격을 계승하고 여덟 방향의 거대한 연꽃 광선으로 전장을 뒤덮는다.',
-        base: { dmg: 150, cd: 2.4, amount: 8, speed: 1, duration: 0.6, area: 1, length: 760, width: 68 },
+        desc: '세 진화 무기의 공격을 계승한다. 연꽃 광선은 보너스와 계승 공격을 합쳐 화면 전체 최대 3발. 자동 사격은 분산 피해, 집중 조준은 선택한 적에게 강화 피해를 준다.',
+        base: { dmg: 125, cd: 2.9, amount: 8, speed: 1, duration: 0.6, area: 1, length: 760, width: 68 },
         levels: [{dmg:15,t:'절대 광선 피해 +15 · 계승 공격 강화'},{area:0.12,t:'절대 광선 범위 +12%'},{cd:-0.08,t:'재사용 -8%'},{dmg:20,t:'절대 광선 피해 +20 · 계승 공격 강화'},{area:0.12,t:'절대 광선 범위 +12%'},{cd:-0.08,t:'재사용 -8%'},{dmg:25,t:'절대 광선 피해 +25 · 세 진화 공격 최종 강화'}],
     },
     lotus_bloom: {

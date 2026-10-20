@@ -7,8 +7,10 @@ import {G} from '../src/game/state.js';
 import {previewFusion,fuseItems} from '../src/game/fusion.js';
 import {activeWeaponCores,createWeapon,weaponStats,updateWeapons} from '../src/game/weapons.js';
 import {snapshotBuild,restoreBuild} from '../src/game/progression.js';
-test('all eight final Lv1 fusions exceed two evolved parents in real 30-second boss, scattered and corridor collisions',()=>{
- for(const recipe of FUSION_RECIPES)for(const scene of ['boss','scatter','corridor']){
+test('final Lv1 fusions retain combined-parent premium except the explicitly balanced Absolute Bloom',()=>{
+ // Absolute Bloom trades three slots for one; its user-requested challenge pass
+ // preserves the separate single-final route premium, not a three-parent sum floor.
+ for(const recipe of FUSION_RECIPES.filter(r=>r.id!=='absolute_bloom'))for(const scene of ['boss','scatter','corridor']){
   const before=simulate(recipe,false,scene),after=simulate(recipe,true,scene);assert.ok(before>0);assert.ok(after>before*1.2,`${recipe.id}/${scene}: ${after}/${before}`);
  }
 });
@@ -24,7 +26,7 @@ test('every final requires two evolved Lv8 parents, rejects partial evolution, p
 test('inherited cores remain bounded, nonrecursive and advance with final item level',()=>{
  simulate(FUSION_RECIPES[0],true,'boss');const item=G.weapons[0],core=item.fusionCores[0],first=weaponStats(core).dmg;item.level=8;activeWeaponCores();assert.ok(weaponStats(core).dmg>first*1.4);
  Object.assign(G.player.stats,{might:100,amount:100,area:100,duration:100,cooldown:.001});
- for(const c of activeWeaponCores().filter(c=>c.sourceId)){const s=weaponStats(c);assert.ok(s.dmg<=600*tierPower(c)*(c.id==='cannon'?2:1)+1e-9);assert.ok(s.amount<=20);assert.ok(s.area<=3);assert.ok(s.duration<=14);assert.ok(s.cd>=.2);assert.equal(WEAPONS[c.id].fusionOnly,undefined);}
+ for(const c of activeWeaponCores().filter(c=>c.sourceId)){const s=weaponStats(c);assert.ok(s.dmg<=(c.id==='cannon'?800:600)*tierPower(c)+1e-9);assert.ok(s.amount<=20);assert.ok(s.area<=3);assert.ok(s.duration<=14);assert.ok(s.cd>=.2);assert.equal(WEAPONS[c.id].fusionOnly,undefined);}
 });
 test('final cores at the sixth slot retain independent bounded hit channels and pooled typed arrays',()=>{
  const recipe=FUSION_RECIPES.find(r=>r.output==='orbit_saw');simulate(recipe,true,'scatter');

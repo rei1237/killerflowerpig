@@ -33,15 +33,15 @@ test('ten encounters advertise ten different executable signatures and concise K
   assert.equal(typeof b[`task_${def.signature}`],'function');assert.match(def.signatureHint,/[가-힣]/);assert.ok(def.signatureHint.length<65);
   for(const phase of def.phases) assert.ok(phase.includes(def.signature));
   close(b.radius,112*def.scale*.32);
-  if(stage>1) for(const field of ['speed','dmg']) assert.equal(def[field],stage===3&&field==='speed'?118:baseline.bosses[stage][field],`${stage}:${field}`);
+  if(stage>1&&stage!==9) for(const field of ['speed','dmg']) assert.equal(def[field],stage===3&&field==='speed'?118:baseline.bosses[stage][field],`${stage}:${field}`);
   b.startPattern();assert.equal(b.lastPattern,def.signature,'opening cannot randomly skip identity');
  }
 });
 
-test('stage 1 keeps its generous charge warning, speed and long recovery in every phase',()=>{
+test('relocated Alpha keeps its original charge warning, speed and recovery in every phase',()=>{
  const old=Math.random;Math.random=()=>.5;
  try { for(let phase=0;phase<3;phase++) {
-  const b=reset(1,phase);begin(b);const warning=1.15/Math.sqrt(b.phaseMul);
+  const b=reset(9,phase);begin(b);const warning=1.15/Math.sqrt(b.phaseMul);
   assert.equal(hazards()[0].delay,warning);advance(b,warning-.005);close(b.x,0);
   advance(b,.01);assert.ok(b.x>0&&b.x<=4.8);
   while(b.task) advance(b,.01);
@@ -52,7 +52,7 @@ test('stage 1 keeps its generous charge warning, speed and long recovery in ever
 test('signatures preserve their full warning and release attack poses only at their gameplay event',()=>{
  for(let stage=2;stage<=10;stage++) for(const phase of [0,2]) {
   const b=reset(stage,phase);begin(b);const first=Math.min(...hazards().map(h=>h.delay));
-  assert.ok(first>=(stage===3?.65:1.05),`${stage}: phase cannot shorten the warning`);
+  assert.ok(first>=(stage===3?.65:stage===9?1.15/Math.sqrt(b.phaseMul):1.05),`${stage}: phase cannot shorten the warning`);
   advance(b,first-.005);assert.equal(bossSpriteFrame(b),BOSS_FRAMES.windup,`${stage}: premature attack`);assert.equal(G.enemyShots.count,0);
   advance(b,.01);assert.equal(bossSpriteFrame(b),BOSS_FRAMES.attack,`${stage}: release pose`);
  }
@@ -139,14 +139,14 @@ test('psychic echoes use separate origins, staggered release and a wide missing 
  }
 });
 
-// 강화: 기본부터 중앙 강타 뒤 직각 십자 균열(2.75초), 변이 이후 대각선 X 균열이 이어진다.
-test('hammer faults leave center safe first, then hit center only at its later warning',()=>{
- const b=reset(9);begin(b);const marks=hazards();assert.equal(marks.length,4);
- const outer=marks.filter(h=>h.delay<2),center=marks.find(h=>h.delay===2),cross=marks.find(h=>h.delay>2);
- assert.equal(outer.length,2);assert.ok(outer.every(h=>!lineContains(h,300,0)));assert.ok(lineContains(center,300,0));
- close(cross.delay,2.75);close(Math.abs(cross.angle-center.angle),Math.PI/2);
- G.player.iframes=0;updateHazards(1.051);assert.equal(G.player.hp,10000);updateHazards(.948);assert.equal(G.player.hp,10000);updateHazards(.002);assert.ok(G.player.hp<10000);
- for(const phase of [1,2])assert.equal((reset(9,phase),begin(G.boss),hazards().length),6,'mutation adds two diagonal X lines');
+test('stage 9 uses Alpha charge, landing rings and phase summons rather than the replaced faultline',()=>{
+ for(const phase of [0,1,2]) {
+  const b=reset(9,phase);begin(b);assert.equal(hazards().length,1);
+  while(b.task)advance(b,.01);
+  assert.equal(G.enemyShots.count,phase?10+phase*4:0);
+ }
+ const b=reset(9);b.enterPhase(1);assert.equal(G.enemies.count,4);
+ G.enemies.clear();b.enterPhase(2);assert.equal(G.enemies.count,5);
 });
 
 // 강화: 금화 사격선 7/9/11줄, 모래시계 2/2/3개(.65초 간격), 결산 금화 11발.
@@ -161,7 +161,7 @@ test('financier contract fixes the debt mark, fires coins first and settles afte
 
 test('death and phase changes cancel owned warning callbacks without removing unrelated hazards',()=>{
  for(const stage of [2,3,4,5,6,7,8,9,10]) for(const interruption of ['phase','death']) {
-  const b=reset(stage);begin(b);const callbacks=hazards().map(h=>[h.onFire,{...h}]);
+  const b=reset(stage);begin(b);const callbacks=hazards().filter(h=>h.onFire).map(h=>[h.onFire,{...h}]);
   const friendly=spawnHazard('gas',1000,1000,{radius:20,duration:5});
   if(interruption==='phase') b.enterPhase(1);else b.die();
   assert.ok(hazards().includes(friendly));assert.ok(hazards().every(h=>h.onFire?.bossOwner!==b));
@@ -174,7 +174,7 @@ test('death and phase changes cancel owned warning callbacks without removing un
 test('phase reinforcement is an explicit brute/brood identity, not the same add wave on every boss',()=>{
  for(let stage=1;stage<=10;stage++) {
   const b=reset(stage);b.enterPhase(1);
-  assert.equal(G.enemies.count,stage===1?4:stage===6?5:0,`stage ${stage}`);
+  assert.equal(G.enemies.count,stage===9?4:stage===6?5:0,`stage ${stage}`);
  }
 });
 
@@ -195,9 +195,10 @@ test('hourglass marker is draw-only and pooled hazards reset it on reuse',()=>{
  G.hazards.clear();const plain=spawnHazard('tcircle',0,0,{delay:1});assert.equal(plain.symbol,null);
 });
 
-test('every boss mixes a bullet pattern after mutation and its signature escalates through mutation and frenzy',()=>{
+test('advanced bosses retain bullet mixing and signature escalation; beginner does not',()=>{
  for(let stage=1;stage<=10;stage++) {
   const def=BOSSES[stage];
+  if(stage===1){assert.deepEqual(def.phases,[['trainingCharge'],['trainingCharge'],['trainingCharge']]);continue;}
   assert.ok(!def.phases[0].some(k=>k==='ring'||k==='aimed')||stage===1,`${stage}: opening phase stays a pure signature read`);
   assert.ok(def.phases[2].some(k=>k==='ring'||k==='aimed'),`${stage}: frenzy mixes a bullet pattern`);
   // Hunter's 2 → 3 → off-beat 3 combo is verified with a moving player in hunter-speed.mjs.

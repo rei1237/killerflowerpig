@@ -63,9 +63,13 @@ for (const phase of ['mid', 'evolved', 'final']) {
         assert.equal(executioner.survival.armor, 0);
         assert.equal(executioner.survival.regenPerSecond, 0);
     });
-    test(`${phase}: Bloom trades weaker focused boss damage for coverage and sustain`, () => {
+    test(`${phase}: Bloom combines broad coverage and sustain without multiplying single-target damage by ray count`, () => {
         const bloom = role('bloom', phase, 'boss_focused'), gunline = role('gunline', phase, 'boss_focused');
-        assert.ok(bloom.dps < gunline.dps);
+        // The requested Cannon buff intentionally supersedes "always weaker
+        // than Gunline on bosses". Keep the distinct crowd/sustain role plus
+        // exact one-hit-per-volley assertions in cannon-growth.mjs instead.
+        assert.ok(bloom.dps > 0);
+        assert.ok(role('bloom', phase, 'swarm_stationary').dps > bloom.dps * 3);
         assert.ok(role('bloom', phase, 'swarm_stationary').dps > role('gunline', phase, 'swarm_stationary').dps);
         assert.ok(role('bloom', phase, 'dispersed_moving').dps > role('gunline', phase, 'dispersed_moving').dps);
         assert.ok(bloom.survival.maxHp > gunline.survival.maxHp);
@@ -74,11 +78,12 @@ for (const phase of ['mid', 'evolved', 'final']) {
     });
     test(`${phase}: Plague has sustained swarm damage and armor with a real field-uptime limitation`, () => {
         const plague = role('plague', phase, 'boss_focused'), gunline = role('gunline', phase, 'boss_focused');
-        if (phase !== 'final') assert.ok(plague.dps < gunline.dps);
-        else {
+        assert.ok(plague.dps > 0);
+        if (phase === 'final') {
             // Final Plague can exceed Gunline against a stationary boss inside
             // stacked fields. That is valid sustained-field strength, not a
-            // reason to nerf it back to the old cross-role ordering.
+            // reason to nerf it back to the old cross-role ordering. The later
+            // explicit non-gun buff also supersedes that ordering at mid-game.
             // Test its actual limitation instead: a moving target exits a live,
             // fixed field even with the real slow applied and predictive landing.
             const still = measurePlagueFieldUptime({ moving: false }), moving = measurePlagueFieldUptime({ moving: true });

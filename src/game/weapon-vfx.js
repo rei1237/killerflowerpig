@@ -8,7 +8,7 @@ export const WEAPON_VFX = Object.freeze({
  shotgun:{color:'#efb16e',light:'#fff0cf',trail:16,shape:'pellet'},
  pistols:{color:'#f6d679',light:'#fff7dc',trail:23,shape:'round'},
  rifle:{color:'#8ecde7',light:'#edfaff',trail:45,shape:'rail'},
- cannon:{color:'#ed75ad',light:'#ffe7f4',accent:'#bc91e8',shape:'petal'},
+ cannon:{color:'#e783bc',light:'#fff4dc',accent:'#dcb970',shape:'lotus'},
  thorns:{color:'#dc79ad',light:'#ffdae9',shape:'petal'},
  molotov:{color:'#f5a34f',light:'#ffe7b2',shape:'ember'},
  gas:{color:'#61c7ad',light:'#d3ffe5',shape:'gas'},
@@ -128,6 +128,7 @@ export function drawWeaponOrbit(ctx,w,s,p,frame) {
  const style=weaponVfxProfile(w.id),n=s.amount,R=s.radius*s.area,size=26*s.area;
  const img=w.id==='orbit_saw'?fx.saw:(w.evolved?fx.petalBlood:fx.petal);
  for(let i=0;i<n;i++){
+  if(w.id==='thorns'&&w.thornState&&!w.thornState.slots[i]?.ready)continue;
   const a=w.angle+(i/n)*Math.PI*2,ox=p.x+Math.cos(a)*R,oy=p.y-20+Math.sin(a)*R*.8;
   ctx.save();ctx.globalCompositeOperation='source-over';
   if(detail(frame)){
@@ -144,28 +145,50 @@ export function drawWeaponOrbit(ctx,w,s,p,frame) {
 }
 
 export function drawWeaponBeam(ctx,b,frame) {
+ // Coalesced releases may share an angle but not width/reach. Keep the real
+ // union outline: a short wide component never becomes a long wide beam.
+ if (Array.isArray(b.segments) && b.segments.length) {
+  for (let i=0;i<b.segments.length;i++) {
+   const segment=b.segments[i];
+   drawWeaponBeamLayer(ctx,{...b,len:segment.length,width:segment.width,
+    layerSecondary:i>0,focusPrimary:b.focusPrimary&&i===0},frame);
+  }
+ } else drawWeaponBeamLayer(ctx,b,frame);
+}
+function drawWeaponBeamLayer(ctx,b,frame) {
  const style=weaponVfxProfile(b.weapon),k=Math.max(0,Math.min(1,b.life/b.max));
  if(!k)return;
- const width=b.width*(.6+.4*k),decor=detail(frame,true),time=frame.motion?frame.clock:0;
+ const intensity = (b.weapon === 'absolute_bloom' ? .72 : 1) * (b.layerSecondary ? .65 : 1) * (b.focused && !b.focusPrimary ? .5 / Math.max(1, (b.focusCount || 1) - 1) : 1);
+ const width=b.width*(.6+.4*k),decor=!b.layerSecondary&&(!b.focused||b.focusPrimary)&&detail(frame,true),time=frame.motion?frame.clock:0;
  ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.angle);ctx.globalCompositeOperation='source-over';ctx.lineCap='round';
  // Translucent tapered layers stay inside the real beam width and length.
- ctx.globalAlpha=k*.18;ctx.fillStyle=style.color;
+ ctx.globalAlpha=k*intensity*.18;ctx.fillStyle=style.color;
  ctx.beginPath();ctx.moveTo(0,-width*.48);ctx.lineTo(b.len*.93,-width*.22);ctx.lineTo(b.len,0);ctx.lineTo(b.len*.93,width*.22);ctx.lineTo(0,width*.48);ctx.closePath();ctx.fill();
- ctx.globalAlpha=k*.23;ctx.fillStyle=style.accent||style.color;
+ ctx.globalAlpha=k*intensity*.23;ctx.fillStyle=style.accent||style.color;
  ctx.beginPath();ctx.moveTo(0,-width*.25);ctx.lineTo(b.len,0);ctx.lineTo(0,width*.25);ctx.closePath();ctx.fill();
- segment(ctx,0,0,b.len,0,style.light,Math.max(1,width*.055),k*.8);
+ segment(ctx,0,0,b.len,0,style.light,Math.max(1,width*.055),k*intensity*.8);
  if(decor){
-  segment(ctx,0,-width*.24,b.len*.95,-width*.09,style.color,1,k*.55);
-  segment(ctx,0,width*.24,b.len*.95,width*.09,style.color,1,k*.55);
+  // Five opening petals and a fine gold collar stay at the real muzzle.
+  // Reduced-motion keeps a stable bloom rather than a pulsing flash.
+  const opening=frame.motion?(.55+.45*Math.sin((1-k)*Math.PI/2)):1;
+  const collar=Math.min(19,width*.28)*opening;
+  ctx.globalAlpha=k*intensity*.6;ctx.strokeStyle=style.accent||style.light;ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.ellipse(0,0,collar*.48,collar,0,0,TAU);ctx.stroke();
+  const muzzlePetals=Math.min(frame.petalLeft,frame.lowQ?3:5);frame.petalLeft-=muzzlePetals;frame.petalsUsed+=muzzlePetals;
+  for(let i=0;i<muzzlePetals;i++){const a=(i-(muzzlePetals-1)/2)*.42;petal(ctx,-Math.cos(a)*collar*.5,Math.sin(a)*collar,Math.min(8,width*.14),a, i%2?style.light:style.accent||style.color);}
+  segment(ctx,0,0,b.len,0,style.accent||style.color,Math.max(2,width*.10),k*intensity*.34);
+  segment(ctx,0,0,b.len,0,style.light,Math.max(1,width*.035),k*intensity*.9);
+  segment(ctx,0,-width*.24,b.len*.95,-width*.09,style.color,1,k*intensity*.55);
+  segment(ctx,0,width*.24,b.len*.95,width*.09,style.color,1,k*intensity*.55);
   if(frame.glow){
    const g=glow(style.color,32),r=Math.min(34,width*.72);
-   ctx.globalAlpha=k*.48;ctx.drawImage(g,-r,-r,r*2,r*2);
+   ctx.globalAlpha=k*intensity*.48;ctx.drawImage(g,-r,-r,r*2,r*2);
   }
   // No fake impacts at the beam end. Petals decorate the light path only.
   const count=Math.min(frame.petalLeft,frame.lowQ?3:8);frame.petalLeft-=count;frame.petalsUsed+=count;
   const bloom=Math.min(count,style.shape==='absolute'?6:style.shape==='lotus'?4:style.shape==='petal'?3:0);
   for(let i=0;i<count;i++){
-   ctx.globalAlpha=k*(.42+(i%2)*.17);
+   ctx.globalAlpha=k*intensity*(.42+(i%2)*.17);
    if(i<bloom){
     const a=i/Math.max(1,bloom)*TAU+time*.2,r=width*.17;
     petal(ctx,Math.cos(a)*r,Math.sin(a)*r,Math.min(6,width*.16),a,i%2?style.light:style.color);
@@ -175,6 +198,15 @@ export function drawWeaponBeam(ctx,b,frame) {
     petal(ctx,x,y,style.shape==='ember'?4.5:3.5,i*.7+time*.35,i%2?style.light:style.color);
    }
   }
+ }
+ // A focused bloom exists only where this volley actually applied damage.
+ if(b.focused&&b.focusPrimary&&b.focusHit&&frame.impactLeft>0){
+  const r=Math.min(18,Math.max(7,width*.2))*(frame.motion?(.7+.3*(1-k)):1);
+  ctx.globalAlpha=k*intensity*.72;ctx.strokeStyle=style.accent||style.light;ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.ellipse(b.len,0,r*.55,r,0,0,TAU);ctx.stroke();
+  const count=Math.min(frame.petalLeft,frame.lowQ?2:4);frame.petalLeft-=count;frame.petalsUsed+=count;
+  for(let i=0;i<count;i++){const a=i/Math.max(1,count)*TAU;petal(ctx,b.len+Math.cos(a)*r*.5,Math.sin(a)*r,4,a,style.light);}
+  frame.impactLeft--;frame.impactsUsed++;
  }
  ctx.restore();
 }
@@ -188,9 +220,10 @@ export function drawBeamHitAccents(ctx,beams,enemies,boss,frame) {
   frame.scanLeft--;const e=i===enemies.count?boss:enemies.items[i];
   if(!e||!(e.flash>0))continue;
   for(let j=0;j<beamCount;j++){
-   const b=beams.items[j];if(!(b.life>0)||FUSIONS.has(b.weapon))continue;
+   const b=beams.items[j];if(!(b.life>0)||b.focused||FUSIONS.has(b.weapon))continue;
    const dx=e.x-b.x,dy=e.y-e.radius-b.y,cx=Math.cos(b.angle),cy=Math.sin(b.angle),along=dx*cx+dy*cy;
-   if(along<0||along>b.len||Math.abs(dx*cy-dy*cx)>=b.width/2+e.radius)continue;
+   const segments=b.segments?.length?b.segments:[{length:b.len,width:b.width}];
+   if(!segments.some(s=>along>=0&&along<=s.length&&Math.abs(dx*cy-dy*cx)<s.width/2+e.radius))continue;
    const style=weaponVfxProfile(b.weapon),r=Math.min(13,Math.max(5,e.radius*.65));
    ctx.save();ctx.translate(e.x,e.y-e.radius);ctx.globalCompositeOperation='source-over';
    ctx.globalAlpha=.65;ctx.strokeStyle=style.light;ctx.lineWidth=1.2;

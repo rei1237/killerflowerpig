@@ -1,3 +1,4 @@
+import { bossCoinValue } from '../game/coin-drops.js';
 import { renderPetUpgradeShop } from './pet-upgrade-shop.js';
 import { initBestiary, openBestiary, closeBestiary } from './bestiary.js';
 import { clearEncirclement } from '../game/encirclement.js';
@@ -14,12 +15,12 @@ import { rollChoices, applyChoice, rollChest, rollBossChest, beginChoiceSession,
 import { createStoryPacer } from './story-pacing.js';
 import { choiceInfo, relatedFusionInfo, passiveEffectNote } from './item-choice-info.js';
 import { FUSION_RECIPES, previewFusion, fuseItems } from '../game/fusion.js';
-import { newRun, continueRun, retryStage, startStage, beginStageClear, loadRun, clearRun, markLoadoutExchangeSpent } from '../game/game.js';
+import { newRun, continueRun, retryStage, startStage, beginStageClear, loadRun, clearRun, checkpointStageClear, finalizeEntryCheckpoint, markLoadoutExchangeSpent } from '../game/game.js';
 import { refreshGore } from '../game/effects.js';
 import { configureCaps } from '../game/state.js';
 import { resize } from '../game/render.js';
 import { settings, setSetting } from '../core/settings.js';
-import { save, persist, SHOP, upgradeLevel, buyUpgrade, equipPet, recordTitleProgress, equipTitle, lastSaveError, queueCoins, retryPendingCoins, pendingCoinTotal, openChest, buyRelic, buyAccessory, setAccessory } from '../core/save.js';
+import { save, persist, settleRunStage, SHOP, upgradeLevel, buyUpgrade, equipPet, recordTitleProgress, equipTitle, lastSaveError, queueCoins, retryPendingCoins, pendingCoinTotal, openChest, buyRelic, buyAccessory, setAccessory } from '../core/save.js';
 import { audio } from '../core/audio.js';
 import { input, resetJoy, resetInput } from '../core/input.js';
 
@@ -41,8 +42,8 @@ import { renderCosmeticShop, startCosmeticPreview, stopCosmeticPreview } from '.
 
 let rewardSequence = 0;
 const rewardSession = Date.now().toString(36) + Math.random().toString(36).slice(2);
-function creditReward(amount) {
-    if (amount > 0 && !queueCoins(amount, `${rewardSession}:${++rewardSequence}`)) notifyPending();
+function creditReward(amount, eventId = `${rewardSession}:${++rewardSequence}`) {
+    if (amount > 0 && !queueCoins(amount, eventId)) notifyPending();
 }
 function notifyPending() {
     if (pendingCoinTotal()) toast(`저장 대기 코인 ${pendingCoinTotal()} · 새로고침하면 사라질 수 있습니다`, 6000);
@@ -109,6 +110,7 @@ export function closeModal(id) {
     modalStack.pop();
     const previousFocus = modalFocus.get(id);
     modalFocus.delete(id);
+    if (id === 'levelup') finalizeEntryCheckpoint();
     if (id === 'chest') { clearTimeout(chestTimer); activeChest = null; }
     syncModalState();
     if (topModalId()) $(topModalId()).querySelector('button, .card')?.focus({ preventScroll: true });
@@ -396,7 +398,7 @@ function presentChest(kind) {
     const boss = kind === 'boss';
     const tier=bossRewardTier(G.stage,difficultyOf(G.difficulty));
     const count=boss?tier.guaranteedCount:1;
-    const receiptId=`${rewardSession}:boss:${G.stage}:${G.stageStartTime}`;
+    const receiptId=`boss:${G.runId}:${G.stage}`;
     $('chest-description').textContent=boss?`기본 강화 ${count}개 확정 · 연꽃 정밀 강화재 ${Math.round(tier.premiumChance*100)}%\n고급 강화재: 보유 무기 최대 +2레벨(최대8). 강화 가능한 무기가 없으면 ${tier.premiumFallbackCoins}코인. 상점 전용 상품은 나오지 않습니다.`:'보유 장비 1회 강화 · 진화 조건을 갖추면 진화 우선. 모두 만렙이면 '+(30+G.stage*10)+'코인을 받습니다.';
     $('chest-title').textContent = boss ? `${BOSSES[G.stage].name}의 회수 물자` : '회수 물자';
     const coffin = $('coffin');
@@ -421,7 +423,7 @@ function presentChest(kind) {
                 audio.sfx('chest');
                 const before = G.gold;
                 const rewards = boss ? rollBossChest(receiptId).rewards : rollChest(count);
-                creditReward(Math.max(0, G.gold - before));
+                creditReward(Math.max(0, G.gold - before), `${receiptId}:coins`);
                 rewards.forEach((r, i) => {
                     const el = document.createElement('div');
                     el.className = 'reward' + (r.kind === 'evolve' ? ' evolve' : '') + (r.premium?' premium-reward':'');
@@ -499,8 +501,9 @@ function fusionStatText(stats) {
     for (const [key,label] of [['dmg','피해'],['amount','발수'],['pierce','관통'],['radius','범위'],['length','사거리'],['orbitDamage','꽃잎 피해'],['orbitAmount','꽃잎 수'],['orbitRadius','꽃잎 범위'],['fieldDamage','화염 틱 피해'],['fieldAmount','화염 지대'],['fieldRadius','화염 범위'],['fieldDuration','화염 지속(초)'],['orbitDuration','꽃잎 지속(초)']]) {
         if (Number.isFinite(shown[key])) parts.push(`${label} ${Math.round(shown[key]*10)/10}`);
     }
-    if (Number.isFinite(stats?.cd)) parts.push(`주기 ${Math.round(stats.cd*100)/100}초`);
-    if (Number.isFinite(stats?.duration)) parts.push(`지속 ${Math.round(stats.duration*100)/100}초`);
+    if (Number.isFinite(stats?.regrow)) parts.push(`꽃잎별 재생 ${Math.round(stats.regrow*100)/100}초 · 접촉 시 1개 소모`);
+    else if (Number.isFinite(stats?.cd)) parts.push(`주기 ${Math.round(stats.cd*100)/100}초`);
+    if (!stats?.regrow && Number.isFinite(stats?.duration)) parts.push(`지속 ${Math.round(stats.duration*100)/100}초`);
     if (Number.isFinite(stats?.slow)) parts.push(`감속 ${Math.round(stats.slow*100)}%`);
     const inherited=stats?.inheritedCores || [];
     if(inherited.length) parts.push(`진화 능력 ${inherited.length}개 계승: ${inherited.map(core=>`${core.name} — ${core.desc}`).join(' / ')}`);
@@ -589,7 +592,7 @@ let chestResultOpen = false;
 function renderShop({ resetPreview = false } = {}) {
     retryPendingCoins();
     const pending = pendingCoinTotal();
-    $('shop-status').textContent = pending ? `저장 대기 ${pending} 코인 · 새로고침 전에 다시 시도하세요.` : '청토끼 처치 후 코인을 회수하세요. 구매한 장비는 다음 작전부터 적용됩니다.';
+    $('shop-status').textContent = pending ? `저장 대기 ${pending} 코인 · 새로고침 전에 다시 시도하세요.` : '강한 청토끼는 더 높은 확률로 코인을, 보스는 확정 코인을 줍니다. 구매한 장비는 다음 작전부터 적용됩니다.';
     $('shop-character').textContent = `최고 클리어 STAGE ${highestClearedStage(save)} · 전투에서는 아이템을 획득·강화하고, 상점에서는 다음 작전을 준비하세요.`;
     $('pet-redemption-note').textContent = PET_REDEMPTION.reason;
     $('shop-gold').textContent = `● ${save.gold}`;
@@ -711,9 +714,9 @@ function renderBossArchive() {
     for (const [stage, boss] of Object.entries(BOSSES).filter(([stage]) => Number(stage) <= 9)) {
         const card = document.createElement('article');
         const img = document.createElement('img');
-        img.src = `asset/bosses/boss-${String(stage).padStart(2,'0')}.webp`;
+        img.src = `asset/bosses/boss-${String(BOSSES[stage].artStage ?? stage).padStart(2,'0')}.webp`;
         img.alt = boss.name; img.loading = 'lazy';
-        const label = document.createElement('span'); label.textContent = `SECTOR ${String(stage).padStart(2,'0')}`;
+        const label = document.createElement('span'); label.textContent = `SECTOR ${String(BOSSES[stage].artStage ?? stage).padStart(2,'0')}`;
         const name = document.createElement('h3'); name.textContent = boss.name;
         const desc = document.createElement('p'); desc.textContent = `${boss.title} · ${boss.signatureHint || ''}`;
         card.append(img,label,name,desc); list.appendChild(card);
@@ -753,19 +756,19 @@ const LORE = [
 ];
 
 function settleStage(outcome) {
-    if (G.settlement) return G.settlement.earned;
+    if (G.settlement && !G.settlement.pending) return G.settlement.earned;
+    if (outcome === 'clear') {
+        const result = settleRunStage({ runId:G.runId,stage:G.stage,outcome,tech:G.tech,kills:G.kills-(G.stageKillsStart||0),bounty:Math.round(bossCoinValue(G.stage)*G.player.stats.greed),evolved:G.weapons.some(w=>w.evolved),fused:G.weapons.some(w=>WEAPONS[w.id]?.fusionOnly),absolute:G.weapons.some(w=>WEAPONS[w.id]?.tier==='absolute') });
+        if (!result.ok) { G.settlement={outcome,earned:0,pending:true}; notifyPending(); return null; }
+        G.gold+=result.earned;G.settlement={outcome,earned:result.earned,titles:result.titles};announceTitles(result.titles);return result.earned;
+    }
     const stageKills = G.kills - (G.stageKillsStart || 0);
-    // 정산 금화: 네임드(보스) 처치 현상금만. 일반 처치·사망으로는 금화를 받지 않는다.
-    const earned = Math.round((outcome === 'clear' ? 5 * G.stage : 0) * G.player.stats.greed);
+    // Death records the attempt without granting a second boss bounty.
+    const earned = 0;
     const eventId = `${rewardSession}:settlement:${++rewardSequence}`;
     G.settlement = { outcome, earned, eventId };
-    if (outcome === 'clear') G.gold += earned;
-    creditReward(earned);
+    creditReward(earned,eventId);
     save.kills += stageKills;
-    if (outcome === 'clear') {
-        save.maxStage = Math.max(save.maxStage, Math.min(STAGE_COUNT, G.stage + 1));
-        save.maxClearedStage = Math.max(save.maxClearedStage || 0,G.stage);
-    }
     // 칭호: 이번 스테이지 기록 (테크·도달 스테이지·처치·진화/조합)
     G.settlement.titles = recordTitleProgress({
         runId: G.runId, tech: G.tech, stage: G.stage, outcome, kills: stageKills,
@@ -827,21 +830,25 @@ export function showGameOver() {
     const earned = settleStage('death');
     let lore = LORE[0][1];
     for (const [s, t] of LORE) if (G.stage >= s) lore = t;
-    $('gameover-lore').textContent = `${lore} 이번 도전의 무기·보조 아이템·진화·조합은 종료됩니다. 상점 구매와 영구 강화는 유지됩니다.`;
+    $('gameover-lore').textContent = `${lore} STAGE ${G.stage} 시작 시점의 레벨·장비로 다시 도전합니다. 상점 구매와 영구 강화는 유지됩니다.`;
     $('gameover-stats').innerHTML = statsHTML([['스테이지', G.stage], ['획득 골드', `+${earned}`], ...newTitleRows()]);
+    $('btn-retry').textContent = `⚔ STAGE ${G.stage} 처음부터 재도전`;
     show('gameover');
 }
 
 export function showStageClear() {
     setPlaying(false);
     const earned = settleStage('clear');
+    if (earned === null) { $('clear-title').textContent = '정산 저장을 다시 시도하세요'; $('clear-stats').textContent = '골드·해금 기록을 아직 저장하지 못했어요. 저장 후 다음 스테이지로 이동합니다.'; $('btn-next').textContent = '저장 다시 시도'; show('clear'); return; }
+    $('btn-next').textContent = '다음 스테이지';
+    checkpointStageClear();
     if (G.stage >= STAGE_COUNT) {
         clearRun();
         playEnding();
         return;
     }
     $('clear-title').textContent = `STAGE ${G.stage} CLEAR`;
-    $('clear-stats').innerHTML = statsHTML([['획득 골드', `+${earned}`], ...newTitleRows()]);
+    $('clear-stats').innerHTML = statsHTML([['보스 금화', '지급 완료 · 필드 획득 포함'], ['추가 정산 골드', `+${earned}`], ...newTitleRows()]);
     show('clear');
 }
 
@@ -873,7 +880,7 @@ function showInstall() {
 // ─────────────────────────── 바인딩 ───────────────────────────
 export function initUI() {
     G.events.loadoutExchanged = markLoadoutExchangeSpent;
-    G.events.runSaveError = () => toast('도전 기록을 저장하지 못했습니다. 종료한 도전은 다시 시작해야 합니다. 브라우저 저장 공간을 확인하세요.', 6000);
+    G.events.runSaveError = () => toast('최신 체크포인트를 저장하지 못했습니다. 탭을 유지하고 브라우저 저장 공간을 확인하세요. 새로고침하면 진행이 되돌아갈 수 있습니다.', 6000);
     const click = (id, fn) => $(id).addEventListener('click', () => { audio.unlock(); audio.sfx('click'); fn(); });
     initBestiary({ onOpen: () => { resetInput(); openModal('bestiary'); }, onClose: () => { closeModal('bestiary'); resetInput(); } });
     click('btn-bestiary', openBestiary);
@@ -932,9 +939,10 @@ export function initUI() {
         if(topModalId()!=='levelup'||!finishChoiceSession(displayedChoiceSession?.id))return;
         closeModal('levelup');
     });
-    click('btn-retry', () => { hide('gameover'); retryStage(); startPlaying(); });
+    click('btn-retry', () => { if ($('gameover').hidden) return; showTitle(); if (retryStage()) { hide('title'); startPlaying(); } });
     click('btn-gameover-title', showTitle);
     click('btn-next', () => {
+        if (G.settlement?.pending) { showStageClear(); return; }
         hide('clear');
         const next = G.stage + 1;
         playStory(`EPISODE ${next} — ${STAGES[next].name}`, STORIES[next], () => { if (startStage(next) !== false) startPlaying(); }, next);
@@ -1002,7 +1010,7 @@ export function initUI() {
 export function onBossSpawn(b) {
     banner(b.def.name, b.def.signatureHint || b.def.title);
     const portrait = document.createElement('img');
-    portrait.src = `asset/bosses/boss-${String(b.stage || G.stage).padStart(2,'0')}.webp`;
+    portrait.src = `asset/bosses/boss-${String(b.def?.artStage ?? b.stage ?? G.stage).padStart(2,'0')}.webp`;
     portrait.alt = '';
     $('banner').appendChild(portrait);
     $('banner').classList.add('boss-intro');

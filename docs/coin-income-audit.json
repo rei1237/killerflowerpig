@@ -1,0 +1,167 @@
+{
+  "method": "Seed7 director,16s ordinary/48s elite synthetic residency,85% field coin collection,guaranteed boss bounty,greed1; no survival/DPS or boss-phase kills.",
+  "rows": [
+    {
+      "stage": 1,
+      "kills": 97,
+      "eliteKills": 1,
+      "counts": {
+        "shambler": 73,
+        "runner": 19,
+        "brute": 5
+      },
+      "oldExpected": 6.53,
+      "newExpected": 35.63,
+      "bossCoins": 25
+    },
+    {
+      "stage": 2,
+      "kills": 170,
+      "eliteKills": 1,
+      "counts": {
+        "shambler": 93,
+        "runner": 67,
+        "brute": 10
+      },
+      "oldExpected": 11.53,
+      "newExpected": 44.45,
+      "bossCoins": 30
+    },
+    {
+      "stage": 3,
+      "kills": 334,
+      "eliteKills": 2,
+      "counts": {
+        "shambler": 53,
+        "bloater": 58,
+        "runner": 170,
+        "brute": 53
+      },
+      "oldExpected": 18.06,
+      "newExpected": 131.99,
+      "bossCoins": 35
+    },
+    {
+      "stage": 4,
+      "kills": 451,
+      "eliteKills": 2,
+      "counts": {
+        "runner": 244,
+        "brute": 138,
+        "shambler": 32,
+        "bloater": 37
+      },
+      "oldExpected": 23.06,
+      "newExpected": 186.71,
+      "bossCoins": 40
+    },
+    {
+      "stage": 5,
+      "kills": 511,
+      "eliteKills": 2,
+      "counts": {
+        "runner": 173,
+        "suicider": 48,
+        "brute": 122,
+        "bloater": 55,
+        "shambler": 36,
+        "spitter": 50,
+        "splitter": 27
+      },
+      "oldExpected": 28.06,
+      "newExpected": 238.12,
+      "bossCoins": 45
+    },
+    {
+      "stage": 6,
+      "kills": 650,
+      "eliteKills": 2,
+      "counts": {
+        "brute": 69,
+        "suicider": 55,
+        "bloater": 83,
+        "spitter": 96,
+        "gunner": 34,
+        "splitter": 68,
+        "runner": 186,
+        "shambler": 38,
+        "hulk": 21
+      },
+      "oldExpected": 33.06,
+      "newExpected": 327.65,
+      "bossCoins": 50
+    },
+    {
+      "stage": 7,
+      "kills": 731,
+      "eliteKills": 2,
+      "counts": {
+        "suicider": 63,
+        "runner": 343,
+        "splitter": 82,
+        "gunner": 46,
+        "brute": 85,
+        "shambler": 40,
+        "spitter": 44,
+        "hulk": 28
+      },
+      "oldExpected": 38.06,
+      "newExpected": 300.31,
+      "bossCoins": 55
+    },
+    {
+      "stage": 8,
+      "kills": 906,
+      "eliteKills": 2,
+      "counts": {
+        "runner": 459,
+        "splitter": 122,
+        "gunner": 38,
+        "suicider": 78,
+        "bloater": 72,
+        "hulk": 54,
+        "shambler": 44,
+        "spitter": 39
+      },
+      "oldExpected": 43.06,
+      "newExpected": 387.25,
+      "bossCoins": 60
+    },
+    {
+      "stage": 9,
+      "kills": 981,
+      "eliteKills": 2,
+      "counts": {
+        "hulk": 93,
+        "runner": 474,
+        "spitter": 81,
+        "splitter": 126,
+        "suicider": 77,
+        "gunner": 32,
+        "shambler": 48,
+        "bloater": 50
+      },
+      "oldExpected": 48.06,
+      "newExpected": 478.57,
+      "bossCoins": 65
+    },
+    {
+      "stage": 10,
+      "kills": 1161,
+      "eliteKills": 2,
+      "counts": {
+        "splitter": 133,
+        "hulk": 124,
+        "runner": 549,
+        "bloater": 86,
+        "gunner": 57,
+        "suicider": 77,
+        "spitter": 83,
+        "shambler": 52
+      },
+      "oldExpected": 53.06,
+      "newExpected": 595.81,
+      "bossCoins": 70
+    }
+  ]
+}

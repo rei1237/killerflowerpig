@@ -1,17 +1,18 @@
 export const HUNTER_TUNING = Object.freeze({ warning: .65, secondWarning: .5, dashSpeed: 650, phaseSpeedStep: .08, dashRange: 350, recovery: 1.25,
     // 페이즈별 연속 돌진 예고 시간. 변이: 3연속, 광폭화: 3연속 엇박자(마지막 돌진이 늦게 출발).
     phaseWarnings: [[.65, .5], [.65, .5, .5], [.65, .5, .8]] });
-// 이전 성장 경제 보정은 HP만 조정(1단계1400, 이후+40~60%). 헌터는 별도 요청으로 빠른 추적·2연속 돌진 적용.
+// 기존 1구역 알파의 패턴·능력치는 9구역으로 이동하고 기준 체력을 13000으로 조정 (실제 291200, 9구역 2융합 전투 시간 기준).
+// 1구역은 단일 돌진을 배우는 경비병. 헌터의 빠른 추적·연속 돌진은 별도 유지.
 // 보스 정의. phases[i] = HP 구간별 패턴 목록 (100-60%, 60-25%, 25-0%)
 // 패턴: charge(돌진), ring(원형탄), spiral(나선탄), aimed(조준 부채꼴), summon(소환),
 //       각 보스의 signature는 이동·안전 지대·공격 순서가 다른 고유 패턴이다.
 //       공통 탄막(ring/aimed)은 변이(60%)·광폭화(25%) 이후 보조 기술로 섞이며,
-//       고유 패턴은 페이즈마다 횟수·각도·박자가 강화된다. 첫 예고 시간은 줄이지 않는다.
+//       초급 경비병은 모든 페이즈에서 고정 예고/회복. 이동한 알파는 기존 페이즈 배율을 유지한다.
 export const BOSSES = {
-    1: { name: '알파 청토끼', title: '지면이 고동친다...', sheet: 'boss1', tint: 'normal', scale: 0.62, hp: 1400, speed: 48, dmg: 10,
-        pacing: { opening: 3, phaseRest: 2.2, recovery: 1.5, chargeWarning: 1.15, chargeSpeed: 480, summons: 0.6 },
-        signature: 'charge', signatureHint: '돌진 선 옆으로 피한 뒤 긴 빈틈을 노리세요.', phaseSummons: true,
-        phases: [['charge', 'summon'], ['charge', 'ring', 'summon'], ['charge', 'ring', 'aimed']] },
+    1: { name: '길목 경비 청토끼', title: '길목을 지키는 파수꾼...', sheet: 'boss1', tint: 'normal', scale: 0.62, hp: 600, speed: 48, dmg: 10,
+        pacing: { opening: 3, phaseRest: 2.5, warning: 1.5, dashSpeed: 300, dashRange: 280, safeRecovery: 2.5 },
+        signature: 'trainingCharge', signatureHint: '1.5초 예고선 옆으로 피하고, 2.5초 멈춘 동안 공격하세요.',
+        phases: [['trainingCharge'], ['trainingCharge'], ['trainingCharge']] },
     2: { name: '엘리트 청토끼', title: '전투 머신이 다가온다...', sheet: 'boss1', tint: 'elite', scale: 0.64, hp: 2240, speed: 66, dmg: 16,
         signature: 'barrage', signatureHint: '고정된 사격선 옆으로 빠지고 재장전 중 공격하세요.',
         phases: [['barrage'], ['barrage'], ['barrage', 'ring']] },
@@ -33,9 +34,10 @@ export const BOSSES = {
     8: { name: '사이코틱 킹', title: '정신이 흔들린다...', sheet: 'boss2', tint: 'hallu', scale: 0.64, hp: 32550, speed: 58, dmg: 30, hallucinate: true,
         signature: 'echo', signatureHint: '환영의 탄막 틈으로 이동하고 반대쪽 메아리를 대비하세요.',
         phases: [['echo'], ['echo', 'aimed'], ['echo', 'ring']] },
-    9: { name: '브루투스 킹', title: '최강의 왕이 눈을 떴다!', sheet: 'bossKing', tint: 'normal', scale: 0.66, hp: 44800, speed: 60, dmg: 34,
-        signature: 'faultline', signatureHint: '양옆 균열 사이로 피한 뒤 중앙 강타 전에 옆으로 이동하세요.',
-        phases: [['faultline'], ['faultline', 'slam', 'ring'], ['faultline', 'slam', 'aimed']] },
+    9: { name: '알파 청토끼', title: '지면이 고동친다...', sheet: 'boss1', tint: 'normal', scale: 0.62, artStage: 1, hp: 13000, speed: 48, dmg: 10,
+        pacing: { opening: 3, phaseRest: 2.2, recovery: 1.5, chargeWarning: 1.15, chargeSpeed: 480, summons: 0.6 },
+        signature: 'charge', signatureHint: '돌진 선 옆으로 피한 뒤 긴 빈틈을 노리세요.', phaseSummons: true,
+        phases: [['charge', 'summon'], ['charge', 'ring', 'summon'], ['charge', 'ring', 'aimed']] },
     10: { name: '청토끼 · 시간의 채권자', title: '마지막 계약의 시간이 다가온다...', sheet: 'bossKing', tint: 'elite', scale: 0.76, hp: 168000, speed: 64, dmg: 38, hallucinate: true,
         signature: 'contract', signatureHint: '금화 탄막을 비켜가고 모래시계 계약 원이 찰 때 안에 있지 마세요.',
         phases: [['contract'], ['contract', 'ring'], ['contract', 'ring', 'aimed']] },
