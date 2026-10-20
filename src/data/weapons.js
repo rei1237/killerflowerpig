@@ -112,7 +112,7 @@ export const PASSIVES = {
     sap: { name: '회전 수액', icon: '🧪', desc: '경험치 획득 +8%', per: '경험치 +8%' },
     scope: { name: '조준경', icon: '🔭', desc: '관통 투사체의 관통 +1 (Lv1·3·5) · 탄속 +5%', per: '관통 +1 (Lv1·3·5) · 탄속 +5%' },
     spread: { name: '확산', icon: '🫧', desc: '공격 범위 +10%', per: '범위 +10%' },
-    pollen: { name: '꽃가루', icon: '🌼', desc: '재사용 대기시간 -7%', per: '쿨타임 -7%' },
+    pollen: { name: '꽃가루 장막', icon: '🌼', desc: '주기적으로 피격 1회를 완전히 막는 꽃가루 보호막. 막을 때 주변 적을 밀쳐낸다 (재충전 12초 → Lv5 6초)', per: '보호막 재충전 단축' },
     whet: { name: '날 연마', icon: '🪓', desc: '모든 피해 +10%', per: '피해 +10%' },
     heart: { name: '썩은 심장', icon: '🫀', desc: '최대 체력 +20', per: '최대 HP +20' },
     regen: { name: '자동 회복 · 재생하는 살점', icon: '🩸', desc: '전투 중 초당 체력 +0.3 자동 회복 (최대 Lv.5)' , per: '재생 +0.3/s' },

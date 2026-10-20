@@ -277,7 +277,14 @@ export function updateEnemies(dt) {
                     mvx = 0; mvy = 0;
                     e.shotWarning -= dt;
                     e.state = 'attack'; e.attackT = 0.4;
-                    if (e.shotWarning <= 0) fireEnemyShot(e.x, e.y - e.radius, e.aimX, e.aimY, rg.speed, rg.dmg * (1 + (G.stage - 1) * 0.16), rg.kind || 'acid', rg.radius || 7);
+                    if (e.shotWarning <= 0) {
+                        // burst: 조준 방향을 중심으로 부채꼴 동시 발사 (총탄 사냥꾼 3발)
+                        const n = rg.burst || 1, base = Math.atan2(e.aimY, e.aimX);
+                        for (let k = 0; k < n; k++) {
+                            const a = base + (n > 1 ? (k - (n - 1) / 2) * (rg.spread || 0) : 0);
+                            fireEnemyShot(e.x, e.y - e.radius, Math.cos(a), Math.sin(a), rg.speed, rg.dmg * (1 + (G.stage - 1) * 0.16), rg.kind || 'acid', rg.radius || 7);
+                        }
+                    }
                 } else {
                     e.shootT -= dt;
                     if (e.shootT <= 0 && dist < rg.range * 1.15) {
@@ -425,7 +432,12 @@ export function drawEnemyShots(ctx, fxImgs) {
     for (let i = 0; i < pool.count; i++) {
         const s = pool.items[i];
         if (s.kind === 'bullet') {
-            ctx.save(); ctx.fillStyle = '#fff0bc'; ctx.strokeStyle = '#ff944a'; ctx.lineWidth = 2;
+            // 붉은 탄환 + 짧은 꼬리 (녹색 산성탄과 한눈에 구별)
+            const sp = Math.hypot(s.vx, s.vy) || 1, tx = -s.vx / sp * s.radius * 3, ty = -s.vy / sp * s.radius * 3;
+            ctx.save(); ctx.lineCap = 'round';
+            ctx.strokeStyle = 'rgba(255,40,60,0.45)'; ctx.lineWidth = s.radius * 1.4;
+            ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x + tx, s.y + ty); ctx.stroke();
+            ctx.fillStyle = '#ff3b4a'; ctx.strokeStyle = '#ffd0d4'; ctx.lineWidth = 1.5;
             ctx.beginPath(); ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore(); continue;
         }
         if(s.kind === 'coin'){

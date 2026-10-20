@@ -45,7 +45,8 @@
       "stats": {
         "might": 1,
         "area": 1.1,
-        "cooldown": 0.86,
+        "cooldown": 1,
+        "barrierCd": 10,
         "duration": 1,
         "growth": 1,
         "projSpeed": 1.05,
@@ -93,7 +94,8 @@
       "stats": {
         "might": 1.5,
         "area": 1,
-        "cooldown": 0.6499999999999999,
+        "cooldown": 1,
+        "barrierCd": 6,
         "duration": 1,
         "growth": 1,
         "projSpeed": 1.25,
@@ -146,7 +148,8 @@
       "stats": {
         "might": 1,
         "area": 1.5,
-        "cooldown": 0.6499999999999999,
+        "cooldown": 1,
+        "barrierCd": 6,
         "duration": 1,
         "growth": 1.4,
         "projSpeed": 1.25,
@@ -194,7 +197,8 @@
       "stats": {
         "might": 1.5,
         "area": 1.5,
-        "cooldown": 0.6499999999999999,
+        "cooldown": 1,
+        "barrierCd": 6,
         "duration": 1,
         "growth": 1,
         "projSpeed": 1.25,

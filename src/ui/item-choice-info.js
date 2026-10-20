@@ -24,6 +24,7 @@ export function passiveEffectNote(id) {
     if(id==='magazine')return `${shared} 탄·광선·투척물·회전 꽃잎의 수가 증가합니다. 영구 추적형 독구름은 하나로 유지됩니다.`;
     if(id==='sap')return `${shared} 보석과 보스 보상을 포함한 모든 경험치 획득량이 늘어 레벨업이 빨라집니다.`;
     if(id==='scope')return `${shared} 산탄·권총·소총처럼 관통하는 탄이 적을 더 많이 꿰뚫고, 탄속이 조금 빨라집니다.`;
-    if(['whet','spread','pollen','focus'].includes(id))return shared;
+    if(id==='pollen')return '피격을 한 번 대신 막아 주는 보호막이 주기적으로 차오릅니다. 막는 순간 주변 적을 밀쳐내며, 준비되면 연이 주위에 금빛 고리가 보입니다.';
+    if(['whet','spread','focus'].includes(id))return shared;
     return '';
 }

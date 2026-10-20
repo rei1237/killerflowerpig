@@ -50,7 +50,7 @@ export const TECHS = Object.freeze({
         ],
     },
     bloom: {
-        name: '연꽃 정원', icon: '🌸', color: '#ffb3d6', power: 2.0,
+        name: '연꽃 정원', icon: '🌸', color: '#ffb3d6', power: 2.35,
         summary: '회전 꽃잎과 광선으로 버티며 성장하는 생존 테크',
         start: { weapon: 'thorns', passive: 'regen' },
         family: { weapons: ['thorns', 'cannon', 'saw'], passives: ['regen', 'pollen', 'heart'] },

@@ -9,7 +9,10 @@ import { relicStats } from '../data/relics.js';
 import { upgradeLevel, save } from '../core/save.js';
 import { MAGAZINE_TABLE } from '../data/weapons.js';
 import { applyTechPlayerBonus, resonanceTier } from './tech.js';
-import { blood, flash, shake, damageText, hitstop } from './effects.js';
+import { blood, flash, shake, damageText, hitstop, sparks, floatText } from './effects.js';
+// 꽃가루 장막 재충전 시간 (패시브 Lv 0~5)
+export const POLLEN_BARRIER_CD = Object.freeze([0, 12, 10, 8.5, 7, 6]);
+const POLLEN_PUSH_RADIUS = 120;
 
 import { shotFrame, firingDrawRect, markPlayerShot, PLAYER_HIT_RADIUS, playerBob, advancePlayerMovement } from './player-motion.js';
 
@@ -38,7 +41,9 @@ export function recomputeStats(fullHeal = false) {
     const s = {
         might: 1 + lv('whet') * 0.1 + upgradeLevel('might') * 0.05,
         area: 1 + lv('spread') * 0.1,
-        cooldown: Math.max(0.4, 1 - lv('pollen') * 0.07),
+        cooldown: 1,
+        // 꽃가루 장막: 피격 1회 차단 보호막 재충전 시간 (0이면 없음)
+        barrierCd: POLLEN_BARRIER_CD[lv('pollen')] || 0,
         duration: 1,
         growth: 1 + lv('sap') * 0.08,
         projSpeed: 1 + lv('scope') * 0.05,
@@ -80,12 +85,24 @@ export function updatePlayer(dt) {
 
     if (p.iframes > 0) p.iframes -= dt;
     if (p.hurtT > 0) p.hurtT -= dt;
+    if (s.barrierCd > 0 && !p.barrier) {
+        p.barrierT = Math.min(p.barrierT ?? s.barrierCd, s.barrierCd) - dt;
+        if (p.barrierT <= 0) { p.barrier = true; p.barrierT = s.barrierCd; }
+    }
     if (s.regen > 0 && p.hp < p.maxHp) p.hp = Math.min(p.maxHp, p.hp + s.regen * dt);
 }
 
 export function damagePlayer(amount, srcX, srcY) {
     const p = G.player;
     if (p.dead || p.iframes > 0) return false;
+    if (p.barrier) {
+        // 꽃가루 장막이 피해를 대신 받고 주변 적을 밀쳐낸다
+        p.barrier = false;
+        p.barrierT = p.stats.barrierCd;
+        p.iframes = 0.6;
+        pollenBurst(p);
+        return true;
+    }
     const dmg = Math.max(1, amount - p.stats.armor);
     p.iframes = 0.5;
     p.hurtT = 0.25;
@@ -119,8 +136,30 @@ export function triggerPlayerShot(dx) {
     markPlayerShot(G.player, G.clock, dx);
 }
 
+function pollenBurst(p) {
+    audio.sfx('heal');
+    sparks(p.x, p.y - 22, 14, '#ffe27a', 220);
+    floatText(p.x, p.y - 58, '🌼 꽃가루 장막!', '#ffe27a', 0.9);
+    for (let i = 0; i < G.enemies.count; i++) {
+        const e = G.enemies.items[i];
+        if (!e.alive) continue;
+        const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy) || 1;
+        if (d > POLLEN_PUSH_RADIUS) continue;
+        const kb = 320 / (e.mass || 1);
+        e.kx += dx / d * kb; e.ky += dy / d * kb;
+    }
+}
+
 export function drawPlayer(ctx) {
     const p = G.player;
+    if (p.barrier) {
+        // 장막 준비 완료: 은은한 금빛 고리
+        ctx.save();
+        ctx.globalAlpha = 0.35 + Math.sin(G.clock * 4) * 0.1;
+        ctx.strokeStyle = '#ffe27a'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(p.x, p.y - 24, 26, 30, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+    }
     const atlas = atlases.player;
     if (!atlas && !images.playerFire) return;
     const blink = p.iframes > 0 && Math.floor(G.clock * 20) % 2 === 0;

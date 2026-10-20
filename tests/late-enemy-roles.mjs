@@ -30,11 +30,11 @@ test('overlapping armed detonations respect normal iframes and absolute damage c
  assert.equal(G.player.hp,70); assert.equal(G.player.iframes,.5); assert.equal(G.hazards.count,0);
  assert.equal(a.alive,false); assert.equal(b.alive,false);
 });
-test('gunner telegraphs one aimed bullet and cannot retarget during warning',()=>{
+test('gunner telegraphs a 3-round red bullet fan and cannot retarget during warning',()=>{
  reset(); const e=spawnEnemy('gunner',200,0); e.shootT=0;
  updateEnemies(.01); assert.equal(G.enemyShots.count,0); assert.equal(e.shotWarning,.7); const aim=e.aimY;
  G.player.y=150; updateEnemies(.3); assert.equal(G.enemyShots.count,0); assert.equal(e.aimY,aim);
- updateEnemies(.41); assert.equal(G.enemyShots.count,1); const s=G.enemyShots.items[0]; assert.equal(s.kind,'bullet'); assert.equal(s.radius,5); assert.equal(s.vy,aim*255);
+ updateEnemies(.41); assert.equal(G.enemyShots.count,3); const shots=G.enemyShots.items.slice(0,3); assert.ok(shots.every(s=>s.kind==='bullet'&&s.radius===5)); const center=shots[1]; assert.ok(Math.abs(center.vy-aim*255)<1e-9,'middle round follows the locked aim'); assert.ok(shots[0].vy!==shots[2].vy,'outer rounds fan out');
 });
 test('pooled ordinary shots do not inherit boss acceleration',()=>{
  reset(); const s=fireEnemyShot(0,0,1,0,100,5); s.accel=9; G.enemyShots.clear(); const next=fireEnemyShot(0,0,1,0,100,5,'bullet'); assert.equal(next.accel,0);

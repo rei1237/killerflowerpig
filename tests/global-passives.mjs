@@ -6,6 +6,7 @@ import {createWeapon,weaponStats,orbitStats,emberFieldStats,updateWeapons} from 
 import {applyChoice,resetBuild,snapshotBuild,restoreBuild} from '../src/game/progression.js';
 import {FUSION_RECIPES,previewFusion,fuseItems} from '../src/game/fusion.js';
 import {WEAPONS} from '../src/data/weapons.js';
+// 꽃가루는 방어형(피격 차단 보호막)으로 바뀌어 무기 수치에는 영향이 없다
 const boosts=['magazine','whet','spread','pollen','sap','scope'];
 function maxBoosts(){for(const id of boosts)for(let level=1;level<=5;level++)applyChoice({kind:'passive',id,level});}
 function reset(){resetBuild();createPlayer();G.mode='play';G.stage=1;G.stageStartTime=1;G.caps={enemies:0,particles:0,texts:0};G.rerolls=0;G.gold=0;G.kills=0;G.events={};}
@@ -14,7 +15,7 @@ test('late weapons inherit all max-level global boosts identically to early weap
  for(const [id,def] of Object.entries(WEAPONS).filter(([,d])=>!d.fusionOnly)){
   reset();applyChoice({kind:'weapon',id,level:1});maxBoosts();const early=weaponStats(G.weapons[0]);
   reset();maxBoosts();applyChoice({kind:'weapon',id,level:1});const late=weaponStats(G.weapons[0]);
-  assert.deepEqual(late,early,id);assert.equal(late.amount,def.base.amount+3,id);assert.ok(late.dmg>def.base.dmg);assert.ok(late.area>1);assert.ok(late.cd<def.base.cd);assert.equal(late.pierce,def.base.pierce?def.base.pierce+3:0,id);
+  assert.deepEqual(late,early,id);assert.equal(late.amount,def.base.amount+3,id);assert.ok(late.dmg>def.base.dmg);assert.ok(late.area>1);assert.ok(late.cd<=def.base.cd);assert.equal(late.pierce,def.base.pierce?def.base.pierce+3:0,id);
  }
 });
 test('all eight actual fusions inherit boosts regardless of order and restore without double application',()=>{

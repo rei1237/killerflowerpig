@@ -13,7 +13,8 @@ export const ENEMIES = {
     suicider: { name: '돌진 폭발체', sheet: 'rabbit2', tint: 'bloat', scale: 0.53, hp: 18, speed: 58, dmg: 7, xp: 3, radius: 14, mass: 1, unlockStage: 5,
         charge: { range: 300, warning: 0.8, duration: 1.3, speed: 320, turnRate: 2.4, fuse: 0.6, radius: 68, dmg: 18, damageCap: 30 } },
     gunner: { name: '탄환 사냥꾼', sheet: 'rabbit3', tint: 'pale', scale: 0.55, hp: 28, speed: 36, dmg: 7, xp: 4, radius: 15, mass: 1.1, unlockStage: 6,
-        ranged: { range: 300, cooldown: 2.8, speed: 255, dmg: 9, warning: 0.7, kind: 'bullet', radius: 5 } },
+        // 산성탄(단발 곡선 덩어리)과 구별: 붉은 탄환 3발을 부채꼴로 동시 발사. 3발이 모두 맞지 않도록 탄당 피해는 낮춤.
+        ranged: { range: 300, cooldown: 2.8, speed: 255, dmg: 6, warning: 0.7, kind: 'bullet', radius: 5, burst: 3, spread: 0.22 } },
     hulk: { name: '사슬 도살자', sheet: 'rabbit3', tint: 'shadow', scale: 0.82, hp: 130, speed: 34, dmg: 16, xp: 10, radius: 22, mass: 3.5 },
 };
 
