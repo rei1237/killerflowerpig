@@ -8,10 +8,27 @@ import { floatText } from './effects.js';
 import { startEncirclement } from './encirclement.js';
 
 let spawnAcc = 0;
+// 군체 러시 강화: 속도 배율, 반대편 협공 물결(지연·규모 비율·시작 스테이지)
+export const SWARM_RUSH = Object.freeze({ speed: 1.35, pincerDelay: 1.4, pincerRatio: 0.6, pincerStage: 2 });
 
 export function resetSpawner() {
     spawnAcc = 0;
     G.eventIdx = 0;
+    G.pendingSwarm = null;
+}
+
+// 한 방향에서 일직선으로 쏟아지는 무리 한 줄
+function spawnSwarmLine(st, angle, n) {
+    const p = G.player;
+    const dx = Math.cos(angle), dy = Math.sin(angle);
+    const r = Math.hypot(G.view.w, G.view.h) / 2 + 60;
+    const sx = p.x - dx * r, sy = p.y - dy * r;
+    const late = G.stage >= 5;
+    for (let i = 0; i < n; i++) {
+        const off = (i % 3 - 1) * (late ? 80 : 22), back = Math.floor(i / 3) * (late ? 115 : 34);
+        spawnEnemy(late ? 'suicider' : 'runner', sx - dy * off - dx * back, sy + dx * off - dy * back,
+            { force: true, lineX: dx, lineY: dy, speedMul: (st.eventTuning?.swarmSpeed ?? 1.5) * SWARM_RUSH.speed });
+    }
 }
 
 export function currentWeights(st, t) {
@@ -60,6 +77,16 @@ export function updateSpawner(dt) {
         if (budget <= 0) spawnAcc = 0;
     } else spawnAcc = 0;
 
+    // 군체 러시 협공: 첫 물결 뒤 반대편에서 두 번째 물결
+    if (G.pendingSwarm && G.time >= G.pendingSwarm.at) {
+        const ps = G.pendingSwarm; G.pendingSwarm = null;
+        if (!G.boss) {
+            spawnSwarmLine(st, ps.angle, ps.n);
+            floatText(G.player.x, G.player.y - 90, '⚠ 반대편에서도 몰려온다!', '#ff2244', 1.2);
+            audio.sfx('warn');
+        }
+    }
+
     // 시간 이벤트
     if (!G.boss) {
         const events = st.events || EVENTS;
@@ -93,15 +120,12 @@ function runEvent(type, st, t) {
         floatText(p.x, p.y - 90, '포위당했다!', '#ff5a3a', 1.4);
         audio.sfx('warn');
     } else if (type === 'swarm') {
-        // 군체 러시: 한 방향에서 일직선으로 쏟아지는 무리
+        // 군체 러시: 한 방향에서 일직선으로 쏟아지는 무리 (+ 스테이지 2부터 반대편 협공)
         const a = Math.random() * Math.PI * 2;
-        const dx = Math.cos(a), dy = Math.sin(a);
-        const r = Math.hypot(G.view.w, G.view.h) / 2 + 60;
-        const sx = p.x - dx * r, sy = p.y - dy * r;
         const n = st.eventTuning?.swarmCount ?? 26 + G.stage * 3;
-        for (let i = 0; i < n; i++) {
-            const off = (i % 3 - 1) * (G.stage >= 5 ? 80 : 22), back = Math.floor(i / 3) * (G.stage >= 5 ? 115 : 34);
-            spawnEnemy(G.stage >= 5 ? 'suicider' : 'runner', sx - dy * off - dx * back, sy + dx * off - dy * back, { force: true, lineX: dx, lineY: dy, speedMul: st.eventTuning?.swarmSpeed ?? 1.5 });
+        spawnSwarmLine(st, a, n);
+        if (G.stage >= SWARM_RUSH.pincerStage) {
+            G.pendingSwarm = { at: G.time + SWARM_RUSH.pincerDelay, angle: a + Math.PI, n: Math.max(3, Math.round(n * SWARM_RUSH.pincerRatio)) };
         }
         floatText(p.x, p.y - 90, G.stage >= 5 ? '⚠ 자폭 돌격대 · 예고선 밖으로!' : '군체 러시!', '#ff2244', 1.4);
         audio.sfx('warn');

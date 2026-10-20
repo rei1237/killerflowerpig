@@ -65,6 +65,7 @@ export const G = {
 
     events: {},       // UI 콜백: levelUp, chest, bossSpawn, stageClear, death, toast
     eventIdx: 0,
+    pendingSwarm: null, // 군체 러시 협공 대기 물결
 };
 
 export function emit(name, ...args) {

@@ -7,7 +7,7 @@ import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, stageScal
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
 import { spawnEnemy } from '../src/game/enemies.js';
-import { currentWeights, resetSpawner, updateSpawner } from '../src/game/spawner.js';
+import { currentWeights, resetSpawner, updateSpawner, SWARM_RUSH } from '../src/game/spawner.js';
 import { Boss } from '../src/game/boss.js';
 
 const baseline = JSON.parse(fs.readFileSync(new URL('./fixtures/later-stage-balance.json', import.meta.url)));
@@ -126,7 +126,7 @@ test('stage 1 leaves a 70-second learning window and smaller events run only onc
         for (const [stage, multiplier] of [[1, 1.15], [2, 1.3], [3, 1.5]]) {
             const swarm = runEvent(stage, 'swarm');
             const scaling = stageScaling(stage, G.time, STAGES[stage].duration);
-            close(swarm[0].speed, ENEMIES.runner.speed * scaling.speed * multiplier);
+            close(swarm[0].speed, ENEMIES.runner.speed * scaling.speed * multiplier * SWARM_RUSH.speed);
         }
         for (const [stage, hpMultiplier] of [[1, 0.65], [2, 0.8], [3, 1]]) {
             const [elite] = runEvent(stage, 'elite');
