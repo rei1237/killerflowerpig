@@ -57,7 +57,7 @@ export function weaponStats(w) {
     const result = {
         dmg: (b.dmg + acc.dmg) * (ev.dmg || 1) * (w.evolved ? 1.35 : 1) * ps.might,
         cd: b.cd * Math.max(0.25, 1 + acc.cd) * (ev.cd || 1) * ps.cooldown,
-        amount: Math.max(1, Math.round((b.amount + acc.amount + ps.amount) * (ev.amount || 1))),
+        amount: Math.max(1, Math.round((b.amount + acc.amount + (ps.amount || 0)) * (ev.amount || 1))),
         area: (1 + acc.area) * (ev.area || 1) * ps.area,
         duration: b.duration * (1 + acc.duration) * (ev.duration || 1) * ps.duration,
         speed: b.speed * (1 + acc.speed) * ps.projSpeed,
@@ -69,8 +69,14 @@ export function weaponStats(w) {
         lifesteal: ev.lifesteal || 0, permanent: !!ev.permanent, trail: !!ev.trail, follow: !!ev.follow,
         spread: b.spread || 0, radius: b.radius || 0, tick: b.tick || 0.3, hitCd: b.hitCd || 0.3,
         length: (b.length || 0) * ps.projSpeed, width: b.width || 0,
-        bonusAmount: ps.amount, durationScale: ps.duration,
+        bonusAmount: (ps.amount || 0) + Math.round(4 * (ps.amountMul || 0)), durationScale: ps.duration,
     };
+    // 탄창 확장(비례): 투사체 수 × (1+보너스). 정수로 늘리지 못한 나머지는 피해 배율로 환산
+    if (ps.amountMul) {
+        const total = result.amount * (1 + ps.amountMul), n = Math.max(result.amount, Math.floor(total + 1e-9));
+        result.dmg *= total / n;
+        result.amount = n;
+    }
     applyTechWeaponBonus(w, result);
     if (w.sourceId) {
         result.dmg = Math.min(600, result.dmg * ((WEAPONS[w.sourceId]?.tier === 'absolute' ? 1.65 : 1.35) + 0.08 * (Math.min(8, Math.max(1, w.fusionLevel || 1)) - 1)));

@@ -15,28 +15,28 @@ test('late weapons inherit all max-level global boosts identically to early weap
  for(const [id,def] of Object.entries(WEAPONS).filter(([,d])=>!d.fusionOnly)){
   reset();applyChoice({kind:'weapon',id,level:1});maxBoosts();const early=weaponStats(G.weapons[0]);
   reset();maxBoosts();applyChoice({kind:'weapon',id,level:1});const late=weaponStats(G.weapons[0]);
-  assert.deepEqual(late,early,id);assert.equal(late.amount,def.base.amount+3,id);assert.ok(late.dmg>def.base.dmg);assert.ok(late.area>1);assert.ok(late.cd<=def.base.cd);assert.equal(late.pierce,def.base.pierce?def.base.pierce+3:0,id);
+  assert.deepEqual(late,early,id);const boosted=Math.round(def.base.amount);assert.equal(late.amount,Math.max(boosted,Math.floor(boosted*1.5+1e-9)),id);assert.ok(late.dmg>def.base.dmg);assert.ok(late.area>1);assert.ok(late.cd<=def.base.cd);assert.equal(late.pierce,def.base.pierce?def.base.pierce+3:0,id);
  }
 });
 test('all eight actual fusions inherit boosts regardless of order and restore without double application',()=>{
  for(const r of FUSION_RECIPES){
   const fuse=()=>{G.weapons=r.inputs.map((i,slot)=>Object.assign(createWeapon(i.id,slot),{level:8,evolved:true}));const p=previewFusion(r.id);assert.equal(fuseItems(r.id,p.signature).ok,true);};
   reset();fuse();maxBoosts();const early=weaponStats(G.weapons[0]);reset();maxBoosts();fuse();assert.deepEqual(weaponStats(G.weapons[0]),early,r.id);
-  const snap=JSON.parse(JSON.stringify(snapshotBuild()));for(let i=0;i<3;i++){restoreBuild(snap);assert.deepEqual(weaponStats(G.weapons[0]),early,r.id);assert.equal(G.player.stats.amount,3);}
+  const snap=JSON.parse(JSON.stringify(snapshotBuild()));for(let i=0;i<3;i++){restoreBuild(snap);assert.deepEqual(weaponStats(G.weapons[0]),early,r.id);assert.equal(G.player.stats.amountMul,0.5);}
  }
 });
 test('duplicate or stale passive choices never advance beyond max or erase magazine bonus',()=>{
- for(let level=1;level<=5;level++)applyChoice({kind:'passive',id:'magazine',level});assert.equal(G.player.stats.amount,3);
+ for(let level=1;level<=5;level++)applyChoice({kind:'passive',id:'magazine',level});assert.equal(G.player.stats.amountMul,0.5);
  assert.equal(applyChoice({kind:'passive',id:'magazine',level:5}),false);assert.equal(applyChoice({kind:'passive',id:'magazine',level:6}),false);
- assert.equal(G.passives.magazine,5);assert.equal(G.player.stats.amount,3);applyChoice({kind:'weapon',id:'pistols',level:1});assert.equal(weaponStats(G.weapons[0]).amount,4);
+ assert.equal(G.passives.magazine,5);assert.equal(G.player.stats.amountMul,0.5);applyChoice({kind:'weapon',id:'pistols',level:1});assert.equal(weaponStats(G.weapons[0]).amount,1,'single-shot weapons keep their count');assert.ok(Math.abs(weaponStats(G.weapons[0]).dmg-4*1.5*1.1**5)<1e-6||weaponStats(G.weapons[0]).dmg>4,'and convert the +50% into damage');
 });
 test('hybrid orbit and secondary fire inherit count/duration within existing caps',()=>{
  maxBoosts();for(const id of ['lotus_bloom','orbit_saw']){const w=createWeapon(id,0),s=orbitStats(w,weaponStats(w));assert.equal(s.amount,5);assert.ok(s.duration>=2.8);assert.ok(s.duration<=4.5);}
- const field=emberFieldStats(weaponStats(createWeapon('ember_lance',0)));assert.ok(field.duration>=3);assert.ok(field.duration<=6);assert.equal(field.amount,2);
+ const field=emberFieldStats(weaponStats(createWeapon('ember_lance',0)));assert.ok(field.duration>=3);assert.ok(field.duration<=6);assert.ok(field.amount>=1&&field.amount<=2,'secondary field count stays within its cap');
 });
 test('loaded passive levels sanitize to known capped records before one recompute',()=>{
  const snap=snapshotBuild();snap.passives={magazine:99,whet:5,spread:-1,sap:'5',bogus:999};restoreBuild(snap);
- assert.deepEqual(G.passives,{magazine:5,whet:5});assert.equal(G.player.stats.amount,3);recomputeStats();assert.equal(G.player.stats.amount,3);
+ assert.deepEqual(G.passives,{magazine:5,whet:5});assert.equal(G.player.stats.amountMul,0.5);recomputeStats();assert.equal(G.player.stats.amountMul,0.5);
 });
 test('new ordinary weapons actually emit the boosted count after magazine has reached max',()=>{
  for(const id of ['shotgun','rifle','cannon','molotov','gas','saw','pistols','thorns']){

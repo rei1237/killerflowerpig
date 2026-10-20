@@ -7,7 +7,7 @@ import { atlases, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { relicStats } from '../data/relics.js';
 import { upgradeLevel, save } from '../core/save.js';
-import { MAGAZINE_TABLE } from '../data/weapons.js';
+import { MAGAZINE_BONUS } from '../data/weapons.js';
 import { applyTechPlayerBonus, resonanceTier } from './tech.js';
 import { blood, flash, shake, damageText, hitstop, sparks, floatText } from './effects.js';
 // 꽃가루 장막 재충전 시간 (패시브 Lv 0~5)
@@ -51,7 +51,8 @@ export function recomputeStats(fullHeal = false) {
         growth: 1 + lv('sap') * 0.08,
         projSpeed: 1 + lv('scope') * 0.05,
         pierce: Math.ceil(lv('scope') / 2),
-        amount: MAGAZINE_TABLE[lv('magazine')] || 0,
+        amount: 0, // 다른 출처의 고정 투사체 보너스
+        amountMul: MAGAZINE_BONUS[lv('magazine')] || 0, // 탄창 확장: 투사체 비례 보너스
         crit: lv('focus') * 0.07,
         regen: lv('regen') * 0.3,
         magnet: BASE.magnet * (1 + lv('nose') * 0.3 + upgradeLevel('magnet') * 0.1),

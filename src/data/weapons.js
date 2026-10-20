@@ -107,7 +107,7 @@ export const WEAPONS = {
 };
 
 export const PASSIVES = {
-    magazine: { name: '탄창 확장', icon: '📦', desc: '모든 무기 투사체 수 증가', per: '투사체 +1 (Lv1·3·5)' },
+    magazine: { name: '탄창 확장', icon: '📦', desc: '모든 무기의 투사체 수가 무기 투사체에 비례해 증가 (Lv5 +50%). 투사체가 적은 무기는 남는 비율만큼 피해가 늘어난다.', per: '투사체 +10%' },
     focus: { name: '집중', icon: '👁️', desc: '치명타 확률 +7% (피해 3배)', per: '치명타 +7%' },
     sap: { name: '회전 수액', icon: '🧪', desc: '경험치 획득 +8%', per: '경험치 +8%' },
     scope: { name: '조준경', icon: '🔭', desc: '관통 투사체의 관통 +1 (Lv1·3·5) · 탄속 +5%', per: '관통 +1 (Lv1·3·5) · 탄속 +5%' },
@@ -121,7 +121,8 @@ export const PASSIVES = {
     hide: { name: '철갑 피부', icon: '🛡️', desc: '받는 피해 -1 (방어)', per: '방어 +1' },
 };
 
-export const MAGAZINE_TABLE = [0, 1, 1, 2, 2, 3];
+// 탄창 확장: 무기 투사체 수에 비례해 증가 (Lv당 +10%). 정수로 못 늘린 나머지 비율은 피해로 환산한다.
+export const MAGAZINE_BONUS = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
 
 export const STARTING_WEAPON = 'shotgun';
 
