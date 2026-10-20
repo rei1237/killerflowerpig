@@ -1,4 +1,5 @@
-import { coinDropValue } from './coin-drops.js';
+import { coinDropValue, treasureDropped, TREASURE_DROPS } from './coin-drops.js';
+import { applyVariant, absorbBarrier, championDeathBlast, updateAffixes, drawAffixMarks, CHAMPIONS, ELITE_AFFIXES } from './affixes.js';
 import { rollSupplies, KILL_OPPORTUNITY } from './supply-drops.js';
 import { playerBody } from './player-motion.js';
 // 적 시스템: 스폰, 추적 이동 + 상호 밀어내기(그리드), 원거리 공격, 상태이상, 피격/사망 처리
@@ -8,7 +9,7 @@ import { STAGES } from '../data/stages.js';
 import { atlases } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { goreProfile } from '../core/settings.js';
-import { blood, gibs, decal, damageText, sparks, smoke, shake, hitstop } from './effects.js';
+import { blood, gibs, decal, damageText, sparks, smoke, shake, hitstop, floatText } from './effects.js';
 import { damagePlayer } from './player.js';
 import { dropGem, dropPickup, dropCoin, pruneFieldSupplies } from './pickups.js';
 import { spawnHazard } from './hazards.js';
@@ -63,7 +64,14 @@ export function spawnEnemy(typeId, x, y, opts = {}) {
     e.alive = true;
     if (!e.hits) e.hits = new Float32Array(HIT_CHANNELS);
     e.hits.fill(-99);
+    applyVariant(e, def, opts);
     return e;
+}
+
+// 소환사 엘리트의 부하: 평소 출현표의 잡몹을 변이 없이 곁에 불러낸다
+function spawnMinion(owner) {
+    const type = G.stage >= 3 ? 'runner' : 'shambler';
+    return spawnEnemy(type, owner.x + rand(-40, 40), owner.y + rand(-20, 20), { force: true, noAffix: true, hpMul: 0.7 });
 }
 
 // 플레이어 주변 시야 밖 링 위치
@@ -84,7 +92,10 @@ export function hitEnemy(e, dmg, opts = {}) {
     const critChance = (opts.crit || 0) + G.player.stats.crit;
     if (critChance > 0 && Math.random() < critChance) { amount *= (G.player.stats.critMul || 3) + (opts.critBonus || 0); crit = true; }
     e.lastCrit = crit; e.lastExecute = false;
-    if (opts.execute && !e.elite && e.hp - amount < e.maxHp * opts.execute) { amount = e.hp; e.lastExecute = true; }
+    if (opts.execute && !e.elite && !e.champion && e.hp - amount < e.maxHp * opts.execute) { amount = e.hp; e.lastExecute = true; }
+    // 엘리트 방벽: 체력보다 먼저 피해를 받는다 (남은 피해만 체력에 들어간다)
+    const dealt = amount;
+    if (e.barrier > 0) amount = absorbBarrier(e, amount);
     e.hp -= amount;
     e.flash = 0.08;
     if (amount > 0) recordFusionHit(e, opts.weapon, G.clock, opts.slow || 0);
@@ -94,9 +105,9 @@ export function hitEnemy(e, dmg, opts = {}) {
     }
     if (opts.bleed) { e.bleed = Math.max(e.bleed, opts.bleed); e.bleedT = 2.5; }
     if (opts.slow) { e.slow = Math.max(e.slow, opts.slow); e.slowT = 0.5; }
-    if (opts.weapon) G.damageBy[opts.weapon] = (G.damageBy[opts.weapon] || 0) + Math.min(amount, e.hp + amount);
+    if (opts.weapon) G.damageBy[opts.weapon] = (G.damageBy[opts.weapon] || 0) + Math.min(dealt, e.hp + amount);
     if (!opts.silent) {
-        damageText(e.x, e.y - e.radius * 2.2, amount, crit);
+        damageText(e.x, e.y - e.radius * 2.2, dealt, crit);
         audio.sfx('hit');
     }
     if (Math.random() < 0.35) blood(e.x, e.y - e.radius, 2, opts.kx || 0, opts.ky || 0);
@@ -122,6 +133,15 @@ function killEnemy(e, opts) {
     dropGem(e.x, e.y, e.xp * KILL_OPPORTUNITY * (G.boss && G.boss.alive ? BOSS_FIGHT_XP_MULTIPLIER : 1));
     const coinValue = coinDropValue(e.elite);
     if (coinValue) dropCoin(e.x, e.y, coinValue);
+    // 보물 상자: 아주 드문 보너스 (필드에 이미 있으면 굴리지 않는다)
+    let chestsOnField = 0;
+    for (let i = 0; i < G.pickups.count; i++) if (G.pickups.items[i].kind === 'chest') chestsOnField++;
+    if (chestsOnField < TREASURE_DROPS.maxOnField && treasureDropped(e.elite ? 'elite' : e.champion ? 'champion' : 'ordinary')) {
+        const chest = dropPickup('chest', e.x, e.y);
+        chest.treasure = true;
+        floatText(e.x, e.y - e.radius * 2.6, '🎁 보물 상자!', '#ffd76a', 1.4);
+        audio.sfx('chest');
+    }
     // Elite enemies award only XP and coins; gear chests are boss-exclusive.
     if (!e.elite) {
         pruneFieldSupplies();
@@ -146,6 +166,8 @@ function killEnemy(e, opts) {
             fireEnemyShot(e.x, e.y - e.radius, Math.cos(a), Math.sin(a), def.charge.shrapnelSpeed || 200, dmg * 0.35, 'bullet', 4);
         }
     }
+    const blast = championDeathBlast(e);
+    if (blast) explosionQueue.push(blast);
     if (def.explode) explosionQueue.push({ x: e.x, y: e.y, r: def.explode.radius, dmg: def.explode.dmg * (1 + (G.stage - 1) * 0.16) });
     if (def.split) {
         for (let i = 0; i < def.split.count; i++) {
@@ -222,6 +244,7 @@ export function updateEnemies(dt) {
         // 이동
         const dx = p.x - e.x, dy = p.y - e.y;
         const dist = Math.hypot(dx, dy) || 1;
+        if (e.affixes) updateAffixes(e, dt, p, dist, spawnMinion);
         let mvx, mvy;
         let movementDt = dt;
         const charge = e.def?.charge;
@@ -397,7 +420,7 @@ export function drawEnemy(ctx, e) {
         if (!gp.deathAnim) { ctx.globalAlpha = Math.max(0, 1 - e.deadT / 0.15); anim = 'walk'; }
         else if (e.deadT > frames * 0.075) ctx.globalAlpha = Math.max(0, 1 - (e.deadT - frames * 0.075) / 0.35);
     }
-    if (e.alive) drawRoleWarning(ctx, e);
+    if (e.alive) { drawRoleWarning(ctx, e); if (e.champion || e.affixes) drawAffixMarks(ctx, e); }
     const roleArt = atlases[`enemyRole_${e.type}`];
     if (roleArt) {
         // New roles use dedicated art with restrained walk/attack/death poses.
@@ -411,11 +434,20 @@ export function drawEnemy(ctx, e) {
     } else atlas.draw(ctx, anim, e.anim, e.x, e.y, e.scale, e.flip, tint);
     ctx.globalAlpha = 1;
     if (e.elite && e.alive) {
-        const w = 40, h = 4, x = e.x - w / 2, y = e.y - atlas.walkH * e.scale - 10;
+        const w = 52, h = 5, x = e.x - w / 2, y = e.y - atlas.walkH * e.scale - 10;
         ctx.fillStyle = '#1a0004';
         ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
         ctx.fillStyle = '#d4102c';
         ctx.fillRect(x, y, w * Math.max(0, e.hp / e.maxHp), h);
+        if (e.barrierMax > 0 && e.barrier > 0) { ctx.fillStyle = '#5aa9ff'; ctx.fillRect(x, y - 4, w * (e.barrier / e.barrierMax), 3); }
+        if (e.affixes) {
+            ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(e.affixes.map(k => ELITE_AFFIXES[k].icon).join(' '), e.x, y - 7);
+        }
+    } else if (e.champion && e.alive && e.hp < e.maxHp) {
+        const w = 28, h = 3, x = e.x - w / 2, y = e.y - atlas.walkH * e.scale - 2;
+        ctx.fillStyle = '#12090a'; ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+        ctx.fillStyle = CHAMPIONS[e.champion].color; ctx.fillRect(x, y, w * Math.max(0, e.hp / e.maxHp), h);
     }
 }
 

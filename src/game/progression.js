@@ -81,9 +81,9 @@ function restoreChoiceState(value) {
 
 export function xpForLevel(lv) {
     // 레벨업 비용: 구간(20, 35)마다 가팔라지는 '쉬움' 기준 곡선 × 난이도 배율.
-    // 초반(1~11레벨, 대략 1~3스테이지)은 기존 곡선 유지. 12·25레벨부터 추가로 가팔라져 후반 레벨업이 어려워진다.
-    const base = 10 + (lv - 1) * 10 + Math.max(0, lv - 20) * 20 + Math.max(0, lv - 35) * 40
-        + Math.max(0, lv - 11) * 12 + Math.max(0, lv - 25) * 25;
+    // 레벨업은 매우 힘들어야 한다: 5·10·13·18·27레벨부터 단계적으로 가팔라진다.
+    const base = 12 + (lv - 1) * 12 + Math.max(0, lv - 4) * 10 + Math.max(0, lv - 9) * 18
+        + Math.max(0, lv - 12) * 40 + Math.max(0, lv - 17) * 90 + Math.max(0, lv - 26) * 140;
     return Math.round(base * difficultyOf(G.difficulty).xpMul);
 }
 
@@ -266,6 +266,20 @@ export function rollChest(count, random = Math.random) {
             const g = 3 + G.stage;
             G.gold += g;
             rewards.push({ kind: 'gold', id: 'gold', name: '피 묻은 금화', icon: '🪙', desc: `골드 +${g}` });
+        }
+    }
+    return rewards;
+}
+
+// 보물 상자: 강화 2회(진화 우선) + 확률로 새 보조 아이템 1개. 아주 드물게 얻는 보너스 보상.
+export function rollTreasure(random = Math.random, bonusChance = 0.25) {
+    const rewards = rollChest(2, random);
+    if (random() < bonusChance) {
+        const fresh = candidates().filter(c => c.kind === 'passive' && c.isNew);
+        if (fresh.length) {
+            const c = fresh[(random() * fresh.length) | 0];
+            applyChoice(c);
+            rewards.push({ ...c, fromLevel: 0, levelsGained: 1, isNew: true, desc: `신규 획득 — ${c.desc}` });
         }
     }
     return rewards;

@@ -14,6 +14,7 @@ import { drawPlayer } from './player.js';
 import { drawShots } from './weapons.js';
 import { drawHUD } from '../ui/hud.js';
 import { focusedTarget, tapFocusAt } from './targeting.js';
+import { drawGroundProps, collectTallProps, drawProp, drawPropLights, drawAmbient, invalidateScenery } from './scenery.js';
 
 let canvas, ctx;
 let backdrop = null;
@@ -121,7 +122,7 @@ function ensureGround() {
     groundStage = G.stage;
 }
 
-export function invalidateStageVisuals() { backdrop = null; groundPattern = null; frameValid = false; }
+export function invalidateStageVisuals() { backdrop = null; groundPattern = null; frameValid = false; invalidateScenery(); }
 
 const drawList = [];
 const byY = (a, b) => a.y - b.y;
@@ -161,6 +162,9 @@ export function render(dt) {
     ctx.fillStyle = groundPattern;
     ctx.fillRect(cam.x - hw - pad, cam.y - hh - pad, G.view.w + pad * 2, G.view.h + pad * 2);
 
+    // 1.5 바닥 소품 (핏물 웅덩이·뼈 더미) — 데칼 아래
+    drawGroundProps(ctx, vx0, vy0, vx1, vy1);
+
     // 2~4. 데칼, 장판, 젬
     drawDecals(ctx, vx0, vy0, vx1, vy1);
     drawHazards(ctx);
@@ -193,15 +197,20 @@ export function render(dt) {
     // 6. Y 정렬 캐릭터
     drawList.push(p);
     if (boss) drawList.push(boss);
+    collectTallProps(drawList, vx0, vy0, vx1, vy1);
     drawList.sort(byY);
     for (let i = 0; i < drawList.length; i++) {
         const o = drawList[i];
         if (o === p) drawPlayer(ctx);
         else if (o === boss) boss.draw(ctx);
+        else if (o.isProp) drawProp(ctx, o);
         else drawEnemy(ctx, o);
     }
 
     drawPets(ctx, images.petYeongnyang);
+
+    // 소품 빛 번짐 (가로등·네온·독 드럼통)
+    drawPropLights(ctx);
 
     // 7. 투사체
     drawShots(ctx);
@@ -228,6 +237,7 @@ export function render(dt) {
     // 스테이지 안개 색 + 비네트를 한 장으로 미리 합성해 둔 오버레이
     const st = STAGES[G.stage];
     // 최저 화질 단계에서는 전체 화면 합성 1회를 아끼기 위해 안개·비네트 오버레이를 생략
+    drawAmbient(ctx, screen, cam);
     if (G.visuals.vignette) ctx.drawImage(vignette(screen.w, screen.h, st ? st.fog : null), 0, 0);
 
     // 저체력/피격: 혈관이 뻗은 붉은 가장자리

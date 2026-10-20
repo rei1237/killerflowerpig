@@ -1,10 +1,11 @@
-import { coinRandom } from '../src/game/coin-drops.js';
+import { coinRandom, treasureRandom } from '../src/game/coin-drops.js';
 coinRandom.next = () => .99;
+treasureRandom.next = () => .99; // 보물 상자는 별도 테스트(rare-coins)에서 검증한다
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases, fx } from '../src/core/assets.js';
-import { ENEMIES, RANGED_UNLOCK_STAGE } from '../src/data/enemies.js';
+import { ENEMIES, RANGED_UNLOCK_STAGE, stageScaling } from '../src/data/enemies.js';
 import { STAGES } from '../src/data/stages.js';
 import { supplyState } from '../src/game/supply-drops.js';
 import { spawnEnemy, hitEnemy, updateEnemies } from '../src/game/enemies.js';
@@ -43,7 +44,7 @@ function withRandom(value, fn) {
 }
 
 function kill(elite = false) {
-    const enemy = spawnEnemy('shambler', 500, 0, { elite });
+    const enemy = spawnEnemy('shambler', 500, 0, { elite, noAffix: true });
     assert.ok(enemy);
     const index = G.enemies.count - 1;
     hitEnemy(enemy, enemy.hp + 1, { silent: true });
@@ -61,7 +62,7 @@ test('healthy real kills never drop heals; magnet guarantee at 36 with exact coi
   assert.equal(field('magnet').length,count===36?1:0);
  }
  assert.equal(G.kills,36);assert.equal(field('coin').reduce((n,c)=>n+c.value,0),0);
- assert.ok(xp>0);close(G.gems.items[0].value,ENEMIES.shambler.xp*5/3);
+ assert.ok(xp>0);close(G.gems.items[0].value,ENEMIES.shambler.xp*stageScaling(1,0,STAGES[1].duration).xp*5/3); // 스테이지 XP 배율(STAGE_XP_YIELD 포함)
 }));
 
 test('low HP real kills guarantee at8; elites drop their 6 coins on a winning roll without a chest',()=>withRandom(.99,()=>{

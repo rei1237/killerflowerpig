@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { STAGES, EVENTS } from '../src/data/stages.js';
+import { STAGES, EVENTS, POPULATION_BOOST } from '../src/data/stages.js';
 import { BOSSES, BOSS_HP_MULTIPLIER } from '../src/data/bosses.js';
-import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, stageScaling } from '../src/data/enemies.js';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
 import { spawnEnemy } from '../src/game/enemies.js';
-import { currentWeights, resetSpawner, updateSpawner, SWARM_RUSH } from '../src/game/spawner.js';
+import { currentWeights, resetSpawner, updateSpawner, spawnRate, SWARM_RUSH } from '../src/game/spawner.js';
 import { Boss } from '../src/game/boss.js';
 
 const baseline = JSON.parse(fs.readFileSync(new URL('./fixtures/later-stage-balance.json', import.meta.url)));
@@ -48,16 +48,18 @@ function runEvent(stage, type, occurrence = 0) {
 }
 
 test('stage 1 and 2 have bounded density and refill; stage 1 introduces enemy types gradually', () => {
-    assert.deepEqual(STAGES[1].density, [4, 19]);
-    assert.deepEqual(STAGES[2].density, [7, 30]);
+    // 기준 밀도 × POPULATION_BOOST (1스테이지 ×1.2, 2스테이지 ×1.25)
+    assert.deepEqual(STAGES[1].density, [4, 19].map(n => Math.round(n * POPULATION_BOOST[1])));
+    assert.deepEqual(STAGES[2].density, [7, 30].map(n => Math.round(n * POPULATION_BOOST[2])));
     assert.equal(currentWeights(STAGES[1], 54.999).runner, undefined);
     assert.equal(currentWeights(STAGES[1], 55).runner, 1);
     assert.equal(currentWeights(STAGES[1], 114.999).brute, undefined);
     assert.equal(currentWeights(STAGES[1], 115).brute, 1);
-    for (const [stage, count] of [[1, 2], [2, 4]]) {
+    for (const stage of [1, 2]) {
         reset(stage);
         updateSpawner(1);
-        assert.equal(G.enemies.count, count);
+        // 1초 동안 투입 속도(spawnRate)만큼 나온다
+        assert.equal(G.enemies.count, Math.min(Math.floor(spawnRate(STAGES[stage], STAGES[stage].density[0], 0)), STAGES[stage].density[0]));
         // A long frame cannot overfill the director's current target.
         updateSpawner(10);
         assert.equal(G.enemies.count, STAGES[stage].density[0]);
@@ -73,19 +75,20 @@ test('stage 1 and 2 have bounded density and refill; stage 1 introduces enemy ty
 test('opening stages stay only slightly softer while tougher enemies retain base XP values', () => withFixedRandom(() => {
     for (const [stage, multipliers] of [[1, [0.95, 0.9, 0.85]], [2, [1, 0.95, 0.95]]]) {
         reset(stage, STAGES[stage].duration / 2);
-        const enemy = spawnEnemy('shambler', 400, 0);
+        const enemy = spawnEnemy('shambler', 400, 0, { noAffix: true });
         const oldHp = (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + 0.5 * IN_STAGE_HP_RAMP);
         close(enemy.hp, ENEMIES.shambler.hp * oldHp * multipliers[0] * ENEMY_TOUGHNESS_MULTIPLIER);
         close(enemy.speed, ENEMIES.shambler.speed * (1 + (stage - 1) * 0.035) * multipliers[1]);
         close(enemy.dmg, ENEMIES.shambler.dmg * (1 + (stage - 1) * 0.24) * multipliers[2]);
-        close(enemy.xp, ENEMIES.shambler.xp * (1 + (stage - 1) * 0.15));
+        close(enemy.xp, ENEMIES.shambler.xp * (1 + (stage - 1) * 0.15) * STAGE_XP_YIELD); // 개체 수 증가분만큼 적 1마리당 XP는 낮췄다
         assert.equal(enemy.tint, ENEMIES.shambler.tint);
         assert.equal(enemy.scale, ENEMIES.shambler.scale);
     }
 }));
 
 test('early caps apply to ordinary, forced, event and boss-summoned enemies', () => {
-    for (const [stage, cap] of [[1, 26], [2, 38]]) {
+    for (const [stage, baseCap] of [[1, 26], [2, 38]]) {
+        const cap = Math.round(baseCap * POPULATION_BOOST[stage]);
         reset(stage);
         assert.equal(STAGES[stage].enemyCap, cap);
         fillEnemies(cap);
@@ -113,7 +116,7 @@ test('stage 1 leaves a 70-second learning window and smaller events run only onc
     assert.equal(G.enemies.count, 0);
     assert.equal(G.eventIdx, 0);
     assert.deepEqual(STAGES[1].events, [
-        { t: 70, type: 'ring' }, { t: 90, type: 'elite' },
+        { t: 70, type: 'ring' }, { t: 90, type: 'elite' }, { t: 105, type: 'horde' },
         { t: 115, type: 'swarm' }, { t: 140, type: 'ring' },
     ]);
     assert.equal(runEvent(1, 'ring').length, 5);
@@ -182,13 +185,15 @@ test('first boss phase transitions and summons allow time to recover', () => {
 });
 
 test('later-stage damage, speed, event timing and legacy charges remain while population and HP are rebalanced', () => withFixedRandom(() => {
-    assert.deepEqual(EVENTS, baseline.events);
+    // 기본 이벤트 표: 대군(horde)이 약 45초마다 추가됐고 링 시각은 그대로다
+    assert.deepEqual(EVENTS.map(e => `${e.t}${e.type}`), ['30horde','45ring','60elite','78horde','95swarm','110elite','125horde','140ring','155elite','168horde','178swarm','190elite']);
+    assert.deepEqual(EVENTS.filter(e => e.type === 'ring'), baseline.events.filter(e => e.type === 'ring'));
     for (let stage = 3; stage <= 10; stage++) {
         const { duration, weights, density } = STAGES[stage];
         const old = baseline.stages[stage];
         assert.equal(duration, old.duration);
         assert.deepEqual(weights.map(([t, w]) => [t, Object.fromEntries(Object.entries(w).filter(([id]) => !['suicider','gunner'].includes(id)))]), old.weights);
-        assert.deepEqual(density, old.density.map(count => Math.round(Math.round(count * 0.6) * .88)));
+        assert.deepEqual(density, old.density.map(count => Math.round(Math.round(Math.round(count * 0.6) * .88) * POPULATION_BOOST[stage])));
         assert.ok(STAGES[stage].enemyCap > density[1]);
         assert.equal(STAGES[stage].events, undefined);
         for (const t of [0, duration / 2, duration, duration + 10]) {
@@ -198,7 +203,7 @@ test('later-stage damage, speed, event timing and legacy charges remain while po
                 hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * ENEMY_TOUGHNESS_MULTIPLIER * (1 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.hp),
                 speed: 1 + (stage - 1) * 0.035 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.speed,
                 dmg: 1 + (stage - 1) * 0.24 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.dmg,
-                xp: 1 + (stage - 1) * 0.15,
+                xp: (1 + (stage - 1) * 0.15) * STAGE_XP_YIELD,
             });
         }
     }
@@ -226,7 +231,7 @@ test('later-stage damage, speed, event timing and legacy charges remain while po
     }
     reset(3);
     updateSpawner(1);
-    assert.equal(G.enemies.count, 14, 'later director also stops at its reduced target during long frames');
+    assert.equal(G.enemies.count, STAGES[3].density[0], 'later director also stops at its reduced target during long frames');
     assert.equal(runEvent(3, 'ring').length, 14);
     assert.equal(runEvent(3, 'swarm').length, 18);
 }));

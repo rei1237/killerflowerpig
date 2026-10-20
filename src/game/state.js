@@ -8,9 +8,9 @@ export const VIEW_H = 600; // 화면에 보이는 월드 높이(단위). 기기�
 // Draw-only budgets. Never use these for collision, attack timing, spawns or pools.
 // In particular, adaptive rendering must not call configureCaps().
 const VISUAL_TIERS = Object.freeze([
-    Object.freeze({ tier: 0, maxDpr: 2, particleDraws: 650, decalDraws: 320, additiveParticles: true, projectileGlow: true, playerGlow: true, fieldGlowScreens: 1.2, fieldFillScreens: 3, vignette: true }),
-    Object.freeze({ tier: 1, maxDpr: 1, particleDraws: 160, decalDraws: 72, additiveParticles: false, projectileGlow: false, playerGlow: false, fieldGlowScreens: 0.6, fieldFillScreens: 1.6, vignette: true }),
-    Object.freeze({ tier: 2, maxDpr: 0.75, particleDraws: 90, decalDraws: 36, additiveParticles: false, projectileGlow: false, playerGlow: false, fieldGlowScreens: 0.3, fieldFillScreens: 1, vignette: false }),
+    Object.freeze({ tier: 0, maxDpr: 2, particleDraws: 650, decalDraws: 320, additiveParticles: true, projectileGlow: true, playerGlow: true, fieldGlowScreens: 1.2, fieldFillScreens: 3, vignette: true, scenery: true, ambient: true, sceneryLights: true }),
+    Object.freeze({ tier: 1, maxDpr: 1, particleDraws: 160, decalDraws: 72, additiveParticles: false, projectileGlow: false, playerGlow: false, fieldGlowScreens: 0.6, fieldFillScreens: 1.6, vignette: true, scenery: true, ambient: true, sceneryLights: false }),
+    Object.freeze({ tier: 2, maxDpr: 0.75, particleDraws: 90, decalDraws: 36, additiveParticles: false, projectileGlow: false, playerGlow: false, fieldGlowScreens: 0.3, fieldFillScreens: 1, vignette: false, scenery: false, ambient: false, sceneryLights: false }),
 ]);
 
 export const G = {

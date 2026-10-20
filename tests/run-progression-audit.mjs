@@ -5,6 +5,7 @@ import { estimateWaveXP, simulatePlan, summarizePlans, makeBossBuildFixtures } f
 import { FUSION_RECIPES } from '../src/data/fusions.js';
 import { WEAPONS } from '../src/data/weapons.js';
 import { BOSS_XP_GEMS, bossGemValue } from '../src/data/boss-rewards.js';
+import './helpers/fixed-variants.mjs'; // 변이·보물 난수 스트림 고정 (벤치마크 재현성)
 
 const rows = estimateWaveXP({ residency: 16, seed: 7 });
 const fixture = JSON.parse(readFileSync(new URL('./fixtures/planned-boss-builds.json', import.meta.url), 'utf8'));
@@ -56,10 +57,11 @@ test('seeded planned versus scattered runs conserve item investment and respect 
         }
         result[mode] = summarizePlans(runs);
     }
-    // 12·25레벨부터 가팔라진 경험치 곡선: 집중 빌드도 일부(6/40)는 최종 보스 전 융합 2개에 머문다.
-    assert.equal(result.planned.beforeBoss10Finals[3], 34);
-    assert.equal((result.planned.beforeBoss10Finals[2] || 0) + result.planned.beforeBoss10Finals[3], 40);
-    assert.equal(result.absolute.beforeBoss10Absolutes[1], 40);
+    // 느려진 레벨업(STAGE_XP_YIELD 0.55 + 5·10·13·18·27레벨 가속): 모든 장비를 최대로 만드는 것은 불가능하다.
+    // 측정(40시드): 집중 빌드는 최종 보스 전에 최종 무기 3개에 도달하지 못하고(0개 2 / 1개 12 / 2개 26), 절대 빌드는 30/40이 절대 무기를 갖춘다.
+    assert.equal(result.planned.beforeBoss10Finals[3], undefined, 'three finals before the last boss are no longer reachable');
+    assert.ok((result.planned.beforeBoss10Finals[2] || 0) >= 20, 'a focused build still reaches two finals in most runs');
+    assert.ok((result.absolute.beforeBoss10Absolutes[1] || 0) >= 20 && (result.absolute.beforeBoss10Absolutes[1] || 0) < 40, 'absolute route is usually, not always, complete');
     assert.ok((result.scattered.beforeBoss10Finals[0] || 0) + (result.scattered.beforeBoss10Finals[1] || 0) > 0);
     // 보조 아이템은 슬롯 제한이 없어 진화 짝을 얻으려고 교체할 필요가 없다.
     assert.equal(result.scattered.exchangesUsed, 0);

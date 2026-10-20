@@ -1,4 +1,8 @@
 import { BOSS_XP_GEMS, bossGemValue } from '../src/data/boss-rewards.js';
+// 재현 가능한 벤치마크: 변이·보물 상자 난수 스트림을 고정한다 (Math.random 과 분리된 스트림이라 시드로는 재현되지 않는다).
+import { affixRandom } from '../src/game/affixes.js';
+import { treasureRandom } from '../src/game/coin-drops.js';
+affixRandom.next = () => .99; treasureRandom.next = () => .99;
 // Bounded planning audit, NOT an autonomous combat/survival playtest.
 // Wave XP uses the real director, spawn/death/drop code under declared residency
 // assumptions. Choices, rerolls, chest evolution, exchanges and fusion are real.

@@ -43,7 +43,7 @@ export function pruneFieldSupplies() {
 
 export function dropPickup(kind, x, y) {
     const p = G.pickups.spawn();
-    p.kind = kind; p.x = x; p.y = y; p.t = 0; p.pull = false; p.speed = 0; p.boss = false; p.value = 0;
+    p.kind = kind; p.x = x; p.y = y; p.t = 0; p.pull = false; p.speed = 0; p.boss = false; p.treasure = false; p.value = 0;
     return p;
 }
 
@@ -104,7 +104,7 @@ function collect(item) {
             healPlayer(30); audio.sfx('heal'); break;
         case 'magnet': magnetAll(); audio.sfx('pickup'); floatText(G.player.x, G.player.y - 60, '굶주림!', '#ff8fa3'); break;
         case 'bomb': detonate(); break;
-        case 'chest': audio.sfx('chest'); emit('chest', item.boss ? 'boss' : 'elite'); break;
+        case 'chest': audio.sfx('chest'); emit('chest', item.boss ? 'boss' : item.treasure ? 'treasure' : 'elite'); break;
         default: break;
     }
     return true;
@@ -190,7 +190,7 @@ export function drawPickups(ctx, vx0, vy0, vx1, vy1) {
         }
         if (it.kind === 'chest') {
             ctx.globalCompositeOperation = 'lighter';
-            const gl = glow('#ff2244', 40);
+            const gl = glow(it.treasure ? '#ffd76a' : '#ff2244', it.treasure ? 52 : 40);
             ctx.globalAlpha = 0.5 + Math.sin(t * 5) * 0.2;
             ctx.drawImage(gl, it.x - 40, it.y - 52);
             ctx.globalAlpha = 1;

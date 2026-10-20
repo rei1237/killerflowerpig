@@ -1,3 +1,4 @@
+import { treasureRandom } from '../src/game/coin-drops.js'; treasureRandom.next = () => .99; // 보물 상자 굴림 고정: 처치가 섞인 테스트가 난수 때문에 흔들리지 않게
 import {TIER_POWER,tierPower} from '../src/data/weapons.js';
 import test, {beforeEach} from 'node:test';
 import assert from 'node:assert/strict';
@@ -7,6 +8,7 @@ import {previewFusion,fuseItems,FUSION_RECIPES} from '../src/game/fusion.js';
 import {rollChoices,snapshotBuild,restoreBuild,resetBuild} from '../src/game/progression.js';
 import {save} from '../src/core/save.js';
 import {WEAPONS} from '../src/data/weapons.js';
+import {FUSED_WEAPONS} from '../src/data/fusions.js';
 // Unique-attack unit tests isolate the fusion attack; full inherited cores have separate combat tests.
 const weapon=(id,level=8,slot=0)=>Object.assign(createWeapon(id,slot),{level,evolved:!!WEAPONS[id].evolve&&level===8,fusionCores:WEAPONS[id].fusionOnly?[]:null});
 beforeEach(()=>{
@@ -54,9 +56,9 @@ test('lotus fusion actually fires piercing beam and activates damaging orbit tog
 });
 test('scatter fusion really creates spread with piercing bullets; plague lands slow-burning field',()=>{
  let w=weapon('scatter_rail',1);w.cd=0;G.weapons=[w];updateWeapons(.01);
- assert.equal(G.shots.count,7);assert.ok(G.shots.items.slice(0,7).every(s=>s.pierce===4));assert.ok(new Set(G.shots.items.slice(0,7).map(s=>s.angle)).size>1);
+ assert.equal(G.shots.count,7);assert.ok(G.shots.items.slice(0,7).every(s=>s.pierce===FUSED_WEAPONS.scatter_rail.base.pierce));assert.ok(new Set(G.shots.items.slice(0,7).map(s=>s.angle)).size>1);
  G.shots.clear();w=weapon('plague_fire',1);w.cd=0;G.weapons=[w];updateWeapons(.01);assert.equal(G.shots.count,2);updateShots(.6);
- assert.equal(G.hazards.count,2);assert.ok(G.hazards.items.slice(0,2).every(h=>h.kind==='fire' && Math.abs(h.dmg-9*TIER_POWER.fused.plague_fire)<1e-9 && h.slow===.45 && h.radius===100));
+ assert.equal(G.hazards.count,2);assert.ok(G.hazards.items.slice(0,2).every(h=>h.kind==='fire' && Math.abs(h.dmg-9*TIER_POWER.fused.plague_fire)<1e-9 && h.slow===FUSED_WEAPONS.plague_fire.base.slow && h.radius===FUSED_WEAPONS.plague_fire.base.radius));
 });
 test('fused loadout and item levels survive run snapshot restore without touching wallet/archive',()=>{
  G.weapons=[weapon('lotus_bloom',6),weapon('pistols',3,1)];G.rerolls=2;G.gold=10;G.kills=3;
@@ -81,10 +83,10 @@ test('eight distinct recipes each lock low levels, consume two once, and restore
 test('burst rail produces timed piercing rounds without replacing unfinished bursts',()=>{
  const w=weapon('burst_rail',1);w.cd=0;G.weapons=[w];updateWeapons(.01);assert.equal(w.burst,4);assert.equal(G.shots.count,0);
  for(let i=0;i<4;i++)updateWeapons(.08);
- assert.equal(G.shots.count,4);assert.equal(w.burst,0);assert.ok(G.shots.items.slice(0,4).every(s=>s.pierce===3 && s.dmg===10));
+ assert.equal(G.shots.count,4);assert.equal(w.burst,0);assert.ok(G.shots.items.slice(0,4).every(s=>s.pierce===FUSED_WEAPONS.burst_rail.base.pierce && Math.abs(s.dmg-10*TIER_POWER.fused.burst_rail)<1e-9));
 });
 test('new toxic bullets and bouncing saws apply real slow on collision',()=>{
- for(const [id,slow] of [['toxic_scatter',.4],['venom_saw',.45]]){
+ for(const id of ['toxic_scatter','venom_saw']){const slow=FUSED_WEAPONS[id].base.slow;
   G.shots.clear();G.grid.reset();const w=weapon(id,1);w.cd=0;G.weapons=[w];updateWeapons(.01);
   const shot=G.shots.items[0];shot.x=40;shot.y=0;shot.vx=0;shot.vy=0;
   const e={id:99,x:40,y:10,radius:10,alive:true,hp:1000,maxHp:1000,mass:1,kx:0,ky:0,slow:0,slowT:0,hits:{}};G.grid.insert(e);
@@ -94,8 +96,8 @@ test('new toxic bullets and bouncing saws apply real slow on collision',()=>{
 });
 test('ember lance fires beam and lasting fire field, both with its own damage attribution',()=>{
  const w=weapon('ember_lance',1);w.cd=0;G.weapons=[w];let dmg=0;G.boss={alive:true,x:120,y:20,radius:20,hits:{},hurt(v){dmg+=v;}};
- updateWeapons(.01);assert.ok(dmg>=48);assert.equal(G.beams.count,1);assert.equal(G.shots.count,1);updateShots(.6);
- assert.equal(G.hazards.count,1);const h=G.hazards.items[0];assert.equal(h.kind,'fire');assert.equal(h.duration,3);assert.equal(h.radius,54);assert.equal(h.dmg,7.68);assert.equal(h.weapon,'ember_lance');
+ updateWeapons(.01);const tp=TIER_POWER.fused.ember_lance;assert.ok(dmg>=48*tp-1e-9);assert.equal(G.beams.count,1);assert.equal(G.shots.count,1);updateShots(.6);
+ assert.equal(G.hazards.count,1);const h=G.hazards.items[0];assert.equal(h.kind,'fire');assert.equal(h.duration,3);assert.equal(h.radius,54);assert.ok(Math.abs(h.dmg-48*tp*.16)<1e-9);assert.equal(h.weapon,'ember_lance');
  const p=previewFusion('ember_lance');assert.equal(p.output.stats.fieldDamage,h.dmg);assert.equal(p.output.stats.fieldDuration,h.duration);
 });
 test('orbit saw fires bouncing blades while activating its separate damaging orbit',()=>{

@@ -10,7 +10,7 @@ export const STAGES = {
         enemyCap: 26,
         spawn: { baseRate: 1.056, gapRate: 0.45, maxRate: 2.64 },
         eventTuning: { ringCount: 5, swarmCount: 6, swarmSpeed: 1.15, eliteHp: 0.65 },
-        events: [{ t: 70, type: 'ring' }, { t: 90, type: 'elite' }, { t: 115, type: 'swarm' }, { t: 140, type: 'ring' }],
+        events: [{ t: 70, type: 'ring' }, { t: 90, type: 'elite' }, { t: 105, type: 'horde' }, { t: 115, type: 'swarm' }, { t: 140, type: 'ring' }],
     },
     2: {
         name: 'NEON GRAVEYARD', subtitle: '네온 시티 중심가', duration: 160, bg: 'bg1',
@@ -98,13 +98,27 @@ export const STAGES = {
 
 export const STAGE_COUNT = 10;
 
-// 시간 이벤트 (모든 스테이지 공통, 초 단위): 엘리트 / 군체 러시 / 포위 링
+// 개체 수 복원: 이전 조정으로 줄어든 적을 다시 늘린다 (1~3스테이지는 완만하게, 4스테이지부터 크게).
+// 대신 적 한 마리당 경험치는 낮추고(STAGE_XP_YIELD) 레벨업 곡선은 가파르게 만들어 '많이 잡아도 쉽게 크지 않게' 한다.
+export const POPULATION_BOOST = Object.freeze({ 1: 1.2, 2: 1.25, 3: 1.3, 4: 1.5, 5: 1.5, 6: 1.5, 7: 1.5, 8: 1.5, 9: 1.5, 10: 1.5 });
+for (const [id, st] of Object.entries(STAGES)) {
+    const k = POPULATION_BOOST[id] || 1;
+    st.density = st.density.map(v => Math.round(v * k));
+    if (st.enemyCap) st.enemyCap = Math.round(st.enemyCap * k);
+}
+
+// 시간 이벤트 (모든 스테이지 공통, 초 단위): 엘리트 / 군체 러시 / 포위 링 / 대군(horde: 한 방향에서 몰려오는 거대한 무리)
 export const EVENTS = [
+    { t: 30, type: 'horde' },
     { t: 45, type: 'ring' },
     { t: 60, type: 'elite' },
+    { t: 78, type: 'horde' },
     { t: 95, type: 'swarm' },
-    { t: 120, type: 'elite' },
+    { t: 110, type: 'elite' },
+    { t: 125, type: 'horde' },
     { t: 140, type: 'ring' },
-    { t: 175, type: 'swarm' },
-    { t: 185, type: 'elite' },
+    { t: 155, type: 'elite' },
+    { t: 168, type: 'horde' },
+    { t: 178, type: 'swarm' },
+    { t: 190, type: 'elite' },
 ];

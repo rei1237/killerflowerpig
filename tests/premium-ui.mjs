@@ -1,6 +1,7 @@
 // Run: node --test tests/premium-ui.mjs
 // Real ES modules with a deliberately small DOM/audio/canvas boundary. Layout,
 // actual image decoding, and touch-browser behavior still need browser QA.
+import { treasureRandom } from '../src/game/coin-drops.js'; treasureRandom.next = () => .99; // 보물 상자 굴림 고정: 처치가 섞인 테스트가 난수 때문에 흔들리지 않게
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';

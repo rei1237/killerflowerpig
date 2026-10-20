@@ -359,3 +359,9 @@ button:focus-visible,input:focus-visible,summary:focus-visible,.card:focus-visib
 .hud-title-name{font-size:.85em;font-weight:700;margin-left:2px}
 @media(max-width:640px){.titles-list{grid-template-columns:1fr 1fr}.title-card p{font-size:10px}}
 .titles-equipped .btn{padding:3px 12px;min-height:26px;font-size:11px}
+
+/* 레벨업 카드의 진화 조건 안내: 카드 본문과 같은 크기·여백 */
+.choice-card .loadout-evolution-info{margin:10px 14px 12px;padding:9px 11px;border-left:2px solid #c7aa72;background:#101d25;font-size:11px;line-height:1.6;color:#b9c6cc}
+.choice-card .loadout-evolution-info p{margin:2px 0;font-size:inherit;color:inherit}
+.choice-card .loadout-evolution-requirement{color:#d8c08e}
+.choice-card .loadout-evolution-state{color:#9fd8bd}

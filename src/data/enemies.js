@@ -40,6 +40,8 @@ export const IN_STAGE_HP_RAMP = 0.7;
 const STANDARD_SCALING = { hp: 1, speed: 1, dmg: 1 };
 
 // 스테이지별 배율
+// 적 한 마리당 경험치 배율. 개체 수를 늘린 만큼 낮춰서 레벨업 속도를 억제한다.
+export const STAGE_XP_YIELD = 0.55;
 // 4스테이지 이후 스테이지당 추가 강화 (late = stage - 3)
 export const LATE_STAGE_SCALING = Object.freeze({ hp: 0.22, speed: 0.02, dmg: 0.1 });
 export function stageScaling(stage, t, duration) {
@@ -51,6 +53,6 @@ export function stageScaling(stage, t, duration) {
         hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp * ENEMY_TOUGHNESS_MULTIPLIER * (1 + late * LATE_STAGE_SCALING.hp),
         speed: (1 + (stage - 1) * 0.035 + late * LATE_STAGE_SCALING.speed) * beginner.speed,
         dmg: (1 + (stage - 1) * 0.24 + late * LATE_STAGE_SCALING.dmg) * beginner.dmg,
-        xp: 1 + (stage - 1) * 0.15,
+        xp: (1 + (stage - 1) * 0.15) * STAGE_XP_YIELD,
     };
 }

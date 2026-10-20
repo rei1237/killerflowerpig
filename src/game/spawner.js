@@ -101,12 +101,15 @@ function runEvent(type, st, t) {
     const p = G.player;
     const table = currentWeights(st, t);
     if (type === 'elite') {
-        // 가장 무거운 유형을 엘리트로
-        const types = Object.keys(table);
-        const pick = types[types.length - 1];
-        const pos = edgePosition(0.5);
-        spawnEnemy(pick, pos.x, pos.y, { elite: true, force: true, hpMul: st.eventTuning?.eliteHp ?? 1 });
-        floatText(p.x, p.y - 90, '⚠ 엘리트 변이체', '#ff2244', 1.6);
+        // 가장 무거운 유형 3종 중에서 엘리트를 뽑는다. 후반에는 여러 마리가 동시에 나타나고 각자 다른 능력을 가진다.
+        const types = Object.keys(table).sort((a, b) => ENEMIES[b].hp - ENEMIES[a].hp).slice(0, 3);
+        const count = G.stage >= 9 ? 3 : G.stage >= 5 ? 2 : 1;
+        for (let i = 0; i < count; i++) {
+            const pick = types[Math.floor(Math.random() * types.length)];
+            const pos = edgePosition(0.5);
+            spawnEnemy(pick, pos.x, pos.y, { elite: true, force: true, hpMul: st.eventTuning?.eliteHp ?? 1 });
+        }
+        floatText(p.x, p.y - 90, count > 1 ? `⚠ 엘리트 변이체 ×${count}` : '⚠ 엘리트 변이체', '#ff2244', 1.6);
         audio.sfx('warn');
     } else if (type === 'ring') {
         // Late rings have a timed, visible poison boundary; early rings stay escapable.
@@ -118,6 +121,21 @@ function runEvent(type, st, t) {
             spawnEnemy('shambler', p.x + Math.cos(a) * R * 1.3, p.y + Math.sin(a) * R, { force: true, hpMul: 0.8 });
         }
         floatText(p.x, p.y - 90, '포위당했다!', '#ff5a3a', 1.4);
+        audio.sfx('warn');
+    } else if (type === 'horde') {
+        // 대군: 한 방향에서 폭넓은 무리가 밀려온다. 평소 출현표를 그대로 쓰되 한꺼번에, 짧은 시간 안에.
+        const a = Math.random() * Math.PI * 2, dx = Math.cos(a), dy = Math.sin(a);
+        const r = Math.hypot(G.view.w, G.view.h) / 2 + 80;
+        const base = st.eventTuning?.hordeCount ?? Math.round(16 + G.stage * 6);
+        const n = Math.round(base * (G.lowQ ? 0.7 : 1));
+        const types = Object.keys(table);
+        for (let i = 0; i < n; i++) {
+            const across = (Math.random() - 0.5) * Math.min(G.view.w, G.view.h) * 1.1;
+            const depth = Math.random() * 190;
+            const type = pickWeighted(table);
+            spawnEnemy(type, p.x - dx * (r + depth) - dy * across, p.y - dy * (r + depth) + dx * across, { force: true, speedMul: 1.08 });
+        }
+        floatText(p.x, p.y - 90, '☠ 대군이 몰려온다!', '#ff2244', 1.6);
         audio.sfx('warn');
     } else if (type === 'swarm') {
         // 군체 러시: 한 방향에서 일직선으로 쏟아지는 무리 (+ 스테이지 2부터 반대편 협공)

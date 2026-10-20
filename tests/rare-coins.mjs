@@ -1,13 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { COIN_DROPS, coinDropValue, createCoinRandom, coinRandom } from '../src/game/coin-drops.js';
+import { COIN_DROPS, TREASURE_DROPS, coinDropValue, createCoinRandom, coinRandom, treasureRandom, treasureDropped } from '../src/game/coin-drops.js';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
 import { spawnEnemy, hitEnemy } from '../src/game/enemies.js';
 import { supplyState } from '../src/game/supply-drops.js';
 const field=kind=>G.pickups.items.slice(0,G.pickups.count).filter(p=>p.kind===kind);
 function reset(){clearWorld();G.stage=1;G.time=0;G.clock=0;G.kills=0;G.damageBy={};G.events={};G.lowQ=false;G.supplyDrought=supplyState();G.view={w:1000,h:600};G.caps={enemies:420,particles:0,texts:0,gems:500,decalScale:0};G.player={x:0,y:0,hp:20,maxHp:100,dead:false,stats:{crit:0,armor:0,magnet:70,greed:1}};for(const name of ['rabbit1','rabbit2','rabbit3'])atlases[name]={walkH:112,frameCount:()=>8};}
-function kill(elite=false){const e=spawnEnemy('shambler',500,0,{elite});assert.ok(e);hitEnemy(e,e.hp+1,{silent:true});assert.equal(hitEnemy(e,100,{silent:true}),0);G.enemies.release(G.enemies.count-1);}
+// 변이/방벽 없는 개체로 고정하고, 보물 상자 난수 스트림은 항상 실패로 고정해 '코인 외 픽업 없음'을 검증한다.
+treasureRandom.next=()=>.99;
+function kill(elite=false){const e=spawnEnemy('shambler',500,0,{elite,noAffix:true});assert.ok(e);hitEnemy(e,e.hp+1,{silent:true});assert.equal(hitEnemy(e,100,{silent:true}),0);G.enemies.release(G.enemies.count-1);}
 // 금화는 네임드(엘리트)만 30% 확률로 6개. 일반 적은 굴리지도 않고 0.
 test('ordinary enemies never drop coins; elite coin odds have exact30percent boundary',()=>{
  assert.deepEqual(COIN_DROPS,{ordinaryChance:0,ordinaryValue:0,eliteChance:.3,eliteValue:6});
@@ -37,4 +39,19 @@ test('ten thousand real elite kills roll the coin stream once each, award6 coins
 test('actual boss defeat guarantees one boss gear chest and repeated damage cannot duplicate it',async()=>{
  const {Boss}=await import('../src/game/boss.js');const random=Math.random;Math.random=()=>.99;
  try{reset();for(const name of ['boss1','boss2','bossKing'])atlases[name]={walkH:112,frameCount:()=>8};const boss=new Boss(1);boss.hurt(boss.hp+1,{silent:true});assert.equal(boss.alive,false);assert.equal(field('chest').length,1);assert.equal(field('chest')[0].boss,true);boss.hurt(999999,{silent:true});assert.equal(field('chest').length,1);}finally{Math.random=random;}
+});
+
+test('treasure chest odds have exact boundaries per enemy kind and use a dedicated stream',()=>{
+ assert.deepEqual({o:TREASURE_DROPS.ordinary,c:TREASURE_DROPS.champion,e:TREASURE_DROPS.elite,max:TREASURE_DROPS.maxOnField},{o:.0005,c:.012,e:.08,max:1});
+ for(const [kind,chance] of [['ordinary',.0005],['champion',.012],['elite',.08]]){
+  assert.equal(treasureDropped(kind,()=>0),true);assert.equal(treasureDropped(kind,()=>chance-1e-9),true);
+  for(const roll of [chance,.999,1,-1,NaN])assert.equal(treasureDropped(kind,()=>roll),false,`${kind} ${roll}`);
+ }
+ assert.equal(treasureDropped('unknown',()=>0),false);
+ const original=Math.random;Math.random=()=>{throw Error('shared random consumed')};
+ try{assert.equal(typeof treasureDropped('elite'),'boolean');}finally{Math.random=original;}
+});
+test('a winning treasure roll drops exactly one treasure chest, and none while one is already on the field',()=>{
+ const prior=treasureRandom.next,random=Math.random;Math.random=()=>.99;
+ try{reset();treasureRandom.next=()=>0;kill();assert.equal(field('chest').length,1);assert.equal(field('chest')[0].treasure,true);assert.ok(!field('chest')[0].boss);kill(true);assert.equal(field('chest').length,1);}finally{treasureRandom.next=prior;Math.random=random;}
 });

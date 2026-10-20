@@ -9,6 +9,7 @@ import { updateHazards, spawnHazard } from '../src/game/hazards.js';
 import { bossSpriteFrame, BOSS_FRAMES } from '../src/game/boss-appearance.js';
 import { estimateWaveXP, simulatePlan } from '../tools/run-progression-audit.mjs';
 import { measureBossEncounter } from '../tools/boss-damage-bench.mjs';
+import './helpers/fixed-variants.mjs'; // 변이·보물 난수 스트림 고정 (벤치마크 재현성)
 
 const close = (a,b) => assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 function reset(phase=0) {

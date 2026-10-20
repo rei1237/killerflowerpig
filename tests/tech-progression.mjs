@@ -11,9 +11,10 @@ beforeEach(()=>{resetBuild();clearWorld();createPlayer();G.mode='play';G.stage=1
 const w=(id,level,evolved=false)=>Object.assign(createWeapon(id,0),{level,evolved});
 const damageRate=item=>{const s=weaponStats(item);return s.dmg*s.amount/s.cd};
 test('cost curve slows discovery while concentrated mid and final tech increase deterministic damage per cooldown',()=>{
- assert.equal(xpForLevel(1),10);assert.equal(xpForLevel(10),100);assert.equal(xpForLevel(20),200+9*12);assert.equal(xpForLevel(40),1000+29*12+15*25); // 12·25레벨부터 추가 가속
+ const ref=lv=>12+(lv-1)*12+Math.max(0,lv-4)*10+Math.max(0,lv-9)*18+Math.max(0,lv-12)*40+Math.max(0,lv-17)*90+Math.max(0,lv-26)*140; // 5·10·13·18·27레벨부터 단계적 가속
+ assert.equal(xpForLevel(1),12);assert.equal(xpForLevel(10),ref(10));assert.equal(xpForLevel(20),ref(20));assert.equal(xpForLevel(40),ref(40));assert.ok(xpForLevel(40)>xpForLevel(20)*4);
  const scattered=damageRate(w('shotgun',1))+damageRate(w('rifle',1));const focused=damageRate(w('shotgun',5))+damageRate(w('rifle',5));
- const final=damageRate(w('scatter_rail',8));assert.ok(focused>scattered*2);assert.ok(final>focused*1.5);
+ const final=damageRate(w('scatter_rail',8));assert.ok(focused>scattered*2);assert.ok(final>focused*1.4,`final ${final} vs focused ${focused}`);// 최종 무기 하향으로 1.5배 -> 1.4배 (관통 산탄포 Lv8 ≈ 1.46배)
  for(const recipe of FUSION_RECIPES){const early=damageRate(w(recipe.output,1)),mid=damageRate(w(recipe.output,5)),late=damageRate(w(recipe.output,8));assert.ok(mid>early*1.3,recipe.id);assert.ok(late>mid*1.15,recipe.id);}
  const plain=weaponStats(w('molotov',8)),evolved=weaponStats(w('molotov',8,true));assert.ok(evolved.dmg>=plain.dmg*2.69);assert.ok(evolved.duration>plain.duration*2);
 });

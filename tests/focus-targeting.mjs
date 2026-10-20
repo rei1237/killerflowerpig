@@ -1,4 +1,5 @@
 // Execute real input, target selection, weapon and pet modules without browser dependencies.
+import { treasureRandom } from '../src/game/coin-drops.js'; treasureRandom.next = () => .99; // 보물 상자 굴림 고정: 처치가 섞인 테스트가 난수 때문에 흔들리지 않게
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const noop=()=>{};
@@ -10,7 +11,7 @@ class Events {
 const windowEvents=new Events();globalThis.window=Object.assign(windowEvents,{innerWidth:390,innerHeight:844,devicePixelRatio:3,matchMedia:()=>({matches:false})});
 Object.defineProperty(globalThis,'navigator',{configurable:true,value:{hardwareConcurrency:8}});
 globalThis.localStorage={getItem:()=>null,setItem:noop};
-function context(){const ops=[];const c={ops,globalAlpha:1,globalCompositeOperation:'source-over',createPattern:()=>({}),createLinearGradient:()=>({addColorStop:noop}),createRadialGradient:()=>({addColorStop:noop}),measureText:s=>({width:s.length*10})};for(const name of ['setTransform','save','restore','translate','scale','rotate','beginPath','closePath','moveTo','lineTo','bezierCurveTo','arc','ellipse','fill','stroke','fillRect','strokeRect','fillText','strokeText','drawImage','roundRect','clip','setLineDash'])c[name]=(...args)=>ops.push({name,args});return c;}
+function context(){const ops=[];const c={ops,globalAlpha:1,globalCompositeOperation:'source-over',createPattern:()=>({}),createLinearGradient:()=>({addColorStop:noop}),createRadialGradient:()=>({addColorStop:noop}),measureText:s=>({width:s.length*10})};for(const name of ['setTransform','save','restore','translate','scale','rotate','beginPath','closePath','moveTo','lineTo','bezierCurveTo','quadraticCurveTo','arc','ellipse','fill','stroke','fillRect','strokeRect','fillText','strokeText','drawImage','roundRect','clip','setLineDash'])c[name]=(...args)=>ops.push({name,args});return c;}
 const nodes=new Map();globalThis.document={hidden:false,createElement(tag){const ctx=context();return{style:{},width:1,height:1,getContext:()=>ctx,appendChild:noop,replaceChildren:noop,setAttribute:noop};},getElementById(id){if(!nodes.has(id))nodes.set(id,{style:{},setAttribute:noop,replaceChildren:noop,appendChild:noop});return nodes.get(id);}};
 const canvas=Object.assign(new Events(),{style:{},width:390,height:844,setPointerCapture:noop,getBoundingClientRect:()=>({left:25,top:40,width:390,height:844})});const ctx=context();canvas.getContext=()=>ctx;
 const {G,configureCaps,clearWorld,setVisualTier}=await import('../src/game/state.js');

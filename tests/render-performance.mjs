@@ -23,7 +23,7 @@ function makeContext() {
         createPattern: () => ({}), createLinearGradient: () => ({ addColorStop: noop }), createRadialGradient: () => ({ addColorStop: noop }),
         measureText: text => ({ width: String(text).length * 9 }),
     };
-    for (const name of ['setTransform', 'save', 'restore', 'translate', 'scale', 'rotate', 'beginPath', 'closePath', 'moveTo', 'lineTo', 'bezierCurveTo', 'arc', 'ellipse', 'fill', 'stroke', 'fillRect', 'strokeRect', 'fillText', 'strokeText', 'drawImage', 'roundRect', 'clip', 'setLineDash']) {
+    for (const name of ['setTransform', 'save', 'restore', 'translate', 'scale', 'rotate', 'beginPath', 'closePath', 'moveTo', 'lineTo', 'bezierCurveTo', 'quadraticCurveTo', 'arc', 'ellipse', 'fill', 'stroke', 'fillRect', 'strokeRect', 'fillText', 'strokeText', 'drawImage', 'roundRect', 'clip', 'setLineDash']) {
         ctx[name] = () => { counts[name] = (counts[name] || 0) + 1; };
     }
     return ctx;

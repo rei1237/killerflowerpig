@@ -1,4 +1,5 @@
-import { coinRandom } from '../src/game/coin-drops.js';
+import { coinRandom, treasureRandom } from '../src/game/coin-drops.js';
+treasureRandom.next = () => .99; // 보물 상자 굴림 고정 (픽업 목록은 코인만 검증)
 coinRandom.next = () => .99;
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -38,7 +39,7 @@ function killBloater(stage, elite = false) {
     reset(stage);
     // 네임드 금화는 30% 확률(6개): 당첨 굴림을 주입. 일반 적은 굴림과 무관하게 금화가 없다.
     coinRandom.next = () => .29;
-    const enemy = spawnEnemy('bloater', 0, 0, { elite, force: true });
+    const enemy = spawnEnemy('bloater', 0, 0, { elite, force: true, noAffix: true }); // 방벽/변이 없이: 한 방에 죽는 기준 개체
     const appearance = { tint: enemy.tint, scale: enemy.scale, radius: enemy.radius };
     let killEvents = 0;
     G.events.kill = () => killEvents++;
@@ -105,8 +106,8 @@ test('death-cloud gate preserves direct splash and chain explosions against enem
     for (const stage of [3, 5]) {
         reset(stage);
         G.player.x = 1000;
-        const first = spawnEnemy('bloater', 0, 0);
-        const second = spawnEnemy('bloater', 20, 0);
+        const first = spawnEnemy('bloater', 0, 0, { noAffix: true });
+        const second = spawnEnemy('bloater', 20, 0, { noAffix: true });
         second.hp = 1;
         const nearby = spawnEnemy('hulk', 30, 0);
         const outside = spawnEnemy('hulk', 100, 0);
@@ -130,7 +131,7 @@ test('all other enemy death types retain their loot and do not gain poison cloud
     for (const stage of [3, 5, 10]) {
         for (const type of Object.keys(ENEMIES).filter(type => type !== 'bloater')) {
             reset(stage);
-            const enemy = spawnEnemy(type, 500, 0);
+            const enemy = spawnEnemy(type, 500, 0, { noAffix: true });
             if (!enemy) { assert.ok((ENEMIES[type].ranged && stage < 5) || stage < (ENEMIES[type].unlockStage || 1)); continue; }
             const xp = enemy.xp;
             hitEnemy(enemy, enemy.hp + 1, { silent: true });
@@ -146,7 +147,7 @@ test('all other enemy death types retain their loot and do not gain poison cloud
 
 test('acid spitter projectiles and boss acid pools remain separate from the death-cloud gate', () => withFixedRandom(() => {
     reset(5, 60);
-    const spitter = spawnEnemy('spitter', 100, 0);
+    const spitter = spawnEnemy('spitter', 100, 0, { noAffix: true });
     spitter.shootT = 0;
     updateEnemies(0.01);
     assert.equal(G.enemyShots.count, 1);

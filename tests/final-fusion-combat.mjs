@@ -7,9 +7,16 @@ import {G} from '../src/game/state.js';
 import {previewFusion,fuseItems} from '../src/game/fusion.js';
 import {activeWeaponCores,createWeapon,weaponStats,updateWeapons} from '../src/game/weapons.js';
 import {snapshotBuild,restoreBuild} from '../src/game/progression.js';
-test('all eight final Lv1 fusions exceed two evolved parents in real 30-second boss, scattered and corridor collisions',()=>{
- for(const recipe of FUSION_RECIPES)for(const scene of ['boss','scatter','corridor']){
-  const before=simulate(recipe,false,scene),after=simulate(recipe,true,scene);assert.ok(before>0);assert.ok(after>before*1.2,`${recipe.id}/${scene}: ${after}/${before}`);
+test('all eight final Lv1 fusions still beat two evolved parents on average in real 30-second boss, scattered and corridor collisions',()=>{
+ // 최종 무기 하향 이후: 장면 평균 1.1배 이상, 보스 단일 대상 1.1배 이상, 어느 장면도 0.7배 미만으로 떨어지지 않는다.
+ // (측정: 역병 화염병 산개 0.85, 화염 꽃잎창 산개 0.78, 연쇄 관통권총 보스/산개/복도 1.15/1.15/1.10)
+ for(const recipe of FUSION_RECIPES){
+  const ratios={};for(const scene of ['boss','scatter','corridor']){
+   const before=simulate(recipe,false,scene),after=simulate(recipe,true,scene);assert.ok(before>0);ratios[scene]=after/before;
+   assert.ok(ratios[scene]>.7,`${recipe.id}/${scene}: ${ratios[scene]}`);
+  }
+  const mean=(ratios.boss+ratios.scatter+ratios.corridor)/3;
+  assert.ok(mean>1.1,`${recipe.id} mean ${mean}`);assert.ok(ratios.boss>1.1,`${recipe.id}/boss ${ratios.boss}`);
  }
 });
 test('every final requires two evolved Lv8 parents, rejects partial evolution, preserves old fused saves and source attribution',()=>{

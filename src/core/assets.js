@@ -343,7 +343,7 @@ export function hurtEdge(w, h) {
 
 // 스테이지별 바닥 타일(절차 생성): 균열 아스팔트, 마른 핏자국, 잔해. 384px 반복(경계 이음매 없음).
 export function makeGroundTile(seed, base, stain, crack) {
-    const S = 384;
+    const S = 512; // 타일이 클수록 반복이 덜 눈에 띈다
     const c = makeCanvas(S, S);
     const g = c.getContext('2d');
     const r = rng(seed);
@@ -352,7 +352,7 @@ export function makeGroundTile(seed, base, stain, crack) {
     // 타일 경계에서 감싸도록 9방향 복제해서 그리는 헬퍼
     const wrap = (fn) => { for (let ox = -S; ox <= S; ox += S) for (let oy = -S; oy <= S; oy += S) fn(ox, oy); };
     // 큰 명암 얼룩
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 40; i++) {
         const x = r() * S, y = r() * S, rad = 30 + r() * 70, a = 0.05 + r() * 0.08;
         const dark = r() < 0.6;
         wrap((ox, oy) => {
@@ -372,7 +372,7 @@ export function makeGroundTile(seed, base, stain, crack) {
         for (let x = off; x < S; x += 96) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 48); g.stroke(); }
     }
     // 스테이지 색 얼룩 (독, 피 등)
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 16; i++) {
         const x = r() * S, y = r() * S, rad = 10 + r() * 34, rot = r() * 3;
         wrap((ox, oy) => {
             g.fillStyle = stain;
@@ -394,7 +394,7 @@ export function makeGroundTile(seed, base, stain, crack) {
         });
     }
     // 잔해 조각
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 110; i++) {
         const x = r() * S, y = r() * S, w = 2 + r() * 5, h = 2 + r() * 4;
         g.fillStyle = r() < 0.5 ? 'rgba(0,0,0,0.35)' : 'rgba(200,190,180,0.08)';
         g.fillRect(x, y, w, h);
@@ -412,6 +412,29 @@ export function makeGroundTile(seed, base, stain, crack) {
             pts.forEach(([px, py], k) => (k ? g.lineTo(px + ox, py + oy) : g.moveTo(px + ox, py + oy)));
             g.stroke();
         });
+    }
+    // 젖은 웅덩이: 어두운 광택 + 하이라이트 (비 온 뒤 썩은 물)
+    for (let i = 0; i < 5; i++) {
+        const x = r() * S, y = r() * S, rx = 18 + r() * 38, ry = rx * (0.35 + r() * 0.25);
+        wrap((ox, oy) => {
+            const gr = g.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, rx);
+            gr.addColorStop(0, 'rgba(8,12,16,0.55)'); gr.addColorStop(1, 'rgba(8,12,16,0)');
+            g.fillStyle = gr; g.beginPath(); g.ellipse(x + ox, y + oy, rx, ry, 0, 0, Math.PI * 2); g.fill();
+            g.fillStyle = 'rgba(190,210,230,0.08)'; g.beginPath(); g.ellipse(x + ox - rx * 0.25, y + oy - ry * 0.3, rx * 0.35, ry * 0.18, 0, 0, Math.PI * 2); g.fill();
+        });
+    }
+    // 탄피와 뼛조각, 종잇조각 (전투가 지나간 자리)
+    for (let i = 0; i < 26; i++) {
+        const x = r() * S, y = r() * S, k = r();
+        if (k < 0.4) { g.fillStyle = 'rgba(214,170,70,0.38)'; g.fillRect(x, y, 3, 1.6); }
+        else if (k < 0.7) { g.strokeStyle = 'rgba(214,206,186,0.22)'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 5 + r() * 6, y + (r() - 0.5) * 3); g.stroke(); }
+        else { g.fillStyle = 'rgba(210,210,200,0.09)'; g.save(); g.translate(x, y); g.rotate(r() * 3); g.fillRect(0, 0, 6, 8); g.restore(); }
+    }
+    // 끌린 핏자국: 길고 가는 선
+    for (let i = 0; i < 3; i++) {
+        let x = r() * S, y = r() * S; const a = r() * Math.PI * 2;
+        g.strokeStyle = 'rgba(70,0,10,0.22)'; g.lineWidth = 4 + r() * 4; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a) * 60 + 18, y + Math.sin(a) * 60, x + Math.cos(a) * 130, y + Math.sin(a) * 130); g.stroke();
     }
     return c;
 }
