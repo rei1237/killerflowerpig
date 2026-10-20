@@ -306,7 +306,7 @@ test('fusion preview pauses safely and consumes two inputs only after explicit c
  freshRun();G.weapons=[createWeapon('cannon',0),createWeapon('thorns',1)];G.weapons.forEach(w=>{w.level=8;w.evolved=true;});
  const before=JSON.stringify(G.weapons);togglePause();showFusion();
  assert.equal(topModalId(),'fusion');assert.equal(G.paused,true);assert.equal(JSON.stringify(G.weapons),before);
- assert.equal(node('fusion-recipes').children.length,9);
+ assert.equal(node('fusion-recipes').children.length,13);
  const button=node('fusion-recipes').children[0].querySelector('button');assert.equal(button.disabled,false);
  button.click();assert.deepEqual(G.weapons.map(w=>w.id),['lotus_bloom']);assert.equal(G.weapons[0].level,1);
  button.click();assert.equal(G.weapons.length,1);assert.match(node('fusion-status').textContent,/조합 완료/);
@@ -368,7 +368,7 @@ test('upgrade cards show live current levels and all recipe details without sele
  G.banished=new Set([...Object.keys(WEAPONS),...Object.keys(PASSIVES)].filter(id=>id!=='cannon'));
  showLevelUp();const card=node('cards').children[0];
  assert.match(card.querySelector('.card-lv').textContent,/Lv.5 → Lv.6/);
- const details=card.querySelector('details');assert.ok(details);assert.equal(details.querySelectorAll('.choice-recipe-detail').length,3);
+ const details=card.querySelector('details');assert.ok(details);assert.equal(details.querySelectorAll('.choice-recipe-detail').length,4);
  assert.match(details.textContent,/만개 연꽃포/);assert.match(details.textContent,/화염 꽃잎창/);assert.match(details.textContent,/필요 Lv.8/);assert.match(details.textContent,/진화 필요/);
  const event=details.dispatch('click');assert.equal(event.stopped,true);assert.equal(G.weapons[0].level,5);assert.equal(topModalId(),'levelup');
  card.querySelector('.choice-select').click();assert.equal(G.weapons[0].level,6);

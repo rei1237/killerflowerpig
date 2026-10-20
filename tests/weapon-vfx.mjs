@@ -22,8 +22,8 @@ function shot(id='shotgun'){return {kind:'bullet',weapon:id,x:20,y:30,vx:200,vy:
 function beam(id='cannon'){return {weapon:id,x:0,y:0,angle:0,len:420,width:38,life:.3,max:.35,evolved:false};}
 
 test('all eight ordinary, eight final and one absolute weapons have explicit distinct visual identities',()=>{
- assert.equal(Object.keys(WEAPON_VFX).length,17);for(const id of Object.keys(WEAPONS))assert.ok(WEAPON_VFX[id],id);
- const fused=FUSION_RECIPES.map(r=>WEAPON_VFX[r.id]);assert.equal(new Set(fused.map(p=>p.color+':'+p.shape)).size,9);
+ assert.equal(Object.keys(WEAPON_VFX).length,21);for(const id of Object.keys(WEAPONS))assert.ok(WEAPON_VFX[id],id);
+ const fused=FUSION_RECIPES.map(r=>WEAPON_VFX[r.id]);assert.equal(new Set(fused.map(p=>p.color+':'+p.shape)).size,13);
  assert.equal(WEAPON_VFX.cannon.shape,'petal');assert.equal(WEAPON_VFX.lotus_bloom.shape,'lotus');assert.equal(WEAPON_VFX.ember_lance.shape,'ember');
 });
 

@@ -3,7 +3,7 @@
 const ROOT = 'asset/items/';
 const weapons = {
     burst_rail:'fusion-burst.svg',venom_saw:'fusion-venom.svg',ember_lance:'fusion-ember.svg',orbit_saw:'fusion-orbit.svg',toxic_scatter:'fusion-toxic.svg',
-    absolute_bloom:'cannon.svg',lotus_bloom:'cannon.svg',scatter_rail:'shotgun.svg',plague_fire:'molotov.svg',petalCannon:'cannon.svg',shotgun:'shotgun.svg', pistols:'pistols.svg', rifle:'rifle.svg',
+    absolute_bloom:'cannon.svg',doom_barrage:'rifle.svg',plague_end:'molotov.svg',guillotine:'pistols.svg',carnage_saw:'saw.svg',lotus_bloom:'cannon.svg',scatter_rail:'shotgun.svg',plague_fire:'molotov.svg',petalCannon:'cannon.svg',shotgun:'shotgun.svg', pistols:'pistols.svg', rifle:'rifle.svg',
     thorns:'thorns.svg', molotov:'molotov.svg', cannon:'cannon.svg', gas:'gas.svg', saw:'saw.svg',
 };
 const passives = {

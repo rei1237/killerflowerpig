@@ -56,7 +56,7 @@ const milestoneTitles = [
     { id: 'boss_10', name: '보스 사냥꾼', grade: 'rare', desc: '보스 처치(스테이지 클리어) 10회', progress: s => [Math.min(10, feat(s, 'bossKills')), 10] },
     { id: 'first_evolve', name: '진화의 목격자', grade: 'rare', desc: '무기를 진화시킨 채 스테이지 종료', progress: s => [Math.min(1, feat(s, 'evolved')), 1] },
     { id: 'first_fusion', name: '조합의 장인', grade: 'epic', desc: '최종 조합 무기를 완성', progress: s => [Math.min(1, feat(s, 'fused')), 1] },
-    { id: 'absolute', name: '절대 만개', grade: 'legend', desc: '절대 등급 무기 「절대 만개」 완성', progress: s => [Math.min(1, feat(s, 'absolute')), 1] },
+    { id: 'absolute', name: '절대의 경지', grade: 'legend', desc: '테크 절대 무기(3종 진화 조합) 완성', progress: s => [Math.min(1, feat(s, 'absolute')), 1] },
     { id: 'all_rounder', name: '만능 전략가', grade: 'epic', desc: `모든 테크(${TECH_IDS.length}종)로 STAGE 3 클리어`, progress: s => [techsReaching(s, 3), TECH_IDS.length] },
     { id: 'legend_pig', name: '전설의 꽃돼지', grade: 'legend', desc: `모든 테크(${TECH_IDS.length}종)로 STAGE 10 클리어`, progress: s => [techsReaching(s, ALL_CLEAR_STAGE), TECH_IDS.length] },
 ];

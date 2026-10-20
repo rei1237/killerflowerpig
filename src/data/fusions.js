@@ -1,4 +1,6 @@
-// Final recipes consume two evolved Lv8 weapons; the absolute recipe consumes three.
+// Final recipes consume two evolved Lv8 weapons; absolute recipes consume three.
+// 절대 무기는 테크마다 하나: 연꽃 정원=절대 만개, 탄막 사수=종말의 탄막, 역병 화염=역병 종언,
+// 처형자=심판의 단두대, 도살자=학살 톱니바퀴. 재료는 각 테크 계열 무기 3종의 진화형.
 export const FUSION_RECIPES = Object.freeze([
     { id: 'lotus_bloom', inputs: [{ id: 'cannon', level: 8 }, { id: 'thorns', level: 8 }], output: 'lotus_bloom' },
     { id: 'scatter_rail', inputs: [{ id: 'shotgun', level: 8 }, { id: 'rifle', level: 8 }], output: 'scatter_rail' },
@@ -9,6 +11,10 @@ export const FUSION_RECIPES = Object.freeze([
     { id: 'orbit_saw', inputs: [{ id: 'thorns', level: 8 }, { id: 'saw', level: 8 }], output: 'orbit_saw' },
     { id: 'toxic_scatter', inputs: [{ id: 'shotgun', level: 8 }, { id: 'gas', level: 8 }], output: 'toxic_scatter' },
     { id: 'absolute_bloom', tier: 'absolute', inputs: [{ id: 'cannon', level: 8 }, { id: 'thorns', level: 8 }, { id: 'molotov', level: 8 }], output: 'absolute_bloom' },
+    { id: 'doom_barrage', tier: 'absolute', inputs: [{ id: 'shotgun', level: 8 }, { id: 'rifle', level: 8 }, { id: 'pistols', level: 8 }], output: 'doom_barrage' },
+    { id: 'plague_end', tier: 'absolute', inputs: [{ id: 'molotov', level: 8 }, { id: 'gas', level: 8 }, { id: 'cannon', level: 8 }], output: 'plague_end' },
+    { id: 'guillotine', tier: 'absolute', inputs: [{ id: 'pistols', level: 8 }, { id: 'rifle', level: 8 }, { id: 'saw', level: 8 }], output: 'guillotine' },
+    { id: 'carnage_saw', tier: 'absolute', inputs: [{ id: 'saw', level: 8 }, { id: 'shotgun', level: 8 }, { id: 'thorns', level: 8 }], output: 'carnage_saw' },
 ]);
 export const FUSED_WEAPONS = {
     absolute_bloom: {
@@ -28,6 +34,30 @@ export const FUSED_WEAPONS = {
         desc: '산탄총의 부채꼴 7발에 소총의 4회 관통과 긴 사거리를 결합한다.',
         base: { dmg: 15, cd: 1.35, amount: 7, speed: 800, duration: 0.8, pierce: 4, area: 1, spread: 0.55 },
         levels: [{dmg:3,t:'탄당 피해 +3'},{pierce:1,t:'관통 +1'},{cd:-0.1,t:'재사용 -10%'},{amount:1,t:'산탄 +1'},{dmg:4,t:'탄당 피해 +4'},{pierce:1,t:'관통 +1'},{amount:1,t:'산탄 +1'}],
+    },
+    doom_barrage: {
+        name: '종말의 탄막', icon: '🎆', color: '#9fd3ff', fusionOnly: true, tier: 'absolute', amountCap: 12,
+        desc: '세 총기의 공격을 계승하고, 360도 전방위로 관통 탄환 12발을 흩뿌린 뒤 조준 레일탄 3발을 꽂는다.',
+        base: { dmg: 34, cd: 1.5, amount: 12, speed: 760, duration: 0.85, pierce: 6, area: 1 },
+        levels: [{dmg:4,t:'탄당 피해 +4 · 계승 공격 강화'},{pierce:2,t:'관통 +2'},{cd:-0.08,t:'재사용 -8%'},{speed:0.15,t:'탄속 +15%'},{dmg:5,t:'탄당 피해 +5 · 계승 공격 강화'},{area:0.1,t:'탄 크기 +10%'},{dmg:6,cd:-0.08,t:'피해 +6, 재사용 -8% · 세 총기 최종 강화'}],
+    },
+    plague_end: {
+        name: '역병 종언', icon: '☣️', color: '#b8f05b', fusionOnly: true, tier: 'absolute', amountCap: 8,
+        desc: '세 진화 무기를 계승하고, 화면 곳곳에 거대한 역병 화염 장판을 동시에 터뜨려 55% 둔화시킨다.',
+        base: { dmg: 22, cd: 2.6, amount: 5, speed: 1, duration: 4, area: 1, radius: 125, tick: 0.3, slow: 0.55 },
+        levels: [{dmg:3,t:'틱 피해 +3 · 계승 공격 강화'},{area:0.08,t:'범위 +8%'},{slow:0.05,t:'둔화 +5%'},{duration:0.1,t:'지속 +10%'},{dmg:3,t:'틱 피해 +3 · 계승 공격 강화'},{cd:-0.06,t:'재사용 -6%'},{dmg:4,t:'피해 +4 · 최종 강화'}],
+    },
+    guillotine: {
+        name: '심판의 단두대', icon: '⚔️', color: '#ff3b5c', fusionOnly: true, tier: 'absolute', amountCap: 10,
+        desc: '세 진화 무기를 계승하고, 치명타 확률 40%·치명타 피해 3.5배의 관통 처형탄을 연사한다. 체력 20% 이하 일반 적은 즉시 처형.',
+        base: { dmg: 42, cd: 1.1, amount: 6, speed: 920, duration: 0.9, pierce: 4, area: 1, crit: 0.4, critBonus: 1.5, execute: 0.2 },
+        levels: [{dmg:5,t:'피해 +5 · 계승 공격 강화'},{crit:0.05,t:'치명타 +5%'},{amount:1,t:'처형탄 +1'},{critBonus:0.3,t:'치명타 피해 +30%'},{dmg:6,t:'피해 +6 · 계승 공격 강화'},{cd:-0.1,t:'재사용 -10%'},{amount:1,crit:0.05,t:'처형탄 +1, 치명타 +5% · 최종 강화'}],
+    },
+    carnage_saw: {
+        name: '학살 톱니바퀴', icon: '🩸', color: '#ff8f8f', fusionOnly: true, tier: 'absolute', amountCap: 8,
+        desc: '세 진화 무기를 계승하고, 거대한 피의 톱날을 사방으로 튕겨 반복해서 베며 강한 출혈을 남긴다.',
+        base: { dmg: 30, cd: 2.6, amount: 5, speed: 420, duration: 3.4, area: 1.3, hitCd: 0.3, bleed: 6 },
+        levels: [{dmg:4,t:'피해 +4 · 계승 공격 강화'},{area:0.1,t:'크기 +10%'},{amount:1,t:'톱날 +1'},{duration:0.15,t:'지속 +15%'},{dmg:5,t:'피해 +5 · 계승 공격 강화'},{cd:-0.1,t:'재사용 -10%'},{amount:1,dmg:5,t:'톱날 +1, 피해 +5 · 최종 강화'}],
     },
     plague_fire: {
         name: '역병 화염병', icon: '🔥', color: '#b8f05b', fusionOnly: true,

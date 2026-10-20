@@ -22,7 +22,7 @@ test('all eight recipe details carry actual counterpart levels, requirements and
   assert.ok(p.ingredients.every(v=>v.level===8 && v.requiredLevel===8 && v.requiredEvolution && v.evolved));
   G.weapons[1].level=4;assert.equal(relatedFusionInfo(recipe.inputs[0].id).find(v=>v.output.id===recipe.output).code,'ITEM_LEVEL_REQUIRED');
  }
- assert.equal(relatedFusionInfo('gas').length,3);assert.deepEqual(relatedFusionInfo('heart'),[]);
+ assert.equal(relatedFusionInfo('gas').length,4);assert.deepEqual(relatedFusionInfo('heart'),[]);
 });
 test('restored builds and rerolls read fresh choice levels and recipe readiness without mutations',()=>{
  G.weapons=[item('cannon',8),item('thorns',8,1)];G.weapons.forEach(w=>w.evolved=true);const snapshot=snapshotBuild();G.weapons=[];restoreBuild(snapshot);

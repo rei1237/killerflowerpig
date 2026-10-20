@@ -12,6 +12,10 @@ export const WEAPON_VFX = Object.freeze({
  gas:{color:'#61c7ad',light:'#d3ffe5',shape:'gas'},
  saw:{color:'#dac9a9',light:'#fff2ce',shape:'blade'},
  absolute_bloom:{color:'#f7d58f',light:'#fff6df',accent:'#d7a5f5',shape:'absolute'},
+ doom_barrage:{color:'#9fd3ff',light:'#f2fbff',trail:40,shape:'burst'},
+ plague_end:{color:'#b8f05b',light:'#f7ffd0',accent:'#ff8a3d',shape:'plague'},
+ guillotine:{color:'#ff3b5c',light:'#ffe6a8',trail:46,shape:'execution'},
+ carnage_saw:{color:'#ff6f6f',light:'#ffe0e0',accent:'#b3122e',shape:'orbit'},
  lotus_bloom:{color:'#d994e5',light:'#fff0fc',accent:'#ed86b5',shape:'lotus'},
  scatter_rail:{color:'#75c9ed',light:'#e0f6ff',trail:42,shape:'split'},
  plague_fire:{color:'#a9cf75',light:'#f5f5b1',accent:'#f0ae69',shape:'plague'},
@@ -26,7 +30,7 @@ for(const value of Object.values(WEAPON_VFX))Object.freeze(value);
 export const EVOLVED_VFX = Object.freeze({ pistols: Object.freeze({color:'#ff3b5c',light:'#ffe6a8',trail:46,shape:'execution'}) });
 const motionPreference=typeof window!=='undefined'&&window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):null;
 const TAU=Math.PI*2;
-const FUSIONS=new Set(['absolute_bloom','lotus_bloom','scatter_rail','plague_fire','burst_rail','venom_saw','ember_lance','orbit_saw','toxic_scatter']);
+const FUSIONS=new Set(['absolute_bloom','doom_barrage','plague_end','guillotine','carnage_saw','lotus_bloom','scatter_rail','plague_fire','burst_rail','venom_saw','ember_lance','orbit_saw','toxic_scatter']);
 // Actual hit events only. One weak entry per pooled object, guarded by spawn ID.
 // This metadata never applies damage, extends slow, or creates world residues.
 const fusionHits=new WeakMap();

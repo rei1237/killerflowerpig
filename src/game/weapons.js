@@ -64,7 +64,7 @@ export function weaponStats(w) {
         slow: Math.min(0.85, (b.slow || 0) + acc.slow + (ev.slow || 0)),
         // 무기 고유 치명타: 확률(crit)과 치명타 피해 배율 가산(critBonus, 기본 2배에 더함)
         crit: (b.crit || 0) + acc.crit + (ev.crit || 0), critBonus: (b.critBonus || 0) + acc.critBonus + (ev.critBonus || 0),
-        execute: ev.execute || 0, bleed: ev.bleed || 0,
+        execute: Math.max(ev.execute || 0, b.execute || 0), bleed: Math.max(ev.bleed || 0, b.bleed || 0),
         lifesteal: ev.lifesteal || 0, permanent: !!ev.permanent, trail: !!ev.trail, follow: !!ev.follow,
         spread: b.spread || 0, radius: b.radius || 0, tick: b.tick || 0.3, hitCd: b.hitCd || 0.3,
         length: (b.length || 0) * ps.projSpeed, width: b.width || 0,
@@ -208,6 +208,31 @@ export function hellfireTrailStats(s) { return { radius: 64 * s.area, duration: 
 export function emberFieldStats(s) { return { ...s, dmg: s.dmg * 0.16, amount: Math.min(2, s.amount), duration: Math.min(6, 3 * (s.durationScale || 1)), radius: 54, tick: 0.3 }; }
 const FIRE = {
     absolute_bloom(w, s) { FIRE.cannon(w, s); },
+    // 절대 무기: 탄막 사수 — 360도 관통 탄환 + 조준 레일탄 3발
+    doom_barrage(w, s) {
+        const p = G.player, n = s.amount;
+        for (let i = 0; i < n; i++) {
+            const a = (i / n) * Math.PI * 2 + G.clock * 0.7;
+            shoot(w, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: 5, knock: 60 });
+        }
+        const t = nearestEnemy(p.x, p.y, 700);
+        const [dx, dy] = aimAt(w, t);
+        triggerPlayerShot(dx);
+        const base = Math.atan2(dy, dx);
+        for (const off of [-0.08, 0, 0.08]) shoot(w, { ...s, dmg: s.dmg * 2 }, Math.cos(base + off), Math.sin(base + off), { img: fx.rail, radius: 7, knock: 120 });
+        shake(2); audio.sfx('zap');
+    },
+    // 절대 무기: 역병 화염 — 거대한 역병 화염 장판 다발
+    plague_end(w, s) {
+        for (let i = 0; i < s.amount; i++) {
+            const e = randomEnemyNear(420, i === 0), p = G.player;
+            lob(w, s, e ? e.x : p.x + rand(-220, 220), e ? e.y : p.y + rand(-170, 170), 'firegas');
+        }
+    },
+    // 절대 무기: 처형자 — 치명타·처형 특화 관통 연사
+    guillotine(w, s) { FIRE.pistols(w, s); },
+    // 절대 무기: 도살자 — 출혈을 남기는 거대 피의 톱날
+    carnage_saw(w, s) { FIRE.saw(w, s); },
     burst_rail(w, s) { FIRE.pistols(w, s); },
     venom_saw(w, s) { FIRE.saw(w, s); },
     toxic_scatter(w, s) { FIRE.shotgun(w, s); },
@@ -305,7 +330,8 @@ const FIRE = {
         if (s.amount > n) s = { ...s, dmg: s.dmg * s.amount / n };
         for (let i = 0; i < n; i++) {
             const a = Math.random() * Math.PI * 2;
-            const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: w.evolved ? fx.sawBone : fx.saw, radius: 14, knock: 40 });
+            const big = w.id === 'carnage_saw';
+            const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: w.evolved || big ? fx.sawBone : fx.saw, radius: big ? 18 : 14, knock: big ? 70 : 40 });
             sh.kind = 'saw';
             sh.pierce = 9999;
             sh.bounce = true;
@@ -367,7 +393,7 @@ export function updateWeapons(dt) {
                 const [dx, dy] = aimAt(w, t);
                 const side = (w.burst % 2 ? 1 : -1) * 0.06;
                 const a = Math.atan2(dy, dx) + side;
-                const executioner = w.id === 'pistols' && w.evolved;
+                const executioner = (w.id === 'pistols' && w.evolved) || w.id === 'guillotine';
                 const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: executioner ? 7 : 5, knock: executioner ? 80 : 50 });
                 // 처형인의 쌍권총: 진홍빛 총구 섬광
                 if (executioner) sparks(sh.x, sh.y, 4, w.burst % 2 ? '#ff3b5c' : '#ffd36b', 180);
@@ -495,7 +521,7 @@ export function updateShots(dt) {
             }
             const sp = Math.hypot(sh.vx, sh.vy) || 1;
             hitEnemy(e, sh.dmg, { weapon: sh.weapon, kx: sh.vx / sp, ky: sh.vy / sp, knock: sh.knock, crit: sh.crit, critBonus: sh.critBonus, execute: sh.execute, bleed: sh.bleed, slow: sh.slow });
-            if (sh.weapon === 'pistols' && sh.evolved) executionerHitFx(e);
+            if ((sh.weapon === 'pistols' && sh.evolved) || sh.weapon === 'guillotine') executionerHitFx(e);
             if (--sh.pierce <= 0) dead = true;
         }
         const boss = G.boss;

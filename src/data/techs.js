@@ -12,6 +12,7 @@ export const WEAPON_TAGS = Object.freeze({
     scatter_rail: ['projectile'], burst_rail: ['projectile'], toxic_scatter: ['projectile', 'field'],
     lotus_bloom: ['orbit', 'beam'], orbit_saw: ['orbit', 'blade'], venom_saw: ['blade', 'field'],
     plague_fire: ['field'], ember_lance: ['beam', 'field'], absolute_bloom: ['beam', 'orbit', 'field'],
+    doom_barrage: ['projectile'], plague_end: ['field', 'beam'], guillotine: ['projectile', 'blade'], carnage_saw: ['blade', 'orbit'],
 });
 
 export const RESONANCE_STEPS = Object.freeze([2, 4, 6]);
@@ -37,7 +38,7 @@ export const TECHS = Object.freeze({
         start: { weapon: 'shotgun', passive: 'magazine' },
         family: { weapons: ['shotgun', 'rifle', 'pistols'], passives: ['magazine', 'scope', 'focus'] },
         tags: ['projectile'],
-        route: ['산탄총 + 탄창 확장 → 도살자의 산탄', '노획 소총 + 조준경 → 레일 소총', '두 진화 → 관통 산탄포'],
+        route: ['산탄총 + 탄창 확장 → 도살자의 산탄', '노획 소총 + 조준경 → 레일 소총', '두 진화 → 관통 산탄포 (쌍권총 진화까지 3종 → 절대 무기 종말의 탄막)'],
         imprints: {
             3: { label: '탄막 각인 I · 투사체 +1', mod: { amount: 1 } },
             5: { label: '탄막 각인 II · 관통 +2 · 탄속 +20%', mod: { pierce: 2, speed: 0.2 } },
@@ -73,7 +74,7 @@ export const TECHS = Object.freeze({
         start: { weapon: 'molotov', passive: 'spread' },
         family: { weapons: ['molotov', 'gas', 'cannon'], passives: ['spread', 'sap', 'hide'] },
         tags: ['field'],
-        route: ['화염병 + 확산 → 지옥 불꽃길', '독가스 수류탄 + 회전 수액 → 역병 안개', '두 진화 → 역병 화염병'],
+        route: ['화염병 + 확산 → 지옥 불꽃길', '독가스 수류탄 + 회전 수액 → 역병 안개', '두 진화 → 역병 화염병 (꽃잎포 진화까지 3종 → 절대 무기 역병 종언)'],
         imprints: {
             3: { label: '역병 각인 I · 장판 지속 +25%', mod: { duration: 0.25 } },
             5: { label: '역병 각인 II · 범위 +20% · 둔화 +10%', mod: { area: 0.2, slow: 0.1 } },
@@ -91,7 +92,7 @@ export const TECHS = Object.freeze({
         start: { weapon: 'pistols', passive: 'focus' },
         family: { weapons: ['pistols', 'rifle', 'saw'], passives: ['focus', 'whet', 'madness'] },
         tags: ['projectile', 'blade'],
-        route: ['쌍권총 + 집중 → 처형인의 쌍권총', '노획 소총 + 조준경 → 레일 소총', '두 진화 → 연쇄 관통권총'],
+        route: ['쌍권총 + 집중 → 처형인의 쌍권총', '노획 소총 + 조준경 → 레일 소총', '두 진화 → 연쇄 관통권총 (뼈 톱날 진화까지 3종 → 절대 무기 심판의 단두대)'],
         imprints: {
             3: { label: '처형 각인 I · 치명타 +8%', mod: { crit: 0.08 } },
             5: { label: '처형 각인 II · 치명타 +8% · 피해 +15%', mod: { crit: 0.08, dmg: 0.15 } },
@@ -109,7 +110,7 @@ export const TECHS = Object.freeze({
         start: { weapon: 'saw', passive: 'whet' },
         family: { weapons: ['saw', 'shotgun', 'thorns'], passives: ['whet', 'hide', 'heart'] },
         tags: ['blade', 'orbit'],
-        route: ['뼈 톱날 + 날 연마 → 척추 분쇄기', '연꽃 가시 + 재생하는 살점 → 피의 연꽃', '두 진화 → 연꽃 톱니진'],
+        route: ['뼈 톱날 + 날 연마 → 척추 분쇄기', '연꽃 가시 + 재생하는 살점 → 피의 연꽃', '두 진화 → 연꽃 톱니진 (산탄총 진화까지 3종 → 절대 무기 학살 톱니바퀴)'],
         imprints: {
             3: { label: '도살 각인 I · 적중 시 출혈', mod: { bleed: 3 } },
             5: { label: '도살 각인 II · 피해 +25%', mod: { dmg: 0.25 } },

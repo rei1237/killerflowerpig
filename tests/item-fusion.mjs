@@ -69,7 +69,7 @@ test('preview signature binds exact recipe and damage modifiers',()=>{
  G.player.stats.might=1.5;assert.equal(fuseItems('lotus_bloom',p.signature).code,'STALE_PREVIEW');assert.equal(G.weapons.length,4);
 });
 test('eight distinct recipes each lock low levels, consume two once, and restore output',()=>{
- assert.equal(FUSION_RECIPES.length,9);assert.equal(new Set(FUSION_RECIPES.map(r=>r.output)).size,9);
+ assert.equal(FUSION_RECIPES.length,13);assert.equal(new Set(FUSION_RECIPES.map(r=>r.output)).size,13);
  for(const recipe of FUSION_RECIPES){
   G.weapons=recipe.inputs.map((x,i)=>weapon(x.id,4,i));assert.equal(previewFusion(recipe.id).code,'ITEM_LEVEL_REQUIRED');
   G.weapons.forEach(w=>{w.level=8;w.evolved=true;});const p=previewFusion(recipe.id);assert.equal(p.ok,true,recipe.id);

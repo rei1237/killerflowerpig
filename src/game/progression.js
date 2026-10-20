@@ -156,7 +156,8 @@ function candidates() {
         if (c.kind === 'weapon' && WEAPONS[c.id].fusionOnly) { c.weight *= 0.25; continue; }
         if (!c.isNew) continue;
         c.weight *= 1.2 * (1 + 0.08 * Math.min(5, Math.max(0, G.choiceAbsence?.[c.id] || 0)));
-        if (c.kind === 'weapon' && FUSION_RECIPES.some(recipe => !weaponOf(recipe.output) && recipe.inputs.some(input => input.id === c.id) && recipe.inputs.some(input => input.id !== c.id && weaponOf(input.id)))) c.weight *= 1.35;
+        // 파트너 가중치는 2종 최종 조합에만 (절대 무기 3종 조합은 카드 분포를 바꾸지 않음)
+        if (c.kind === 'weapon' && FUSION_RECIPES.some(recipe => recipe.tier !== 'absolute' && !weaponOf(recipe.output) && recipe.inputs.some(input => input.id === c.id) && recipe.inputs.some(input => input.id !== c.id && weaponOf(input.id)))) c.weight *= 1.35;
     }
     return out;
 }

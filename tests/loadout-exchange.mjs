@@ -51,7 +51,7 @@ test('passives take no slots: no passive exchange, a seventh passive is still of
  const snap=JSON.parse(JSON.stringify(snapshotBuild())); restoreBuild(snap); assert.deepEqual(G.passives,snap.passives);
 });
 test('every recipe is reachable from full slots missing a partner; fusion outputs upgrade all seven levels',()=>{
- assert.equal(base.length,8); assert.equal(FUSION_RECIPES.length,9);
+ assert.equal(base.length,8); assert.equal(FUSION_RECIPES.length,13);
  for(const recipe of FUSION_RECIPES){
   resetBuild(); const ids=recipe.inputs.map(x=>x.id),b=ids.at(-1);
   const starters=[...ids.slice(0,-1),...base.filter(id=>!ids.includes(id))].slice(0,6);

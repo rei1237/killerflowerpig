@@ -763,7 +763,7 @@ function settleStage(outcome) {
     G.settlement.titles = recordTitleProgress({
         runId: G.runId, tech: G.tech, stage: G.stage, outcome, kills: stageKills,
         evolved: G.weapons.some(w => w.evolved), fused: G.weapons.some(w => WEAPONS[w.id]?.fusionOnly),
-        absolute: G.weapons.some(w => w.id === 'absolute_bloom'),
+        absolute: G.weapons.some(w => WEAPONS[w.id]?.tier === 'absolute'),
     });
     announceTitles(G.settlement.titles);
     if (!persist()) notifyPending();

@@ -130,7 +130,8 @@ export const STARTING_WEAPON = 'shotgun';
 // tests/tier-order.mjs 가 실제 전투 시뮬레이션으로 이 순서를 검증한다.
 export const TIER_POWER = Object.freeze({
     evolved: Object.freeze({ thorns: 2.4, cannon: 1.45, gas: 1.6, saw: 1.1 }),
-    fused: Object.freeze({ lotus_bloom: 2.4, venom_saw: 2.05, orbit_saw: 2.05, toxic_scatter: 1.1, plague_fire: 0.85, absolute_bloom: 1.1 }),
+    fused: Object.freeze({ lotus_bloom: 2.4, venom_saw: 2.05, orbit_saw: 2.05, toxic_scatter: 1.1, plague_fire: 0.85, absolute_bloom: 1.1,
+        doom_barrage: 1.2, plague_end: 0.95, guillotine: 1.45, carnage_saw: 2.1 }),
 });
 // 조합 무기가 계승한 코어(sourceId)는 조합 무기의 보정을 함께 받는다.
 export function tierPower(w) {
