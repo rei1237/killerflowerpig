@@ -443,6 +443,8 @@ const ASSETS = {
     boss: 'asset/청토끼 보스.png',
     boss2: 'asset/청토끼 보스2.png',
     bossKing: 'asset/청토끼 킹.png',
+    petBase: 'asset/pet/yeongnyang.webp',
+    petAttack: 'asset/pet/yeongnyang-attack.webp',
     win: 'asset/꽃돼지 승리.png',
     gameover: 'asset/게임오버.png',
     gameClear: 'asset/게임 클리어.jpg',
@@ -1549,6 +1551,7 @@ const Player = {
         this.petalCannonCharge = 0; // 현재 충전량 (발사 횟수)
         this.petalCannonMaxCharge = 50 - Progress.upgradeLevel('PETAL') * 5; // 최대 충전 필요 발사 횟수
         this.petalCannonReady = false; // 발사 가능 여부
+        Pet.reset();
     },
     // 총알 발사 (연꽃 총 보유 시: 관통하는 연꽃 탄환 3갈래)
     fireBullet: function (x, y, speed) {
@@ -1969,7 +1972,13 @@ const SHOP_UPGRADES = [
     { id: 'PETAL', icon: '🌸', name: '꽃잎 충전기', desc: '꽃잎 포 충전 -5발', max: 6, base: 180, growth: 1.5 },
     { id: 'START_SHIELD', icon: '🔰', name: '출격 보호막', desc: '스테이지 시작 시 무적 +3초', max: 5, base: 150, growth: 1.5 },
     { id: 'GOLD', icon: '🍀', name: '행운의 클로버', desc: '골드 획득 +15%', max: 5, base: 200, growth: 1.6 },
-    { id: 'EXP', icon: '📘', name: '전투 교본', desc: '경험치 획득 +15%', max: 5, base: 200, growth: 1.6 }
+    { id: 'EXP', icon: '📘', name: '전투 교본', desc: '경험치 획득 +15%', max: 5, base: 200, growth: 1.6 },
+    // --- 동행 펫 영냥이 (펫 탭) ---
+    { id: 'PET', tab: 'pet', icon: 'asset/pet/yeongnyang-portrait.png', name: '동행 펫 · 영냥이 입양', desc: '자동으로 따라다니며 별빛 마법으로 가까운 적을 공격하는 고양이 마법사', max: 1, base: 1000, growth: 1, featured: true },
+    { id: 'PET_ATK', tab: 'pet', requires: 'PET', icon: '🔮', name: '보랏빛 마법 구슬', desc: '영냥이 공격력 +10', max: 15, base: 150, growth: 1.3 },
+    { id: 'PET_SPEED', tab: 'pet', requires: 'PET', icon: '🌙', name: '초승달 모자', desc: '영냥이 공격 간격 -10%', max: 8, base: 200, growth: 1.4 },
+    { id: 'PET_MULTI', tab: 'pet', requires: 'PET', icon: '✨', name: '별자리 망토', desc: '영냥이가 동시에 공격하는 적 +1', max: 4, base: 500, growth: 1.8 },
+    { id: 'PET_HEAL', tab: 'pet', requires: 'PET', icon: '🐾', name: '치유의 분홍 발바닥', desc: '12초마다 연이의 체력 +5/Lv 회복', max: 6, base: 300, growth: 1.5 }
 ];
 
 // 소모품 (instant: 구매 즉시 적용 / 그 외: 보관 후 사용)
@@ -2067,6 +2076,11 @@ const Progress = {
         return Math.round(u.base * Math.pow(u.growth, this.upgradeLevel(u.id)) / 10) * 10;
     },
     hasLotusGun: function () { return this.upgradeLevel('LOTUS_GUN') > 0; },
+    hasPet: function () { return this.upgradeLevel('PET') > 0; },
+    // 펫 레벨 = 1 + 펫 강화 레벨 합계
+    petLevel: function () {
+        return 1 + ['PET_ATK', 'PET_SPEED', 'PET_MULTI', 'PET_HEAL'].reduce((sum, id) => sum + this.upgradeLevel(id), 0);
+    },
     expMultiplier: function () { return 1 + this.upgradeLevel('EXP') * 0.15; },
     critChance: function () { return this.upgradeLevel('CRIT') * 0.05; },
 
@@ -2194,8 +2208,10 @@ const Shop = {
             const lvl = Progress.upgradeLevel(id);
             const price = Progress.upgradePrice(u);
             if (lvl >= u.max || Progress.gold < price) return;
+            if (u.requires && Progress.upgradeLevel(u.requires) <= 0) return;
             Progress.gold -= price;
             Progress.upgrades[id] = lvl + 1;
+            if (id === 'PET') Pet.reset();
             this.applyUpgradeNow(id);
         } else {
             const c = SHOP_CONSUMABLES.find(x => x.id === id);
@@ -2253,14 +2269,25 @@ const Shop = {
         });
 
         let html = '';
-        if (this.tab === 'upgrade') {
+        if (this.tab === 'upgrade' || this.tab === 'pet') {
+            if (this.tab === 'pet' && Progress.hasPet()) {
+                html += `<div class="shop-pet-info">🐈 영냥이 Lv${Progress.petLevel()} · 공격력 ${Pet.damage()} · 공격 간격 ${(Pet.cooldown() / 1000).toFixed(2)}초 · 동시 공격 ${Pet.targets()}마리${Pet.healAmount() > 0 ? ` · 12초마다 회복 +${Math.round(Pet.healAmount() * 20)}` : ''}</div>`;
+            }
             for (const u of SHOP_UPGRADES) {
+                if ((u.tab || 'upgrade') !== this.tab) continue;
                 const lvl = Progress.upgradeLevel(u.id);
                 const maxed = lvl >= u.max;
                 const price = Progress.upgradePrice(u);
-                html += this.cardHtml('upgrade', u.id, u.icon, u.name, u.desc,
-                    u.legendary ? (maxed ? '장착 중' : '★ 전설') : `Lv ${lvl}/${u.max}`,
-                    maxed ? (u.legendary ? '보유' : 'MAX') : `${price.toLocaleString()}G`, maxed || Progress.gold < price, u.legendary);
+                const locked = u.requires && Progress.upgradeLevel(u.requires) <= 0;
+                const special = u.legendary || u.featured;
+                let sub = `Lv ${lvl}/${u.max}`;
+                if (u.legendary) sub = maxed ? '장착 중' : '★ 전설';
+                else if (u.featured) sub = maxed ? '함께하는 중' : '★ 펫';
+                let priceLabel = `${price.toLocaleString()}G`;
+                if (maxed) priceLabel = u.featured ? '입양 완료' : (u.legendary ? '보유' : 'MAX');
+                else if (locked) priceLabel = '입양 필요';
+                html += this.cardHtml('upgrade', u.id, u.icon, u.name, u.desc, sub, priceLabel,
+                    maxed || locked || Progress.gold < price, special ? (u.featured ? 'featured' : 'legendary') : '');
             }
         } else {
             for (const c of SHOP_CONSUMABLES) {
@@ -2284,9 +2311,9 @@ const Shop = {
             this.secondaryBtn.hidden = true;
         }
     },
-    cardHtml: function (kind, id, icon, name, desc, sub, priceLabel, disabled, legendary) {
+    cardHtml: function (kind, id, icon, name, desc, sub, priceLabel, disabled, specialClass) {
         const iconHtml = icon.startsWith('asset/') ? `<img src="${icon}" alt="">` : icon;
-        return `<div class="shop-card${disabled ? ' disabled' : ''}${legendary ? ' legendary' : ''}">
+        return `<div class="shop-card${disabled ? ' disabled' : ''}${specialClass ? ' ' + specialClass : ''}">
             <div class="shop-card-icon">${iconHtml}</div>
             <div class="shop-card-body">
                 <div class="shop-card-name">${name} <span class="shop-card-sub">${sub}</span></div>
@@ -2929,6 +2956,29 @@ class ItemDrop {
     }
 }
 
+// 총알/펫 공격으로 적 처치 (점수, EXP, 보상, 보스 소환 체크)
+function killEnemy(e) {
+    e.state = 'DEAD'; e.aniFrame = 0; enemiesKilled++; score += e.isElite ? 1000 : 100;
+    // 적 처치 시 EXP 획득 (10 EXP, 엘리트 60 EXP)
+    LevelSystem.addPlayerExp(e.isElite ? 60 : 10);
+    onEnemyKilled(e);
+    createExplosion(e.x, e.y); AudioManager.playSFX('explode');
+    if (enemiesKilled >= getCurrentStageData().goal && !boss) startBossFight();
+}
+
+// 보스 체력이 0 이하가 되면 사망 처리
+function checkBossDefeated(timestamp) {
+    if (boss && boss.hp <= 0 && boss.state !== 'DEAD') {
+        boss.state = 'DEAD';
+        boss.aniFrame = 0;
+        boss.lastFrameTime = timestamp;
+        score += 5000;
+        // 보스 처치 시 대량 EXP 획득 (100 EXP)
+        LevelSystem.addPlayerExp(100);
+        addFloatingText(`★ BOSS DEFEATED! +100 EXP ★`, canvas.width / 2, canvas.height / 2 - 80, '#f1c40f');
+    }
+}
+
 // 적 처치 공통 처리 (골드, 흡혈, 엘리트 드롭)
 function onEnemyKilled(e) {
     if (e.isElite) {
@@ -2944,6 +2994,131 @@ function onEnemyKilled(e) {
         addFloatingText('🩸 +10', Player.x, Player.y - 20, '#ff4757');
     }
 }
+
+// ============================================================================
+// [PET] 동행 펫 영냥이 - 상점에서 입양/강화, 별빛 마법으로 적을 공격하고 체력 회복
+// ============================================================================
+const Pet = {
+    x: 0, y: 0, size: 56,
+    attackCd: 1000, healCd: 12000,
+    attackAnim: -1, // 공격 애니메이션 경과 시간 (ms), -1이면 대기
+    beams: [],
+    BASE_FRAME: 627, ATTACK_FRAME: 397, ATTACK_FRAMES: 10, ATTACK_ANIM_MS: 500,
+
+    // --- 강화 수치 ---
+    damage: function () { return 20 + Progress.upgradeLevel('PET_ATK') * 10 + currentStage * 4; },
+    cooldown: function () { return Math.max(450, 1400 * Math.pow(0.9, Progress.upgradeLevel('PET_SPEED'))); },
+    targets: function () { return 1 + Progress.upgradeLevel('PET_MULTI'); },
+    healAmount: function () { return 0.25 * Progress.upgradeLevel('PET_HEAL'); }, // 내부 HP 0.25 = 표시 5
+
+    reset: function () {
+        this.x = Player.x - 20;
+        this.y = Player.y - 30;
+        this.attackCd = 1000;
+        this.healCd = 12000;
+        this.attackAnim = -1;
+        this.beams = [];
+    },
+
+    update: function (timestamp) {
+        if (!Progress.hasPet() || Player.state !== 'ALIVE') return;
+        // 플레이어 머리 위에서 둥실둥실 따라다님 (화면 위쪽이면 발 아래로)
+        const tx = Player.x + (Player.width - this.size) / 2 - 6;
+        let ty = Player.y - this.size - 6;
+        if (ty < 50) ty = Player.y + Player.height + 4;
+        ty += Math.sin(timestamp / 300) * 5;
+        if (Math.hypot(tx - this.x, ty - this.y) > 400) { this.x = tx; this.y = ty; }
+        this.x += (tx - this.x) * 0.12;
+        this.y += (ty - this.y) * 0.12;
+
+        if (this.attackAnim >= 0) {
+            this.attackAnim += 16;
+            if (this.attackAnim > this.ATTACK_ANIM_MS) this.attackAnim = -1;
+        }
+        for (const b of this.beams) b.life -= 16;
+        this.beams = this.beams.filter(b => b.life > 0);
+
+        // 치유의 꼬리: 주기적으로 체력 회복
+        const heal = this.healAmount();
+        if (heal > 0) {
+            this.healCd -= 16;
+            if (this.healCd <= 0) {
+                this.healCd = 12000;
+                if (Player.hp < Player.maxHp) {
+                    Player.hp = Math.min(Player.maxHp, Player.hp + heal);
+                    addFloatingText(`🐾 영냥이 치유 +${Math.round(heal * 20)}`, Player.x, Player.y - 30, '#dcb6ff');
+                    for (let i = 0; i < 10; i++) particles.push(new Particle(Player.x + Player.width / 2, Player.y + Player.height / 2, '#dcb6ff'));
+                }
+            }
+        }
+
+        // 별빛 마법 공격: 가까운 적부터 여러 마리 동시 타격
+        this.attackCd -= 16;
+        if (this.attackCd > 0) return;
+        const cx = this.x + this.size / 2, cy = this.y + this.size / 2;
+        const candidates = enemies
+            .filter(e => e.active && e.state !== 'DEAD' && e.x < canvas.width - 20 && e.x + e.width > 0)
+            .map(e => ({ target: e, dist: Math.hypot(e.x + e.width / 2 - cx, e.y + e.height / 2 - cy) }));
+        if (boss && boss.active && boss.state !== 'DEAD') {
+            candidates.push({ target: boss, dist: Math.hypot(boss.x + boss.width / 2 - cx, boss.y + boss.height / 2 - cy), isBoss: true });
+        }
+        if (!candidates.length) { this.attackCd = 150; return; }
+        candidates.sort((a, b) => a.dist - b.dist);
+        const dmg = this.damage();
+        for (const c of candidates.slice(0, this.targets())) {
+            const t = c.target;
+            const tx2 = t.x + t.width / 2, ty2 = t.y + t.height / 2;
+            this.beams.push({ x1: cx + 10, y1: cy - 6, x2: tx2, y2: ty2, life: 220 });
+            createExplosion(tx2, ty2, '#b98cff');
+            t.hp -= dmg;
+            if (c.isBoss) checkBossDefeated(timestamp);
+            else if (t.hp <= 0) killEnemy(t);
+        }
+        this.attackCd = this.cooldown();
+        this.attackAnim = 0;
+    },
+
+    draw: function (ctx) {
+        if (!Progress.hasPet()) return;
+        // 별빛 공격 광선
+        ctx.save();
+        for (const b of this.beams) {
+            const a = b.life / 220;
+            ctx.globalAlpha = a;
+            ctx.strokeStyle = '#dcb6ff'; ctx.lineWidth = 3;
+            ctx.shadowBlur = 15; ctx.shadowColor = '#9b59ff';
+            ctx.beginPath(); ctx.moveTo(b.x1, b.y1); ctx.lineTo(b.x2, b.y2); ctx.stroke();
+            ctx.fillStyle = '#fff';
+            ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('✦', b.x2, b.y2);
+        }
+        ctx.restore();
+
+        const s = this.size;
+        let img, frame, sx, sy;
+        if (this.attackAnim >= 0 && ImageLoader.get('petAttack')) {
+            img = ImageLoader.get('petAttack');
+            frame = Math.min(this.ATTACK_FRAMES - 1, Math.floor(this.attackAnim / this.ATTACK_ANIM_MS * this.ATTACK_FRAMES));
+            const fw = img.width / 5, fh = img.height / 2;
+            sx = (frame % 5) * fw; sy = Math.floor(frame / 5) * fh;
+            ctx.drawImage(img, sx, sy, fw, fh, this.x - s * 0.1, this.y - s * 0.1, s * 1.2, s * 1.2);
+        } else if (ImageLoader.get('petBase')) {
+            img = ImageLoader.get('petBase');
+            // 대기: 가끔 눈 깜빡임 (프레임 0/1)
+            frame = (Date.now() % 3000) < 180 ? 1 : 0;
+            const fw = img.width / 2, fh = img.height / 2;
+            sx = (frame % 2) * fw; sy = Math.floor(frame / 2) * fh;
+            ctx.drawImage(img, sx, sy, fw, fh, this.x, this.y, s, s);
+        }
+        // 펫 레벨 표시
+        ctx.save();
+        ctx.fillStyle = '#dcb6ff';
+        ctx.font = '7px "Press Start 2P"';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Lv${Progress.petLevel()}`, this.x + s / 2, this.y - 2);
+        ctx.restore();
+    }
+};
 
 class GatePair {
     constructor(x) {
@@ -4739,7 +4914,7 @@ function gameLoop(timestamp) {
     if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT || currentState === GAME_STATE.STAGE_CLEAR) {
         // STAGE_CLEAR일 때도 보스 업데이트 필요 (사망 애니메이션 완료)
         if (currentState !== GAME_STATE.STAGE_CLEAR) {
-            Background.update(); Player.update(timestamp);
+            Background.update(); Player.update(timestamp); Pet.update(timestamp);
         }
         if (timestamp - gateSpawnTimer > GATE_SPAWN_INTERVAL && currentState !== GAME_STATE.STAGE_CLEAR && !boss) { gates.push(new GatePair(canvas.width + 50)); gateSpawnTimer = timestamp; }
         const stage = getCurrentStageData(); // EASY MODE
@@ -4765,14 +4940,7 @@ function gameLoop(timestamp) {
                         } else {
                             p.active = false;
                         }
-                        if (e.hp <= 0) { 
-                            e.state = 'DEAD'; e.aniFrame = 0; enemiesKilled++; score += e.isElite ? 1000 : 100; 
-                            // 적 처치 시 EXP 획득 (10 EXP, 엘리트 60 EXP)
-                            LevelSystem.addPlayerExp(e.isElite ? 60 : 10);
-                            onEnemyKilled(e);
-                            createExplosion(e.x, e.y); AudioManager.playSFX('explode'); 
-                            if (enemiesKilled >= stage.goal && !boss) startBossFight(); 
-                        }
+                        if (e.hp <= 0) killEnemy(e);
                         break;
                     }
                 }
@@ -4784,15 +4952,7 @@ function gameLoop(timestamp) {
                     if (p.isPetalCannon) {
                         addFloatingText(`💥 CRITICAL! -${damageToBoss}`, p.x, p.y - 20, '#ff00ff');
                     }
-                    if (boss.hp <= 0 && boss.state !== 'DEAD') {
-                        boss.state = 'DEAD';
-                        boss.aniFrame = 0;
-                        boss.lastFrameTime = timestamp;
-                        score += 5000;
-                        // 보스 처치 시 대량 EXP 획득 (100 EXP)
-                        LevelSystem.addPlayerExp(100);
-                        addFloatingText(`★ BOSS DEFEATED! +100 EXP ★`, canvas.width / 2, canvas.height / 2 - 80, '#f1c40f');
-                    }
+                    checkBossDefeated(timestamp);
                 }
             } else {
                 // 적의 공격 (플레이어에게 맞음)
@@ -4832,6 +4992,7 @@ function gameLoop(timestamp) {
     for (const d of itemDrops) d.draw(ctx);
     for (const pt of particles) pt.draw(ctx);
     Player.draw(ctx);
+    if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT || currentState === GAME_STATE.STAGE_CLEAR) Pet.draw(ctx);
 
     // 캔버스 기반 HUD 렌더링 (최상단 레이어)
     if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS_FIGHT || currentState === GAME_STATE.STAGE_CLEAR) {

@@ -1978,3 +1978,40 @@ html {
     0%, 100% { box-shadow: 0 0 10px rgba(94, 255, 196, 0.25); }
     50% { box-shadow: 0 0 22px rgba(94, 255, 196, 0.6); }
 }
+
+/* 펫 영냥이 카드 */
+.shop-card.featured {
+    grid-column: 1 / -1;
+    border: 3px solid #b98cff;
+    background: linear-gradient(90deg, #22163a 0%, #1a1020 70%);
+    box-shadow: 0 0 16px rgba(185, 140, 255, 0.35);
+}
+
+.shop-card.featured.disabled {
+    opacity: 0.9;
+}
+
+.shop-card.featured .shop-card-icon {
+    width: 72px;
+}
+
+.shop-card.featured .shop-card-icon img {
+    width: 72px;
+    height: auto;
+    display: block;
+}
+
+.shop-card.featured .shop-card-name {
+    color: #dcb6ff;
+    font-size: 11px;
+}
+
+.shop-pet-info {
+    grid-column: 1 / -1;
+    font-size: 8px;
+    line-height: 1.8;
+    color: #dcb6ff;
+    background: #1f1430;
+    border: 2px dashed #6c4fa0;
+    padding: 8px 10px;
+}
