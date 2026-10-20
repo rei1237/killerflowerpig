@@ -79,9 +79,9 @@ test('eight distinct recipes each lock low levels, consume two once, and restore
  }
 });
 test('burst rail produces timed piercing rounds without replacing unfinished bursts',()=>{
- const w=weapon('burst_rail',1);w.cd=0;G.weapons=[w];updateWeapons(.01);assert.equal(w.burst,3);assert.equal(G.shots.count,0);
- for(let i=0;i<3;i++)updateWeapons(.08);
- assert.equal(G.shots.count,3);assert.equal(w.burst,0);assert.ok(G.shots.items.slice(0,3).every(s=>s.pierce===3 && s.dmg===15));
+ const w=weapon('burst_rail',1);w.cd=0;G.weapons=[w];updateWeapons(.01);assert.equal(w.burst,4);assert.equal(G.shots.count,0);
+ for(let i=0;i<4;i++)updateWeapons(.08);
+ assert.equal(G.shots.count,4);assert.equal(w.burst,0);assert.ok(G.shots.items.slice(0,4).every(s=>s.pierce===3 && s.dmg===10));
 });
 test('new toxic bullets and bouncing saws apply real slow on collision',()=>{
  for(const [id,slow] of [['toxic_scatter',.4],['venom_saw',.45]]){

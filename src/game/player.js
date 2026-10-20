@@ -35,6 +35,9 @@ export function createPlayer() {
 }
 
 // 패시브/영구강화 → 최종 배율
+// 기본 치명타 피해 배율 (3배)
+export const BASE_CRIT_MUL = 3;
+
 export function recomputeStats(fullHeal = false) {
     const p = G.player;
     const lv = (id) => G.passives[id] || 0;
@@ -56,7 +59,7 @@ export function recomputeStats(fullHeal = false) {
         armor: lv('hide'),
         maxHp: BASE.hp + lv('heart') * 20 + upgradeLevel('maxHp') * 10,
         greed: 1 + upgradeLevel('greed') * 0.1,
-        critMul: 2,
+        critMul: BASE_CRIT_MUL,
     };
     applyTechPlayerBonus(s);
     p.techTier = resonanceTier();

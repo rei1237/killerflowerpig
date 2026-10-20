@@ -33,7 +33,7 @@ export const FAMILY_GUARANTEE_EVERY = 4;
 
 export const TECHS = Object.freeze({
     gunline: {
-        name: '탄막 사수', icon: '🎯', color: '#9fd3ff', power: 1.15,
+        name: '탄막 사수', icon: '🎯', color: '#9fd3ff', power: 1.0,
         summary: '산탄과 관통탄으로 화면을 쓸어버리는 투사체 테크',
         start: { weapon: 'shotgun', passive: 'magazine' },
         family: { weapons: ['shotgun', 'rifle', 'pistols'], passives: ['magazine', 'scope', 'focus'] },
@@ -51,7 +51,7 @@ export const TECHS = Object.freeze({
         ],
     },
     bloom: {
-        name: '연꽃 정원', icon: '🌸', color: '#ffb3d6', power: 2.35,
+        name: '연꽃 정원', icon: '🌸', color: '#ffb3d6', power: 2.6,
         summary: '회전 꽃잎과 광선으로 버티며 성장하는 생존 테크',
         start: { weapon: 'thorns', passive: 'regen' },
         family: { weapons: ['thorns', 'cannon', 'saw'], passives: ['regen', 'pollen', 'heart'] },
@@ -87,7 +87,7 @@ export const TECHS = Object.freeze({
         ],
     },
     executioner: {
-        name: '처형자', icon: '☠️', color: '#e6c6ff', power: 0.92,
+        name: '처형자', icon: '☠️', color: '#e6c6ff', power: 0.82,
         summary: '치명타를 쌓아 약해진 적을 즉시 끝내는 정밀 테크',
         start: { weapon: 'pistols', passive: 'focus' },
         family: { weapons: ['pistols', 'rifle', 'saw'], passives: ['focus', 'whet', 'madness'] },
@@ -100,7 +100,7 @@ export const TECHS = Object.freeze({
         },
         tiers: [
             { label: '사격·톱날 치명타 +10%', weapon: { crit: 0.1 } },
-            { label: '모든 치명타 피해 2배 → 2.6배', player: { critMul: 0.6 } },
+            { label: '모든 치명타 피해 3배 → 3.6배', player: { critMul: 0.6 } },
             { label: '체력 10% 이하 일반 적 처형 · 피해 +15%', weapon: { execute: 0.1, dmg: 0.15 } },
         ],
     },

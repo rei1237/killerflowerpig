@@ -62,7 +62,7 @@ export function weaponStats(w) {
         speed: b.speed * (1 + acc.speed) * ps.projSpeed,
         pierce: (b.pierce || 0) + acc.pierce + (ev.pierce || 0) + (b.pierce ? ps.pierce || 0 : 0),
         slow: Math.min(0.85, (b.slow || 0) + acc.slow + (ev.slow || 0)),
-        // 무기 고유 치명타: 확률(crit)과 치명타 피해 배율 가산(critBonus, 기본 2배에 더함)
+        // 무기 고유 치명타: 확률(crit)과 치명타 피해 배율 가산(critBonus, 기본 3배에 더함)
         crit: (b.crit || 0) + acc.crit + (ev.crit || 0), critBonus: (b.critBonus || 0) + acc.critBonus + (ev.critBonus || 0),
         execute: Math.max(ev.execute || 0, b.execute || 0), bleed: Math.max(ev.bleed || 0, b.bleed || 0),
         lifesteal: ev.lifesteal || 0, permanent: !!ev.permanent, trail: !!ev.trail, follow: !!ev.follow,
@@ -194,6 +194,7 @@ function randomEnemyNear(maxR, preferBoss = false) {
     return pick;
 }
 
+export const BURST_INTERVAL = 0.045;
 export const SAW_VISUAL_CAP = 6;
 export const ORBIT_VISUAL_CAP = 8;
 export function orbitStats(w, s) {
@@ -388,7 +389,7 @@ export function updateWeapons(dt) {
         if (w.burst > 0) {
             w.burstT -= dt;
             if (w.burstT <= 0) {
-                w.burstT = 0.07;
+                w.burstT = BURST_INTERVAL; // 쌍권총 계열 연발 간격 (초고속 연사)
                 const t = nearestEnemy(p.x, p.y, 520);
                 const [dx, dy] = aimAt(w, t);
                 const side = (w.burst % 2 ? 1 : -1) * 0.06;

@@ -79,11 +79,11 @@ test('player-wide tier bonuses (HP, regen, armor, crit multiplier) follow resona
     assert.ok(Math.abs(G.player.stats.regen - (0.3 + 0.5)) < 1e-9);
 
     startTech('executioner');
-    assert.equal(G.player.stats.critMul, 2);
+    assert.equal(G.player.stats.critMul, 3);
     applyChoice({ kind: 'weapon', id: 'rifle', level: 1 });
     applyChoice({ kind: 'passive', id: 'whet', level: 1 });
     recomputeStats();
-    assert.ok(Math.abs(G.player.stats.critMul - 2.6) < 1e-9);
+    assert.ok(Math.abs(G.player.stats.critMul - 3.6) < 1e-9);
 
     startTech('butcher');
     for (const [kind, id] of [['weapon', 'shotgun'], ['passive', 'hide']]) applyChoice({ kind, id, level: 1 });

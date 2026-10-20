@@ -58,7 +58,7 @@ export class Boss {
         let amount = dmg;
         let crit = false;
         const cc = (opts.crit || 0) + G.player.stats.crit;
-        if (cc && Math.random() < cc) { amount *= (G.player.stats.critMul || 2) + (opts.critBonus || 0); crit = true; }
+        if (cc && Math.random() < cc) { amount *= (G.player.stats.critMul || 3) + (opts.critBonus || 0); crit = true; }
         this.hp -= amount;
         this.flash = 0.06;
         if (amount > 0) recordFusionHit(this, opts.weapon, G.clock);

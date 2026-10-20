@@ -64,7 +64,7 @@
         "armor": 0,
         "maxHp": 100,
         "greed": 1,
-        "critMul": 2
+        "critMul": 3
       },
       "finals": 0,
       "absolutes": 0
@@ -113,7 +113,7 @@
         "armor": 0,
         "maxHp": 200,
         "greed": 1,
-        "critMul": 2
+        "critMul": 3
       },
       "finals": 2,
       "absolutes": 0
@@ -167,7 +167,7 @@
         "armor": 0,
         "maxHp": 100,
         "greed": 1,
-        "critMul": 2
+        "critMul": 3
       },
       "finals": 3,
       "absolutes": 0
@@ -216,7 +216,7 @@
         "armor": 0,
         "maxHp": 100,
         "greed": 1,
-        "critMul": 2
+        "critMul": 3
       },
       "finals": 1,
       "absolutes": 1

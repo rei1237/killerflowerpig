@@ -21,15 +21,15 @@ export const WEAPONS = {
     },
     pistols: {
         name: '쌍권총', icon: '🔫', color: '#ffd27a',
-        desc: '치명타 특화. 양손으로 가장 가까운 적을 연사하고, 치명타는 2.5배 피해 (레벨업으로 최대 3.5배).',
-        base: { dmg: 7, cd: 0.6, amount: 1, speed: 680, duration: 0.9, pierce: 1, area: 1, crit: 0.15, critBonus: 0.5 },
+        desc: '치명타 특화 초고속 연사. 양손으로 가장 가까운 적에게 탄을 쏟아붓고, 치명타는 3배 피해 (레벨업으로 최대 4배).',
+        base: { dmg: 4, cd: 0.3, amount: 1, speed: 720, duration: 0.9, pierce: 1, area: 1, crit: 0.1, critBonus: 0 },
         levels: [
-            { amount: 1, t: '탄 +1' }, { crit: 0.1, t: '치명타 확률 +10%' }, { amount: 1, dmg: 3, t: '탄 +1, 피해 +3' },
-            { critBonus: 0.5, t: '치명타 피해 +50%' }, { cd: -0.15, crit: 0.1, t: '연사 +15%, 치명타 확률 +10%' }, { dmg: 4, critBonus: 0.5, t: '피해 +4, 치명타 피해 +50%' },
+            { amount: 1, t: '탄 +1' }, { critBonus: 0.5, t: '치명타 피해 +50%' }, { amount: 1, dmg: 2, t: '탄 +1, 피해 +2' },
+            { crit: 0.1, t: '치명타 확률 +10%' }, { cd: -0.15, crit: 0.1, t: '연사 +15%, 치명타 확률 +10%' }, { dmg: 3, critBonus: 0.5, t: '피해 +3, 치명타 피해 +50%' },
             { amount: 1, crit: 0.1, cd: -0.1, t: '탄 +1, 치명타 확률 +10%, 연사 +10%' },
         ],
-        evolve: { with: 'focus', name: '처형인의 쌍권총', icon: '☠️', desc: '피해 +35%, 치명타 확률 +30%, 치명타 피해 +120%, 관통 +2, 연사 +25%. 체력 15% 이하의 적은 즉시 처형.',
-            mods: { dmg: 1.35, crit: 0.3, critBonus: 1.2, execute: 0.15, cd: 0.75, pierce: 2 } },
+        evolve: { with: 'focus', name: '처형인의 쌍권총', icon: '☠️', desc: '연사 +40%, 피해 +30%, 치명타 확률 +30%, 치명타 피해 +80%, 관통 +2. 체력 15% 이하의 적은 즉시 처형.',
+            mods: { dmg: 1.3, crit: 0.3, critBonus: 0.8, execute: 0.15, cd: 0.6, pierce: 2 } },
     },
     thorns: {
         name: '연꽃 가시', icon: '🌸', color: '#ff4fa0',
@@ -108,7 +108,7 @@ export const WEAPONS = {
 
 export const PASSIVES = {
     magazine: { name: '탄창 확장', icon: '📦', desc: '모든 무기 투사체 수 증가', per: '투사체 +1 (Lv1·3·5)' },
-    focus: { name: '집중', icon: '👁️', desc: '치명타 확률 +7% (피해 2배)', per: '치명타 +7%' },
+    focus: { name: '집중', icon: '👁️', desc: '치명타 확률 +7% (피해 3배)', per: '치명타 +7%' },
     sap: { name: '회전 수액', icon: '🧪', desc: '경험치 획득 +8%', per: '경험치 +8%' },
     scope: { name: '조준경', icon: '🔭', desc: '관통 투사체의 관통 +1 (Lv1·3·5) · 탄속 +5%', per: '관통 +1 (Lv1·3·5) · 탄속 +5%' },
     spread: { name: '확산', icon: '🫧', desc: '공격 범위 +10%', per: '범위 +10%' },
@@ -129,8 +129,8 @@ export const STARTING_WEAPON = 'shotgun';
 // 규칙: 진화 무기 > 모든 일반 무기 Lv8, 조합 무기 Lv1 > 모든 진화 무기, 절대 등급 Lv1 > 모든 조합 무기 Lv8.
 // tests/tier-order.mjs 가 실제 전투 시뮬레이션으로 이 순서를 검증한다.
 export const TIER_POWER = Object.freeze({
-    evolved: Object.freeze({ thorns: 2.4, cannon: 1.45, gas: 1.6, saw: 1.1 }),
-    fused: Object.freeze({ lotus_bloom: 2.4, venom_saw: 2.05, orbit_saw: 2.05, toxic_scatter: 1.1, plague_fire: 0.85, absolute_bloom: 1.1,
+    evolved: Object.freeze({ thorns: 2.4, cannon: 1.6, gas: 1.75, saw: 1.3 }),
+    fused: Object.freeze({ lotus_bloom: 2.4, venom_saw: 2.25, orbit_saw: 2.25, toxic_scatter: 1.15, plague_fire: 0.85, absolute_bloom: 1.1,
         doom_barrage: 1.2, plague_end: 0.95, guillotine: 1.45, carnage_saw: 2.1 }),
 });
 // 조합 무기가 계승한 코어(sourceId)는 조합 무기의 보정을 함께 받는다.

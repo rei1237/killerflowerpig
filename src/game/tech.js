@@ -100,7 +100,7 @@ export function applyTechPlayerBonus(stats) {
     if (b.maxHp) stats.maxHp += b.maxHp;
     if (b.regen) stats.regen += b.regen;
     if (b.armor) stats.armor += b.armor;
-    if (b.critMul) stats.critMul = (stats.critMul || 2) + b.critMul;
+    if (b.critMul) stats.critMul = (stats.critMul || 3) + b.critMul;
     return stats;
 }
 
