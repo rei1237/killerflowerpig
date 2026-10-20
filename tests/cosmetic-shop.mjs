@@ -147,6 +147,8 @@ function openShop({ owned = [], equipped = { outfit: null, ornament: null }, gol
     Object.assign(save, validateProgress({ gold, maxClearedStage: stage, cosmeticInventory: owned, equippedCosmetics: equipped, revision: save.revision }));
     assert.equal(persist(), true);
     images.playerFire = { width: 1536, height: 256 };
+    images.playerHaloLayer = { width:1536, height:256 };
+    for (const item of COSMETICS) if(item.bodySprites)for(const variant of ['normal','lotus'])images[`costume_${item.id}_${variant}`]={width:1536,height:256};
     G.player = { x: 7, y: 13, hp: 83, maxHp: 100, stats: { might: 1.25 }, shotAt: -Infinity };
     node('btn-shop').click();
     assert.equal(topModalId(), 'shop');
@@ -268,4 +270,9 @@ test('responsive fitting-room controls use real buttons, visible focus and stats
     assert.match(html, /구매하면 영구 보유되며 해당 슬롯에 바로 장착됩니다/);
     openShop();
     for (const control of node('cosmetic-room').querySelectorAll('button')) assert.equal(control.type, 'button');
+});
+test('missing wearing atlas is disclosed and never replaced with a flat inventory icon',()=>{
+ openShop();delete images.costume_jade_lotus_guard_normal;tryOn('jade_lotus_guard');
+ assert.match(node('cosmetic-preview-state').textContent,/외형 파일을 불러오지 못해 기본 모습 표시/);
+ assert.deepEqual(save.cosmeticInventory,[]);
 });

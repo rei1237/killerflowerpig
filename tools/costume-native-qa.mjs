@@ -1,0 +1,19 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import path from 'node:path';import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),{createCanvas,Image}=require('@napi-rs/canvas'),root=path.resolve(import.meta.dirname,'..');
+const node=()=>({style:{},dataset:{},classList:{add(){},remove(){}},setAttribute(){},getAttribute(){},replaceChildren(){},appendChild(){},addEventListener(){}});
+globalThis.document={hidden:false,createElement:tag=>tag==='canvas'?createCanvas(1,1):node(),getElementById:()=>node()};globalThis.window={innerWidth:1100,innerHeight:800,devicePixelRatio:1,matchMedia:()=>({matches:false}),addEventListener(){}};
+const fail=process.env.COSMETIC_FAIL || '';
+const storage=new Map();globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)};
+globalThis.Image=class extends Image{set src(value){if(fail==='image' && /player-(?:cape|jade|halo)/.test(String(value))){queueMicrotask(()=>this.onerror?.(Error('simulated404')));return;}try{super.src=typeof value==='string'?fs.readFileSync(path.join(root,value)):value;}catch(e){queueMicrotask(()=>this.onerror?.(e));}}};
+globalThis.fetch=async url=>{if((fail==='metadata'||fail==='all') && String(url).includes('pet-yeongnyang'))return {ok:false};try{const data=fs.readFileSync(path.join(root,url));return {ok:true,json:async()=>JSON.parse(data)}}catch{return {ok:false}}};
+const assets=await import('../src/core/assets.js'),{drawAppearance,appearanceAssets}=await import('../src/game/player-appearance.js');
+await assets.loadAssets();const keys=['playerFire','playerLotusFire','costume_dusk_lotus_cape_normal','costume_dusk_lotus_cape_lotus','costume_jade_lotus_guard_normal','costume_jade_lotus_guard_lotus','playerHaloLayer'];
+for(const key of keys){assert.ok(assets.images[key],`Missing ${key}`);assert.equal(assets.images[key].width,1536);assert.equal(assets.images[key].height,256);}
+const canvas=createCanvas(1280,1700),g=canvas.getContext('2d');g.fillStyle='#111521';g.fillRect(0,0,1280,1700);g.font='23px sans-serif';g.fillStyle='#f8deaa';g.fillText('FLOWERPIG • FITTED COSTUME SPRITES',24,36);g.font='14px sans-serif';g.fillStyle='#aab7cf';g.fillText('24 complete poses • Native shared game renderer • No inventory icons pasted over the body',24,63);
+const rows=[['BASE / STANDARD',null,false],['BASE / LEGENDARY',null,true],['FITTED CAPE / STANDARD','dusk_lotus_cape',false],['FITTED CAPE / LEGENDARY','dusk_lotus_cape',true],['FITTED JADE / STANDARD','jade_lotus_guard',false],['FITTED JADE / LEGENDARY','jade_lotus_guard',true]],poses=[['READY',1],['FIRE',.025],['RECOIL',.075],['RECOVER',.15]];
+for(let r=0;r<rows.length;r++){
+ const [label,outfit,lotusGun]=rows[r],y=280+r*250;g.fillStyle=r%2?'#16212c':'#111521';g.fillRect(0,y-205,1280,250);g.fillStyle='#e9d9b8';g.font='14px sans-serif';g.fillText(label,24,y-185);
+ for(let c=0;c<poses.length;c++){const [pose,elapsed]=poses[c],x=160+c*320;g.fillStyle='#8099a4';g.font='12px sans-serif';g.fillText(pose,x-35,y-165);const appearance={outfit,ornament:'dawn_petal_halo'};assert.deepEqual(appearanceAssets(appearance,lotusGun).missing,[]);drawAppearance(g,{x,y,clock:10,scale:2.8,lotusGun,appearance,player:{shotAt:10-elapsed,shotFlip:c===3,flip:c===3}});}
+}
+g.fillStyle='#aab7cf';g.font='13px sans-serif';g.fillText('Actual gameplay scale (0.24) →',24,1653);for(let i=0;i<rows.length;i++)drawAppearance(g,{x:370+i*135,y:1680,clock:10,lotusGun:rows[i][2],appearance:{outfit:rows[i][1],ornament:'dawn_petal_halo'},player:{}});
+fs.writeFileSync('/workspace/shared/flowerpig-fitted-costumes-24poses.png',canvas.toBuffer('image/png'));console.log(JSON.stringify({status:'PASS',bodyVariants:6,poseChecks:24,haloFrames:4,allAtlasDimensions:'1536x256',comparison:'/workspace/shared/flowerpig-fitted-costumes-24poses.png'}));

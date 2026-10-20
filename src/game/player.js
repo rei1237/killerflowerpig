@@ -166,7 +166,7 @@ export function drawPlayer(ctx) {
         ctx.restore();
     }
     const atlas = atlases.player;
-    if (!atlas && !images.playerFire) return;
+    if (!atlas && !images.playerFire && !images.playerLotusFire) return;
     const blink = p.iframes > 0 && Math.floor(G.clock * 20) % 2 === 0;
     const tint = p.hurtT > 0 ? 'flash' : 'normal';
     if (blink && p.hurtT <= 0) ctx.globalAlpha = 0.55;

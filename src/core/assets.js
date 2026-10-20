@@ -447,17 +447,36 @@ export async function loadAssets(onProgress, { signal, timeoutMs = 20000 } = {})
             for (const tint of ['normal', 'flash', 'elite', 'hallu']) atlases[key].variant(tint);
         });
     }
-    // Trim the generated source margin and cache compact runtime layers once.
-    // Full-resolution originals remain available for the shop cards.
-    for (const item of COSMETICS) add(`cosmetic_${item.id}`, item.sprite, img => {
-        if (!img) { images[`cosmetic_${item.id}`] = null; return; }
-        const crop = item.crop || [0, 0, img.width, img.height];
-        const width = 384, height = Math.round(width * crop[3] / crop[2]);
-        const layer = makeCanvas(width, height);
-        layer.getContext('2d').drawImage(img, ...crop, 0, 0, width, height);
-        images[`cosmetic_${item.id}`] = layer;
+    // Pose-matched complete costumes: no inventory art is composited onto the body.
+    const addCharacterSheet = (key, src, flashEnabled = true) => add(key, src, img => {
+        if (img && (img.width !== 1536 || img.height !== 256)) img = null;
+        images[key] = img;
+        images[`${key}Flash`] = null;
+        if (!img || !flashEnabled) return;
+        const flash = makeCanvas(img.width, img.height), g = flash.getContext('2d');
+        g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-atop';
+        g.fillStyle = 'rgba(255,255,255,0.72)'; g.fillRect(0, 0, img.width, img.height);
+        images[`${key}Flash`] = flash;
     });
+    for (const item of COSMETICS) {
+        if (item.bodySprites) for (const [variant, src] of Object.entries(item.bodySprites))
+            addCharacterSheet(`costume_${item.id}_${variant}`, src);
+    }
+    addCharacterSheet('playerHaloLayer', 'asset/sprites/player-halo-layer.png', false);
     add('petYeongnyang', 'asset/items/pet-yeongnyang.png', img => { images.petYeongnyang = img; });
+    add('playerLotusFire', 'asset/sprites/player-lotus-fire.png', (img) => {
+        if (img && (img.width !== 1536 || img.height !== 256)) img = null;
+        images.playerLotusFire = img;
+        images.playerLotusFireFlash = null;
+        if (!img) return;
+        const flash = makeCanvas(img.width, img.height);
+        const g = flash.getContext('2d');
+        g.drawImage(img, 0, 0);
+        g.globalCompositeOperation = 'source-atop';
+        g.fillStyle = 'rgba(255,255,255,0.72)';
+        g.fillRect(0, 0, img.width, img.height);
+        images.playerLotusFireFlash = flash;
+    });
     add('playerFire', 'asset/sprites/player-fire.png', (img) => {
         if (!img) return;
         images.playerFire = img;

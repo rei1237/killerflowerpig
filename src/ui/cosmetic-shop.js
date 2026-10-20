@@ -3,7 +3,7 @@
 import { COSMETICS } from '../data/cosmetics.js';
 import { save, buyCosmetic, setCosmetic } from '../core/save.js';
 import { shopAccess } from '../core/shop-access.js';
-import { drawAppearance } from '../game/player-appearance.js';
+import { drawAppearance, appearanceAssets } from '../game/player-appearance.js';
 import { audio } from '../core/audio.js';
 
 const $ = id => document.getElementById(id);
@@ -52,6 +52,7 @@ function updatePreviewLabels() {
     $('cosmetic-preview-state').dataset.preview = String(changed.length > 0);
     $('cosmetic-preview-name').textContent = changed.length === 1 ? itemName(look[changed[0]]) : changed.length ? '나만의 연꽃 조합' : '꽃돼지 · 나의 장비';
     $('cosmetic-preview-look').textContent = `의상 · ${itemName(look.outfit)} / 장식 · ${look.ornament ? itemName(look.ornament) : '없음'}`;
+    if (appearanceAssets(look).missing.length) $('cosmetic-preview-state').textContent += ' · 외형 파일을 불러오지 못해 기본 모습 표시';
     $('cosmetic-preview-reset').disabled = !changed.length;
     $('cosmetic-preview-canvas').setAttribute('aria-label', `꽃돼지 외형 미리보기. ${$('cosmetic-preview-look').textContent}`);
 }

@@ -4,12 +4,12 @@ const node=()=>({style:{},dataset:{},classList:{add(){},remove(){}},setAttribute
 globalThis.document={hidden:false,createElement:tag=>tag==='canvas'?createCanvas(1,1):node(),getElementById:()=>node()};globalThis.window={innerWidth:1100,innerHeight:800,devicePixelRatio:1,matchMedia:()=>({matches:false}),addEventListener(){}};
 const fail=process.env.COSMETIC_FAIL || '';
 const storage=new Map();globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)};
-globalThis.Image=class extends Image{set src(value){if(fail==='image' && String(value).includes('asset/cosmetics/')){queueMicrotask(()=>this.onerror?.(Error('simulated404')));return;}try{super.src=typeof value==='string'?fs.readFileSync(path.join(root,value)):value;}catch(e){queueMicrotask(()=>this.onerror?.(e));}}};
+globalThis.Image=class extends Image{set src(value){if(fail==='image' && /player-(?:cape|jade|halo)/.test(String(value))){queueMicrotask(()=>this.onerror?.(Error('simulated404')));return;}try{super.src=typeof value==='string'?fs.readFileSync(path.join(root,value)):value;}catch(e){queueMicrotask(()=>this.onerror?.(e));}}};
 globalThis.fetch=async url=>{if((fail==='metadata'||fail==='all') && String(url).includes('pet-yeongnyang'))return {ok:false};try{const data=fs.readFileSync(path.join(root,url));return {ok:true,json:async()=>JSON.parse(data)}}catch{return {ok:false}}};
 const assets=await import('../src/core/assets.js'),game=await import('../src/game/game.js'),saving=await import('../src/core/save.js'),rendering=await import('../src/game/render.js');
 const {G}=await import('../src/game/state.js');const {drawAppearance}=await import('../src/game/player-appearance.js');const {COSMETICS}=await import('../src/data/cosmetics.js');
 const assetReport=await assets.loadAssets();
-if(!fail)for(const item of COSMETICS)assert.ok(assets.images[`cosmetic_${item.id}`],`Required QA art did not decode: ${item.id}`);
+if(!fail)for(const key of ['costume_dusk_lotus_cape_normal','costume_jade_lotus_guard_normal','playerHaloLayer'])assert.ok(assets.images[key],`Required QA art did not decode: ${key}`);
 const canvas=createCanvas(1100,800);canvas.style={};rendering.initRender(canvas);
 saving.save.gold=20000;saving.save.maxClearedStage=10;assert.ok(saving.persist());game.newRun(1);game.step(.016);
 const ctx=canvas.getContext('2d');G.player.hp=37;const hp=G.player.hp;const stats=JSON.stringify(G.player.stats),radius=G.player.radius;
@@ -19,5 +19,5 @@ for(let i=0;i<looks.length;i++){const x=100+(i%3)*400,y=285+Math.floor(i/3)*285;
 fs.writeFileSync(`/workspace/shared/lotus-equipment-${fail||'native'}-comparison.png`,contact.toBuffer('image/png'));
 for(const item of COSMETICS){assert.ok(saving.buyCosmetic(item.id,saving.save.revision).ok);assert.equal(saving.save.equippedCosmetics[item.slot],item.id);rendering.render(.016);assert.equal(G.player.hp,hp);assert.equal(JSON.stringify(G.player.stats),stats);assert.equal(G.player.radius,radius);}
 const snap=game.loadRun();assert.ok(snap);game.continueRun(snap);assert.deepEqual(saving.save.equippedCosmetics,{outfit:'jade_lotus_guard',ornament:'dawn_petal_halo'});game.step(.016);rendering.render(.016);fs.writeFileSync(`/workspace/shared/lotus-equipment-${fail||'native'}-combat.png`,canvas.toBuffer('image/png'));
-const before=ctx.getImageData(0,0,1100,800).data.slice();assert.ok(saving.setCosmetic('outfit',null).ok);assert.ok(saving.setCosmetic('ornament',null).ok);rendering.render(.016);const after=ctx.getImageData(0,0,1100,800).data;let changed=0;for(let i=0;i<before.length;i+=4)if(before[i]!==after[i]||before[i+1]!==after[i+1]||before[i+2]!==after[i+2])changed++;assert.ok(changed>50);
+const before=ctx.getImageData(0,0,1100,800).data.slice();assert.ok(saving.setCosmetic('outfit',null).ok);assert.ok(saving.setCosmetic('ornament',null).ok);rendering.render(.016);const after=ctx.getImageData(0,0,1100,800).data;let changed=0;for(let i=0;i<before.length;i+=4)if(before[i]!==after[i]||before[i+1]!==after[i+1]||before[i+2]!==after[i+2])changed++;if(!fail)assert.ok(changed>50);else assert.equal(changed,0);
 console.log(JSON.stringify({status:'PASS',failureMode:fail||'none',changedPixels:changed,hpUnchanged:hp,statsUnchanged:true,hitRadius:radius,continue:true,comparison:`/workspace/shared/lotus-equipment-${fail||'native'}-comparison.png`}));

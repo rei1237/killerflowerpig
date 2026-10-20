@@ -41,7 +41,7 @@ test('three appearance-only items have stable IDs, independent slots and exact p
         assert.match(item.name, /[가-힣]/);
         assert.match(item.desc, /[가-힣]/);
         assert.equal(item.art, `asset/cosmetics/${item.id}-icon.png`);
-        assert.equal(item.sprite, `asset/cosmetics/${item.id}.png`);
+        if(item.slot==='outfit'){assert.ok(item.bodySprites.normal.startsWith('asset/sprites/'));assert.ok(item.bodySprites.lotus.startsWith('asset/sprites/'));}else assert.equal(item.layerSprite,'asset/sprites/player-halo-layer.png');
         for (const key of ['bonuses', 'stats', 'hp', 'maxHp', 'might', 'speed', 'armor', 'regen']) assert.equal(item[key], undefined);
     }
 });
