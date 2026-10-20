@@ -70,7 +70,7 @@ test('each ordinary or evolved cannon volley hits each enemy and boss once even 
         const w=setup('cannon',8,evolved);G.player.stats.area=3;
         const hits=boss(),e=enemy(1,35), s=weaponStats(w);
         updateWeapons(.001);
-        assert.equal(G.beams.count,s.amount);assert.equal(hits.length,1);near(hits[0].dmg,s.dmg*.65);near(1e9-e.hp,s.dmg*.65);
+        assert.equal(G.beams.count,s.amount);assert.equal(hits.length,1);near(hits[0].dmg,s.beamDamage*.65);near(1e9-e.hp,s.beamDamage*.65);
         const hp=e.hp,bossHp=G.boss.hp;updateShots(.1);
         assert.equal(e.hp,hp);assert.equal(G.boss.hp,bossHp,'visible lifetime is not repeating DoT');
         w.cd=0;G.clock+=.01;updateWeapons(.001);assert.equal(hits.length,2,'dedup expires with the volley, not the weapon');
@@ -83,7 +83,7 @@ test('inherited Cannon and final main releases coalesce without losing their sch
         assert.ok(core,id);assert.equal(core.level,8);assert.equal(core.evolved,true);
         const s=weaponStats(core);assert.equal(s.amount,3);near(s.cd,2.6*.37*.85*(id==='absolute_bloom'?1.15:1));
         const direct=cores.filter(c=>['cannon','lotus_bloom','ember_lance','absolute_bloom'].includes(c.id));
-        const expected=direct.reduce((sum,c)=>{const s=weaponStats(c);return sum+s.dmg*cannonFocusMultiplier(s.amount);},0);
+        const expected=direct.reduce((sum,c)=>{const s=weaponStats(c);return sum+s.focusBeamDamage*cannonFocusMultiplier(s.amount);},0);
         const hits=boss(350);tapFocusAt(G.boss.x,G.boss.y-G.boss.radius);updateWeapons(.001);
         assert.equal(hits.length,1,id);near(hits[0].dmg,expected,id);
         assert.equal(G.beams.count,3,id);
@@ -112,5 +112,50 @@ test('focused Cannon progression keeps evolved, final-entry and absolute-entry p
     const dps = builds.map(build => runBalanceScene({ tech:'bloom', build:[build],
         passives:{regen:3,pollen:3,spread:3}, scene:'boss_focused', seconds:30 }).dps);
     for (let i = 1; i < dps.length; i++) assert.ok(dps[i] > dps[i-1], JSON.stringify(dps));
-    for (const index of [1,2,4]) assert.ok(dps[index] > dps[index-1]*1.1, `tier entry premium: ${JSON.stringify(dps)}`);
+    for (const index of [1,2]) assert.ok(dps[index] > dps[index-1]*1.1, `tier entry premium: ${JSON.stringify(dps)}`);
+    // The requested beam-only 2× buff deliberately does not triple Absolute's
+    // independent thorn/fire damage. Keep a premium without undoing restraint.
+    assert.ok(dps[4] > dps[3]*1.04, `absolute entry premium: ${JSON.stringify(dps)}`);
+});
+
+test('requested double impact and count-based focus apply exactly once at Lv1/4/8 in automatic and focused modes',()=>{
+    for(const [level,base,ratio] of [[1,44,1],[4,68,.85],[8,100,.65]]) {
+        for(const focused of [false,true]) for(const might of [1,1.7]) {
+            const w=setup('cannon',level);G.player.stats.might=might;
+            const s=weaponStats(w), hits=boss(250);
+            if(focused)tapFocusAt(G.boss.x,G.boss.y-G.boss.radius);
+            updateWeapons(.001);
+            const oldImpact=base*might*(focused?cannonFocusMultiplier(s.amount):ratio);
+            near(s.beamDamage,s.dmg*2,'derived beam damage');
+            assert.equal(hits.length,1);near(hits[0].dmg,oldImpact*2);
+            assert.ok(G.beams.count<=3);
+        }
+    }
+});
+
+test('beam multiplier never changes non-beam stats or multiplies inherited core twice',()=>{
+    for(const id of ['cannon','lotus_bloom','ember_lance','absolute_bloom']) {
+        setup(id,8,id==='cannon');
+        for(const w of activeWeaponCores()) {
+            const s=weaponStats(w);
+            if(['cannon','lotus_bloom','ember_lance','absolute_bloom'].includes(w.id))near(s.beamDamage,s.dmg*2);
+            else assert.equal(s.beamDamage,undefined,w.id);
+        }
+    }
+    for(const id of ['shotgun','pistols','gas','molotov','saw','sword','thorns']) {
+        const w=setup(id,8);assert.equal(weaponStats(w).beamDamage,undefined,id);
+    }
+});
+
+test('focused total is exactly 1.1/2.2/3.3 strengthened beams, never multiplied by count twice',()=>{
+    for(const [count,expected] of [[0,1.1],[1,1.1],[2,2.2],[3,3.3],[100,3.3]])near(cannonFocusMultiplier(count),expected);
+    for(const tech of ['gunline','executioner','plague','butcher']){
+        const w=setup('cannon',8);G.tech=tech;
+        const s=weaponStats(w);
+        near(s.dmg,80,'existing raw mismatch remains for shared non-beam stats');
+        near(s.beamDamage,190,'Cannon-only mismatch is 5% of doubled100');
+        near(s.beamFocusedImpact,627,'three rays already included in total');
+        const hits=boss(250);tapFocusAt(G.boss.x,G.boss.y-G.boss.radius);updateWeapons(.001);
+        near(hits[0].dmg,627);assert.equal(G.beams.count,3);
+    }
 });

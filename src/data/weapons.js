@@ -5,6 +5,10 @@ export const MAX_WEAPONS = 6;
 // 보조 아이템(패시브)은 슬롯을 차지하지 않는다: 12종 모두 획득·강화 가능.
 export const WEAPON_MAX_LEVEL = 8;
 export const PASSIVE_MAX_LEVEL = 5;
+// Applied once to actual Cannon-family beam impacts, after stat caps/passives.
+// Mixed final weapons keep their non-beam damage unchanged.
+export const CANNON_IMPACT_MULTIPLIER = 2;
+export const CANNON_MISMATCH_DAMAGE = .95;
 
 export const WEAPONS = {
     shotgun: {
@@ -69,18 +73,18 @@ export const WEAPONS = {
     },
     cannon: {
         name: '꽃잎포', icon: '🌺', color: '#ff69b4',
-        desc: '다수 적 자동 조준 또는 한 표적 집중 사격. 모든 등급과 추가 발수 효과를 포함해 광선은 최대 3개. 분산 피해율은 100%→65%, 집중 사격은 기본 위력의 1.25~1.41배를 한 표적에 준다.',
+        desc: '다수 적 자동 조준 또는 한 표적 집중 사격. 광선 피해 2배 강화: 테크·장비 보정 전 Lv1 분산 88 / 집중 96.8. 다른 테크의 광선 피해 감소는 5%만 적용. 모든 등급과 추가 발수 효과를 포함해 광선은 최대 3개. 분산 피해율 100%→65%, 집중 총 피해는 강화 광선 1개 기준 1발 1.1배 / 2발 2.2배 / 3발 3.3배.',
         base: { dmg: 44, cd: 2.6, amount: 1, speed: 1, duration: 0.35, area: 1, length: 520, width: 44 },
         levels: [
-            { dmg: 12, width: 2, length: 20, amount: 1, cd: -0.09, t: '피해 +12 · 광선 +1 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 95%' },
-            { dmg: 4, width: 2, length: 20, area: 0.25, cd: -0.09, t: '피해 +4 · 굵기 +2 · 사거리 +20 · 범위 +25% · 간격 -9% · 분산 90%' },
-            { dmg: 8, width: 2, length: 20, amount: 1, cd: -0.09, t: '피해 +8 · 광선 +1 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 85%' },
-            { dmg: 6, width: 2, length: 20, cd: -0.09, t: '피해 +6 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 80%' },
-            { dmg: 10, width: 2, length: 20, cd: -0.09, t: '피해 +10 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 75%' },
-            { dmg: 8, width: 2, length: 20, cd: -0.09, t: '피해 +8 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 70%' },
-            { dmg: 8, width: 2, length: 20, area: 0.2, cd: -0.09, t: '피해 +8 · 굵기 +2 · 사거리 +20 · 범위 +20% · 간격 -9% · 분산 65%' },
+            { dmg: 12, width: 2, length: 20, amount: 1, cd: -0.09, t: '광선 기본 피해 +24 · 광선 +1 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 95%' },
+            { dmg: 4, width: 2, length: 20, area: 0.25, cd: -0.09, t: '광선 기본 피해 +8 · 굵기 +2 · 사거리 +20 · 범위 +25% · 간격 -9% · 분산 90%' },
+            { dmg: 8, width: 2, length: 20, amount: 1, cd: -0.09, t: '광선 기본 피해 +16 · 광선 +1 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 85%' },
+            { dmg: 6, width: 2, length: 20, cd: -0.09, t: '광선 기본 피해 +12 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 80%' },
+            { dmg: 10, width: 2, length: 20, cd: -0.09, t: '광선 기본 피해 +20 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 75%' },
+            { dmg: 8, width: 2, length: 20, cd: -0.09, t: '광선 기본 피해 +16 · 굵기 +2 · 사거리 +20 · 간격 -9% · 분산 70%' },
+            { dmg: 8, width: 2, length: 20, area: 0.2, cd: -0.09, t: '광선 기본 피해 +16 · 굵기 +2 · 사거리 +20 · 범위 +20% · 간격 -9% · 분산 65%' },
         ],
-        evolve: { with: 'pollen', name: '개화 꽃잎포', icon: '💮', desc: '재발사 간격 15% 단축과 피해·범위 강화. 진화해도 광선은 최대 3개. 분산 피해율 65%, 집중 시 기본 위력의 최대 1.41배. 초과 발수를 피해로 바꾸지 않는다.',
+        evolve: { with: 'pollen', name: '개화 꽃잎포', icon: '💮', desc: '재발사 간격 15% 단축과 피해·범위 강화. 광선 피해 2배 강화 유지. 진화해도 광선은 최대 3개. 분산 피해율 65%, 집중 총 피해는 강화 광선 1개 기준 최대 3.3배. 초과 발수를 피해로 바꾸지 않는다.',
             mods: { dmg: 1.5, area: 1.25, cd: 0.85 } },
     },
     gas: {

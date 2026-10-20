@@ -94,7 +94,7 @@ test('new toxic bullets and bouncing saws apply real slow on collision',()=>{
 });
 test('ember lance fires beam and lasting fire field, both with its own damage attribution',()=>{
  const w=weapon('ember_lance',1);w.cd=0;G.weapons=[w];let dmg=0;G.boss={alive:true,hp:10000,x:120,y:20,radius:20,hits:{},hurt(v){dmg+=v;this.hp-=v;}};
- updateWeapons(.01);assert.ok(Math.abs(dmg-weaponStats(w).dmg*.65)<1e-9,'main beam applies its exact dispersed damage during the same update');assert.equal(G.beams.count,1);assert.equal(G.shots.count,1);updateShots(.6);
+ updateWeapons(.01);assert.ok(Math.abs(dmg-weaponStats(w).beamDamage*.65)<1e-9,'main beam applies its exact dispersed damage during the same update');assert.equal(G.beams.count,1);assert.equal(G.shots.count,1);updateShots(.6);
  assert.equal(G.hazards.count,1);const h=G.hazards.items[0];assert.equal(h.kind,'fire');assert.equal(h.duration,3);assert.equal(h.radius,54);assert.equal(h.dmg,7.68);assert.equal(h.weapon,'ember_lance');
  const p=previewFusion('ember_lance');assert.equal(p.output.stats.fieldDamage,h.dmg);assert.equal(p.output.stats.fieldDuration,h.duration);
 });

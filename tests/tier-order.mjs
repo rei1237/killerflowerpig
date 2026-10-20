@@ -31,12 +31,14 @@ for(const recipe of FUSION_RECIPES.filter(recipe=>recipe.tier!=='absolute'))test
         assert.ok(improvement(fused,ingredient)>1.1,`${recipe.output} ${JSON.stringify(describe(fused))} <= ${input.id} ${JSON.stringify(describe(ingredient))}`);
     }
 });
-for(const recipe of FUSION_RECIPES.filter(recipe=>recipe.tier==='absolute'))test(`absolute ${recipe.output} Lv1 exceeds related max-level fusion routes by 5%`,()=>{
+for(const recipe of FUSION_RECIPES.filter(recipe=>recipe.tier==='absolute'))test(`absolute ${recipe.output} Lv1 retains its route premium (Bloom trades some specialized AoE for boss power)`,()=>{
     const inputs=new Set(recipe.inputs.map(input=>input.id));
     const related=FUSION_RECIPES.filter(other=>other.tier!=='absolute'&&other.inputs.every(input=>inputs.has(input.id)));
     assert.ok(related.length>0,`${recipe.output}: no comparable recipe route`);
     const absolute=raw(recipe.output,1);
     for(const fusion of related){const previous=raw(fusion.output,8);
-        assert.ok(improvement(absolute,previous)>1.05,`${recipe.output} ${JSON.stringify(describe(absolute))} <= ${fusion.output} ${JSON.stringify(describe(previous))}`);
+        // Bloom retains boss superiority and broad utility, without restoring
+        // the previously rejected overwhelming AoE advantage over specialists.
+        assert.ok(recipe.output==='absolute_bloom' ? absolute.boss>previous.boss && improvement(absolute,previous)>.95 : improvement(absolute,previous)>1.05,`${recipe.output} ${JSON.stringify(describe(absolute))} <= ${fusion.output} ${JSON.stringify(describe(previous))}`);
     }
 });

@@ -1,3 +1,5 @@
+> Historical e3d3b330 balance snapshot. The later user-requested Cannon impact/focus revision supersedes Cannon damage and derived TTK below; see [current revision](cannon-impact-revision.md). Other mechanics remain unchanged.
+
 # Absolute Bloom: narrower power and clearer boss play
 
 The user's latest request overrides the earlier requirement that a one-slot Absolute must exceed the combined damage of all three evolved parents. It still preserves the three-beam global cap, explicit focus, inherited attacks and a meaningful premium over a single related lower final. Other absolute definitions, guns, enemy stats and boss HP are unchanged by this pass.

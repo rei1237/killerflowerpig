@@ -66,7 +66,7 @@ test('tech weapon bonus applies only to matching tags and grows with tiers', () 
     const cannonWith = weaponStats(cannon);
     G.tech = null; const cannonWithout = weaponStats(cannon); G.tech = 'gunline';
     assert.ok(Math.abs(cannonWith.dmg - cannonWithout.dmg * MISMATCH_DAMAGE) < 1e-9, 'off-tag weapons suffer the mismatch penalty');
-    assert.deepEqual({ ...cannonWith, dmg: 0 }, { ...cannonWithout, dmg: 0 }, 'and receive no tech bonus');
+    assert.deepEqual({ ...cannonWith, dmg: 0, beamDamage:0, focusBeamDamage:0, beamAutoImpact:0, beamFocusedImpact:0 }, { ...cannonWithout, dmg: 0, beamDamage:0, focusBeamDamage:0, beamAutoImpact:0, beamFocusedImpact:0 }, 'and receive no tech bonus');
     G.weapons.pop();
     for (const [kind, id] of [['weapon', 'rifle'], ['passive', 'scope'], ['weapon', 'pistols'], ['passive', 'focus']]) applyChoice({ kind, id, level: 1 });
     assert.equal(resonanceTier(), 3);

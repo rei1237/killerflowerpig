@@ -95,7 +95,7 @@ export function cannonAimReport() {
         curve.push({ level, damage: s.dmg, interval: round(s.cd), rays: s.amount,
             width: round(s.width * s.area), range: round(s.length * Math.sqrt(s.area)),
             automaticDamage:round(s.dmg*(1-.05*(level-1))), spreadRatio:round(1-.05*(level-1)),
-            focusMultiplier: cannonFocusMultiplier(s.amount), focusedDamage:round(s.dmg*cannonFocusMultiplier(s.amount)),
+            focusMultiplier: cannonFocusMultiplier(s.amount), focusedDamage:round(s.focusBeamDamage*cannonFocusMultiplier(s.amount)),
             before: { damage: [28, 40, 40, 40, 40, 55, 55, 75][level - 1], interval: round(s.cd), rays: level,
                 width: round(38 * (1 + (level >= 3 ? .25 : 0) + (level >= 8 ? .2 : 0))),
                 range: round(520 * Math.sqrt(1 + (level >= 3 ? .25 : 0) + (level >= 8 ? .2 : 0))) } });

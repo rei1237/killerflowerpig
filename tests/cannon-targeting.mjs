@@ -110,12 +110,12 @@ test('focused ordinary/evolved/final volleys aggregate once with a bounded bonus
         const focus = enemy(1, 240, 12), bystander = enemy(2, 140, 12), behind = enemy(3, 340, 12);
         tapFocusAt(focus.x, focus.y - focus.radius);
         const s = weaponStats(w); updateWeapons(.001);
-        assert.ok(Math.abs(focus.maxHp - focus.hp - s.dmg * cannonFocusMultiplier(s.amount)) < 1e-6, id);
+        assert.ok(Math.abs(focus.maxHp - focus.hp - s.focusBeamDamage * cannonFocusMultiplier(s.amount)) < 1e-6, id);
         assert.equal(bystander.hp, bystander.maxHp); assert.equal(behind.hp, behind.maxHp);
         const beams = G.beams.items.slice(0, G.beams.count);
         assert.equal(beams.filter(b => b.focusPrimary).length, 1); assert.equal(beams.filter(b => b.focusHit).length, 1);
         assert.ok(beams.every(b => b.focused && b.focusCount === s.amount && b.focusEndX <= focus.x + focus.radius));
-        assert.ok(cannonFocusMultiplier(s.amount) <= 1.41);
+        assert.ok(cannonFocusMultiplier(s.amount) <= 3.3 + 1e-9);
     }
 });
 test('a killed focus is not replaced mid-volley; next attack releases lock and resets pooled focus metadata', () => {
@@ -146,7 +146,7 @@ test('two equipped Cannon-derived owners share three visible rays and retain bot
     const focus=enemy(1,240,12), bystander=enemy(2,120,12);tapFocusAt(focus.x,focus.y-focus.radius);
     const cores=activeWeaponCores(), expected=new Map();
     for(const w of cores) if(['cannon','lotus_bloom','absolute_bloom'].includes(w.id)) {
-        const s=weaponStats(w), id=w.sourceId||w.id;expected.set(id,(expected.get(id)||0)+s.dmg*cannonFocusMultiplier(s.amount));
+        const s=weaponStats(w), id=w.sourceId||w.id;expected.set(id,(expected.get(id)||0)+s.focusBeamDamage*cannonFocusMultiplier(s.amount));
     }
     updateWeapons(.001);assert.equal(G.beams.count,3);assert.equal(bystander.hp,bystander.maxHp);
     for(const [id,damage] of expected) assert.ok(Math.abs(G.damageBy[id]-damage)<1e-6,`${id}: ${G.damageBy[id]} vs ${damage}`);
@@ -162,7 +162,7 @@ test('coalesced sources retain their own range and width instead of inheriting t
     assert.ok(shortStats.length*Math.sqrt(shortStats.area)<600);
     updateWeapons(.001);
     assert.equal(G.damageBy.lotus_bloom||0,0,'short source cannot borrow long range');
-    assert.ok(Math.abs(G.damageBy.absolute_bloom-longStats.dmg*cannonFocusMultiplier(longStats.amount))<1e-6);
+    assert.ok(Math.abs(G.damageBy.absolute_bloom-longStats.focusBeamDamage*cannonFocusMultiplier(longStats.amount))<1e-6);
     assert.equal(G.beams.count,3);
 });
 

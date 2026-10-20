@@ -1,3 +1,5 @@
+> Historical e3d3b330 balance snapshot. The later user-requested Cannon impact/focus revision supersedes Cannon damage and derived TTK below; see [current revision](cannon-impact-revision.md). Other mechanics remain unchanged.
+
 # Cannon: three-beam cap, exclusive focus, and bounded auto-aim
 
 This report compares the final three-beam implementation with published commit `76d85937`. The unpublished 120-damage/eight-ray experiment is not the user baseline and was discarded. Reproduce the measured JSON with `node tools/cannon-aim-qa.mjs > docs/cannon-aim-qa.json`.

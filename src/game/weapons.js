@@ -1,5 +1,6 @@
-import { applyTechWeaponBonus, resonanceTier } from './tech.js';
+import { applyTechWeaponBonus, resonanceTier, isMismatchedWeapon } from './tech.js';
 import { FUSION_RECIPES } from '../data/fusions.js';
+import { MISMATCH_DAMAGE } from '../data/techs.js';
 import { firingMuzzle } from './player-motion.js';
 import { markPlayerAttack } from './attack-animation.js';
 import { createWeaponVfxFrame, drawWeaponProjectile, drawWeaponOrbit, drawWeaponBeam, drawBeamHitAccents, drawFusionResidues, drawFusionHitAccents } from './weapon-vfx.js';
@@ -9,7 +10,7 @@ import { fireSword, drawButcherSword } from './butcher-sword.js';
 import { choosePlagueLanding } from './plague-targeting.js';
 import { updateThornCharges } from './thorn-charges.js';
 import { chooseCannonVolley, collectCannonTargets, cannonBeamHits, cannonFocusMultiplier, CANNON_RAY_LIMIT } from './cannon-targeting.js';
-import { WEAPONS, tierPower } from '../data/weapons.js';
+import { WEAPONS, tierPower, CANNON_IMPACT_MULTIPLIER, CANNON_MISMATCH_DAMAGE } from '../data/weapons.js';
 import { fx, glow, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { hitEnemy } from './enemies.js';
@@ -115,6 +116,15 @@ export function weaponStats(w) {
     }
     // 등급 보정: 상위 등급 무기가 하위 등급보다 약해지지 않도록. 피해 상한(220/420/600)은 보정 전 값에 적용된다.
     result.dmg *= tierPower(w);
+    // Beam-only: do not double a mixed weapon's orbit, fire field or lifesteal.
+    // Derived once after all stat multipliers/caps; inherited cores use this
+    // same path without multiplying their owner's already-derived value.
+    if (isCannonBeam(w.id)) {
+        result.beamDamage = result.dmg * CANNON_IMPACT_MULTIPLIER * (isMismatchedWeapon(w.id) ? CANNON_MISMATCH_DAMAGE / MISMATCH_DAMAGE : 1);
+        result.focusBeamDamage = result.beamDamage;
+        result.beamAutoImpact = result.beamDamage * (w.id === 'cannon' ? 1 - .05 * (Math.min(8,Math.max(1,w.level))-1) : .65);
+        result.beamFocusedImpact = result.focusBeamDamage * cannonFocusMultiplier(result.amount);
+    }
     if (w.id === 'thorns') {
         // result.cd already includes player and tech cooldown exactly once.
         result.regrow = Math.max(.35, ((b.regrow || 1.8) + acc.regrow) * (ev.regrow || 1) * result.cd / b.cd);
@@ -465,8 +475,9 @@ function flushCannonVolleys() {
                     const ratio = volley.focused ? cannonFocusMultiplier(s.amount) :
                         core.id === 'cannon' ? 1 - .05 * (Math.min(8, Math.max(1, core.level)) - 1) : .65;
                     const owner = ownerId(core), old = contributions.get(owner);
-                    if (old) { old.damage += s.dmg * ratio; old.crit = Math.max(old.crit, s.crit); }
-                    else contributions.set(owner, { damage: s.dmg * ratio, crit: s.crit });
+                    const impact = (volley.focused ? s.focusBeamDamage : s.beamDamage) * ratio;
+                    if (old) { old.damage += impact; old.crit = Math.max(old.crit, s.crit); }
+                    else contributions.set(owner, { damage: impact, crit: s.crit });
                     break;
                 }
             }

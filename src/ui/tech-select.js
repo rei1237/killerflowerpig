@@ -122,7 +122,7 @@ function renderDetail() {
     const rb = document.createElement('b');
     rb.textContent = '부조화';
     const rl = document.createElement('span');
-    rl.textContent = `테크와 맞지 않는 무기 피해 -${Math.round((1 - MISMATCH_DAMAGE) * 100)}%`;
+    rl.textContent = `테크와 맞지 않는 무기 피해 -${Math.round((1 - MISMATCH_DAMAGE) * 100)}% (꽃잎포 계열 광선은 -5%)`;
     rule.append(rb, rl);
     imprints.append(rule);
 

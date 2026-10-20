@@ -1,0 +1,396 @@
+{
+  "sheets": 39,
+  "authoredFrames": 312,
+  "files": [
+    {
+      "path": "asset/sprites/player-base-blade.png",
+      "bytes": 547794,
+      "sha256": "1d2cdb0a9c708ea8d82221d2cfdac585942585e9c9cf40ecd433bb98fb440e9b",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-base-cannon-move.png",
+      "bytes": 681031,
+      "sha256": "6eaa3fd508c805a87e42f3ad5f48221ccc6f0d941116bd9686be9f1b93286f2b",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-base-cannon.png",
+      "bytes": 669976,
+      "sha256": "e6abdc98cf024aa860a51ef0e776c294e4a4d59d38458faf2f0c558777f1f1c9",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-base-channel.png",
+      "bytes": 503419,
+      "sha256": "8f5539252120a0dbcd97a314938f6dcab42128006b16c026f672514559bb6d22",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-base-dual-move.png",
+      "bytes": 534710,
+      "sha256": "cc587de8135559a30776bdaf9f94b2031242d3b10b757b0db9a77adcbe9f5110",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-base-dual.png",
+      "bytes": 540744,
+      "sha256": "4d8ba77c6c31eede397a7f569739f46a699a273a1e0549cb75761926e305bd20",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-base-fire-move.png",
+      "bytes": 485400,
+      "sha256": "9a02311acdfe8a980acb0f102e495c22b50a93334c7b5eb266002943c1b71338",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-base-sword-move.png",
+      "bytes": 540995,
+      "sha256": "3683831bba8944c2bdd5620de80ef3c78f58c7b540f84c2e311b697dbc3a6f74",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-base-sword.png",
+      "bytes": 572853,
+      "sha256": "f6ba7261a765f7efd2e4358b18765fbb58bce707045f72093db27ff7aabffcc5",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-base-throw-move.png",
+      "bytes": 521847,
+      "sha256": "ba9654f32d34750aa97bb30c468b0600aa4b67bacb485376bc5f6c3d558627c1",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-base-throw.png",
+      "bytes": 505836,
+      "sha256": "c4cb32bec666743affc6def0efdf7478daabe532f194f30a9fa667209e22691c",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-blade.png",
+      "bytes": 649324,
+      "sha256": "949fdb081b1c5af46ef91355ba459f0fa0cccb7ff6a26b081dc82846eefdf43b",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-cannon-move.png",
+      "bytes": 733676,
+      "sha256": "3207db4132acf41514d4aa360f231b90331aa2e3c5c746d4bdcf1be3a03823c4",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-cannon.png",
+      "bytes": 717604,
+      "sha256": "f201ed0b6e2fc570b9c79dff17812179093cf8b3df35cb0d9410e2cff8ec5c28",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-channel.png",
+      "bytes": 552147,
+      "sha256": "10aa73c48aa8b7a6972c0b979fc4af4f5d408b6a5901b379f9ba458adf4c24fc",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-dual-move.png",
+      "bytes": 594582,
+      "sha256": "ba0ee42d5fe0a0fb34b0962f6e007181e3eb3325650efc42269213f70bed828e",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-dual.png",
+      "bytes": 612758,
+      "sha256": "0ebddc2d3d0640f9f7e1c67b6b80c03fad7cd5ddcb9f7c2d9ce0bc84934a154e",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-fire-move.png",
+      "bytes": 563350,
+      "sha256": "6ecee46bc4027a1dddae85208a41d2dfbcc61309208cc3f6a4eeb362ad57d8f7",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-fire.png",
+      "bytes": 598957,
+      "sha256": "4cbaf7e0153bc73baa3ab9eb671c7d4e0c5e9e86ee6ff75cc8ca7280ff55e8f6",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-lotus-fire.png",
+      "bytes": 630337,
+      "sha256": "f5fe998104ef3c38fdde04f6181765f5c62a91850a6216cf4f27be6aa8cbbdb7",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-sword-move.png",
+      "bytes": 656639,
+      "sha256": "c7eaae7a66bc9543d1cf6d053f40aa0a1ef749ec7b9de72cae86eb6927cabdc1",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-sword.png",
+      "bytes": 657536,
+      "sha256": "5d19c9c46f51861363af5ca28c3ba84d77d8a57f6b1205cf43cf0231aa5c848a",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-throw-move.png",
+      "bytes": 577026,
+      "sha256": "11db4543cf623c3e24257a9c4646b36522cb9923ca579e8fac140bdc6f0b3615",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-cape-throw.png",
+      "bytes": 555287,
+      "sha256": "5a16a1022975d04abc24a0712da37b9dc8f71799c60b7fe5c5dbf3aab23a357f",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-fire.png",
+      "bytes": 483771,
+      "sha256": "f5f8a7cd3b99122c2668328703379986540312c2a9eb62fa7398c3d59693e9d8",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-blade.png",
+      "bytes": 669871,
+      "sha256": "3f8f823034a04e8c10d70ee02a6bc53c97f72a08389dfed0635a899794e0592e",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-cannon-move.png",
+      "bytes": 771973,
+      "sha256": "fc832c98c2827f522f47ee762aa6d994111db42c93482f1b62fd371434fc2b3b",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-cannon.png",
+      "bytes": 733990,
+      "sha256": "fd0ad3a4499f50aef4ddbfee220f96894b6d7754d97d5c8b6f368de562655e48",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-channel.png",
+      "bytes": 586320,
+      "sha256": "523704f7291cee5d09ca11c97865cd4191ba306219a856c51746c0cc70d1de54",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-dual-move.png",
+      "bytes": 591951,
+      "sha256": "8dc7036d1b1482657bf63e5b40391d283f0e310386c7acc08b49eb461c2bd241",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-dual.png",
+      "bytes": 613185,
+      "sha256": "297fcdc8924a6245674fde36aa4a6f7ec6f894dd26399c123f354e1eadff4e4b",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-fire-move.png",
+      "bytes": 514199,
+      "sha256": "d4eb67051ebeba3348e2723eddc2da4172f18f91d2899663effaec45f486b7d3",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-fire.png",
+      "bytes": 534219,
+      "sha256": "b94750fe5c9a37fd7b5e86878366f89d8e5129c624d9de3fbea1b59a7945bf3e",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-lotus-fire.png",
+      "bytes": 552928,
+      "sha256": "3fbb42903b2a6e7990b8696d1f315b63eb270d45d6ec535ac892939121dfbc52",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-sword-move.png",
+      "bytes": 610731,
+      "sha256": "21c4245c3bda9e3ae3390377a62f92f4d39523c0c7a89309a759ec75450c3c32",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-sword.png",
+      "bytes": 686454,
+      "sha256": "711081c339f500019f6e71ec75767ae8706261144b8bc440bd7dc70745089fd4",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-throw-move.png",
+      "bytes": 571819,
+      "sha256": "8342fa7dcb502f40c5bba2edb065da40d535a0110ee7fe138788dbf429c00b4e",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-jade-throw.png",
+      "bytes": 574223,
+      "sha256": "c332210e7177dacfbd8a4984d078dd73e8a7e642fa6585a8029b8e1f6c026d84",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    },
+    {
+      "path": "asset/sprites/player-lotus-fire.png",
+      "bytes": 515871,
+      "sha256": "6a566f6b596ded3e8172aaf229d4324709ab088c404832dfba3afe27be443643",
+      "dimensions": [
+        3072,
+        256
+      ],
+      "frames": 8
+    }
+  ]
+}
