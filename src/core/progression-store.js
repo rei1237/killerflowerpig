@@ -4,6 +4,7 @@ import { shopAccess } from './shop-access.js';
 import { RELICS, RELIC_CHEST, rollRelic } from '../data/relics.js';
 import { SHOP, CATALOG_VERSION } from '../data/shop.js';
 import { CHARACTER_XP_CAP } from './character-progression.js';
+import { defaultTitleProgress, normalizeTitleProgress } from './titles.js';
 export const SAVE_VERSION = 5;
 export const LEGACY_KEY = 'kfp.save.v1';
 const MAX = 1_000_000_000;
@@ -11,7 +12,7 @@ const integer = (v, fallback = 0, max = MAX) => Number.isSafeInteger(v) && v >= 
 const clone = v => JSON.parse(JSON.stringify(v));
 const object = v => v && typeof v === 'object' && !Array.isArray(v);
 export function defaultProgress() {
-    return { accessoryInventory: [], equippedAccessory: null, characterXP: 0, characterRewardCount: 0, lastCharacterReward: null, maxClearedStage: 0, version: SAVE_VERSION, revision: 0, catalogVersion: CATALOG_VERSION, gold: 0, upgrades: {}, inventory: [], equippedPet: null, maxStage: 1, bestTime: 0, kills: 0, seenStory: {}, receipts: [], relics: [], chestPity: 0, chestCount: 0, relicDuplicates: 0, lastChest: null };
+    return { accessoryInventory: [], equippedAccessory: null, characterXP: 0, characterRewardCount: 0, lastCharacterReward: null, maxClearedStage: 0, version: SAVE_VERSION, revision: 0, catalogVersion: CATALOG_VERSION, gold: 0, upgrades: {}, inventory: [], equippedPet: null, maxStage: 1, bestTime: 0, kills: 0, seenStory: {}, receipts: [], relics: [], chestPity: 0, chestCount: 0, relicDuplicates: 0, lastChest: null, ...defaultTitleProgress() };
 }
 export function validateProgress(raw) {
     if (!object(raw)) throw new Error('INVALID_PROGRESS');
@@ -35,6 +36,7 @@ export function validateProgress(raw) {
     if (object(raw.seenStory)) for (const [k, v] of Object.entries(raw.seenStory)) if (/^[\w-]{1,80}$/.test(k) && v === true) s.seenStory[k] = true;
     s.receipts = Array.isArray(raw.receipts) ? raw.receipts.filter(r => typeof r === 'string' && r.length <= 160).slice(-128) : [];
     s.relics = RELICS.filter(r => Array.isArray(raw.relics) && raw.relics.includes(r.id)).map(r => r.id);
+    Object.assign(s, normalizeTitleProgress(raw));
     s.chestPity = integer(raw.chestPity, 0, RELIC_CHEST.pityAt - 1);
     s.chestCount = integer(raw.chestCount);
     s.relicDuplicates = integer(raw.relicDuplicates);

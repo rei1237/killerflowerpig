@@ -2,6 +2,7 @@ import { purchaseAccessory, equipAccessory } from './accessories.js';
 import { awardCharacterXP } from './character-progression.js';
 import { SHOP } from '../data/shop.js';
 import { createGuestAdapter, itemLevel, purchase, validateProgress, openRelicChest, purchaseRelic } from './progression-store.js';
+import { recordSettlement } from './titles.js';
 export { SHOP };
 let storage;
 try { storage = globalThis.localStorage; } catch { /* Private-mode storage may be inaccessible. */ }
@@ -20,6 +21,16 @@ export function buyUpgrade(id, expectedLevel = upgradeLevel(id), requestId = `bu
     const result = purchase(save, { itemId: id, expectedLevel, requestId });
     if (!result.ok) { lastSaveError = result.code; return false; }
     return result.duplicate || commit(result.state);
+}
+// 칭호: 스테이지 정산 기록 → 새로 얻은 칭호 id 목록. 저장 실패 시에도 메모리에는 반영해 다음 저장에 포함된다.
+export function recordTitleProgress(rec) {
+    const { state, earned } = recordSettlement(save, rec);
+    Object.assign(save, state);
+    return earned;
+}
+export function equipTitle(id) {
+    if (id !== null && !save.titles.includes(id)) return false;
+    return commit({ ...save, equippedTitle: id, revision: save.revision + 1 });
 }
 export function equipPet(id) {
     if (id !== null && !save.inventory.includes(id)) return false;

@@ -5,6 +5,8 @@ import { G } from '../game/state.js';
 import { STAGES, STAGE_COUNT } from '../data/stages.js';
 import { STORIES, EPILOGUE } from '../data/story.js';
 import { WEAPONS, PASSIVES, MAX_WEAPONS } from '../data/weapons.js';
+import { TITLES, TITLE_GRADES, TECH_IDS, titleById } from '../data/titles.js';
+import { TECHS } from '../data/techs.js';
 import { bossRewardTier } from '../data/boss-rewards.js';
 import { BOSSES } from '../data/bosses.js';
 import { rollChoices, applyChoice, rollChest, rollBossChest, beginChoiceSession, consumeChoiceReroll, finishChoiceSession } from '../game/progression.js';
@@ -16,7 +18,7 @@ import { refreshGore } from '../game/effects.js';
 import { configureCaps } from '../game/state.js';
 import { resize } from '../game/render.js';
 import { settings, setSetting } from '../core/settings.js';
-import { save, persist, SHOP, upgradeLevel, buyUpgrade, equipPet, lastSaveError, queueCoins, retryPendingCoins, pendingCoinTotal, openChest, buyRelic, buyAccessory, setAccessory } from '../core/save.js';
+import { save, persist, SHOP, upgradeLevel, buyUpgrade, equipPet, recordTitleProgress, equipTitle, lastSaveError, queueCoins, retryPendingCoins, pendingCoinTotal, openChest, buyRelic, buyAccessory, setAccessory } from '../core/save.js';
 import { audio } from '../core/audio.js';
 import { input, resetJoy, resetInput } from '../core/input.js';
 
@@ -172,7 +174,7 @@ export function showTitle() {
         cont.hidden = false;
         cont.textContent = `이어하기 — STAGE ${run.stage} (LV ${run.level})`;
     } else cont.hidden = true;
-    $('title-record').textContent = `최고 도달: STAGE ${save.maxStage} · 누적 처치 ${save.kills.toLocaleString()} · 골드 ${save.gold}`;
+    $('title-record').textContent = `최고 도달: STAGE ${save.maxStage} · 누적 처치 ${save.kills.toLocaleString()} · 골드 ${save.gold}` + titleRecordLine();
     $('btn-install').hidden = isStandalone();
     show('title');
 }
@@ -237,6 +239,9 @@ export function playStory(head, text, onDone, stage = STAGE_COUNT) {
 
 function startPlaying() {
     setPlaying(true);
+    const title = titleById(save.equippedTitle);
+    $('hud-title-name').textContent = title ? `「${title.name}」` : '';
+    $('hud-title-name').style.color = title ? TITLE_GRADES[title.grade].color : '';
     G.paused = false;
     const st = STAGES[G.stage];
     banner(`STAGE ${G.stage}`, `${st.name} — ${st.subtitle}`);
@@ -754,8 +759,60 @@ function settleStage(outcome) {
         save.maxStage = Math.max(save.maxStage, Math.min(STAGE_COUNT, G.stage + 1));
         save.maxClearedStage = Math.max(save.maxClearedStage || 0,G.stage);
     }
+    // 칭호: 이번 스테이지 기록 (테크·도달 스테이지·처치·진화/조합)
+    G.settlement.titles = recordTitleProgress({
+        runId: G.runId, tech: G.tech, stage: G.stage, outcome, kills: stageKills,
+        evolved: G.weapons.some(w => w.evolved), fused: G.weapons.some(w => WEAPONS[w.id]?.fusionOnly),
+        absolute: G.weapons.some(w => w.id === 'absolute_bloom'),
+    });
+    announceTitles(G.settlement.titles);
     if (!persist()) notifyPending();
     return earned;
+}
+
+// ─────────────────────────── 칭호 ───────────────────────────
+function titleBadge(id) {
+    const t = titleById(id);
+    return t ? `<span class="title-badge" style="--grade:${TITLE_GRADES[t.grade].color}">${t.name}</span>` : '';
+}
+function announceTitles(ids = []) {
+    ids.forEach((id, i) => setTimeout(() => {
+        const t = titleById(id);
+        if (t) toast(`🏅 새 칭호 획득 — 「${t.name}」 (${TITLE_GRADES[t.grade].name})`, 2600);
+    }, i * 2700));
+}
+function newTitleRows() {
+    const ids = G.settlement?.titles || [];
+    return ids.length ? [['새 칭호', ids.map(id => titleById(id)?.name).filter(Boolean).join(', ')]] : [];
+}
+function titleRecordLine() {
+    return save.equippedTitle ? ` · 칭호 「${titleById(save.equippedTitle)?.name || ''}」` : '';
+}
+function titleCard(t) {
+    const [cur, goal] = t.progress(save);
+    const earned = save.titles.includes(t.id), equipped = save.equippedTitle === t.id;
+    const grade = TITLE_GRADES[t.grade];
+    const pct = Math.round(Math.min(1, goal ? cur / goal : 1) * 100);
+    return `<div class="title-card${earned ? ' earned' : ''}${equipped ? ' equipped' : ''}" style="--grade:${grade.color}">
+        <div class="title-head"><strong>${earned ? t.name : '???'}</strong><small>${grade.name}</small></div>
+        <p>${t.desc}</p>
+        <div class="title-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${cur}"><i style="width:${pct}%"></i></div>
+        <div class="title-foot"><span>${cur.toLocaleString()} / ${goal.toLocaleString()}</span>${earned ? `<button class="btn btn-small" type="button" data-title="${t.id}"${equipped ? ' disabled' : ''}>${equipped ? '장착 중' : '장착'}</button>` : ''}</div>
+    </div>`;
+}
+function renderTitles() {
+    const equipped = save.equippedTitle;
+    $('titles-equipped').innerHTML = equipped
+        ? `현재 칭호 ${titleBadge(equipped)} <button class="btn btn-small" type="button" data-title="">해제</button>`
+        : '장착한 칭호가 없습니다.';
+    $('titles-techs').innerHTML = TECH_IDS.map(id => {
+        const tech = TECHS[id], st = save.techStats[id] || { runs: 0, best: 0, clears: 0, kills: 0 };
+        const cards = TITLES.filter(t => t.group === id).map(titleCard).join('');
+        return `<section class="tech-record"><h3>${tech.icon} ${tech.name}</h3>
+            <div class="tech-record-stats"><span>출격 <b>${st.runs}</b>회</span><span>최고 클리어 <b>STAGE ${st.best}</b></span><span>클리어 <b>${st.clears}</b>회</span><span>처치 <b>${st.kills.toLocaleString()}</b></span></div>
+            <div class="titles-list">${cards}</div></section>`;
+    }).join('');
+    $('titles-list').innerHTML = TITLES.filter(t => t.group === 'milestone').map(titleCard).join('');
 }
 
 export function showGameOver() {
@@ -764,7 +821,7 @@ export function showGameOver() {
     let lore = LORE[0][1];
     for (const [s, t] of LORE) if (G.stage >= s) lore = t;
     $('gameover-lore').textContent = `${lore} 이번 도전의 무기·보조 아이템·진화·조합은 종료됩니다. 상점 구매와 영구 강화는 유지됩니다.`;
-    $('gameover-stats').innerHTML = statsHTML([['스테이지', G.stage], ['획득 골드', `+${earned}`]]);
+    $('gameover-stats').innerHTML = statsHTML([['스테이지', G.stage], ['획득 골드', `+${earned}`], ...newTitleRows()]);
     show('gameover');
 }
 
@@ -777,7 +834,7 @@ export function showStageClear() {
         return;
     }
     $('clear-title').textContent = `STAGE ${G.stage} CLEAR`;
-    $('clear-stats').innerHTML = statsHTML([['획득 골드', `+${earned}`]]);
+    $('clear-stats').innerHTML = statsHTML([['획득 골드', `+${earned}`], ...newTitleRows()]);
     show('clear');
 }
 
@@ -848,6 +905,15 @@ export function initUI() {
     click('btn-settings', openSettings);
     click('btn-intel', () => { renderBossArchive(); openModal('intel'); });
     click('btn-intel-close', () => closeModal('intel'));
+    click('btn-titles', () => { renderTitles(); openModal('titles'); });
+    click('btn-titles-close', () => closeModal('titles'));
+    $('titles').addEventListener('click', e => {
+        const btn = e.target.closest('[data-title]');
+        if (!btn || btn.disabled) return;
+        if (!equipTitle(btn.dataset.title || null)) toast('칭호 저장에 실패했습니다. 저장 공간을 확인하세요.');
+        renderTitles();
+        $('title-record').textContent = $('title-record').textContent.replace(/ · 칭호 「[^」]*」$/, '') + titleRecordLine();
+    });
     click('btn-pause-settings', openSettings);
     click('btn-install', showInstall);
     click('btn-install-close', () => closeModal('install'));

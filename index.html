@@ -94,7 +94,19 @@
                         </div>
                     </details>
                 </nav>
-                <footer class="menu-footer"><div id="title-record" class="small-text record"></div><nav class="menu-system" aria-label="시스템 메뉴"><button id="btn-settings" class="btn btn-ghost" type="button">설정 <span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></svg></span></button><button id="btn-install" class="btn btn-ghost" type="button" hidden>홈 화면에 설치 <span aria-hidden="true">↓</span></button></nav></footer>
+                <footer class="menu-footer"><div id="title-record" class="small-text record"></div><nav class="menu-system" aria-label="시스템 메뉴"><button id="btn-titles" class="btn btn-ghost" type="button">칭호 <span aria-hidden="true">🏅</span></button><button id="btn-settings" class="btn btn-ghost" type="button">설정 <span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></svg></span></button><button id="btn-install" class="btn btn-ghost" type="button" hidden>홈 화면에 설치 <span aria-hidden="true">↓</span></button></nav></footer>
+            </div>
+        </section>
+
+        <section id="titles" class="modal" hidden aria-labelledby="titles-heading">
+            <div class="modal-box titles-box">
+                <p class="eyebrow">SERVICE RECORD</p><h2 id="titles-heading" class="modal-title">칭호 · 전투 기록</h2>
+                <p class="panel-caption">어떤 테크로 얼마나 멀리 갔는지 테크별로 기록됩니다. 칭호 하나를 장착하면 이름 옆에 표시됩니다. (칭호는 외형 보상이며 전투 능력치는 바뀌지 않습니다)</p>
+                <div id="titles-equipped" class="titles-equipped"></div>
+                <div id="titles-techs" class="titles-techs"></div>
+                <h3 class="titles-section">업적 칭호</h3>
+                <div id="titles-list" class="titles-list"></div>
+                <div class="modal-actions"><button id="btn-titles-close" class="btn btn-blood" type="button">닫기</button></div>
             </div>
         </section>
 
@@ -123,7 +135,7 @@
 
         <div id="battle-hud" class="battle-hud" hidden>
             <div class="guardian-card"><img src="asset/ui/menu-yeoni.webp" alt="" width="1254" height="1254"><div class="guardian-vitals">
-                <div class="vitals-label"><strong>꽃돼지 <span id="hud-level">Lv.1</span> <span id="hud-tech" class="hud-tech" hidden></span></strong><span id="hud-hp-text"></span></div>
+                <div class="vitals-label"><strong>꽃돼지 <span id="hud-title-name" class="hud-title-name"></span> <span id="hud-level">Lv.1</span> <span id="hud-tech" class="hud-tech" hidden></span></strong><span id="hud-hp-text"></span></div>
                 <div id="hud-hp-track" class="vital-track" role="progressbar" aria-label="체력" aria-valuemin="0" aria-valuemax="100"><div id="hud-hp"></div></div>
                 <div id="hud-xp-track" class="xp-track" role="progressbar" aria-label="경험치" aria-valuemin="0" aria-valuemax="100"><div id="hud-xp"></div></div>
             </div></div>
