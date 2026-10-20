@@ -19,7 +19,8 @@ test('lotus gun fires 3 piercing rounds outside weapon slots only when owned',()
  }finally{if(before===undefined)delete save.upgrades.lotus_gun;else save.upgrades.lotus_gun=before;}
 });
 test('lotus gun is an expensive stage-3 unlock bought once',()=>{
- const item=SHOP.find(i=>i.id==='lotus_gun');assert.equal(item.max,1);assert.ok(item.cost[0]>=2000);
+ const item=SHOP.find(i=>i.id==='lotus_gun');assert.equal(item.max,1);assert.ok(item.cost[0]>=500); // 경제 축소에 맞춰 600으로 인하, 여전히 상점 최고가
+ assert.ok(SHOP.filter(i=>i.id!=='lotus_gun').every(i=>i.cost.every(c=>c<item.cost[0])));
  const rich={...defaultProgress(),gold:5000};
  assert.equal(purchase({...rich,maxClearedStage:2},{itemId:'lotus_gun',expectedLevel:0,requestId:'l1'}).code,'STAGE_LOCKED');
  const ok=purchase({...rich,maxClearedStage:3},{itemId:'lotus_gun',expectedLevel:0,requestId:'l2'});assert.equal(ok.ok,true);assert.equal(ok.state.upgrades.lotus_gun,1);assert.equal(ok.state.gold,5000-item.cost[0]);

@@ -1,10 +1,10 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import {bestiaryEntries,findBestiaryEntry,searchBestiary} from '../src/data/bestiary.js';
-import {ENEMIES,ELITE} from '../src/data/enemies.js';import {BOSSES,BOSS_HP_MULTIPLIER} from '../src/data/bosses.js';
+import {ENEMIES,ELITE} from '../src/data/enemies.js';import {BOSSES,bossMaxHp} from '../src/data/bosses.js';
 test('every ordinary and elite variant plus bosses1–9 is open initially',()=>{
  const all=bestiaryEntries();assert.equal(all.length,Object.keys(ENEMIES).length*2+9);assert.equal(new Set(all.map(e=>e.id)).size,all.length);
  for(const id of Object.keys(ENEMIES)){assert.ok(findBestiaryEntry('enemy-'+id));assert.ok(findBestiaryEntry('elite-'+id));}
- for(let stage=1;stage<=9;stage++)assert.equal(findBestiaryEntry('boss-'+stage).hp,BOSSES[stage].hp*BOSS_HP_MULTIPLIER);
+ for(let stage=1;stage<=9;stage++)assert.equal(findBestiaryEntry('boss-'+stage).hp,bossMaxHp(stage),'bestiary shows the real battle HP');
 });
 test('final boss is absent from data, IDs, search and direct detail lookup',()=>{
  assert.equal(findBestiaryEntry('boss-10'),null);assert.equal(searchBestiary(BOSSES[10].name).length,0);assert.equal(searchBestiary('시간의 채권자').length,0);

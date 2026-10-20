@@ -11,7 +11,8 @@ export const ENEMIES = {
     splitter: { name: '기생 숙주', sheet: 'rabbit3', tint: 'normal', scale: 0.56, hp: 48, speed: 40, dmg: 11, xp: 5, radius: 16, mass: 1.5,
         split: { type: 'runner', count: 3 } },
     suicider: { name: '돌진 폭발체', sheet: 'rabbit2', tint: 'bloat', scale: 0.53, hp: 18, speed: 58, dmg: 7, xp: 3, radius: 14, mass: 1, unlockStage: 5,
-        charge: { range: 300, warning: 0.8, duration: 1.3, speed: 320, turnRate: 2.4, fuse: 0.6, radius: 68, dmg: 18, damageCap: 30 } },
+        // 강화: 더 빠르고 집요한 추적, 짧은 신관, 넓은 폭발 + 폭발 시 파편 8개가 사방으로 튄다
+        charge: { range: 320, warning: 0.7, duration: 1.4, speed: 400, turnRate: 3.4, fuse: 0.45, radius: 78, dmg: 24, damageCap: 40, shrapnel: 8, shrapnelSpeed: 210 } },
     gunner: { name: '탄환 사냥꾼', sheet: 'rabbit3', tint: 'pale', scale: 0.55, hp: 28, speed: 36, dmg: 7, xp: 4, radius: 15, mass: 1.1, unlockStage: 6,
         // 산성탄(단발 곡선 덩어리)과 구별: 붉은 탄환 3발을 부채꼴로 동시 발사. 3발이 모두 맞지 않도록 탄당 피해는 낮춤.
         ranged: { range: 300, cooldown: 2.8, speed: 255, dmg: 6, warning: 0.7, kind: 'bullet', radius: 5, burst: 3, spread: 0.22 } },
@@ -39,14 +40,17 @@ export const IN_STAGE_HP_RAMP = 0.7;
 const STANDARD_SCALING = { hp: 1, speed: 1, dmg: 1 };
 
 // 스테이지별 배율
+// 4스테이지 이후 스테이지당 추가 강화 (late = stage - 3)
+export const LATE_STAGE_SCALING = Object.freeze({ hp: 0.22, speed: 0.02, dmg: 0.1 });
 export function stageScaling(stage, t, duration) {
-    const prog = Math.min(1, t / duration);
+    const prog = Math.min(1, t / duration), late = Math.max(0, stage - 3);
     // 첫 두 스테이지만 완만하게. 경험치와 3스테이지 이후 성장 곡선은 유지한다.
     const beginner = BEGINNER_SCALING[stage] || STANDARD_SCALING;
     return {
-        hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp * ENEMY_TOUGHNESS_MULTIPLIER,
-        speed: (1 + (stage - 1) * 0.035) * beginner.speed,
-        dmg: (1 + (stage - 1) * 0.24) * beginner.dmg,
+        // 1~3스테이지는 기존 곡선 유지. 4스테이지부터 같은 적이라도 추가로 강해진다 (LATE_STAGE_SCALING).
+        hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp * ENEMY_TOUGHNESS_MULTIPLIER * (1 + late * LATE_STAGE_SCALING.hp),
+        speed: (1 + (stage - 1) * 0.035 + late * LATE_STAGE_SCALING.speed) * beginner.speed,
+        dmg: (1 + (stage - 1) * 0.24 + late * LATE_STAGE_SCALING.dmg) * beginner.dmg,
         xp: 1 + (stage - 1) * 0.15,
     };
 }

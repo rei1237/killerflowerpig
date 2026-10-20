@@ -80,29 +80,42 @@ test('hunter separately locks two capped dashes and holds a stationary recovery 
  assert.equal(G.enemyShots.count,0);assert.ok(b.attackT>=1.35);
 });
 
-test('sniper acquires two independent locks and freezes each line for at least .55s',()=>{
+// 강화: 저격 3/4/5회(1.05초 간격), 3갈래(광폭화 5갈래). 각 조준선은 여전히 .55초 이상 고정된다.
+test('sniper acquires three independent locks and freezes each line for at least .55s',()=>{
  const b=reset(4);const task=begin(b),first=task.locks[0].h;
  advance(b,.4);G.player.y=130;advance(b,.15);const angle=first.angle;assert.ok(angle>0);
  advance(b,.1);G.player.y=-160;advance(b,.4);close(first.angle,angle);assert.equal(G.enemyShots.count,0);
- advance(b,.12);assert.equal(G.enemyShots.count,1);close(Math.atan2(shots()[0].vy,shots()[0].vx),angle);
+ advance(b,.12);assert.equal(G.enemyShots.count,3);close(Math.atan2(shots()[1].vy,shots()[1].vx),angle);
  advance(b,.2);assert.equal(task.locks.length,2);assert.ok(task.locks[1].h.angle<0);
  const second=task.locks[1].h;advance(b,.65);const locked=second.angle;G.player.y=200;advance(b,.55);
- assert.equal(G.enemyShots.count,2);close(Math.atan2(shots()[1].vy,shots()[1].vx),locked);
+ assert.equal(G.enemyShots.count,6);close(Math.atan2(shots()[4].vy,shots()[4].vx),locked);
+ while(b.task)advance(b,.01);assert.equal(task.locks.length,3);assert.equal(G.enemyShots.count,9);
+ for(const phase of [1,2]){const r=reset(4,phase),t=begin(r);while(r.task)advance(r,.01);assert.equal(t.locks.length,[3,4,5][phase]);assert.equal(G.enemyShots.count,[3,4,5][phase]*(phase===2?5:3));}
 });
 
-test('tank battery walks through forward impact circles and leaves both flanks safe',()=>{
- const b=reset(5);begin(b);const marks=hazards();assert.equal(marks.length,3);
- assert.deepEqual(marks.map(h=>h.x),[110,225,340]);assert.ok(marks.every(h=>h.y===0));
- assert.ok(marks[0].delay<marks[1].delay&&marks[1].delay<marks[2].delay);
- G.player.iframes=0;G.player.x=225;G.player.y=100;const hp=G.player.hp;updateHazards(1.8);assert.equal(G.player.hp,hp);
+// 강화: 전진 포격 4발 + 기본부터 한쪽 측면 귀환 포격 1발(변이 양 측면, 광폭화 +2). 반대쪽 측면은 안전하게 남는다.
+test('tank battery walks through forward impact circles plus one flank return and leaves the other flank safe',()=>{
+ const b=reset(5);begin(b);const marks=hazards();assert.equal(marks.length,5);
+ const forward=marks.slice(0,4);assert.deepEqual(forward.map(h=>h.x),[110,215,320,425]);assert.ok(forward.every(h=>h.y===0));
+ assert.deepEqual([marks[4].x,marks[4].y],[270,105]);assert.ok(marks.every(h=>h.radius===70));
+ for(let i=1;i<marks.length;i++)assert.ok(marks[i-1].delay<marks[i].delay);
+ for(const phase of [1,2])assert.equal((reset(5,phase),begin(G.boss),hazards().length),[5,6,8][phase]);
+ reset(5);begin(G.boss);
+ G.player.iframes=0;G.player.x=225;G.player.y=-100;const hp=G.player.hp;updateHazards(2.2);assert.equal(G.player.hp,hp);
  const second=reset(5);begin(second);G.player.x=110;G.player.iframes=0;updateHazards(1.099);assert.equal(G.player.hp,10000);updateHazards(.002);assert.ok(G.player.hp<10000);
 });
 
-test('toxic horseshoe snapshots position with a broad clear exit and exactly five acid pockets',()=>{
- const b=reset(6);begin(b);const marks=hazards().map(h=>({...h}));assert.equal(marks.length,5);
- for(let distance=0;distance<=240;distance+=4) assert.ok(marks.every(h=>!ellipseContains(h,300+distance,0)),'east exit remains clear');
+// 강화: 기본부터 출구가 반대쪽인 두 번째 파도(.85초 뒤), 산성 지속 3.4/4.0/4.6초. 파도마다 넓은 출구가 남는다.
+test('toxic horseshoe snapshots position with a broad clear exit per wave and five acid pockets per wave',()=>{
+ const b=reset(6);begin(b);const marks=hazards().map(h=>({...h}));assert.equal(marks.length,10);
+ const first=marks.filter(h=>h.delay===1.2),second=marks.filter(h=>h.delay>1.2);assert.equal(first.length,5);assert.equal(second.length,5);
+ close(second[0].delay,2.05);
+ for(let distance=0;distance<=240;distance+=4) assert.ok(first.every(h=>!ellipseContains(h,300+distance,0)),'east exit remains clear in the first wave');
+ for(let distance=0;distance<=240;distance+=4) assert.ok(second.every(h=>!ellipseContains(h,300-distance,0)),'west exit remains clear in the second wave');
  G.player.x=600;advance(b,1.205);const acid=hazards().filter(h=>h.kind==='acid');assert.equal(acid.length,5);
- for(const h of acid) {assert.equal(h.duration,2.8);assert.ok(marks.some(m=>m.x===h.x&&m.y===h.y&&m.radius===h.radius));}
+ for(const h of acid) {assert.equal(h.duration,3.4);assert.ok(first.some(m=>m.x===h.x&&m.y===h.y&&m.radius===h.radius));}
+ advance(b,.85);assert.equal(hazards().filter(h=>h.kind==='acid').length,10);
+ const rage=reset(6,2);begin(rage);assert.equal(hazards().length,15,'frenzy adds a third wave');
 });
 
 test('assassin crossing cuts lock both paths, strike in order and cannot hit beyond the drawn line',()=>{
@@ -113,11 +126,12 @@ test('assassin crossing cuts lock both paths, strike in order and cannot hit bey
  const hp=G.player.hp;G.player.iframes=0;const h=marks[0];G.player.x=h.x-Math.cos(h.angle);G.player.y=h.y-Math.sin(h.angle);b.lineHit(h);assert.equal(G.player.hp,hp);
 });
 
+// 강화: 메아리 3/4/4개, 탄 20+3×페이즈, 광폭화 간격 .6초. 90도 빈 쐐기는 그대로.
 test('psychic echoes use separate origins, staggered release and a wide missing sector per wave',()=>{
- assert.equal((reset(8,0),begin(G.boss),hazards().length),2);
- const b=reset(8,2);begin(b);const marks=hazards().map(h=>({...h}));assert.equal(marks.length,3);assert.equal(new Set(marks.map(m=>`${m.x},${m.y}`)).size,3);
- advance(b,1.205);assert.equal(G.enemyShots.count,20);assert.ok(shots().every(s=>s.x===marks[0].x&&s.y===marks[0].y));
- advance(b,.8);assert.equal(G.enemyShots.count,40);advance(b,.8);assert.equal(G.enemyShots.count,60);
+ assert.equal((reset(8,0),begin(G.boss),hazards().length),3);
+ const b=reset(8,2);begin(b);const marks=hazards().map(h=>({...h}));assert.equal(marks.length,4);assert.equal(new Set(marks.map(m=>`${m.x},${m.y}`)).size,4);
+ advance(b,1.205);assert.equal(G.enemyShots.count,26);assert.ok(shots().every(s=>s.x===marks[0].x&&s.y===marks[0].y));
+ advance(b,.6);assert.equal(G.enemyShots.count,52);advance(b,.6);assert.equal(G.enemyShots.count,78);advance(b,.6);assert.equal(G.enemyShots.count,104);
  for(const h of marks) {
   const angles=shots().filter(s=>s.x===h.x&&s.y===h.y).map(s=>(Math.atan2(s.vy,s.vx)+Math.PI*2)%(Math.PI*2)).sort((a,b)=>a-b);
   const gaps=angles.map((a,i)=>(angles[(i+1)%angles.length]-a+Math.PI*2)%(Math.PI*2));
@@ -125,18 +139,24 @@ test('psychic echoes use separate origins, staggered release and a wide missing 
  }
 });
 
+// 강화: 기본부터 중앙 강타 뒤 직각 십자 균열(2.75초), 변이 이후 대각선 X 균열이 이어진다.
 test('hammer faults leave center safe first, then hit center only at its later warning',()=>{
- const b=reset(9);begin(b);const marks=hazards();assert.equal(marks.length,3);
- const outer=marks.filter(h=>h.delay<2),center=marks.find(h=>h.delay===2);
- assert.ok(outer.every(h=>!lineContains(h,300,0)));assert.ok(lineContains(center,300,0));
+ const b=reset(9);begin(b);const marks=hazards();assert.equal(marks.length,4);
+ const outer=marks.filter(h=>h.delay<2),center=marks.find(h=>h.delay===2),cross=marks.find(h=>h.delay>2);
+ assert.equal(outer.length,2);assert.ok(outer.every(h=>!lineContains(h,300,0)));assert.ok(lineContains(center,300,0));
+ close(cross.delay,2.75);close(Math.abs(cross.angle-center.angle),Math.PI/2);
  G.player.iframes=0;updateHazards(1.051);assert.equal(G.player.hp,10000);updateHazards(.948);assert.equal(G.player.hp,10000);updateHazards(.002);assert.ok(G.player.hp<10000);
+ for(const phase of [1,2])assert.equal((reset(9,phase),begin(G.boss),hazards().length),6,'mutation adds two diagonal X lines');
 });
 
+// 강화: 금화 사격선 7/9/11줄, 모래시계 2/2/3개(.65초 간격), 결산 금화 11발.
 test('financier contract fixes the debt mark, fires coins first and settles after two seconds',()=>{
  const b=reset(10);begin(b);const mark=hazards().find(h=>h.kind==='tcircle');assert.equal(mark.symbol,'hourglass');assert.equal(mark.delay,2);assert.equal(mark.x,300);
- G.player.x=520;G.player.iframes=0;advance(b,1.055);assert.equal(G.enemyShots.count,5);assert.ok(shots().every(s=>s.kind==='coin'));
- G.player.x=300;updateHazards(.944);assert.equal(G.player.hp,10000);updateHazards(.002);assert.ok(G.player.hp<10000);assert.equal(G.enemyShots.count,12);
- const final=reset(10,2);begin(final);assert.deepEqual(hazards().filter(h=>h.kind==='tcircle').map(h=>h.delay),[2,2.65]);
+ assert.equal(hazards().filter(h=>h.kind==='tcircle').length,2);
+ G.player.x=520;G.player.iframes=0;advance(b,1.055);assert.equal(G.enemyShots.count,7);assert.ok(shots().every(s=>s.kind==='coin'));
+ G.player.x=300;updateHazards(.944);assert.equal(G.player.hp,10000);updateHazards(.002);assert.ok(G.player.hp<10000);assert.equal(G.enemyShots.count,18);
+ const final=reset(10,2);begin(final);hazards().filter(h=>h.kind==='tcircle').map(h=>h.delay).forEach((d,i)=>close(d,[2,2.65,3.3][i]));assert.equal(hazards().filter(h=>h.kind==='tcircle').length,3);
+ assert.equal(hazards().filter(h=>h.kind==='tline').length,11);
 });
 
 test('death and phase changes cancel owned warning callbacks without removing unrelated hazards',()=>{
@@ -158,11 +178,12 @@ test('phase reinforcement is an explicit brute/brood identity, not the same add 
  }
 });
 
+// 강화된 4~10 보스 광폭화 기준 상한: 독성 3파도 15개·계약 14개 경고, 메아리 4×26=104발 (이전 12/72)
 test('each final-phase signature completes with bounded hazards/projectiles and a real recovery gap',()=>{
  for(let stage=2;stage<=10;stage++) {
   const b=reset(stage,2);begin(b);let maxHazards=0,maxShots=0;
   for(let t=0;b.task&&t<6;t+=.01) {advance(b,.01);maxHazards=Math.max(maxHazards,G.hazards.count);maxShots=Math.max(maxShots,G.enemyShots.count);}
-  assert.equal(b.task,null,`stage ${stage}: stuck task`);assert.ok(b.attackT>=1.25);assert.ok(maxHazards<=12,`stage ${stage}: ${maxHazards} hazards`);assert.ok(maxShots<=72,`stage ${stage}: ${maxShots} shots`);
+  assert.equal(b.task,null,`stage ${stage}: stuck task`);assert.ok(b.attackT>=1.25);assert.ok(maxHazards<=16,`stage ${stage}: ${maxHazards} hazards`);assert.ok(maxShots<=110,`stage ${stage}: ${maxShots} shots`);
   assert.ok(Number.isFinite(b.x)&&Number.isFinite(b.y));
  }
 });

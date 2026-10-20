@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { STAGES, EVENTS } from '../src/data/stages.js';
 import { BOSSES, BOSS_HP_MULTIPLIER } from '../src/data/bosses.js';
-import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, stageScaling } from '../src/data/enemies.js';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
 import { spawnEnemy } from '../src/game/enemies.js';
@@ -194,9 +194,10 @@ test('later-stage damage, speed, event timing and legacy charges remain while po
         for (const t of [0, duration / 2, duration, duration + 10]) {
             const prog = Math.min(1, t / duration);
             assert.deepEqual(stageScaling(stage, t, duration), {
-                hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * ENEMY_TOUGHNESS_MULTIPLIER,
-                speed: 1 + (stage - 1) * 0.035,
-                dmg: 1 + (stage - 1) * 0.24,
+                // 4스테이지부터 LATE_STAGE_SCALING만큼 추가 강화 (3스테이지는 late=0으로 기존 곡선)
+                hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * ENEMY_TOUGHNESS_MULTIPLIER * (1 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.hp),
+                speed: 1 + (stage - 1) * 0.035 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.speed,
+                dmg: 1 + (stage - 1) * 0.24 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.dmg,
                 xp: 1 + (stage - 1) * 0.15,
             });
         }

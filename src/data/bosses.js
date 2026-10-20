@@ -36,7 +36,7 @@ export const BOSSES = {
     9: { name: '브루투스 킹', title: '최강의 왕이 눈을 떴다!', sheet: 'bossKing', tint: 'normal', scale: 0.66, hp: 44800, speed: 60, dmg: 34,
         signature: 'faultline', signatureHint: '양옆 균열 사이로 피한 뒤 중앙 강타 전에 옆으로 이동하세요.',
         phases: [['faultline'], ['faultline', 'slam', 'ring'], ['faultline', 'slam', 'aimed']] },
-    10: { name: '청토끼 · 시간의 채권자', title: '마지막 계약의 시간이 다가온다...', sheet: 'bossKing', tint: 'elite', scale: 0.76, hp: 67200, speed: 64, dmg: 38, hallucinate: true,
+    10: { name: '청토끼 · 시간의 채권자', title: '마지막 계약의 시간이 다가온다...', sheet: 'bossKing', tint: 'elite', scale: 0.76, hp: 168000, speed: 64, dmg: 38, hallucinate: true,
         signature: 'contract', signatureHint: '금화 탄막을 비켜가고 모래시계 계약 원이 찰 때 안에 있지 마세요.',
         phases: [['contract'], ['contract', 'ring'], ['contract', 'ring', 'aimed']] },
 };
@@ -45,4 +45,8 @@ export const PHASE_THRESHOLDS = [0.6, 0.25];
 
 // 보스 체력 배율. hp 값은 기준치이며 실제 전투 체력은 hp × BOSS_HP_MULTIPLIER. (×10에서 30% 하향)
 export const BOSS_HP_MULTIPLIER = 7;
-export const bossMaxHp = stage => (BOSSES[stage]?.hp || 0) * BOSS_HP_MULTIPLIER;
+// 무기 진화 단계에 맞춘 4스테이지 이후 보스 체력 추가 배율 (진화 → 조합 → 절대 무기 화력 증가에 비례).
+// 1~3스테이지는 1배(기존 유지). 10스테이지 최종 보스는 기본 체력 자체도 크게 높다.
+export const BOSS_EVOLUTION_HP = Object.freeze({ 4: 1.6, 5: 1.8, 6: 2.2, 7: 2.5, 8: 2.8, 9: 3.2, 10: 2.4 });
+// 실제 전투 체력 (도감 표시와 보스 생성이 같은 값을 쓰도록)
+export const bossMaxHp = stage => (BOSSES[stage]?.hp || 0) * BOSS_HP_MULTIPLIER * (BOSS_EVOLUTION_HP[stage] || 1);

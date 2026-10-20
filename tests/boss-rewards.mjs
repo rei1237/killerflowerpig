@@ -27,7 +27,8 @@ test('same boss session never rerolls, upgrades or credits twice and cached resu
 });
 test('no eligible upgrade falls back to bounded coins and excludes every permanent shop category',()=>{
  G.stage=10;G.weapons=[Object.assign(createWeapon('venom_saw',0),{level:8})];const r=rollBossChest('maxed',()=>0);
- assert.equal(G.gold,5*130+190);assert.equal(r.rewards.at(-1).amount,190);assert.equal(r.rewards.at(-1).rewardName,'만렙 회수금');assert.equal(r.rewards.at(-1).rewardIconId,'gold');
+ // 금화 축소: 상자 대체금 3+stage, 만렙 회수금 8+2*stage
+ assert.equal(G.gold,5*13+28);assert.equal(r.rewards.at(-1).amount,28);assert.equal(r.rewards.at(-1).rewardName,'만렙 회수금');assert.equal(r.rewards.at(-1).rewardIconId,'gold');
  for(const reward of r.rewards){assert.ok(reward.id==='gold'||WEAPONS[reward.id]||PASSIVES[reward.id]);assert.ok(!['pet','accessory','relic'].includes(reward.kind));}
 });
 test('ordinary chest remains one basic reward and invalid boss requests do not mutate',()=>{

@@ -6,13 +6,13 @@ export const PRACTICE_KEY = 'kfp.practice.v1';
 const STAGES = [
     ['먼저, 자유롭게 움직여 보세요', 'WASD / 방향키 또는 연습장을 누른 채 드래그하세요. 꽃돼지가 조금 이동하면 다음 단계로 넘어가요.'],
     ['토끼 표적을 짧게 눌러 보세요', '클릭 / 탭으로 집중 조준해요. 같은 적을 다시 누르면 해제돼요. 키보드는 아래 표적 집중 버튼을 사용하세요.'],
-    ['금빛 연습 코인으로 다가가세요', '이동해서 코인을 주워 보세요. 이곳의 연습 코인은 실제 보유 코인에 더해지지 않아요.'],
+    ['파란 경험치 젬으로 다가가세요', '이동해서 경험치 젬을 주워 보세요. 실전에서는 적이 떨어뜨린 젬을 모아 레벨을 올려요. (금화는 네임드 적에게서만 드물게 나와요)'],
     ['강화 하나를 직접 골라 보세요', '실전에서는 경험치 젬으로 레벨을 올려 강화를 선택해요. 여기서는 연습을 위해 선택 화면을 열었어요.'],
     ['준비 완료!', '이동 · 집중 조준 · 수집 · 강화까지 모두 해봤어요. 실전에서도 공격은 자동이에요.'],
 ];
 let root, canvas, ctx, hooks = {}, opened = false, acknowledged = false, state, callback, restoreFocus;
 let isolated = [], frameId, lastTime = 0, previousStep = -1, keys = new Set(), pointer = null, joystick = {x:0,y:0};
-let hero, rabbit, coin;
+let hero, rabbit;
 const MAP = { KeyW:[0,-1], ArrowUp:[0,-1], KeyS:[0,1], ArrowDown:[0,1], KeyA:[-1,0], ArrowLeft:[-1,0], KeyD:[1,0], ArrowRight:[1,0] };
 function el(tag, cls, text) { const n=document.createElement(tag); if(cls)n.className=cls;if(text)n.textContent=text;return n; }
 function btn(cls,text,fn){const b=el('button',cls,text);b.type='button';b.addEventListener('click',fn);return b;}
@@ -26,16 +26,16 @@ export function initPractice(options={}) {
     const info=el('div','practice-info');info.setAttribute('aria-live','polite');info.setAttribute('aria-atomic','true');
     const count=el('p','practice-count'),heading=el('h2');heading.id='practice-heading';heading.tabIndex=-1;
     info.append(count,heading,el('p','practice-instruction'));
-    canvas=el('canvas','practice-canvas');canvas.width=PRACTICE_WORLD.width;canvas.height=PRACTICE_WORLD.height;canvas.setAttribute('aria-label','꽃돼지 연습장. 이동, 토끼 집중 조준, 코인 수집을 연습하세요.');canvas.setAttribute('role','img');ctx=canvas.getContext('2d');
+    canvas=el('canvas','practice-canvas');canvas.width=PRACTICE_WORLD.width;canvas.height=PRACTICE_WORLD.height;canvas.setAttribute('aria-label','꽃돼지 연습장. 이동, 토끼 집중 조준, 경험치 젬 수집을 연습하세요.');canvas.setAttribute('role','img');ctx=canvas.getContext('2d');
     const actions=el('div','practice-actions');
     const focus=btn('practice-focus','표적 집중',()=>{if(state.step===1||state.step===2){focusPracticeAt(state,state.dummy.x,state.dummy.y-state.dummy.radius);sync();}});
     const choices=el('div','practice-choices');
     for(const id of ['whet','heart']){const b=btn('practice-choice',`${PASSIVES[id].name} · ${PASSIVES[id].per}`,()=>{if(choosePracticeUpgrade(state,id)){sync();root.querySelector('.practice-finish').focus();}});b.dataset.upgrade=id;choices.append(b);}
     const finish=btn('practice-finish','연습 완료',()=>closePractice());
     actions.append(focus,choices,finish);
-    const safety=el('p','practice-safety','적 공격·시간 제한 없음 · 연습 결과는 실제 코인·장비에 저장되지 않아요');
+    const safety=el('p','practice-safety','적 공격·시간 제한 없음 · 연습 결과는 실제 경험치·코인·장비에 저장되지 않아요');
     panel.append(top,info,canvas,actions,safety);root.append(panel);document.body.append(root);
-    hero=new Image();hero.src='asset/sprites/player-fire.png';rabbit=new Image();rabbit.src='asset/ui-rabbit.png';coin=new Image();coin.src='asset/items/coin-stack.svg';
+    hero=new Image();hero.src='asset/sprites/player-fire.png';rabbit=new Image();rabbit.src='asset/ui-rabbit.png';
     window.addEventListener('keydown',keydown,true);window.addEventListener('keyup',keyup,true);window.addEventListener('blur',resetControls);
     canvas.addEventListener('pointerdown',pointerdown);canvas.addEventListener('pointermove',pointermove);canvas.addEventListener('pointerup',pointerup);canvas.addEventListener('pointercancel',()=>{pointer=null;joystick={x:0,y:0};});
     canvas.addEventListener('lostpointercapture',()=>{pointer=null;joystick={x:0,y:0};});
@@ -109,10 +109,12 @@ function draw(){
         if(state.target||state.step===1){ctx.strokeStyle=state.target?'#ffe19a':'#94dcff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(d.x,d.y-30,43,0,Math.PI*2);ctx.stroke();}
     }
     if(state.step>=2&&!state.coin.collected){
-        const c=state.coin;ctx.strokeStyle='#ffe19a88';ctx.beginPath();ctx.arc(c.x,c.y,27,0,Math.PI*2);ctx.stroke();
-        if(coin.complete&&coin.naturalWidth)ctx.drawImage(coin,c.x-18,c.y-18,36,36);
-        else{ctx.fillStyle='#ffd772';ctx.beginPath();ctx.arc(c.x,c.y,12,0,Math.PI*2);ctx.fill();}
-        ctx.fillStyle='#ffe4a4';ctx.fillText('연습 코인',c.x,c.y+44);
+        // 연습용 경험치 젬 (실전의 파란 젬과 같은 모양)
+        const c=state.coin,bob=Math.sin(state.clock*4)*3;ctx.strokeStyle='#8fd8ff88';ctx.beginPath();ctx.arc(c.x,c.y,27,0,Math.PI*2);ctx.stroke();
+        ctx.save();ctx.translate(c.x,c.y+bob);ctx.shadowColor='#5fc8ff';ctx.shadowBlur=14;ctx.fillStyle='#4fb4ff';
+        ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(11,0);ctx.lineTo(0,15);ctx.lineTo(-11,0);ctx.closePath();ctx.fill();
+        ctx.shadowBlur=0;ctx.fillStyle='#d9f3ff';ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(5,-1);ctx.lineTo(0,2);ctx.lineTo(-5,-1);ctx.closePath();ctx.fill();ctx.restore();
+        ctx.fillStyle='#bfe7ff';ctx.fillText('경험치 젬',c.x,c.y+44);
     }
     if(state.target&&state.step<3){
         if(!Number.isFinite(p.shotAt)||state.clock-p.shotAt>.65)markPlayerShot(p,state.clock,d.x-p.x);

@@ -3,7 +3,7 @@ import { prepareBossSheets, getBossSheet } from './boss-sheets.js';
 import { recordFusionHit } from './weapon-vfx.js';
 // 보스: 3페이즈, 예고(텔레그래프) 기반 패턴, 페이즈 전환 연출, 처치 시 관 상자
 import { G, rand, emit, pickWeighted } from './state.js';
-import { BOSSES, PHASE_THRESHOLDS, HUNTER_TUNING, BOSS_HP_MULTIPLIER } from '../data/bosses.js';
+import { BOSSES, PHASE_THRESHOLDS, HUNTER_TUNING, bossMaxHp } from '../data/bosses.js';
 import { STAGES } from '../data/stages.js';
 import { currentWeights } from './spawner.js';
 import { atlases, images } from '../core/assets.js';
@@ -26,7 +26,7 @@ export class Boss {
         this.scale = def.scale;
         this.tint = def.tint;
         this.radius = this.atlas.walkH * def.scale * 0.32;
-        this.maxHp = this.hp = def.hp * BOSS_HP_MULTIPLIER;
+        this.maxHp = this.hp = bossMaxHp(stage);
         this.speed = def.speed;
         this.dmg = def.dmg * (1 + (stage - 1) * 0.05);
         const pos = edgePosition(0.9);
@@ -361,13 +361,13 @@ export class Boss {
     // completely fixed for .55s, rewarding a direction change after lock-on.
     task_lockshot() {
         setBossMotion(this, 'windup');
-        // 변이: 저격 3회. 광폭화: 저격마다 3갈래 탄.
-        const lockCount = this.phase ? 3 : 2, fanCount = this.phase === 2 ? 3 : 1, end = (lockCount - 1) * 1.35 + 1.5;
+        // 강화: 기본 저격 3회·3갈래 / 변이 4회 / 광폭화 5회·5갈래, 저격 간격 단축
+        const lockCount = [3, 4, 5][this.phase] || 3, fanCount = this.phase === 2 ? 5 : 3, gap = 1.05, end = (lockCount - 1) * gap + 1.5;
         const task = { t: 0, locks: [], next: 0, step: (dt, s) => {
-            while (s.next < lockCount && s.t >= s.next * 1.35) {
-                const start = s.next * 1.35;
+            while (s.next < lockCount && s.t >= s.next * gap) {
+                const start = s.next * gap;
                 const h = this.warn('tline', this.x, this.bodyY(), { angle: 0, len: 1000, width: 20, delay: 1.15, color: '#f58a98' }, line => {
-                    this.fan(line.x, line.y, line.angle, fanCount, .2, 690, 'boss', 8);
+                    this.fan(line.x, line.y, line.angle, fanCount, .28, 720, 'boss', 8);
                     audio.sfx('zap');
                 });
                 s.locks.push({ h, start }); s.next++;
@@ -386,18 +386,22 @@ export class Boss {
     // The flank/back stays open. Later phases add an offset return impact.
     task_artillery() {
         setBossMotion(this, 'windup');
-        // 변이: 측면 귀환 포격 1발. 광폭화: 양 측면 귀환 포격.
-        const a = Math.atan2(G.player.y - this.y, G.player.x - this.x), count = 3 + this.phase;
+        // 강화: 전진 포격 4발 + 기본부터 측면 귀환 포격 (변이: 양 측면, 광폭화: 양 측면 2열)
+        const a = Math.atan2(G.player.y - this.y, G.player.x - this.x);
+        const shots = [[110, 0], [215, 0], [320, 0], [425, 0], [270, 105]];
+        if (this.phase >= 1) shots.push([270, -105]);
+        if (this.phase === 2) shots.push([370, 150], [370, -150]);
+        const count = shots.length;
         for (let i = 0; i < count; i++) {
-            const distance = i < 3 ? 110 + i * 115 : 225, side = i < 3 ? 0 : i === 3 ? 100 : -100;
+            const [distance, side] = shots[i];
             const x = this.x + Math.cos(a) * distance - Math.sin(a) * side;
             const y = this.y + Math.sin(a) * distance + Math.cos(a) * side;
-            this.warn('tcircle', x, y, { radius: 66, delay: 1.1 + i * .3, color: '#efae67' }, h => {
+            this.warn('tcircle', x, y, { radius: 70, delay: 1.1 + i * .24, color: '#efae67' }, h => {
                 this.circleHit(h); shake(5); audio.sfx('explode');
             });
         }
         audio.sfx('warn');
-        return this.signatureTask(1.1 + (count - 1) * .3 + .35, 2.4, 1.4);
+        return this.signatureTask(1.1 + (count - 1) * .24 + .35, 2.2, 1.3);
     }
 
     // 6: a horseshoe of acid, not random pools. Two missing sectors create
@@ -405,17 +409,17 @@ export class Boss {
     task_toxicTide() {
         setBossMotion(this, 'windup');
         const x = G.player.x, y = G.player.y, gap = Math.atan2(y - this.y, x - this.x) + this.phase * .35;
-        // 변이: 산성 웅덩이가 더 오래 남는다. 광폭화: 출구가 반대쪽인 두 번째 파도.
-        const waves = this.phase === 2 ? 2 : 1, acid = this.phase ? 3.6 : 2.8;
+        // 강화: 기본부터 출구가 반대쪽인 두 번째 파도, 광폭화는 출구가 120도씩 도는 세 번째 파도. 웅덩이가 더 오래 남는다.
+        const waves = this.phase === 2 ? 3 : 2, acid = [3.4, 4.0, 4.6][this.phase] || 3.4, turn = waves === 3 ? Math.PI * 2 / 3 : Math.PI;
         for (let w = 0; w < waves; w++) for (let i = 2; i <= 6; i++) {
-            const a = gap + w * Math.PI + i * Math.PI / 4;
-            this.warn('tcircle', x + Math.cos(a) * 132, y + Math.sin(a) * 92.4, { radius: 48, delay: 1.2 + w * 1.0, color: '#b5df56' }, h => {
+            const a = gap + w * turn + i * Math.PI / 4;
+            this.warn('tcircle', x + Math.cos(a) * 132, y + Math.sin(a) * 92.4, { radius: 48, delay: 1.2 + w * .85, color: '#b5df56' }, h => {
                 this.circleHit(h, .55);
                 spawnHazard('acid', h.x, h.y, { radius: h.radius, duration: acid, dmg: this.dmg * .23, tick: .4 });
             });
         }
         audio.sfx('warn');
-        return this.signatureTask(1.55 + (waves - 1) * 1.0, 2.5, 1.6);
+        return this.signatureTask(1.55 + (waves - 1) * .85, 2.3, 1.4);
     }
 
     // 7: locked crossing slashes, then pursuit slashes re-aimed at the
@@ -464,15 +468,15 @@ export class Boss {
     task_echo() {
         setBossMotion(this, 'windup');
         const targetX = G.player.x, targetY = G.player.y;
-        // 변이: 세 번째 메아리. 광폭화: 메아리 간격이 짧고 탄이 빠르다.
-        const echoes = this.phase ? 3 : 2, gapT = this.phase === 2 ? .8 : 1.0, speed = this.phase === 2 ? 165 : 145;
-        const spots = [[-115, -45, -.4], [115, 45, 1.2], [0, -120, 2.6]];
+        // 강화: 기본 메아리 3개 / 변이 4개 / 광폭화 4개·더 빠른 탄, 간격 단축·탄 수 증가
+        const echoes = this.phase ? 4 : 3, gapT = this.phase === 2 ? .6 : .8, speed = this.phase === 2 ? 195 : 170;
+        const spots = [[-115, -45, -.4], [115, 45, 1.2], [0, -120, 2.6], [0, 120, 4.0]];
         for (let i = 0; i < echoes; i++) {
             const x = this.x + spots[i][0], y = this.bodyY() + spots[i][1];
             const gap = Math.atan2(targetY - 18 - y, targetX - x) + spots[i][2];
             this.warn('tcircle', x, y, { radius: 32, delay: 1.2 + i * gapT, color: '#ba9af2' }, h => {
                 // A 90-degree empty wedge remains even in the final phase.
-                const n = 16 + this.phase * 2;
+                const n = 20 + this.phase * 3;
                 for (let j = 0; j < n; j++) {
                     const a = gap + Math.PI / 4 + (j / (n - 1)) * Math.PI * 1.5;
                     fireEnemyShot(h.x, h.y, Math.cos(a), Math.sin(a), speed, this.dmg * .55, 'boss', 7);
@@ -496,16 +500,25 @@ export class Boss {
                 this.lineHit(h, 1); shake(7); audio.sfx('explode');
             });
         }
-        // 변이 이후: 중앙 강타 뒤 직각 균열이 십자로 갈라진다 (광폭화는 더 빨리).
-        const crossDelay = this.phase ? 2.0 + (this.phase === 2 ? .6 : .8) : 0;
-        if (crossDelay) {
-            const b = a + Math.PI / 2;
-            this.warn('tline', x - Math.cos(b) * 240, y - Math.sin(b) * 240, { angle: b, len: 480, width: 58, delay: crossDelay, color: '#ffd08b' }, h => {
-                this.lineHit(h, 1); shake(7); audio.sfx('explode');
-            });
+        // 강화: 기본부터 중앙 강타 뒤 직각 균열(십자). 변이·광폭화는 대각선 X 균열이 이어진다.
+        const crossDelay = 2.0 + (this.phase === 2 ? .55 : .75);
+        const b = a + Math.PI / 2;
+        this.warn('tline', x - Math.cos(b) * 240, y - Math.sin(b) * 240, { angle: b, len: 480, width: 58, delay: crossDelay, color: '#ffd08b' }, h => {
+            this.lineHit(h, 1); shake(7); audio.sfx('explode');
+        });
+        let last = crossDelay;
+        if (this.phase) {
+            const xDelay = crossDelay + (this.phase === 2 ? .55 : .75);
+            for (const d of [Math.PI / 4, -Math.PI / 4]) {
+                const c = a + d;
+                this.warn('tline', x - Math.cos(c) * 240, y - Math.sin(c) * 240, { angle: c, len: 480, width: 50, delay: xDelay, color: '#ffb36b' }, h => {
+                    this.lineHit(h, 1); shake(6); audio.sfx('explode');
+                });
+            }
+            last = xDelay;
         }
         audio.sfx('warn');
-        return this.signatureTask(Math.max(2.4, crossDelay + .4), 2.5, 1.5);
+        return this.signatureTask(last + .4, 2.3, 1.4);
     }
 
     // 10: a contract snapshots your position. Coin interest is paid first;
@@ -514,23 +527,24 @@ export class Boss {
         setBossMotion(this, 'windup');
         const x = G.player.x, y = G.player.y;
         const angle = Math.atan2(y - 18 - this.bodyY(), x - this.x);
-        // 변이: 금화 사격선 +1·탄속 증가. 광폭화: 사격선 +2·계약 원 2개.
-        const lines = 5 + this.phase, spread = .5 + this.phase * .1, coinSpeed = 210 + this.phase * 20;
+        // 강화: 금화 사격선 7/9/11줄·탄속 증가, 계약 원 2/2/3개, 결산 금화 확산
+        const lines = 7 + this.phase * 2, spread = .6 + this.phase * .12, coinSpeed = 240 + this.phase * 25;
         for (let i = 0; i < lines; i++) {
             const a = angle + (i / (lines - 1) - .5) * spread;
             this.warn('tline', this.x, this.bodyY(), { angle: a, len: 860, width: 16, delay: 1.05, color: '#f2d383' }, h => {
                 this.fan(h.x, h.y, h.angle, 1, 0, coinSpeed, 'coin', 8);
             });
         }
-        const marks = this.phase === 2 ? 2 : 1;
+        const marks = this.phase === 2 ? 3 : 2;
         for (let i = 0; i < marks; i++) {
-            const mx = x + (i ? Math.cos(angle + Math.PI / 2) * 135 : 0);
-            const my = y + (i ? Math.sin(angle + Math.PI / 2) * 135 : 0);
+            const side = i === 0 ? 0 : i === 1 ? 1 : -1;
+            const mx = x + Math.cos(angle + Math.PI / 2) * 135 * side;
+            const my = y + Math.sin(angle + Math.PI / 2) * 135 * side;
             this.warn('tcircle', mx, my, { radius: 64, delay: 2.0 + i * .65, color: '#f2d383', symbol: 'hourglass' }, h => {
                 this.circleHit(h, 1);
                 // Settlement coins travel outward: leaving the contract early
                 // is safer than returning to the old position after the volley.
-                this.fan(h.x, h.y, angle + Math.PI, 7, Math.PI * 1.5, 135, 'coin', 7);
+                this.fan(h.x, h.y, angle + Math.PI, 11, Math.PI * 1.5, 150, 'coin', 7);
                 audio.sfx('pickup');
             });
         }

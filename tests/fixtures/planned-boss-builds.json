@@ -7,7 +7,7 @@
       "seed": 1,
       "stage": 5,
       "distance": 130,
-      "level": 34,
+      "level": 29,
       "weapons": [
         {
           "id": "shotgun",
@@ -26,12 +26,12 @@
         },
         {
           "id": "molotov",
-          "level": 7,
+          "level": 6,
           "evolved": false
         },
         {
           "id": "thorns",
-          "level": 3,
+          "level": 1,
           "evolved": false
         },
         {
@@ -42,18 +42,17 @@
       ],
       "passives": {
         "magazine": 1,
-        "sap": 3,
+        "sap": 2,
         "pollen": 1,
-        "spread": 1,
         "scope": 1
       },
       "stats": {
         "might": 1,
-        "area": 1.1,
+        "area": 1,
         "cooldown": 1,
         "barrierCd": 12,
         "duration": 1,
-        "growth": 1.24,
+        "growth": 1.16,
         "projSpeed": 1.05,
         "pierce": 1,
         "amount": 0,
@@ -76,7 +75,7 @@
       "seed": 101,
       "stage": 10,
       "distance": 130,
-      "level": 60,
+      "level": 51,
       "weapons": [
         {
           "id": "scatter_rail",
@@ -126,21 +125,21 @@
       "seed": 101,
       "stage": 10,
       "distance": 130,
-      "level": 65,
+      "level": 55,
       "weapons": [
         {
           "id": "scatter_rail",
-          "level": 6,
+          "level": 4,
           "evolved": false
         },
         {
           "id": "lotus_bloom",
-          "level": 5,
+          "level": 4,
           "evolved": false
         },
         {
           "id": "plague_fire",
-          "level": 5,
+          "level": 1,
           "evolved": false
         }
       ],
@@ -148,8 +147,8 @@
         "magazine": 5,
         "regen": 5,
         "scope": 5,
-        "spread": 5,
         "sap": 5,
+        "spread": 5,
         "pollen": 5
       },
       "stats": {
@@ -181,11 +180,11 @@
       "seed": 101,
       "stage": 10,
       "distance": 130,
-      "level": 60,
+      "level": 51,
       "weapons": [
         {
           "id": "scatter_rail",
-          "level": 8,
+          "level": 1,
           "evolved": false
         },
         {

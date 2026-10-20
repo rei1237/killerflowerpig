@@ -401,7 +401,7 @@ test('premium accessory shop shows six actual items with ownership, locks and re
 
 test('field boxes explain one existing upgrade while boss boxes disclose stronger odds and named premium reward',()=>{
  freshRun();showChest('elite');assert.match(node('chest-description').textContent,/보유 장비 1회 강화/);takeChest();
- showChest('boss');assert.match(node('chest-description').textContent,/기본 강화 2개 확정/);assert.match(node('chest-description').textContent,/20%/);assert.match(node('chest-description').textContent,/100코인/);
+ showChest('boss');assert.match(node('chest-description').textContent,/기본 강화 2개 확정/);assert.match(node('chest-description').textContent,/20%/);assert.match(node('chest-description').textContent,/10코인/); // stage1 만렙 회수금 8+2*1
  const rng=Math.random;Math.random=()=>.01;
  try{node('btn-chest').click();advanceTime(901);}finally{Math.random=rng;}
  assert.equal(node('rewards').children.length,3);const premium=node('rewards').children[2];assert.match(premium.textContent,/연꽃 정밀 강화재/);assert.match(premium.textContent,/최대 8/);assert.match(premium.querySelector('img').src,/violet-orb/);

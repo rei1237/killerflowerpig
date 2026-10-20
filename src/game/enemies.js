@@ -136,7 +136,16 @@ function killEnemy(e, opts) {
     }
 
     const def = e.def;
-    if (opts.detonate && def.charge) explosionQueue.push({ x: e.x, y: e.y, r: def.charge.radius, dmg: Math.min(def.charge.damageCap, def.charge.dmg * (1 + (G.stage - 1) * 0.16)), suicide: true });
+    if (opts.detonate && def.charge) {
+        const dmg = Math.min(def.charge.damageCap, def.charge.dmg * (1 + (G.stage - 1) * 0.16));
+        explosionQueue.push({ x: e.x, y: e.y, r: def.charge.radius, dmg, suicide: true });
+        // 파편: 폭발 반경 밖으로 피한 뒤에도 사방으로 튀는 파편을 피해야 한다
+        const n = def.charge.shrapnel || 0, off = Math.random() * Math.PI * 2;
+        for (let i = 0; i < n; i++) {
+            const a = off + (i / n) * Math.PI * 2;
+            fireEnemyShot(e.x, e.y - e.radius, Math.cos(a), Math.sin(a), def.charge.shrapnelSpeed || 200, dmg * 0.35, 'bullet', 4);
+        }
+    }
     if (def.explode) explosionQueue.push({ x: e.x, y: e.y, r: def.explode.radius, dmg: def.explode.dmg * (1 + (G.stage - 1) * 0.16) });
     if (def.split) {
         for (let i = 0; i < def.split.count; i++) {
