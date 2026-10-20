@@ -1939,3 +1939,42 @@ html {
     .shop-tabs { margin: 8px 0 6px; }
     .shop-actions { margin-top: 8px; }
 }
+
+/* 전설 장비 카드 (연꽃 총) */
+.shop-card.legendary {
+    grid-column: 1 / -1;
+    border: 3px solid #5effc4;
+    background: linear-gradient(90deg, #0f2a24 0%, #1a1020 70%);
+    box-shadow: 0 0 16px rgba(94, 255, 196, 0.35);
+    animation: legendary-glow 2s infinite;
+}
+
+.shop-card.legendary.disabled {
+    opacity: 0.9;
+}
+
+.shop-card.legendary .shop-card-icon {
+    width: 96px;
+}
+
+.shop-card.legendary .shop-card-icon img {
+    width: 96px;
+    height: auto;
+    display: block;
+    image-rendering: auto;
+    border: 2px solid #5effc4;
+}
+
+.shop-card.legendary .shop-card-name {
+    color: #7dffd0;
+    font-size: 11px;
+}
+
+.shop-card.legendary .shop-buy-btn:not(:disabled) {
+    background: linear-gradient(180deg, #7dffd0 0%, #2ecc9a 100%);
+}
+
+@keyframes legendary-glow {
+    0%, 100% { box-shadow: 0 0 10px rgba(94, 255, 196, 0.25); }
+    50% { box-shadow: 0 0 22px rgba(94, 255, 196, 0.6); }
+}

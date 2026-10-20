@@ -1550,6 +1550,21 @@ const Player = {
         this.petalCannonMaxCharge = 50 - Progress.upgradeLevel('PETAL') * 5; // 최대 충전 필요 발사 횟수
         this.petalCannonReady = false; // 발사 가능 여부
     },
+    // 총알 발사 (연꽃 총 보유 시: 관통하는 연꽃 탄환 3갈래)
+    fireBullet: function (x, y, speed) {
+        if (!Progress.hasLotusGun()) {
+            projectiles.push(new Projectile(x, y, speed, 0, this.damage));
+            return;
+        }
+        for (const vy of [-1.6, 0, 1.6]) {
+            const p = new Projectile(x, y - 8, speed * 1.2, vy, this.damage);
+            p.isLotus = true;
+            p.pierce = 4; // 적 4마리까지 관통
+            p.hitEnemies = new Set();
+            p.width = 34; p.height = 22;
+            projectiles.push(p);
+        }
+    },
     // 공격력/발사간격 재계산 (아이템 레벨 + 상점 업그레이드)
     recalcWeaponStats: function () {
         const baseDamage = 10 + Progress.upgradeLevel('ATK') * 3;
@@ -1560,6 +1575,11 @@ const Player = {
         const baseFireRate = 200 - Progress.upgradeLevel('RATE') * 6;
         const itemFireRateBonus = (LevelSystem.items.FIRE_RATE.level - 1) * LevelSystem.stats.itemFireRatePerLevel;
         this.fireRate = Math.max(baseFireRate - itemFireRateBonus, this.minFireRate);
+        // 전설 장비 연꽃 총: 공격력 2.5배, 발사 간격 40% 단축
+        if (Progress.hasLotusGun()) {
+            this.damage = Math.round(this.damage * 2.5);
+            this.fireRate = Math.max(Math.round(this.fireRate * 0.6), this.minFireRate);
+        }
     },
     update: function (currentTime) {
         if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS_FIGHT) return;
@@ -1627,9 +1647,7 @@ const Player = {
             const bulletSpeed = 10 * speedScale;
             
             // 주 총알 발사 - Projectile 생성자에서 공격력 기반으로 크기 자동 계산
-            console.log(`[SHOOT] Player.damage: ${this.damage}, bulletSpeed: ${bulletSpeed}, weaponLevel: ${weaponLevel}`);
-            const projectile = new Projectile(this.x + this.width - 5, this.y + this.height * 0.65, bulletSpeed, 0, this.damage);
-            projectiles.push(projectile);
+            this.fireBullet(this.x + this.width - 5, this.y + this.height * 0.65, bulletSpeed);
             
             // 꽃잎 포 충전 (총 발사 횟수 기준)
             if (!this.petalCannonReady) {
@@ -1643,10 +1661,8 @@ const Player = {
 
             // 지원군 사격 (위, 아래 추가 지원)
             if (this.supportTimer > 0) {
-                const projTop = new Projectile(this.x + this.width - 5, this.y + this.height * 0.65 - 80, bulletSpeed, 0, this.damage);
-                const projBottom = new Projectile(this.x + this.width - 5, this.y + this.height * 0.65 + 80, bulletSpeed, 0, this.damage);
-                projectiles.push(projTop);
-                projectiles.push(projBottom);
+                this.fireBullet(this.x + this.width - 5, this.y + this.height * 0.65 - 80, bulletSpeed);
+                this.fireBullet(this.x + this.width - 5, this.y + this.height * 0.65 + 80, bulletSpeed);
             }
 
             AudioManager.playSFX('shoot');
@@ -1940,6 +1956,7 @@ const LevelSystem = {
 
 // 영구 업그레이드 (레벨제, 새 게임을 시작해도 유지)
 const SHOP_UPGRADES = [
+    { id: 'LOTUS_GUN', icon: 'asset/lotus-gun.png', name: '전설의 연꽃 총', desc: '공격력 x2.5 · 발사 간격 -40% · 연꽃 탄환 3갈래 발사 · 적 4마리 관통', max: 1, base: 30000, growth: 1, legendary: true },
     { id: 'ATK', icon: '🗡️', name: '강화 탄두', desc: '기본 공격력 +3', max: 10, base: 120, growth: 1.4 },
     { id: 'RATE', icon: '⚙️', name: '속사 장치', desc: '발사 간격 -6ms', max: 10, base: 120, growth: 1.4 },
     { id: 'HP', icon: '❤️', name: '강철 심장', desc: '최대 체력 +20', max: 10, base: 150, growth: 1.45 },
@@ -2049,6 +2066,7 @@ const Progress = {
     upgradePrice: function (u) {
         return Math.round(u.base * Math.pow(u.growth, this.upgradeLevel(u.id)) / 10) * 10;
     },
+    hasLotusGun: function () { return this.upgradeLevel('LOTUS_GUN') > 0; },
     expMultiplier: function () { return 1 + this.upgradeLevel('EXP') * 0.15; },
     critChance: function () { return this.upgradeLevel('CRIT') * 0.05; },
 
@@ -2204,7 +2222,7 @@ const Shop = {
     // 업그레이드 구매 시 현재 플레이어 스탯에 바로 반영 (상점은 스테이지 사이에 열림)
     applyUpgradeNow: function (id) {
         switch (id) {
-            case 'ATK': case 'RATE': Player.recalcWeaponStats(); break;
+            case 'ATK': case 'RATE': case 'LOTUS_GUN': Player.recalcWeaponStats(); break;
             case 'HP': Player.maxHp += 1; Player.hp = Player.maxHp; break;
             case 'ARMOR': Player.defense += 0.04; break;
             case 'SPEED': Player.speed = 0.15 * (1 + Progress.upgradeLevel('SPEED') * 0.08); break;
@@ -2240,8 +2258,9 @@ const Shop = {
                 const lvl = Progress.upgradeLevel(u.id);
                 const maxed = lvl >= u.max;
                 const price = Progress.upgradePrice(u);
-                html += this.cardHtml('upgrade', u.id, u.icon, u.name, u.desc, `Lv ${lvl}/${u.max}`,
-                    maxed ? 'MAX' : `${price}G`, maxed || Progress.gold < price);
+                html += this.cardHtml('upgrade', u.id, u.icon, u.name, u.desc,
+                    u.legendary ? (maxed ? '장착 중' : '★ 전설') : `Lv ${lvl}/${u.max}`,
+                    maxed ? (u.legendary ? '보유' : 'MAX') : `${price.toLocaleString()}G`, maxed || Progress.gold < price, u.legendary);
             }
         } else {
             for (const c of SHOP_CONSUMABLES) {
@@ -2265,9 +2284,10 @@ const Shop = {
             this.secondaryBtn.hidden = true;
         }
     },
-    cardHtml: function (kind, id, icon, name, desc, sub, priceLabel, disabled) {
-        return `<div class="shop-card${disabled ? ' disabled' : ''}">
-            <div class="shop-card-icon">${icon}</div>
+    cardHtml: function (kind, id, icon, name, desc, sub, priceLabel, disabled, legendary) {
+        const iconHtml = icon.startsWith('asset/') ? `<img src="${icon}" alt="">` : icon;
+        return `<div class="shop-card${disabled ? ' disabled' : ''}${legendary ? ' legendary' : ''}">
+            <div class="shop-card-icon">${iconHtml}</div>
             <div class="shop-card-body">
                 <div class="shop-card-name">${name} <span class="shop-card-sub">${sub}</span></div>
                 <div class="shop-card-desc">${desc}</div>
@@ -2294,6 +2314,35 @@ class Projectile {
         if (this.x > canvas.width || this.x < -100 || this.y < -100 || this.y > canvas.height + 100) this.active = false;
     }
     draw(ctx) {
+        if (this.isLotus) {
+            // 🪷 민트빛 연꽃 탄환
+            const cx = this.x + this.width / 2;
+            const cy = this.y + this.height / 2;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.shadowBlur = 25; ctx.shadowColor = '#5effc4';
+            // 잔상 꼬리
+            ctx.fillStyle = 'rgba(94, 255, 196, 0.25)';
+            ctx.beginPath(); ctx.ellipse(-22, 0, 22, 7, 0, 0, Math.PI * 2); ctx.fill();
+            // 연꽃잎 5장 (앞을 향해 펼쳐짐)
+            const petals = [-0.9, -0.45, 0, 0.45, 0.9];
+            for (const a of petals) {
+                const len = a === 0 ? 16 : 13;
+                ctx.save();
+                ctx.rotate(a);
+                const g = ctx.createLinearGradient(0, 0, len, 0);
+                g.addColorStop(0, '#e9fff7');
+                g.addColorStop(0.5, '#7dffd0');
+                g.addColorStop(1, 'rgba(46, 204, 154, 0.6)');
+                ctx.fillStyle = g;
+                ctx.beginPath(); ctx.ellipse(len / 2, 0, len / 2 + 2, 5, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            }
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+            return;
+        }
         if (this.isBossEnergyBall) {
             const centerX = this.x + this.width / 2;
             const centerY = this.y + this.height / 2;
@@ -4704,8 +4753,18 @@ function gameLoop(timestamp) {
             if (!p.isEnemyBullet && !p.isBossEnergyBall) {
                 for (let j = enemies.length - 1; j >= 0; j--) {
                     const e = enemies[j]; if (e.state === 'DEAD') continue;
+                    if (p.isLotus && p.hitEnemies.has(e)) continue;
                     if (checkCollision(p, e)) {
-                        e.hp -= rollCritDamage(p); p.active = false;
+                        e.hp -= rollCritDamage(p);
+                        if (p.isLotus) {
+                            // 연꽃 탄환: 관통 (같은 적은 한 번만 타격)
+                            p.hitEnemies.add(e);
+                            p.pierce--;
+                            if (p.pierce <= 0) p.active = false;
+                            createExplosion(p.x, p.y, '#7dffd0');
+                        } else {
+                            p.active = false;
+                        }
                         if (e.hp <= 0) { 
                             e.state = 'DEAD'; e.aniFrame = 0; enemiesKilled++; score += e.isElite ? 1000 : 100; 
                             // 적 처치 시 EXP 획득 (10 EXP, 엘리트 60 EXP)
