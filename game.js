@@ -17,6 +17,9 @@ const installBtnContainer = document.getElementById('install-btn-container');
 const gameoverButtons = document.getElementById('gameover-buttons');
 const retryButton = document.getElementById('retry-btn');
 const quitButton = document.getElementById('quit-btn');
+const continueButton = document.getElementById('continue-btn');
+const menuShopButton = document.getElementById('menu-shop-btn');
+const gameoverShopButton = document.getElementById('gameover-shop-btn');
 
 // 패스워드 및 스테이지 선택 UI
 const passwordContainer = document.getElementById('password-container');
@@ -336,6 +339,8 @@ function drawHUD(ctx) {
     ctx.fillStyle = '#fff';
     ctx.font = '10px "Press Start 2P"';
     ctx.fillText(`SCORE:${score.toString().padStart(6, '0')}`, canvas.width/scale - 15, 20);
+    ctx.fillStyle = '#ffd700';
+    ctx.fillText(`${Progress.gold}G`, canvas.width/scale - 15, 35);
 
     // 9. Stage info (center top)
     ctx.textAlign = 'center';
@@ -452,7 +457,7 @@ const ASSETS = {
     gate: ''
 };
 
-const GAME_STATE = { START: 'START', STORY: 'STORY', PLAYING: 'PLAYING', STAGE_CLEAR: 'STAGE_CLEAR', BOSS_FIGHT: 'BOSS_FIGHT', GAME_OVER: 'GAME_OVER', EPILOGUE: 'EPILOGUE', GAME_CLEAR_IMAGE: 'GAME_CLEAR_IMAGE', WIN: 'WIN', ALL_CLEAR: 'ALL_CLEAR' };
+const GAME_STATE = { START: 'START', STORY: 'STORY', PLAYING: 'PLAYING', STAGE_CLEAR: 'STAGE_CLEAR', BOSS_FIGHT: 'BOSS_FIGHT', GAME_OVER: 'GAME_OVER', EPILOGUE: 'EPILOGUE', GAME_CLEAR_IMAGE: 'GAME_CLEAR_IMAGE', WIN: 'WIN', ALL_CLEAR: 'ALL_CLEAR', SHOP: 'SHOP' };
 let currentState = GAME_STATE.START;
 
 // --- 1-1. 스테이지 및 보스 설정 ---
@@ -490,6 +495,7 @@ let score = 0;
 
 let projectiles = [];
 let enemies = [];
+let itemDrops = []; // 엘리트 처치 드롭 아이템
 let particles = [];
 let gates = [];
 let spawnTimer = 0;
@@ -776,6 +782,15 @@ function updateMainMenuVisibility() {
     // 개별 버튼 컨테이너 가시성 업데이트
     const shouldShow = currentState === GAME_STATE.START;
     if (startBtnContainer) startBtnContainer.hidden = !shouldShow;
+    // 저장된 진행 상황이 있으면 CONTINUE 버튼 표시
+    if (shouldShow && continueButton && startButton) {
+        const run = Progress.run;
+        continueButton.hidden = !run;
+        const continueLabel = run ? `CONTINUE · STAGE ${run.stage}` : 'CONTINUE';
+        if (continueButton.textContent !== continueLabel) continueButton.textContent = continueLabel;
+        const startLabel = run ? 'NEW GAME' : 'START GAME';
+        if (startButton.textContent !== startLabel) startButton.textContent = startLabel;
+    }
     if (installBtnContainer) installBtnContainer.hidden = !shouldShow;
     // 패스워드 입력 UI 표시 (스테이지 언락되지 않았을 때만)
     if (passwordContainer) {
@@ -844,7 +859,8 @@ function updateGameOverButtonVisibility() {
         }
 
         gameoverStats.innerHTML = `
-            <div style="font-size: 14px; margin-bottom: 10px; color: #f1c40f;">FINAL SCORE: ${score.toLocaleString()}</div>
+            <div style="font-size: 14px; margin-bottom: 10px; color: #f1c40f;">SCORE: ${score.toLocaleString()} · 💰 ${Progress.gold.toLocaleString()}G</div>
+            <div style="font-size: 9px; margin-bottom: 10px; color: #2ecc71;">레벨과 아이템을 유지한 채 STAGE ${currentStage}부터 이어서 재도전할 수 있습니다.</div>
             <div style="font-size: 10px; line-height: 1.5; color: ${messageColor};">${loreMessage}</div>
         `;
     }
@@ -972,6 +988,13 @@ function startGameAtStage(stageNum) {
 // 게임 시작 - 스토리 먼저 표시
 function startGame() {
     if (currentState !== GAME_STATE.START) return;
+    // 새 게임: 진행 상황(스테이지/레벨)은 초기화, 상점 업그레이드와 골드는 유지
+    if (Progress.hasRun() && !window.confirm('새 게임을 시작하면 스테이지 진행 상황과 레벨이 초기화됩니다.\n(골드, 상점 강화, 소모품은 유지됩니다)\n계속할까요?')) return;
+    Progress.clearRun();
+    LevelSystem.init();
+    score = 0; currentStage = 1; enemiesKilled = 0; boss = null;
+    projectiles = []; enemies = []; particles = []; gates = []; itemDrops = [];
+    Player.init();
     enterMobileFullscreen();
     AudioManager.init();
     AudioManager.startBGM();
@@ -996,6 +1019,8 @@ function startGame() {
 function startGameplay() {
     currentState = GAME_STATE.PLAYING;
     storyTypingIndex = 0;
+    Progress.applyStageStartBonuses();
+    Progress.saveRun(currentStage);
     // storyDisplayTime은 다음 스토리에서 다시 설정됨
     updateMainMenuVisibility();
 
@@ -1073,7 +1098,7 @@ function handleStoryClick(e) {
     } else if (currentState === GAME_STATE.STAGE_CLEAR) {
         e.preventDefault();
         e.stopPropagation();
-        if (currentStage < 10) advanceStage();
+        if (currentStage < 10) Shop.open('stageClear');
     }
 }
 
@@ -1165,13 +1190,39 @@ if (startButton) {
     });
 }
 
+// 이어하기: 저장된 스테이지부터 레벨/아이템을 유지한 채 시작
+if (continueButton) {
+    continueButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        AudioManager.playSFX('buttonclick');
+        if (currentState !== GAME_STATE.START || !Progress.restoreRun()) return;
+        startGameAtStage(currentStage);
+    });
+}
+
+// 상점 버튼 (메인 메뉴 / 게임 오버)
+if (menuShopButton) {
+    menuShopButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        AudioManager.playSFX('buttonclick');
+        if (currentState === GAME_STATE.START) Shop.open('menu');
+    });
+}
+if (gameoverShopButton) {
+    gameoverShopButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        AudioManager.playSFX('buttonclick');
+        if (currentState === GAME_STATE.GAME_OVER) Shop.open('gameOver');
+    });
+}
+
 // 게임 오버 버튼 이벤트
 if (retryButton) {
     retryButton.addEventListener('click', (e) => {
         e.stopPropagation();
         AudioManager.playSFX('buttonclick');
-        console.log('[GameOver] Retry clicked');
-        resetGame();
+        console.log('[GameOver] Retry clicked - continue from current stage');
+        resetGame(currentStage, true);
         // 게임 오버 버튼 숨김
         if (gameoverButtons) gameoverButtons.hidden = true;
     });
@@ -1471,28 +1522,23 @@ const Player = {
         const levelBonusHp = (LevelSystem.playerLevel - 1) * LevelSystem.stats.playerHpPerLevel;
         const levelBonusDef = (LevelSystem.playerLevel - 1) * LevelSystem.stats.playerDefensePerLevel;
         
-        // 아이템 레벨 보너스 - 무기 레벨만 공격력에 영향
-        const itemDamageBonus = (LevelSystem.items.DAMAGE.level - 1) * LevelSystem.stats.itemDamagePerLevel;
-        const itemFireRateBonus = (LevelSystem.items.FIRE_RATE.level - 1) * LevelSystem.stats.itemFireRatePerLevel;
-        
-        // 최종 스탯 계산 - 무기 레벨만 공격력에 영향
-        this.damage = isMobileEasyModeActive() 
-            ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier) 
-            : baseDamage + itemDamageBonus;
-            
-        // 공격속도: 아이템 레벨로 감소 (최소 minFireRate까지)
-        this.fireRate = Math.max(baseFireRate - itemFireRateBonus, this.minFireRate);
-        
+        // 최종 스탯 계산 - 무기 레벨 + 상점 업그레이드
+        this.recalcWeaponStats();
+
+        // 상점 업그레이드: 최대 체력
+        const shopHpBonus = Progress.upgradeLevel('HP');
         this.hp = isMobileEasyModeActive() 
-            ? Math.round((baseHp + levelBonusHp) * EASY_MODE_CONFIG.playerHpMultiplier) 
-            : baseHp + levelBonusHp;
+            ? Math.round((baseHp + levelBonusHp + shopHpBonus) * EASY_MODE_CONFIG.playerHpMultiplier) 
+            : baseHp + levelBonusHp + shopHpBonus;
         this.maxHp = this.hp;
         
-        // 방어력: 플레이어 레벨로 증가 (캐릭터 레벨업 보너스)
-        this.defense = levelBonusDef;
+        // 방어력: 플레이어 레벨 + 방탄 조끼 업그레이드
+        this.defense = levelBonusDef + Progress.upgradeLevel('ARMOR') * 0.04;
+        this.speed = 0.15 * (1 + Progress.upgradeLevel('SPEED') * 0.08);
+        this.regenTimer = 0;
         
         this.shield = 0;
-        this.bombCount = 3;
+        this.bombCount = 3 + Progress.upgradeLevel('BOMB_BAG');
         this.aniFrame = 0;
         this.state = 'ALIVE';
         this.lastFrameTime = 0;
@@ -1501,8 +1547,19 @@ const Player = {
         
         // 꽃잎 포 (필살기) 시스템
         this.petalCannonCharge = 0; // 현재 충전량 (발사 횟수)
-        this.petalCannonMaxCharge = 50; // 최대 충전 필요 발사 횟수
+        this.petalCannonMaxCharge = 50 - Progress.upgradeLevel('PETAL') * 5; // 최대 충전 필요 발사 횟수
         this.petalCannonReady = false; // 발사 가능 여부
+    },
+    // 공격력/발사간격 재계산 (아이템 레벨 + 상점 업그레이드)
+    recalcWeaponStats: function () {
+        const baseDamage = 10 + Progress.upgradeLevel('ATK') * 3;
+        const itemDamageBonus = (LevelSystem.items.DAMAGE.level - 1) * LevelSystem.stats.itemDamagePerLevel;
+        this.damage = isMobileEasyModeActive()
+            ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier)
+            : Math.round(baseDamage + itemDamageBonus);
+        const baseFireRate = 200 - Progress.upgradeLevel('RATE') * 6;
+        const itemFireRateBonus = (LevelSystem.items.FIRE_RATE.level - 1) * LevelSystem.stats.itemFireRatePerLevel;
+        this.fireRate = Math.max(baseFireRate - itemFireRateBonus, this.minFireRate);
     },
     update: function (currentTime) {
         if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS_FIGHT) return;
@@ -1523,6 +1580,18 @@ const Player = {
 
         if (this.shield > 0) this.shield -= 16;
         if (this.supportTimer > 0) this.supportTimer -= 16;
+
+        // 재생의 꽃: 20초마다 체력 회복
+        const regenLevel = Progress.upgradeLevel('REGEN');
+        if (regenLevel > 0 && this.hp < this.maxHp) {
+            this.regenTimer += 16;
+            if (this.regenTimer >= 20000) {
+                this.regenTimer = 0;
+                const heal = regenLevel * 0.5;
+                this.hp = Math.min(this.maxHp, this.hp + heal);
+                addFloatingText(`🌿 +${Math.round(heal * 20)}`, this.x, this.y - 20, '#2ecc71');
+            }
+        }
 
         // 스킬 알림 수명 관리
         this.skillNotifications = this.skillNotifications.filter(n => {
@@ -1712,7 +1781,7 @@ const LevelSystem = {
     addPlayerExp: function(amount) {
         if (this.playerLevel >= this.maxLevel) return;
         
-        this.playerExp += amount;
+        this.playerExp += Math.round(amount * Progress.expMultiplier());
         
         // 레벨업 체크 (연속 레벨업 가능)
         while (this.playerExp >= this.playerExpToNext && this.playerLevel < this.maxLevel) {
@@ -1797,21 +1866,17 @@ const LevelSystem = {
         
         switch(itemType) {
             case 'DAMAGE':
-                // 공격력 재계산 - 무기 레벨만 영향
-                const baseDamage = 10;
-                const newDamage = isMobileEasyModeActive() 
-                    ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier)
-                    : baseDamage + itemDamageBonus;
-                Player.damage = newDamage;
+                // 공격력 재계산 - 무기 레벨 + 상점 업그레이드
+                Player.recalcWeaponStats();
+                const newDamage = Player.damage;
                 addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#e74c3c');
                 addFloatingText(`공격력: ${newDamage.toFixed(1)} (+${this.stats.itemDamagePerLevel})`, Player.x, Player.y - 50, '#ff6b6b');
                 break;
                 
             case 'FIRE_RATE':
                 // 공격속도 재계산 (발사 간격 감소)
-                const baseFireRate = 200;
-                const newFireRate = Math.max(baseFireRate - itemFireRateBonus, Player.minFireRate);
-                Player.fireRate = newFireRate;
+                Player.recalcWeaponStats();
+                const newFireRate = Player.fireRate;
                 addFloatingText(`${item.icon} ${item.name} Lv.${newLevel}!`, Player.x, Player.y - 30, '#3498db');
                 addFloatingText(`발사간격: ${newFireRate}ms (-${this.stats.itemFireRatePerLevel}ms)`, Player.x, Player.y - 50, '#74b9ff');
                 break;
@@ -1866,6 +1931,352 @@ const LevelSystem = {
         addSkillNotification("SUPPORT CALLED", baseSupport + bonus);
     }
 };
+
+// ============================================================================
+// [PROGRESS & SHOP] 이어하기 저장 + 골드 상점
+// - 진행 상황(스테이지/레벨/아이템/점수)과 지갑(골드/업그레이드/소모품)을 localStorage에 저장
+// - 게임 오버 시 1스테이지로 돌아가지 않고 현재 스테이지부터 이어서 재도전
+// ============================================================================
+
+// 영구 업그레이드 (레벨제, 새 게임을 시작해도 유지)
+const SHOP_UPGRADES = [
+    { id: 'ATK', icon: '🗡️', name: '강화 탄두', desc: '기본 공격력 +3', max: 10, base: 120, growth: 1.4 },
+    { id: 'RATE', icon: '⚙️', name: '속사 장치', desc: '발사 간격 -6ms', max: 10, base: 120, growth: 1.4 },
+    { id: 'HP', icon: '❤️', name: '강철 심장', desc: '최대 체력 +20', max: 10, base: 150, growth: 1.45 },
+    { id: 'ARMOR', icon: '🦺', name: '방탄 조끼', desc: '받는 피해 -4%', max: 8, base: 160, growth: 1.5 },
+    { id: 'SPEED', icon: '👟', name: '질주 부츠', desc: '이동 반응 속도 +8%', max: 5, base: 100, growth: 1.5 },
+    { id: 'CRIT', icon: '🎯', name: '저격 조준경', desc: '치명타 확률 +5% (피해 2배)', max: 8, base: 180, growth: 1.45 },
+    { id: 'VAMP', icon: '🩸', name: '흡혈 탄환', desc: '처치 시 3% 확률로 체력 +10', max: 5, base: 220, growth: 1.55 },
+    { id: 'REGEN', icon: '🌿', name: '재생의 꽃', desc: '20초마다 체력 +10/Lv', max: 5, base: 250, growth: 1.6 },
+    { id: 'BOMB_BAG', icon: '🎒', name: '폭탄 가방', desc: '출격 시 폭탄 +1', max: 5, base: 200, growth: 1.6 },
+    { id: 'PETAL', icon: '🌸', name: '꽃잎 충전기', desc: '꽃잎 포 충전 -5발', max: 6, base: 180, growth: 1.5 },
+    { id: 'START_SHIELD', icon: '🔰', name: '출격 보호막', desc: '스테이지 시작 시 무적 +3초', max: 5, base: 150, growth: 1.5 },
+    { id: 'GOLD', icon: '🍀', name: '행운의 클로버', desc: '골드 획득 +15%', max: 5, base: 200, growth: 1.6 },
+    { id: 'EXP', icon: '📘', name: '전투 교본', desc: '경험치 획득 +15%', max: 5, base: 200, growth: 1.6 }
+];
+
+// 소모품 (instant: 구매 즉시 적용 / 그 외: 보관 후 사용)
+const SHOP_CONSUMABLES = [
+    { id: 'REVIVE', icon: '👼', name: '부활의 깃털', desc: '사망 시 체력 50%로 자동 부활', price: 400, max: 3 },
+    { id: 'BOMB', icon: '💣', name: '폭탄 보급', desc: '다음 스테이지 시작 시 폭탄 +2', price: 120, max: 5 },
+    { id: 'SHIELD_CHARM', icon: '🛡️', name: '무적 부적', desc: '다음 스테이지 시작 시 무적 10초', price: 150, max: 1 },
+    { id: 'SUPPORT_FLARE', icon: '📡', name: '지원 신호탄', desc: '다음 스테이지 시작 시 지원군 호출', price: 180, max: 1 },
+    { id: 'PETAL_SEED', icon: '🌺', name: '꽃잎 씨앗', desc: '다음 스테이지 시작 시 꽃잎 포 충전 완료', price: 160, max: 1 },
+    { id: 'EXP_POTION', icon: '🧪', name: '경험치 물약', desc: '즉시 플레이어 EXP +150', price: 200, instant: true },
+    { id: 'WEAPON_KIT', icon: '🔧', name: '무기 개조 키트', desc: '즉시 공격력 아이템 +1 Lv', price: 250, instant: true },
+    { id: 'TRIGGER_KIT', icon: '🔩', name: '방아쇠 개조 키트', desc: '즉시 공격속도 아이템 +1 Lv', price: 250, instant: true }
+];
+
+const Progress = {
+    KEY: 'killerflowerpig_save_v1',
+    gold: 0,
+    upgrades: {},
+    consumables: {},
+    run: null, // { stage, score, playerLevel, playerExp, playerExpToNext, items, bombCount }
+
+    load: function () {
+        try {
+            const data = JSON.parse(localStorage.getItem(this.KEY) || 'null');
+            if (data) {
+                this.gold = data.gold || 0;
+                this.upgrades = data.upgrades || {};
+                this.consumables = data.consumables || {};
+                this.run = data.run || null;
+            }
+        } catch (e) {
+            console.warn('[Progress] Load failed', e);
+        }
+    },
+    save: function () {
+        try {
+            localStorage.setItem(this.KEY, JSON.stringify({
+                gold: this.gold, upgrades: this.upgrades, consumables: this.consumables, run: this.run
+            }));
+        } catch (e) {
+            console.warn('[Progress] Save failed', e);
+        }
+    },
+
+    // --- 진행 상황 (이어하기) ---
+    saveRun: function (stage) {
+        const items = {};
+        for (const key in LevelSystem.items) {
+            items[key] = { level: LevelSystem.items[key].level, exp: LevelSystem.items[key].exp };
+        }
+        this.run = {
+            stage: Math.max(1, Math.min(10, stage)),
+            score: score,
+            playerLevel: LevelSystem.playerLevel,
+            playerExp: LevelSystem.playerExp,
+            playerExpToNext: LevelSystem.playerExpToNext,
+            items: items,
+            bombCount: Player.bombCount
+        };
+        this.save();
+    },
+    hasRun: function () { return !!this.run; },
+    clearRun: function () { this.run = null; this.save(); },
+    restoreRun: function () {
+        if (!this.run) return false;
+        const r = this.run;
+        LevelSystem.init();
+        LevelSystem.playerLevel = r.playerLevel || 1;
+        LevelSystem.playerExp = r.playerExp || 0;
+        LevelSystem.playerExpToNext = r.playerExpToNext || LevelSystem.getPlayerExpToNext(LevelSystem.playerLevel);
+        for (const key in r.items || {}) {
+            if (LevelSystem.items[key]) {
+                LevelSystem.items[key].level = r.items[key].level;
+                LevelSystem.items[key].exp = r.items[key].exp;
+            }
+        }
+        score = r.score || 0;
+        currentStage = r.stage;
+        projectiles = []; enemies = []; particles = []; gates = []; itemDrops = [];
+        enemiesKilled = 0; boss = null;
+        Player.init();
+        Player.bombCount = Math.max(Player.bombCount, r.bombCount || 0);
+        return true;
+    },
+
+    // --- 골드 / 업그레이드 ---
+    addGold: function (amount, x, y) {
+        const gained = Math.round(amount * (1 + this.upgradeLevel('GOLD') * 0.15));
+        this.gold += gained;
+        if (x !== undefined) addFloatingText(`💰 +${gained}G`, x, y, '#ffd700');
+        return gained;
+    },
+    upgradeLevel: function (id) { return this.upgrades[id] || 0; },
+    upgradePrice: function (u) {
+        return Math.round(u.base * Math.pow(u.growth, this.upgradeLevel(u.id)) / 10) * 10;
+    },
+    expMultiplier: function () { return 1 + this.upgradeLevel('EXP') * 0.15; },
+    critChance: function () { return this.upgradeLevel('CRIT') * 0.05; },
+
+    // --- 소모품 ---
+    consumableCount: function (id) { return this.consumables[id] || 0; },
+    addConsumable: function (id, n) {
+        this.consumables[id] = this.consumableCount(id) + n;
+        this.save();
+    },
+    useConsumable: function (id) {
+        if (this.consumableCount(id) <= 0) return false;
+        this.consumables[id]--;
+        this.save();
+        return true;
+    },
+
+    // 스테이지 시작 시 적용되는 업그레이드/소모품 효과
+    applyStageStartBonuses: function () {
+        const startShield = this.upgradeLevel('START_SHIELD') * 3000;
+        if (startShield > 0) {
+            Player.shield = Math.max(Player.shield, startShield);
+            addSkillNotification('START SHIELD', startShield);
+        }
+        while (this.useConsumable('BOMB')) Player.bombCount += 2;
+        if (this.useConsumable('SHIELD_CHARM')) {
+            Player.shield = Math.max(Player.shield, 10000);
+            addSkillNotification('SHIELD CHARM', 10000);
+        }
+        if (this.useConsumable('SUPPORT_FLARE')) LevelSystem.applySupport();
+        if (this.useConsumable('PETAL_SEED')) {
+            Player.petalCannonCharge = Player.petalCannonMaxCharge;
+            Player.petalCannonReady = true;
+        }
+    }
+};
+Progress.load();
+
+// 치명타 판정 (저격 조준경 업그레이드)
+function rollCritDamage(p) {
+    if (Math.random() < Progress.critChance()) {
+        addFloatingText(`CRIT! ${p.damage * 2}`, p.x, p.y - 15, '#ff00ff');
+        return p.damage * 2;
+    }
+    return p.damage;
+}
+
+const Shop = {
+    overlay: document.getElementById('overlay-shop'),
+    list: document.getElementById('shop-list'),
+    goldText: document.getElementById('shop-gold'),
+    statsText: document.getElementById('shop-stats'),
+    primaryBtn: document.getElementById('shop-primary-btn'),
+    secondaryBtn: document.getElementById('shop-secondary-btn'),
+    tab: 'upgrade',
+    context: 'menu', // 'menu' | 'stageClear' | 'gameOver'
+    openedAt: 0,
+
+    init: function () {
+        if (!this.overlay) return;
+        this.overlay.querySelectorAll('.shop-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.tab = btn.dataset.tab;
+                this.render();
+            });
+        });
+        this.list.addEventListener('click', (e) => {
+            const btn = e.target.closest('.shop-buy-btn');
+            if (!btn || btn.disabled) return;
+            // 스테이지 클리어 화면 터치가 그대로 구매 버튼으로 이어지는 것을 방지
+            if (Date.now() - this.openedAt < 400) return;
+            this.buy(btn.dataset.kind, btn.dataset.id);
+        });
+        this.primaryBtn.addEventListener('click', () => this.onPrimary());
+        this.secondaryBtn.addEventListener('click', () => this.onSecondary());
+        // 오버레이 내부 입력이 게임(캔버스/윈도우) 입력으로 전달되지 않도록 차단
+        ['mousedown', 'touchstart', 'click'].forEach(type => {
+            this.overlay.addEventListener(type, (e) => e.stopPropagation());
+        });
+    },
+
+    open: function (context) {
+        if (!this.overlay) { if (context === 'stageClear') advanceStage(); return; }
+        this.context = context;
+        this.openedAt = Date.now();
+        // 메인 메뉴에서 열면 저장된 진행 상황을 불러와서 현재 스탯 기준으로 표시/적용
+        if (context === 'menu') {
+            if (!Progress.restoreRun()) { LevelSystem.init(); Player.init(); }
+        }
+        currentState = GAME_STATE.SHOP;
+        if (gameoverButtons) gameoverButtons.hidden = true;
+        updateMainMenuVisibility();
+        this.overlay.hidden = false;
+        this.render();
+    },
+    close: function () {
+        if (this.overlay) this.overlay.hidden = true;
+        Progress.save();
+    },
+    onPrimary: function () {
+        AudioManager.playSFX('buttonclick');
+        this.close();
+        if (this.context === 'stageClear') {
+            advanceStage();
+        } else if (this.context === 'gameOver') {
+            resetGame(currentStage, true);
+        } else {
+            currentState = GAME_STATE.START;
+            updateMainMenuVisibility();
+        }
+    },
+    onSecondary: function () {
+        AudioManager.playSFX('buttonclick');
+        this.close();
+        if (this.context === 'gameOver') {
+            currentState = GAME_STATE.GAME_OVER;
+        } else {
+            currentState = GAME_STATE.START;
+            updateMainMenuVisibility();
+        }
+    },
+
+    buy: function (kind, id) {
+        if (kind === 'upgrade') {
+            const u = SHOP_UPGRADES.find(x => x.id === id);
+            const lvl = Progress.upgradeLevel(id);
+            const price = Progress.upgradePrice(u);
+            if (lvl >= u.max || Progress.gold < price) return;
+            Progress.gold -= price;
+            Progress.upgrades[id] = lvl + 1;
+            this.applyUpgradeNow(id);
+        } else {
+            const c = SHOP_CONSUMABLES.find(x => x.id === id);
+            if (!this.canBuyConsumable(c) || Progress.gold < c.price) return;
+            Progress.gold -= c.price;
+            if (c.instant) this.applyInstant(id);
+            else Progress.consumables[id] = Progress.consumableCount(id) + 1;
+        }
+        // 진행 중인 런이 있으면 즉시 적용된 레벨/아이템도 함께 저장
+        if (Progress.hasRun()) Progress.saveRun(Progress.run.stage);
+        else Progress.save();
+        AudioManager.playSFX('powerup');
+        this.render();
+    },
+    canBuyConsumable: function (c) {
+        if (c.instant) {
+            if (c.id === 'WEAPON_KIT') return LevelSystem.items.DAMAGE.level < LevelSystem.itemMaxLevel;
+            if (c.id === 'TRIGGER_KIT') return LevelSystem.items.FIRE_RATE.level < LevelSystem.itemMaxLevel;
+            if (c.id === 'EXP_POTION') return LevelSystem.playerLevel < LevelSystem.maxLevel;
+            return true;
+        }
+        return Progress.consumableCount(c.id) < c.max;
+    },
+    // 업그레이드 구매 시 현재 플레이어 스탯에 바로 반영 (상점은 스테이지 사이에 열림)
+    applyUpgradeNow: function (id) {
+        switch (id) {
+            case 'ATK': case 'RATE': Player.recalcWeaponStats(); break;
+            case 'HP': Player.maxHp += 1; Player.hp = Player.maxHp; break;
+            case 'ARMOR': Player.defense += 0.04; break;
+            case 'SPEED': Player.speed = 0.15 * (1 + Progress.upgradeLevel('SPEED') * 0.08); break;
+            case 'BOMB_BAG': Player.bombCount += 1; break;
+            case 'PETAL': Player.petalCannonMaxCharge = 50 - Progress.upgradeLevel('PETAL') * 5; break;
+        }
+    },
+    applyInstant: function (id) {
+        if (id === 'EXP_POTION') LevelSystem.addPlayerExp(150);
+        if (id === 'WEAPON_KIT') {
+            const it = LevelSystem.items.DAMAGE;
+            LevelSystem.addItemExp('DAMAGE', it.expToNext - it.exp);
+        }
+        if (id === 'TRIGGER_KIT') {
+            const it = LevelSystem.items.FIRE_RATE;
+            LevelSystem.addItemExp('FIRE_RATE', it.expToNext - it.exp);
+        }
+        Player.recalcWeaponStats();
+    },
+
+    render: function () {
+        if (!this.overlay) return;
+        this.goldText.textContent = Progress.gold.toLocaleString();
+        this.statsText.textContent =
+            `LV ${LevelSystem.playerLevel} · ATK ${Player.damage} · 발사간격 ${Player.fireRate}ms · HP ${Math.round(Player.maxHp * 20)}`;
+        this.overlay.querySelectorAll('.shop-tab').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === this.tab);
+        });
+
+        let html = '';
+        if (this.tab === 'upgrade') {
+            for (const u of SHOP_UPGRADES) {
+                const lvl = Progress.upgradeLevel(u.id);
+                const maxed = lvl >= u.max;
+                const price = Progress.upgradePrice(u);
+                html += this.cardHtml('upgrade', u.id, u.icon, u.name, u.desc, `Lv ${lvl}/${u.max}`,
+                    maxed ? 'MAX' : `${price}G`, maxed || Progress.gold < price);
+            }
+        } else {
+            for (const c of SHOP_CONSUMABLES) {
+                const owned = c.instant ? '즉시 사용' : `보유 ${Progress.consumableCount(c.id)}/${c.max}`;
+                const canBuy = this.canBuyConsumable(c);
+                html += this.cardHtml('consumable', c.id, c.icon, c.name, c.desc, owned,
+                    canBuy ? `${c.price}G` : (c.instant ? 'MAX' : '보유 한도'), !canBuy || Progress.gold < c.price);
+            }
+        }
+        this.list.innerHTML = html;
+
+        if (this.context === 'stageClear') {
+            this.primaryBtn.textContent = `▶ STAGE ${currentStage + 1} 출격`;
+            this.secondaryBtn.hidden = true;
+        } else if (this.context === 'gameOver') {
+            this.primaryBtn.textContent = `⚔️ STAGE ${currentStage} 재출격`;
+            this.secondaryBtn.textContent = '돌아가기';
+            this.secondaryBtn.hidden = false;
+        } else {
+            this.primaryBtn.textContent = '닫기';
+            this.secondaryBtn.hidden = true;
+        }
+    },
+    cardHtml: function (kind, id, icon, name, desc, sub, priceLabel, disabled) {
+        return `<div class="shop-card${disabled ? ' disabled' : ''}">
+            <div class="shop-card-icon">${icon}</div>
+            <div class="shop-card-body">
+                <div class="shop-card-name">${name} <span class="shop-card-sub">${sub}</span></div>
+                <div class="shop-card-desc">${desc}</div>
+            </div>
+            <button type="button" class="shop-buy-btn" data-kind="${kind}" data-id="${id}"${disabled ? ' disabled' : ''}>${priceLabel}</button>
+        </div>`;
+    }
+};
+Shop.init();
 
 class Projectile {
     constructor(x, y, vx, vy, damage) {
@@ -2143,7 +2554,7 @@ class Enemy {
                 // 놓친 적은 무적 상태와 관계없이 1마리당 HP 1 감소 (무적 모드일 때는 감소 안함)
                 if (this.state !== 'DEAD' && !isGodMode) {
                     // 방어력 적용: 받는 데미지 = 기본데미지 * (1 - 방어력)
-                    const actualDamage = Math.max(0.2, 1 * (1 - Player.defense));
+                    const actualDamage = Math.max(0.2, (this.contactDamage || 1) * (1 - Player.defense));
                     Player.hp -= actualDamage; AudioManager.playSFX('miss');
                     if (Player.hp <= 0) endGame();
                 } else if (this.state !== 'DEAD' && isGodMode) {
@@ -2186,7 +2597,7 @@ class Enemy {
                 this.state = 'ATTACK'; this.aniFrame = 0; this.lastFrameTime = timestamp;
                 if (!isGodMode) {
                     // 방어력 적용: 받는 데미지 = 기본데미지 * (1 - 방어력)
-                    const actualDamage = Math.max(0.2, 1 * (1 - Player.defense));
+                    const actualDamage = Math.max(0.2, (this.contactDamage || 1) * (1 - Player.defense));
                     Player.hp -= actualDamage; Player.shield = getPlayerInvincibleDuration(); AudioManager.playSFX('hit');
                     if (Player.hp <= 0) endGame();
                 } else {
@@ -2201,7 +2612,9 @@ class Enemy {
             // 적 타입별/상태별 프레임 수 최적화 (죽는 모션이 부정확하다는 피드백 반영)
             let maxFrames = this.totalFrames;
             if (this.state === 'DEAD') {
-                if (currentStage >= 8) {
+                if (this.isElite) {
+                    maxFrames = BOSS_SPRITE_MAP.DEAD.frames.length; // 엘리트(구 보스): 6프레임
+                } else if (currentStage >= 8) {
                     maxFrames = 4; // 청토끼 3: 4프레임
                 } else if (currentStage >= 4) {
                     maxFrames = 4; // 청토끼 2: 4프레임 (5번째 프레임에 잘못된 이미지 제거)
@@ -2317,6 +2730,172 @@ class Enemy {
     }
 }
 
+// ============================================================================
+// [ELITE ENEMY] 이전 청토끼 보스가 일반 몹으로 등장 - 매우 강하지만 처치 시 아이템 드롭
+// ============================================================================
+class EliteEnemy extends Enemy {
+    constructor(x, y) {
+        super(x, y);
+        this.isElite = true;
+        const sizeScale = isMobileLandscapePlayMode() ? 0.75 : 1.0;
+        this.width = Math.round(120 * sizeScale);
+        this.height = Math.round(120 * sizeScale);
+        this.y = Math.max(40, Math.min(y, canvas.height - this.height - 10));
+        this.hp = this.hp * 7; // 일반 몹의 7배 체력
+        this.maxHp = this.hp;
+        this.contactDamage = 2; // 접촉/놓침 시 2배 피해
+        this.shootInterval *= 0.6; // 더 자주 사격
+    }
+    draw(ctx) {
+        const img = ImageLoader.get('boss');
+        if (img) {
+            const animSet = BOSS_SPRITE_MAP[this.state] || BOSS_SPRITE_MAP.WALK;
+            const frame = animSet.frames[this.aniFrame % animSet.frames.length];
+            const drawW = this.width * 1.5;
+            const drawH = drawW * (145 / 250);
+            ctx.save();
+            ctx.translate(this.x + this.width / 2, this.y + this.height - drawH / 2);
+            ctx.scale(-1, 1);
+            if (this.state === 'DEAD') ctx.globalAlpha = Math.max(0.3, 1 - this.aniFrame * 0.12);
+            // 엘리트 표시: 보라색 오라
+            ctx.shadowBlur = 18 + Math.sin(Date.now() / 150) * 6;
+            ctx.shadowColor = '#b84dff';
+            ctx.drawImage(img, frame.x, animSet.y, frame.w, animSet.h, -drawW / 2, -drawH / 2, drawW, drawH);
+            ctx.restore();
+        }
+        if (this.state !== 'DEAD') {
+            const barW = 80; const barH = 6;
+            const bx = this.x + (this.width - barW) / 2;
+            const by = this.y - 18;
+            const clampedHp = Math.max(0, Math.min(this.hp, this.maxHp));
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(bx, by, barW, barH);
+            ctx.fillStyle = '#b84dff';
+            ctx.fillRect(bx, by, (clampedHp / this.maxHp) * barW, barH);
+            ctx.strokeStyle = '#f1c40f'; ctx.lineWidth = 1;
+            ctx.strokeRect(bx, by, barW, barH);
+            ctx.fillStyle = '#f1c40f';
+            ctx.font = '8px "Press Start 2P"';
+            ctx.textAlign = 'center';
+            ctx.fillText(`★ELITE★ ${Math.floor(clampedHp)}`, this.x + this.width / 2, by - 5);
+        }
+    }
+}
+
+// 엘리트 처치 시 드롭되는 아이템 (가중치 랜덤)
+const ELITE_DROP_TABLE = [
+    { id: 'WEAPON', icon: '⚔️', name: '무기 강화', color: '#2ecc71', weight: 18 },
+    { id: 'TRIGGER', icon: '🔥', name: '연사 강화', color: '#3498db', weight: 18 },
+    { id: 'BOMB', icon: '💣', name: '폭탄 +2', color: '#f1c40f', weight: 14 },
+    { id: 'HEAL', icon: '❤️', name: '체력 완전 회복', color: '#e74c3c', weight: 14 },
+    { id: 'SHIELD', icon: '🛡️', name: '무적 보호막', color: '#9b59b6', weight: 10 },
+    { id: 'SUPPORT', icon: '👥', name: '지원군 호출', color: '#e67e22', weight: 8 },
+    { id: 'PETAL', icon: '🌸', name: '꽃잎 포 충전', color: '#ff69b4', weight: 8 },
+    { id: 'GOLD', icon: '💰', name: '골드 주머니 +200', color: '#ffd700', weight: 7 },
+    { id: 'REVIVE', icon: '👼', name: '부활의 깃털', color: '#ecf0f1', weight: 3 }
+];
+
+function rollEliteDrop() {
+    const total = ELITE_DROP_TABLE.reduce((sum, d) => sum + d.weight, 0);
+    let r = Math.random() * total;
+    for (const d of ELITE_DROP_TABLE) {
+        r -= d.weight;
+        if (r <= 0) return d;
+    }
+    return ELITE_DROP_TABLE[0];
+}
+
+function applyEliteDrop(drop) {
+    switch (drop.id) {
+        case 'WEAPON': {
+            const it = LevelSystem.items.DAMAGE;
+            if (it.level < LevelSystem.itemMaxLevel) LevelSystem.addItemExp('DAMAGE', it.expToNext - it.exp);
+            else Progress.addGold(150);
+            Player.recalcWeaponStats();
+            break;
+        }
+        case 'TRIGGER': {
+            const it = LevelSystem.items.FIRE_RATE;
+            if (it.level < LevelSystem.itemMaxLevel) LevelSystem.addItemExp('FIRE_RATE', it.expToNext - it.exp);
+            else Progress.addGold(150);
+            Player.recalcWeaponStats();
+            break;
+        }
+        case 'BOMB': Player.bombCount += 2; break;
+        case 'HEAL': Player.hp = Player.maxHp; break;
+        case 'SHIELD': LevelSystem.applyShield(); break;
+        case 'SUPPORT': LevelSystem.applySupport(); break;
+        case 'PETAL':
+            Player.petalCannonCharge = Player.petalCannonMaxCharge;
+            Player.petalCannonReady = true;
+            break;
+        case 'GOLD': Progress.addGold(200); break;
+        case 'REVIVE': Progress.addConsumable('REVIVE', 1); break;
+    }
+    addFloatingText(`🎁 ${drop.icon} ${drop.name}!`, Player.x + 40, Player.y - 40, drop.color);
+    AudioManager.playSFX('powerup');
+}
+
+// 드롭 아이템: 잠깐 튀어오른 뒤 플레이어에게 빨려 들어감
+class ItemDrop {
+    constructor(x, y, drop) {
+        this.x = x; this.y = y; this.drop = drop;
+        this.vx = -1.5; this.vy = -4;
+        this.age = 0; this.active = true;
+    }
+    update() {
+        this.age += 16;
+        if (this.age < 500) {
+            this.x += this.vx; this.y += this.vy; this.vy += 0.3;
+        } else {
+            const tx = Player.x + Player.width / 2;
+            const ty = Player.y + Player.height / 2;
+            const speed = Math.min(18, 4 + (this.age - 500) / 60);
+            const dx = tx - this.x; const dy = ty - this.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < 30) {
+                this.active = false;
+                applyEliteDrop(this.drop);
+                createExplosion(this.x, this.y, this.drop.color);
+                return;
+            }
+            this.x += (dx / dist) * speed; this.y += (dy / dist) * speed;
+        }
+    }
+    draw(ctx) {
+        const pulse = 1 + Math.sin(this.age / 80) * 0.15;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.scale(pulse, pulse);
+        ctx.shadowBlur = 20; ctx.shadowColor = this.drop.color;
+        ctx.fillStyle = 'rgba(20, 10, 30, 0.85)';
+        ctx.fillRect(-16, -16, 32, 32);
+        ctx.strokeStyle = this.drop.color; ctx.lineWidth = 3;
+        ctx.strokeRect(-16, -16, 32, 32);
+        ctx.shadowBlur = 0;
+        ctx.font = '18px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(this.drop.icon, 0, 1);
+        ctx.restore();
+    }
+}
+
+// 적 처치 공통 처리 (골드, 흡혈, 엘리트 드롭)
+function onEnemyKilled(e) {
+    if (e.isElite) {
+        Progress.addGold(60, e.x, e.y);
+        itemDrops.push(new ItemDrop(e.x + e.width / 2, e.y + e.height / 2, rollEliteDrop()));
+        addFloatingText('★ ELITE DOWN! ★', e.x, e.y - 30, '#b84dff');
+    } else {
+        Progress.addGold(5);
+    }
+    const vampLevel = Progress.upgradeLevel('VAMP');
+    if (vampLevel > 0 && Player.hp < Player.maxHp && Math.random() < vampLevel * 0.03) {
+        Player.hp = Math.min(Player.maxHp, Player.hp + 0.5);
+        addFloatingText('🩸 +10', Player.x, Player.y - 20, '#ff4757');
+    }
+}
+
 class GatePair {
     constructor(x) {
         this.x = x; this.width = 60; this.speed = 3.5; this.active = true;
@@ -2370,9 +2949,7 @@ class GatePair {
             const item = LevelSystem.items.FIRE_RATE;
 
             // 스탯 직접 업데이트
-            const baseFireRate = 200;
-            const itemFireRateBonus = (newLevel - 1) * LevelSystem.stats.itemFireRatePerLevel;
-            Player.fireRate = Math.max(baseFireRate - itemFireRateBonus, Player.minFireRate);
+            Player.recalcWeaponStats();
 
             // 레벨업 시에만 표시
             if (leveledUp) {
@@ -2387,9 +2964,7 @@ class GatePair {
             const item = LevelSystem.items.DAMAGE;
 
             // 스탯 직접 업데이트
-            const baseDamage = 10;
-            const itemDamageBonus = (newLevel - 1) * LevelSystem.stats.itemDamagePerLevel;
-            Player.damage = Math.round(baseDamage + itemDamageBonus);
+            Player.recalcWeaponStats();
 
             if (leveledUp) {
                 addFloatingText(`⚔️ ATK Lv.${newLevel} UP!`, this.x, gatePart.y + gatePart.height / 2 - 10, "#2ecc71");
@@ -2417,6 +2992,7 @@ class GatePair {
         } else if (gatePart.type === 'COIN') {
             // 코인 아이템: 플레이어 EXP 즉시 획득 (25 EXP)
             const expGained = 25;
+            Progress.addGold(40, this.x, gatePart.y + gatePart.height / 2 + 20);
             const prevLevel = LevelSystem.playerLevel;
             LevelSystem.addPlayerExp(expGained);
             const newLevel = LevelSystem.playerLevel;
@@ -2827,16 +3403,10 @@ function advanceStage() {
         projectiles = [];
         gates = [];
 
-        // 스테이지 진행 시에도 아이템 레벨 기준으로 스탯 유지 (초기화하지 않음)
-        const baseDamage = 10;
-        const itemDamageBonus = (LevelSystem.items.DAMAGE.level - 1) * LevelSystem.stats.itemDamagePerLevel;
-        Player.damage = isMobileEasyModeActive()
-            ? Math.round((baseDamage + itemDamageBonus) * EASY_MODE_CONFIG.playerDamageMultiplier)
-            : baseDamage + itemDamageBonus;
+        itemDrops = [];
 
-        const baseFireRate = 200;
-        const itemFireRateBonus = (LevelSystem.items.FIRE_RATE.level - 1) * LevelSystem.stats.itemFireRatePerLevel;
-        Player.fireRate = Math.max(baseFireRate - itemFireRateBonus, Player.minFireRate);
+        // 스테이지 진행 시에도 아이템 레벨 + 상점 업그레이드 기준으로 스탯 유지 (초기화하지 않음)
+        Player.recalcWeaponStats();
 
         // 플레이어 상태 완전 초기화 (중요: state를 DEAD에서 ALIVE로 변경)
         Player.hp = Player.maxHp;
@@ -3097,10 +3667,15 @@ class Boss {
                         currentState = GAME_STATE.STAGE_CLEAR;
                         AudioManager.playSFX('explode');
 
-                        // 3초 후 자동으로 스테이지 진행 (사용자가 클릭하지 않아도 스토리가 나오도록)
+                        // 보스 처치 보상 골드 + 진행 상황 저장 (다음 스테이지부터 이어하기)
+                        Progress.addGold(150 + currentStage * 30, canvas.width / 2, canvas.height / 2 - 110);
+                        if (currentStage < 10) Progress.saveRun(currentStage + 1);
+                        else Progress.clearRun();
+
+                        // 3초 후 자동으로 상점 열기 (상점에서 다음 스테이지로 출격)
                         setTimeout(() => {
-                            if (currentState === GAME_STATE.STAGE_CLEAR) {
-                                advanceStage();
+                            if (currentState === GAME_STATE.STAGE_CLEAR && currentStage < 10) {
+                                Shop.open('stageClear');
                             }
                         }, 3000);
                     }
@@ -3355,10 +3930,15 @@ function spawnEnemyWave() {
     // 가로 모드에서 적들이 더 오른쪽에서 생성되고 더 느리게 이동
     const isLandscape = window.innerWidth > window.innerHeight;
     const spawnOffset = isLandscape ? 150 : 50; // 가로 모드: 더 오른쪽에서 생성
-    const e = new Enemy(canvas.width + spawnOffset, Math.random() * (canvas.height - 100) + 50);
+    // 스테이지 2부터 일정 확률로 엘리트(구 청토끼 보스) 등장 - 화면에 1마리까지
+    const hasElite = enemies.some(en => en.isElite && en.active && en.state !== 'DEAD');
+    const eliteChance = currentStage >= 2 ? 0.06 + currentStage * 0.005 : 0;
+    const EnemyClass = (!hasElite && Math.random() < eliteChance) ? EliteEnemy : Enemy;
+    const e = new EnemyClass(canvas.width + spawnOffset, Math.random() * (canvas.height - 100) + 50);
     // 가로 모드에서 적 속도 50% 감소
     const landscapeSpeedMultiplier = isLandscape ? 0.5 : 1;
-    e.speed = stage.enemySpeed * landscapeSpeedMultiplier;
+    e.speed = stage.enemySpeed * landscapeSpeedMultiplier * (e.isElite ? 0.55 : 1);
+    if (e.isElite) addFloatingText('⚠ ELITE 청토끼 출현! ⚠', canvas.width / 2, 120, '#b84dff');
     enemies.push(e);
 }
 
@@ -3452,19 +4032,36 @@ function usePetalCannon() {
 }
 
 function endGame() {
-    if (currentState !== GAME_STATE.GAME_OVER) gameOverStartTime = Date.now();
+    if (currentState === GAME_STATE.GAME_OVER) return;
+    // 부활의 깃털: 사망 시 1회 부활
+    if (Progress.useConsumable('REVIVE')) {
+        Player.state = 'ALIVE';
+        Player.aniFrame = 0;
+        Player.hp = Math.max(1, Player.maxHp * 0.5);
+        Player.shield = 3000;
+        addFloatingText('👼 부활의 깃털! 부활했다!', Player.x + 60, Player.y - 30, '#ecf0f1');
+        AudioManager.playSFX('powerup');
+        return;
+    }
+    gameOverStartTime = Date.now();
     currentState = GAME_STATE.GAME_OVER;
+    // 이어하기: 레벨/아이템을 유지한 채 현재 스테이지부터 다시 시작할 수 있도록 저장
+    Progress.saveRun(currentStage);
 }
-function resetGame(stageToStart = 1) {
-    projectiles = []; enemies = []; particles = []; gates = [];
+// keepProgress: true면 레벨/아이템/점수를 유지한 채 해당 스테이지 재도전 (이어하기)
+function resetGame(stageToStart = 1, keepProgress = false) {
+    projectiles = []; enemies = []; particles = []; gates = []; itemDrops = [];
     currentStage = stageToStart; // 파라미터로 받은 스테이지로 시작
     enemiesKilled = 0; boss = null;
     currentState = GAME_STATE.PLAYING; gameOverStartTime = 0;
-    // 스테이지 1에서 시작할 때만 레벨 시스템 초기화, 아니면 레벨 유지
-    if (stageToStart === 1) {
+    if (!keepProgress) {
         LevelSystem.init();
+        score = 0;
     }
-    Player.init(); updateMainMenuVisibility();
+    Player.init();
+    Progress.applyStageStartBonuses();
+    Progress.saveRun(currentStage);
+    updateMainMenuVisibility();
 }
 
 function createBombExplosion() {
@@ -3486,12 +4083,18 @@ function useBomb() {
         let bombKills = 0;
         for (const e of enemies) {
             if (e.state !== 'DEAD') {
+                // 엘리트는 폭탄 한 방에 죽지 않음 (최대 체력의 40% 피해)
+                if (e.isElite) {
+                    e.hp -= e.maxHp * 0.4;
+                    if (e.hp > 0) { createExplosion(e.x, e.y, '#b84dff'); continue; }
+                }
                 e.state = 'DEAD';
                 e.aniFrame = 0;
                 bombKills++;
                 score += 100;
                 // 폭탄 킬도 EXP 제공 (5 EXP)
                 LevelSystem.addPlayerExp(5);
+                onEnemyKilled(e);
                 createExplosion(e.x, e.y);
             }
         }
@@ -3925,10 +4528,10 @@ window.addEventListener('mousedown', (e) => {
     }
     if (currentState === GAME_STATE.GAME_OVER) {
         // 게임오버 버튼이 보이면 클릭으로 재시작하지 않음 (버튼으로만 조작)
-        if (!gameoverButtons || gameoverButtons.hidden) resetGame();
+        if (!gameoverButtons || gameoverButtons.hidden) resetGame(currentStage, true);
     }
     else if (currentState === GAME_STATE.STAGE_CLEAR) {
-        if (currentStage < 10) advanceStage();
+        if (currentStage < 10) Shop.open('stageClear');
     }
 });
 
@@ -3981,10 +4584,10 @@ window.addEventListener('touchstart', (e) => {
     }
     if (currentState === GAME_STATE.GAME_OVER) {
         // 게임오버 버튼이 보이면 터치로 재시작하지 않음 (버튼으로만 조작)
-        if (!gameoverButtons || gameoverButtons.hidden) resetGame();
+        if (!gameoverButtons || gameoverButtons.hidden) resetGame(currentStage, true);
     }
     else if (currentState === GAME_STATE.STAGE_CLEAR) {
-        if (currentStage < 10) advanceStage();
+        if (currentStage < 10) Shop.open('stageClear');
     }
 
     // 더블 탭 감지
@@ -4029,7 +4632,7 @@ window.addEventListener('touchmove', (e) => {
     if (e.touches.length > 0) {
         Player.targetY = e.touches[0].clientY - Player.height / 2;
     }
-    e.preventDefault(); // 모바일 브라우저 화면 스크롤 방지
+    if (currentState !== GAME_STATE.SHOP) e.preventDefault(); // 모바일 브라우저 화면 스크롤 방지 (상점 목록은 스크롤 허용)
 }, { passive: false });
 
 window.addEventListener('keydown', (e) => { 
@@ -4102,12 +4705,12 @@ function gameLoop(timestamp) {
                 for (let j = enemies.length - 1; j >= 0; j--) {
                     const e = enemies[j]; if (e.state === 'DEAD') continue;
                     if (checkCollision(p, e)) {
-                        console.log(`[HIT] Bullet damage: ${p.damage}, Enemy HP: ${e.hp} → ${e.hp - p.damage}`);
-                        e.hp -= p.damage; p.active = false;
+                        e.hp -= rollCritDamage(p); p.active = false;
                         if (e.hp <= 0) { 
-                            e.state = 'DEAD'; e.aniFrame = 0; enemiesKilled++; score += 100; 
-                            // 적 처치 시 EXP 획득 (10 EXP)
-                            LevelSystem.addPlayerExp(10);
+                            e.state = 'DEAD'; e.aniFrame = 0; enemiesKilled++; score += e.isElite ? 1000 : 100; 
+                            // 적 처치 시 EXP 획득 (10 EXP, 엘리트 60 EXP)
+                            LevelSystem.addPlayerExp(e.isElite ? 60 : 10);
+                            onEnemyKilled(e);
                             createExplosion(e.x, e.y); AudioManager.playSFX('explode'); 
                             if (enemiesKilled >= stage.goal && !boss) startBossFight(); 
                         }
@@ -4116,7 +4719,7 @@ function gameLoop(timestamp) {
                 }
                 if (boss && boss.active && boss.state !== 'DEAD' && checkCollision(p, boss)) {
                     // 꽃잎 포는 보스에게 2배 데미지
-                    const damageToBoss = p.isPetalCannon ? p.damage * 2 : p.damage;
+                    const damageToBoss = p.isPetalCannon ? p.damage * 2 : rollCritDamage(p);
                     boss.hp -= damageToBoss; p.active = false; createExplosion(p.x, p.y, '#ff4757');
                     // 꽃잎 포 보스 타격 시 추가 플로팅 텍스트
                     if (p.isPetalCannon) {
@@ -4159,6 +4762,7 @@ function gameLoop(timestamp) {
             }
         }
         for (let i = enemies.length - 1; i >= 0; i--) { enemies[i].update(timestamp); if (!enemies[i].active) enemies.splice(i, 1); }
+        for (let i = itemDrops.length - 1; i >= 0; i--) { itemDrops[i].update(); if (!itemDrops[i].active) itemDrops.splice(i, 1); }
         for (let i = particles.length - 1; i >= 0; i--) { particles[i].update(); if (particles[i].life <= 0) particles.splice(i, 1); }
     }
     Background.draw(ctx);
@@ -4166,6 +4770,7 @@ function gameLoop(timestamp) {
     for (const g of gates) g.draw(ctx);
     for (const p of projectiles) p.draw(ctx);
     for (const e of enemies) e.draw(ctx);
+    for (const d of itemDrops) d.draw(ctx);
     for (const pt of particles) pt.draw(ctx);
     Player.draw(ctx);
 

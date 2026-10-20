@@ -22,7 +22,7 @@
     <!-- 링크 -->
     <link rel="manifest" href="manifest.webmanifest?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
     
     <!-- PWA 캐시 초기화 스크립트 -->
     <script>
@@ -45,7 +45,9 @@
             <!-- 메인 메뉴 버튼 및 UI 요소들 -->
 
             <div id="start-btn-container" class="btn-container start-container" hidden>
+                <button id="continue-btn" type="button" class="pixel-btn primary" hidden>CONTINUE</button>
                 <button id="start-btn" type="button" class="pixel-btn primary">START GAME</button>
+                <button id="menu-shop-btn" type="button" class="pixel-btn secondary">🛒 SHOP</button>
             </div>
             <div id="install-btn-container" class="btn-container install-container" hidden>
                 <button id="install-btn" type="button" class="pixel-btn install" hidden>
@@ -106,6 +108,9 @@
                     <button id="retry-btn" type="button" class="pixel-btn gameover-btn retry-btn">
                         <span class="btn-icon">⚔️</span> 부활하여 재출격
                     </button>
+                    <button id="gameover-shop-btn" type="button" class="pixel-btn gameover-btn shop-btn">
+                        <span class="btn-icon">🛒</span> 상점
+                    </button>
                     <button id="quit-btn" type="button" class="pixel-btn gameover-btn quit-btn">
                         <span class="btn-icon">👣</span> 전선에서 후퇴
                     </button>
@@ -160,6 +165,26 @@
             <button id="stage-clear-epilogue-btn" type="button" class="pixel-btn primary win-btn" style="display:none; margin-top:24px;">에필로그 보기</button>
         </div>
 
+        <!-- 전체화면 오버레이: 상점 -->
+        <div id="overlay-shop" class="fullscreen-overlay shop-overlay" hidden>
+            <div class="shop-panel">
+                <div class="shop-header">
+                    <div class="shop-title">🛒 연이의 상점</div>
+                    <div class="shop-gold">💰 <span id="shop-gold">0</span>G</div>
+                </div>
+                <div class="shop-stats" id="shop-stats"></div>
+                <div class="shop-tabs">
+                    <button type="button" class="shop-tab active" data-tab="upgrade">영구 강화</button>
+                    <button type="button" class="shop-tab" data-tab="consumable">소모품</button>
+                </div>
+                <div class="shop-list" id="shop-list"></div>
+                <div class="shop-actions">
+                    <button id="shop-secondary-btn" type="button" class="pixel-btn secondary" hidden>돌아가기</button>
+                    <button id="shop-primary-btn" type="button" class="pixel-btn primary">닫기</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 전체화면 오버레이: 게임 올 클리어 (Win) -->
         <div id="overlay-win" class="fullscreen-overlay" hidden>
             <div class="victory-neon-frame">
@@ -206,7 +231,7 @@
             </div>
         </div>
     </div>
-    <script src="game.js?v=4"></script>
+    <script src="game.js?v=5"></script>
 </body>
 
 </html>
