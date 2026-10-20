@@ -1,5 +1,5 @@
 // 출격 전 시작 테크 선택 화면. 고른 테크 id 를 onPick 으로 넘긴다.
-import { TECHS, RESONANCE_STEPS, DEFAULT_TECH, IMPRINT_LEVELS, MISMATCH_DAMAGE } from '../data/techs.js';
+import { TECHS, RESONANCE_STEPS, DEFAULT_TECH, IMPRINT_LEVELS, MISMATCH_DAMAGE, techStartingWeapons } from '../data/techs.js';
 import { DIFFICULTIES, DIFFICULTY_ORDER } from '../data/difficulty.js';
 import { WEAPONS, PASSIVES } from '../data/weapons.js';
 import { mountItemArt } from './item-art.js';
@@ -57,7 +57,7 @@ function renderList() {
         b.setAttribute('aria-checked', String(id === selected));
         const arts = document.createElement('span');
         arts.className = 'tech-arts';
-        arts.append(art(t.start.weapon, 'tech-art'), art(t.start.passive, 'tech-art small'));
+        arts.append(...techStartingWeapons(t).map(id => art(id, 'tech-art')), art(t.start.passive, 'tech-art small'));
         const text = document.createElement('span');
         text.className = 'tech-text';
         const name = document.createElement('strong');
@@ -84,7 +84,10 @@ function renderDetail() {
     head.className = 'tech-detail-head';
     const combo = document.createElement('p');
     combo.className = 'tech-combo';
-    combo.textContent = `시작 조합 · ${itemName(t.start.weapon)} Lv1 + ${itemName(t.start.passive)} Lv1 (공명 2/6 · I단계 즉시 활성)`;
+    const startingWeapons = techStartingWeapons(t);
+    const startingItems = [...startingWeapons, t.start.passive];
+    const startingResonance = startingWeapons.filter(id => t.family.weapons.includes(id)).length + Number(t.family.passives.includes(t.start.passive));
+    combo.textContent = `시작 조합 · ${startingItems.map(id => `${itemName(id)} Lv1`).join(' + ')} (무기 ${startingWeapons.length}/6칸 · 공명 ${startingResonance}/6 · I단계 즉시 활성)`;
     head.append(combo);
 
     const tiers = document.createElement('ol');

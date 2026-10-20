@@ -753,7 +753,8 @@ const LORE = [
 function settleStage(outcome) {
     if (G.settlement) return G.settlement.earned;
     const stageKills = G.kills - (G.stageKillsStart || 0);
-    const earned = Math.round((outcome === 'clear' ? stageKills * 0.2 + 40 * G.stage : stageKills * 0.1) * G.player.stats.greed);
+    // 정산 금화: 네임드(보스) 처치 현상금만. 일반 처치·사망으로는 금화를 받지 않는다.
+    const earned = Math.round((outcome === 'clear' ? 5 * G.stage : 0) * G.player.stats.greed);
     const eventId = `${rewardSession}:settlement:${++rewardSequence}`;
     G.settlement = { outcome, earned, eventId };
     if (outcome === 'clear') G.gold += earned;
@@ -927,9 +928,6 @@ export function initUI() {
     click('btn-quit', () => { closeModal('pause'); audio.pauseBGM(); showTitle(); audio.playBGM(); });
     click('btn-skip', () => {
         if(topModalId()!=='levelup'||!finishChoiceSession(displayedChoiceSession?.id))return;
-        const g = 10 * G.stage;
-        G.gold += g;
-        creditReward(g);
         closeModal('levelup');
     });
     click('btn-retry', () => { hide('gameover'); retryStage(); startPlaying(); });

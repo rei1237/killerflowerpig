@@ -157,7 +157,7 @@
             <div class="modal-box tech-box">
                 <p class="eyebrow"><span></span>LOADOUT · 출격 준비</p>
                 <h2 id="tech-title" class="modal-title">시작 테크 선택</h2>
-                <p class="panel-caption tech-caption">시작 무기와 짝 보조 장비가 주어집니다. 같은 계열 장비를 <b>2·4·6개</b> 모으면 <b>공명</b> 보너스가 단계별로 열리고, 다른 계열 무기는 테크 보너스를 받지 못합니다.</p>
+                <p class="panel-caption tech-caption">시작 무기와 짝 보조 장비가 주어집니다. 연꽃 정원은 연꽃 가시와 꽃잎포를 함께 들고 시작합니다. 같은 계열 장비를 <b>2·4·6개</b> 모으면 <b>공명</b> 보너스가 단계별로 열리고, 다른 계열 무기는 테크 보너스를 받지 못합니다.</p>
                 <div class="diff-row">
                     <span class="tech-sub">난이도</span>
                     <div id="diff-list" class="diff-list" role="radiogroup" aria-label="난이도"></div>
@@ -180,7 +180,7 @@
                 <div class="modal-actions">
                     <button id="btn-levelup-fusion" class="btn btn-small" type="button">아이템 조합</button>
                     <button id="btn-reroll" class="btn btn-small" type="button">🎲 리롤</button>
-                    <button id="btn-skip" class="btn btn-ghost btn-small" type="button">넘기기 (+골드)</button>
+                    <button id="btn-skip" class="btn btn-ghost btn-small" type="button">넘기기</button>
                 </div>
             </div>
         </section>
@@ -263,13 +263,14 @@
                 <h2 class="modal-title drip">장비 보급소 <small id="shop-gold">● 0</small></h2>
                 <p id="shop-character" class="character-record"></p><p id="shop-status" class="shop-status" role="status"></p>
                 <section id="cosmetic-room" class="cosmetic-room" aria-labelledby="cosmetic-heading">
-                    <div class="cosmetic-heading"><div><p class="eyebrow">FLOWERPIG ATELIER</p><h3 id="cosmetic-heading">꽃돼지의 의상실</h3></div><span class="cosmetic-pure-tag">외형 전용</span></div>
-                    <p class="cosmetic-intro">연꽃을 두르고, 나만의 꽃돼지로.<br><strong>구매 전에 자유롭게 입어보세요.</strong> 의상과 장식은 전투 능력치를 바꾸지 않습니다.</p>
+                    <div class="cosmetic-heading"><div><p class="eyebrow">FLOWERPIG ATELIER</p><h3 id="cosmetic-heading">꽃돼지의 의상실</h3></div><span class="cosmetic-pure-tag">외형 + 의상 효과</span></div>
+                    <p class="cosmetic-intro">연꽃을 두르고, 나만의 꽃돼지로.<br><strong>구매 전에 자유롭게 입어보세요.</strong> 망토는 이동·수집을, 예복은 방어를 돕습니다. 장식은 외형만 바뀝니다.</p>
                     <div class="cosmetic-layout">
                         <div class="cosmetic-preview-panel">
                             <div class="cosmetic-preview-stage"><div class="cosmetic-preview-watermark"><span>LIVE FITTING</span><b>YEONI / 01</b></div><img id="cosmetic-preview-fallback" src="asset/ui/menu-yeoni.webp" alt="꽃돼지 기본 모습" hidden><canvas id="cosmetic-preview-canvas" width="320" height="312" role="img" aria-label="꽃돼지 외형 미리보기"></canvas></div>
                             <div class="cosmetic-preview-copy"><p id="cosmetic-preview-state" class="cosmetic-preview-state" aria-live="polite">현재 장착 모습</p><h4 id="cosmetic-preview-name">꽃돼지 · 나의 장비</h4><p id="cosmetic-preview-look"></p>
                                 <div class="cosmetic-preview-controls" role="group" aria-label="미리보기 동작"><button id="cosmetic-preview-idle" type="button" aria-pressed="true">대기</button><button id="cosmetic-preview-fire" type="button" aria-pressed="false">발사 동작</button><button id="cosmetic-preview-flip" type="button" aria-pressed="false">좌우 반전</button></div>
+                                <label class="cosmetic-family-label" for="cosmetic-preview-family">공격 모션</label><select id="cosmetic-preview-family" class="cosmetic-family-select"><option value="fire">산탄·소총</option><option value="dual">쌍권총</option><option value="throw">병·수류탄 투척</option><option value="cannon">꽃잎포</option><option value="blade">톱날 발사</option><option value="channel">연꽃 시전</option></select>
                                 <button id="cosmetic-preview-reset" class="cosmetic-reset" type="button" disabled>실제 장착 모습으로 돌아가기</button>
                             </div>
                             <div id="cosmetic-equipped-slots" class="cosmetic-slots" aria-label="실제 장착 슬롯"></div>

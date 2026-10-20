@@ -68,3 +68,12 @@ test('versioned offer preserves old guide/save keys and explains actual field-bo
  assert.match(box.tip,/상점 전용/);assert.doesNotMatch(JSON.stringify(guide.TUTORIAL_STEPS),/조각|파편/);
  const all=JSON.stringify(guide.TUTORIAL_STEPS);assert.match(all,/나중에 얻은 무기와 조합 무기/);assert.match(all,/STAGE 3 클리어/);assert.match(all,/1개만 장착/);
 });
+
+test('guide discloses bloom dual Lv1 starters, two slots and unchanged evolution requirements',()=>{
+ const combo=guide.TUTORIAL_STEPS.find(s=>s.label==='아이템 조합');
+ assert.match(combo.text,/연꽃 정원.*연꽃 가시 Lv\.1 \+ 꽃잎포 Lv\.1.*재생하는 살점 Lv\.1/);
+ assert.match(combo.tip,/6칸 중 2칸/);
+ assert.match(combo.text,/Lv\.8.*짝 보조 아이템 Lv\.1 이상.*상자로 진화/);
+ assert.match(combo.text,/진화 무기 2개/);
+ assert.match(combo.text,/꽃잎포·연꽃 가시·화염병 3개를 모두 진화/);
+});

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { G, clearWorld, configureCaps, setVisualTier } from '../src/game/state.js';
 import { settings } from '../src/core/settings.js';
 import { atlases } from '../src/core/assets.js';
-import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, stageScaling } from '../src/data/enemies.js';
 import { STAGES, EVENTS } from '../src/data/stages.js';
 import { spawnEnemy, hitEnemy } from '../src/game/enemies.js';
 import { Boss } from '../src/game/boss.js';
@@ -33,11 +33,12 @@ function withFixedRandom(fn) {
 
 function originalScaling(stage, time) {
     const beginner = stage === 1 ? { hp: .95, speed: .9, dmg: .85 } : stage === 2 ? { hp: 1, speed: .95, dmg: .95 } : { hp: 1, speed: 1, dmg: 1 };
-    const prog = Math.min(1, time / STAGES[stage].duration);
+    const prog = Math.min(1, time / STAGES[stage].duration), late = Math.max(0, stage - 3);
+    // 1~3스테이지는 원래 곡선, 4스테이지부터 LATE_STAGE_SCALING 추가 강화 (1.62 배율은 이 위에 곱해진다)
     return {
-        hp: (1 + (stage - 1) * .6) * (1 + (stage - 1) * .14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp,
-        speed: (1 + (stage - 1) * .035) * beginner.speed,
-        dmg: (1 + (stage - 1) * .24) * beginner.dmg,
+        hp: (1 + (stage - 1) * .6) * (1 + (stage - 1) * .14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp * (1 + late * LATE_STAGE_SCALING.hp),
+        speed: (1 + (stage - 1) * .035 + late * LATE_STAGE_SCALING.speed) * beginner.speed,
+        dmg: (1 + (stage - 1) * .24 + late * LATE_STAGE_SCALING.dmg) * beginner.dmg,
         xp: 1 + (stage - 1) * .15,
     };
 }

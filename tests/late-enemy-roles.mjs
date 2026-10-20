@@ -20,15 +20,20 @@ test('suicide charge warns, locks direction, gives final fuse and can be killed 
  reset(); const e=spawnEnemy('suicider',150,0,{lineX:-1,lineY:0});
  updateEnemies(.1); assert.equal(e.rolePhase,'warning'); assert.equal(e.x,150); const aim=e.aimY;
  G.player.y=100; updateEnemies(.2); assert.equal(e.aimY,aim); assert.equal(G.player.hp,100);
- updateEnemies(.51); assert.equal(e.rolePhase,'warning'); updateEnemies(.1); assert.equal(e.rolePhase,'dash'); updateEnemies(.56); updateEnemies(.01); assert.equal(e.rolePhase,'fuse'); assert.equal(G.player.hp,100);
+ // 강화: 예고 .8→.7초, 신관 .6→.45초
+ updateEnemies(.41); assert.equal(e.rolePhase,'warning'); updateEnemies(.1); assert.equal(e.rolePhase,'dash'); updateEnemies(.56); updateEnemies(.01); assert.equal(e.rolePhase,'fuse'); assert.equal(G.player.hp,100);
  hitEnemy(e,1e6,{silent:true}); flushExplosions(); assert.equal(G.player.hp,100); assert.equal(G.hazards.count,0);
 });
 test('overlapping armed detonations respect normal iframes and absolute damage cap, with no toxic field',()=>{
  reset(10); const a=spawnEnemy('suicider',0,0), b=spawnEnemy('suicider',0,0);
  for(const e of [a,b]) {e.rolePhase='fuse'; e.roleT=.01;}
  updateEnemies(.02); assert.equal(G.player.hp,100); flushExplosions();
- assert.equal(G.player.hp,70); assert.equal(G.player.iframes,.5); assert.equal(G.hazards.count,0);
+ // 피해 상한 30→40: 두 폭발이 겹쳐도 무적시간 덕에 한 번(40)만 들어간다
+ assert.equal(ENEMIES.suicider.charge.damageCap,40); assert.equal(G.player.hp,100-ENEMIES.suicider.charge.damageCap); assert.equal(G.player.iframes,.5); assert.equal(G.hazards.count,0);
  assert.equal(a.alive,false); assert.equal(b.alive,false);
+ // 폭발마다 파편 8발(피해 = 상한 적용 폭발 피해 × .35), 무적시간 중이라 즉시 추가 피해 없음
+ const shards=G.enemyShots.items.slice(0,G.enemyShots.count); assert.equal(shards.length,2*ENEMIES.suicider.charge.shrapnel);
+ assert.ok(shards.every(s=>s.kind==='bullet'&&Math.abs(s.dmg-40*.35)<1e-9&&Math.abs(Math.hypot(s.vx,s.vy)-ENEMIES.suicider.charge.shrapnelSpeed)<1e-9));
 });
 test('gunner telegraphs a 3-round red bullet fan and cannot retarget during warning',()=>{
  reset(); const e=spawnEnemy('gunner',200,0); e.shootT=0;
@@ -54,16 +59,17 @@ test('role warning circle matches blast geometry and optional generated art pres
 
 test('long frames preserve fresh warning/fuse, bound dash travel, and sweep player collision',()=>{
  reset(); const e=spawnEnemy('suicider',240,0);
- updateEnemies(4); assert.equal(e.rolePhase,'warning'); assert.equal(e.roleT,.8); assert.equal(e.x,240);
+ updateEnemies(4); assert.equal(e.rolePhase,'warning'); assert.equal(e.roleT,ENEMIES.suicider.charge.warning); assert.equal(e.x,240);
  updateEnemies(4); assert.equal(e.rolePhase,'dash'); assert.equal(e.roleT,ENEMIES.suicider.charge.duration); assert.equal(e.x,240);
- G.player.y=400; updateEnemies(4); assert.equal(e.rolePhase,'dash'); assert.equal(e.roleT,0);
+ // 돌진 강화(400×1.4=560px): 플레이어를 더 멀리 옮겨 접촉 정지 없이 최대 돌진 거리만 검증
+ G.player.y=600; updateEnemies(4); assert.equal(e.rolePhase,'dash'); assert.equal(e.roleT,0);
  const c=ENEMIES.suicider.charge, travelled=Math.hypot(e.x-240,e.y);
  assert.ok(Math.abs(travelled-c.speed*c.duration)<1e-6,'dash length is bounded by speed×duration despite a four-second frame');
  assert.ok(e.y>0,'the long dash steers toward the moved player');
- updateEnemies(4); assert.equal(e.rolePhase,'fuse'); assert.equal(e.roleT,.6); assert.equal(e.alive,true);
+ updateEnemies(4); assert.equal(e.rolePhase,'fuse'); assert.equal(e.roleT,ENEMIES.suicider.charge.fuse); assert.equal(e.alive,true);
  hitEnemy(e,1e6,{silent:true}); flushExplosions();
  reset(); const near=spawnEnemy('suicider',100,0);
  updateEnemies(4); updateEnemies(4); updateEnemies(4);
  assert.ok(Math.abs(near.x-38)<1e-8,'sweep stops at activation distance instead of tunneling');
- assert.equal(G.player.hp,100); updateEnemies(4); assert.equal(near.rolePhase,'fuse'); assert.equal(near.roleT,.6);
+ assert.equal(G.player.hp,100); updateEnemies(4); assert.equal(near.rolePhase,'fuse'); assert.equal(near.roleT,ENEMIES.suicider.charge.fuse);
 });

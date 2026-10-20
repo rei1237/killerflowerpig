@@ -1,5 +1,5 @@
 // 시작 테크(빌드 계열). 뱀파이어 서바이버즈의 캐릭터 선택처럼 첫 조합이 이후 성장 방향을 정한다.
-// - start: 시작 무기 + 그 무기의 진화 짝 패시브(Lv1)
+// - start: 대표 시작 무기 + 그 무기의 진화 짝 패시브(Lv1). weapons가 있으면 해당 무기들을 모두 Lv1로 지급.
 // - family: 이 테크의 '공명' 대상. 보유한 계열 아이템 수(무기·패시브 합산, 최대 6)로 공명 단계가 오른다.
 // - tags: 공명 무기 보너스가 적용되는 무기 태그. 다른 계열 무기는 테크 보너스를 받지 않는다.
 // - tiers: 공명 2/4/6개에서 누적 적용. weapon.* 는 태그 무기에만, player.* 는 캐릭터 전체에 적용.
@@ -53,7 +53,7 @@ export const TECHS = Object.freeze({
     bloom: {
         name: '연꽃 정원', icon: '🌸', color: '#ffb3d6', power: 2.6,
         summary: '회전 꽃잎과 광선으로 버티며 성장하는 생존 테크',
-        start: { weapon: 'thorns', passive: 'regen' },
+        start: { weapon: 'thorns', weapons: ['thorns', 'cannon'], passive: 'regen' },
         family: { weapons: ['thorns', 'cannon', 'saw'], passives: ['regen', 'pollen', 'heart'] },
         tags: ['orbit', 'beam'],
         route: ['연꽃 가시 + 재생하는 살점 → 피의 연꽃', '꽃잎포 + 꽃가루 → 개화 꽃잎포', '두 진화 → 만개 연꽃포 (화염병 추가 시 절대 만개)'],
@@ -125,3 +125,9 @@ export const TECHS = Object.freeze({
 });
 
 export const DEFAULT_TECH = 'gunline';
+
+// The single-weapon field remains the primary weapon/evolution partner.
+// Only new-run initialization grants this list; checkpoint restoration never does.
+export function techStartingWeapons(tech) {
+    return [...new Set(tech?.start.weapons || (tech?.start.weapon ? [tech.start.weapon] : []))];
+}

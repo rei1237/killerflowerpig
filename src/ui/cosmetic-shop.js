@@ -4,14 +4,25 @@ import { COSMETICS } from '../data/cosmetics.js';
 import { save, buyCosmetic, setCosmetic } from '../core/save.js';
 import { shopAccess } from '../core/shop-access.js';
 import { drawAppearance, appearanceAssets } from '../game/player-appearance.js';
+import { ATTACK_FAMILIES, attackFrame, markPlayerAttack } from '../game/attack-animation.js';
+import { characterSheetKey, requestCharacterSheet } from '../core/assets.js';
+import { WEAPONS } from '../data/weapons.js';
+import { LOTUS_GUN } from '../game/weapons.js';
 import { audio } from '../core/audio.js';
 
 const $ = id => document.getElementById(id);
 const SLOT_NAMES = { outfit: '의상', ornament: '장식' };
 let overrides = {};
 let animation = 'idle';
+let attackFamily = 'fire';
+const PREVIEW_WEAPONS = Object.freeze({ fire: 'shotgun', dual: 'pistols', throw: 'molotov', cannon: 'cannon', blade: 'saw', channel: 'thorns' });
 let flipped = false;
 let animationStart = 0;
+let previewClock = 0;
+let lastTimestamp = null;
+// A disposable model, reused across frames and never installed as G.player.
+const previewPlayer = { anim: 0, animT: 0, flip: false, shotAt: -Infinity,
+    shotFlip: false, hurtT: 0, iframes: 0, vx: 0, vy: 0, dead: false };
 let frameId = null;
 let generation = 0;
 let context = null;
@@ -52,44 +63,63 @@ function updatePreviewLabels() {
     $('cosmetic-preview-state').dataset.preview = String(changed.length > 0);
     $('cosmetic-preview-name').textContent = changed.length === 1 ? itemName(look[changed[0]]) : changed.length ? '나만의 연꽃 조합' : '꽃돼지 · 나의 장비';
     $('cosmetic-preview-look').textContent = `의상 · ${itemName(look.outfit)} / 장식 · ${look.ornament ? itemName(look.ornament) : '없음'}`;
-    if (appearanceAssets(look).missing.length) $('cosmetic-preview-state').textContent += ' · 외형 파일을 불러오지 못해 기본 모습 표시';
+    const art = appearanceAssets(look, attackFamily === 'fire' && (save.upgrades?.lotus_gun || 0) > 0, attackFamily);
+    if (art.pending.length) $('cosmetic-preview-state').textContent += ' · 동작 외형 준비 중';
+    if (art.missing.length) $('cosmetic-preview-state').textContent += ' · 외형 파일을 불러오지 못해 기본 모습 표시';
     $('cosmetic-preview-reset').disabled = !changed.length;
     $('cosmetic-preview-canvas').setAttribute('aria-label', `꽃돼지 외형 미리보기. ${$('cosmetic-preview-look').textContent}`);
 }
 
 function paintPreview(timestamp = 0) {
     if (!context || !canvas) return;
-    const clock = timestamp / 1000;
-    const phase = reducedMotion() ? 0.025 : Math.max(0.025, (clock - animationStart) % 1.2);
-    // This temporary object is never installed as the live player.
-    const player = { anim: Math.floor(clock * 7) % 8, animT: 0, flip: flipped,
-        shotAt: animation === 'fire' ? clock - phase : -Infinity,
-        shotFlip: flipped, hurtT: 0, iframes: 0, vx: 0, vy: 0, dead: false };
+    if (lastTimestamp !== null) previewClock += Math.max(0, timestamp - lastTimestamp) / 1000;
+    lastTimestamp = timestamp;
+    const reduced = reducedMotion();
+    const lotusGun = attackFamily === 'fire' && (save.upgrades?.lotus_gun || 0) > 0;
+    const weapon = lotusGun ? 'lotus_gun' : PREVIEW_WEAPONS[attackFamily];
+    const cadence = lotusGun ? LOTUS_GUN.cd : WEAPONS[weapon].base.cd;
+    const elapsed = Math.max(0, previewClock - animationStart);
+    previewPlayer.anim = Math.floor(previewClock * 7) % 8;
+    previewPlayer.flip = flipped;
+    previewPlayer.readyFamily = attackFamily;
+    if (animation === 'fire') {
+        // Same timestamp-driven pose selection as combat, at the actual base
+        // weapon cadence. Reduced motion plays one requested shot, then rests.
+        const shotAt = reduced ? animationStart : animationStart + Math.floor(elapsed / cadence) * cadence;
+        if (previewPlayer.attackPose?.at !== shotAt) markPlayerAttack(previewPlayer, shotAt, { id: weapon }, flipped ? -1 : 1, { family: attackFamily });
+    } else { previewPlayer.shotAt = -Infinity; previewPlayer.attackPose = null; }
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.save();
     context.scale(canvas.width / 320, canvas.height / 312);
-    const drawn = drawAppearance(context, { x: 160, y: 260, clock, player,
-        appearance: previewAppearance(), scale: 3.35 });
+    const drawn = drawAppearance(context, { x: 160, y: 260, clock: previewClock, player: previewPlayer,
+        appearance: previewAppearance(), scale: 3.35, lotusGun, reducedMotion: reduced, tech: null });
     context.restore();
     $('cosmetic-preview-fallback').hidden = drawn !== false;
 }
 
+function shouldAnimate() {
+    return !reducedMotion() || (animation === 'fire' && attackFrame(previewClock - animationStart, attackFamily, previewPlayer.attackPose?.tier) > 0);
+}
+
 function tick(timestamp) {
     frameId = null;
-    if (!active()) return;
+    if (!active()) { lastTimestamp = null; return; }
     paintPreview(timestamp);
-    if (!reducedMotion() && typeof requestAnimationFrame === 'function') frameId = requestAnimationFrame(tick);
+    if (shouldAnimate() && typeof requestAnimationFrame === 'function') frameId = requestAnimationFrame(tick);
 }
 
 export function startCosmeticPreview() {
     if (!active() || !context || frameId !== null) return;
     paintPreview(typeof performance !== 'undefined' ? performance.now() : 0);
-    if (!reducedMotion() && typeof requestAnimationFrame === 'function') frameId = requestAnimationFrame(tick);
+    if (shouldAnimate() && typeof requestAnimationFrame === 'function') frameId = requestAnimationFrame(tick);
 }
 
 export function stopCosmeticPreview() {
     if (frameId !== null && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(frameId);
     frameId = null;
+    // Reopening a modal resumes the visual clock; hidden wall time is not
+    // added to a shot, just as G.clock stops while combat is paused.
+    lastTimestamp = null;
 }
 
 function preparePreview() {
@@ -115,15 +145,35 @@ function preparePreview() {
         control.setAttribute('aria-pressed', String(animation === mode));
         control.onclick = () => {
             if (!active()) return;
+            stopCosmeticPreview();
             animation = mode;
-            animationStart = (typeof performance !== 'undefined' ? performance.now() : 0) / 1000;
+            animationStart = previewClock;
+            previewPlayer.attackPose = null;
+            lastTimestamp = typeof performance !== 'undefined' ? performance.now() : 0;
             preparePreview();
-            paintPreview(animationStart * 1000);
+            paintPreview(lastTimestamp);
+            startCosmeticPreview();
         };
     }
+    const familyControl = $('cosmetic-preview-family');
+    if (familyControl) {
+        familyControl.value = attackFamily;
+        familyControl.onchange = () => {
+            if (!active() || !ATTACK_FAMILIES.includes(familyControl.value)) return;
+            stopCosmeticPreview(); attackFamily = familyControl.value;
+            animationStart = previewClock; previewPlayer.attackPose = null;
+            preparePreview(); updatePreviewLabels(); startCosmeticPreview();
+        };
+    }
+    const requestGeneration = generation, requestedFamily = attackFamily;
+    const sheet = characterSheetKey(previewAppearance().outfit, attackFamily, attackFamily === 'fire' && (save.upgrades?.lotus_gun || 0) > 0);
+    void requestCharacterSheet(sheet).then(() => {
+        if (requestGeneration !== generation || requestedFamily !== attackFamily || !active()) return;
+        updatePreviewLabels(); paintPreview(typeof performance !== 'undefined' ? performance.now() : 0);
+    });
     const flip = $('cosmetic-preview-flip');
     flip.setAttribute('aria-pressed', String(flipped));
-    flip.onclick = () => { if (!active()) return; flipped = !flipped; preparePreview(); paintPreview(performance.now()); };
+    flip.onclick = () => { if (!active()) return; flipped = !flipped; if (previewPlayer.attackPose) previewPlayer.attackPose.flip = flipped; preparePreview(); paintPreview(performance.now()); };
     $('cosmetic-preview-reset').onclick = () => {
         if (!active()) return;
         overrides = {};
@@ -145,7 +195,7 @@ function transaction(action, item, revision, renderId, control) {
     if (result.ok) $('cosmetic-room').querySelector(`[data-cosmetic-focus="${action === 'clear' ? `try-${item.id}` : `clear-${item.slot}`}"]`)?.focus({ preventScroll: true });
     if (!result.ok) {
         const message = result.code === 'REVISION_CONFLICT'
-            ? '보유 정보가 갱신되었습니다. 코인과 장착 상태를 확인하고 다시 선택하세요.'
+            ? '저장 정보가 변경되어 구매·장착하지 않았습니다. 표시된 코인과 장착 상태를 확인하고 다시 선택하세요.'
             : result.code === 'STAGE_LOCKED' ? '필요한 스테이지를 클리어한 뒤 구매할 수 있습니다.'
             : result.code === 'INSUFFICIENT_FUNDS' || result.code === 'INSUFFICIENT_GOLD' ? '코인이 부족합니다. 표시된 잔액을 확인하세요.'
             : '변경 사항을 저장하지 못했습니다. 코인과 장착 상태를 확인하고 다시 시도하세요.';
@@ -153,8 +203,8 @@ function transaction(action, item, revision, renderId, control) {
         return;
     }
     audio.sfx('levelup');
-    announce(action === 'buy' ? `${item.name} 구매·장착 완료. 전투 능력치는 그대로입니다.`
-        : action === 'clear' ? `${SLOT_NAMES[item.slot]} 장착을 해제했습니다.` : `${item.name} 장착 완료. 전투 능력치는 그대로입니다.`);
+    announce(action === 'buy' ? `${item.name} 구매·장착 완료. ${item.effectDesc || ''}`
+        : action === 'clear' ? `${SLOT_NAMES[item.slot]} 장착을 해제했습니다.` : `${item.name} 장착 완료. ${item.effectDesc || ''}`);
 }
 
 function renderSlots(renderId) {
@@ -186,12 +236,13 @@ function renderCards(renderId) {
         art.append(img, node('span', 'cosmetic-edition', `0${index + 1}`));
         const copy = node('div', 'cosmetic-card-copy');
         const top = node('div', 'cosmetic-card-top');
-        top.append(node('span', 'cosmetic-category', `${SLOT_NAMES[item.slot]} · 외형 전용`), node('span', `cosmetic-ownership${worn ? ' on' : ''}`, worn ? '장착 중' : owned ? '보유 중' : '컬렉션'));
+        top.append(node('span', 'cosmetic-category', `${SLOT_NAMES[item.slot]} · ${item.slot === 'outfit' ? '작은 전투 보너스' : '외형 전용'}`), node('span', `cosmetic-ownership${worn ? ' on' : ''}`, worn ? '장착 중' : owned ? '보유 중' : '컬렉션'));
         const name = node('h4', '', item.name);
         const desc = node('p', 'cosmetic-description', item.desc);
+        const effect = node('p', 'cosmetic-description cosmetic-effect', item.effectDesc || '');
         const price = node('div', 'cosmetic-price', owned ? '구매 완료' : `${item.price.toLocaleString()} 코인`);
         const unlock = node('small', 'cosmetic-unlock', owned ? '추가 결제 없이 자유롭게 장착' : access.unlocked ? '해금 완료 · 한 번 구매하면 영구 보유' : access.message);
-        copy.append(top, name, desc, price, unlock);
+        copy.append(top, name, desc, effect, price, unlock);
         const actions = node('div', 'cosmetic-card-actions');
         const tryOn = button('cosmetic-button cosmetic-try', selected ? '미리보기 중' : '입어보기', `try-${item.id}`);
         tryOn.setAttribute('aria-label', `${item.name} 입어보기`);
@@ -216,7 +267,11 @@ export function renderCosmeticShop(options = {}) {
     if (!$('cosmetic-list')) return;
     if (options.onChange) refreshShop = options.onChange;
     if (options.isActive) isActive = options.isActive;
-    if (options.resetPreview) { overrides = {}; animation = 'idle'; flipped = false; announce(''); }
+    if (options.resetPreview) {
+        overrides = {}; animation = 'idle'; attackFamily = 'fire'; flipped = false;
+        previewClock = animationStart = 0; lastTimestamp = null; previewPlayer.shotAt = -Infinity; previewPlayer.attackPose = null;
+        announce('');
+    }
     const focusId = document.activeElement?.dataset?.cosmeticFocus;
     const renderId = ++generation;
     preparePreview();

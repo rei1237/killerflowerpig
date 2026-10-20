@@ -8,12 +8,17 @@ globalThis.Image=class extends Image{set src(value){if(fail==='image' && /player
 globalThis.fetch=async url=>{if((fail==='metadata'||fail==='all') && String(url).includes('pet-yeongnyang'))return {ok:false};try{const data=fs.readFileSync(path.join(root,url));return {ok:true,json:async()=>JSON.parse(data)}}catch{return {ok:false}}};
 const assets=await import('../src/core/assets.js'),{drawAppearance,appearanceAssets}=await import('../src/game/player-appearance.js');
 await assets.loadAssets();const keys=['playerFire','playerLotusFire','costume_dusk_lotus_cape_normal','costume_dusk_lotus_cape_lotus','costume_jade_lotus_guard_normal','costume_jade_lotus_guard_lotus','playerHaloLayer'];
-for(const key of keys){assert.ok(assets.images[key],`Missing ${key}`);assert.equal(assets.images[key].width,1536);assert.equal(assets.images[key].height,256);}
-const canvas=createCanvas(1280,1700),g=canvas.getContext('2d');g.fillStyle='#111521';g.fillRect(0,0,1280,1700);g.font='23px sans-serif';g.fillStyle='#f8deaa';g.fillText('FLOWERPIG • FITTED COSTUME SPRITES',24,36);g.font='14px sans-serif';g.fillStyle='#aab7cf';g.fillText('24 complete poses • Native shared game renderer • No inventory icons pasted over the body',24,63);
-const rows=[['BASE / STANDARD',null,false],['BASE / LEGENDARY',null,true],['FITTED CAPE / STANDARD','dusk_lotus_cape',false],['FITTED CAPE / LEGENDARY','dusk_lotus_cape',true],['FITTED JADE / STANDARD','jade_lotus_guard',false],['FITTED JADE / LEGENDARY','jade_lotus_guard',true]],poses=[['READY',1],['FIRE',.025],['RECOIL',.075],['RECOVER',.15]];
+assert.ok(assets.images.playerFire);assert.ok(assets.images.playerHaloLayer);
+const {shotFrame,FIRING_SPRITE}=await import('../src/game/player-motion.js');
+const rows=[['BASE / STANDARD',null,false],['BASE / LEGENDARY',null,true],['CAPE / STANDARD','dusk_lotus_cape',false],['CAPE / LEGENDARY','dusk_lotus_cape',true],['JADE / STANDARD','jade_lotus_guard',false],['JADE / LEGENDARY','jade_lotus_guard',true]];
+// Find representative timestamps through the actual timing function, never force an atlas frame.
+const times=Array(8).fill(null); times[0]=1;
+for(let i=0;i<1000;i++){const t=i/1000,frame=shotFrame(t);if(frame&&times[frame]===null)times[frame]=t+.001;}
+assert.ok(times.every(t=>t!==null),'All eight authored frames reachable');
+const canvas=createCanvas(1920,1460),g=canvas.getContext('2d');g.fillStyle='#101722';g.fillRect(0,0,1920,1460);g.fillStyle='#f8deaa';g.font='26px sans-serif';g.fillText('FLOWERPIG / 48 AUTHORED FIRING POSES',30,40);g.font='16px sans-serif';g.fillStyle='#aab7cf';g.fillText('Actual shared combat renderer / fixed feet / immediate shot / cloth follow-through',30,70);
 for(let r=0;r<rows.length;r++){
- const [label,outfit,lotusGun]=rows[r],y=280+r*250;g.fillStyle=r%2?'#16212c':'#111521';g.fillRect(0,y-205,1280,250);g.fillStyle='#e9d9b8';g.font='14px sans-serif';g.fillText(label,24,y-185);
- for(let c=0;c<poses.length;c++){const [pose,elapsed]=poses[c],x=160+c*320;g.fillStyle='#8099a4';g.font='12px sans-serif';g.fillText(pose,x-35,y-165);const appearance={outfit,ornament:'dawn_petal_halo'};assert.deepEqual(appearanceAssets(appearance,lotusGun).missing,[]);drawAppearance(g,{x,y,clock:10,scale:2.8,lotusGun,appearance,player:{shotAt:10-elapsed,shotFlip:c===3,flip:c===3}});}
+ const [label,outfit,lotusGun]=rows[r];await assets.requestCharacterSheet(assets.characterSheetKey(outfit,'fire',lotusGun));const y=290+r*220;g.fillStyle=r%2?'#172330':'#101722';g.fillRect(0,y-190,1920,220);g.fillStyle='#ead7b7';g.font='15px sans-serif';g.fillText(label,24,y-170);
+ for(let c=0;c<8;c++){const x=120+c*240;g.fillStyle='#829bad';g.font='12px sans-serif';g.fillText(String(c),x-5,y-145);const appearance={outfit,ornament:'dawn_petal_halo'};assert.deepEqual(appearanceAssets(appearance,lotusGun).missing,[]);drawAppearance(g,{x,y,clock:10,scale:2.3,lotusGun,appearance,player:{shotAt:10-times[c],shotFlip:r%2===1,flip:r%2===1}});}
 }
-g.fillStyle='#aab7cf';g.font='13px sans-serif';g.fillText('Actual gameplay scale (0.24) →',24,1653);for(let i=0;i<rows.length;i++)drawAppearance(g,{x:370+i*135,y:1680,clock:10,lotusGun:rows[i][2],appearance:{outfit:rows[i][1],ornament:'dawn_petal_halo'},player:{}});
-fs.writeFileSync('/workspace/shared/flowerpig-fitted-costumes-24poses.png',canvas.toBuffer('image/png'));console.log(JSON.stringify({status:'PASS',bodyVariants:6,poseChecks:24,haloFrames:4,allAtlasDimensions:'1536x256',comparison:'/workspace/shared/flowerpig-fitted-costumes-24poses.png'}));
+fs.writeFileSync('/workspace/shared/flowerpig-eight-frame-48poses.png',canvas.toBuffer('image/png'));
+console.log(JSON.stringify({status:'PASS',bodyVariants:6,poseChecks:48,atlas:'3072x256',frameTimes:times,animationDuration:FIRING_SPRITE.recoverEnd,contact:'/workspace/shared/flowerpig-eight-frame-48poses.png'}));

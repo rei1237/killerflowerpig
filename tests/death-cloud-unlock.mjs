@@ -36,6 +36,8 @@ function withFixedRandom(fn) {
 
 function killBloater(stage, elite = false) {
     reset(stage);
+    // 네임드 금화는 30% 확률(6개): 당첨 굴림을 주입. 일반 적은 굴림과 무관하게 금화가 없다.
+    coinRandom.next = () => .29;
     const enemy = spawnEnemy('bloater', 0, 0, { elite, force: true });
     const appearance = { tint: enemy.tint, scale: enemy.scale, radius: enemy.radius };
     let killEvents = 0;
@@ -50,8 +52,9 @@ function killBloater(stage, elite = false) {
     assert.equal(G.gems.count, 1);
     close(G.gems.items[0].value, ENEMIES.bloater.xp * stageScaling(stage, 0, STAGES[stage].duration).xp * (elite ? ELITE.xp : 1) * (5 / 3));
     assert.deepEqual(active(G.pickups).map(({ kind, value }) => ({ kind, value })), elite
-        ? [{ kind: 'coin', value: 8 }]
+        ? [{ kind: 'coin', value: 6 }]
         : []);
+    coinRandom.next = () => .99;
     flushExplosions();
     const blastDamage = ENEMIES.bloater.explode.dmg * (1 + (stage - 1) * 0.16);
     close(G.player.hp, 1000 - blastDamage, 'immediate explosion remains unchanged');

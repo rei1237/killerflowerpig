@@ -213,7 +213,7 @@ test('save facade commits purchase/equipment atomically, reloads and preserves e
     }
 });
 
-test('appearance purchases and switches cannot change combat stats or create healing', () => {
+test('cosmetic transactions preserve HP and the independent stat-accessory calculations', () => {
     const state = { ...funded(), hp: 21, maxHp: 140 };
     const base = { maxHp: 100, might: 1, armor: 0, speed: 135, crit: 0, cooldown: 1, area: 1, projSpeed: 1, regen: 0 };
     const stats = accessoryStats(base, state);

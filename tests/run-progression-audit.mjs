@@ -56,7 +56,9 @@ test('seeded planned versus scattered runs conserve item investment and respect 
         }
         result[mode] = summarizePlans(runs);
     }
-    assert.equal(result.planned.beforeBoss10Finals[3], 40);
+    // 12·25레벨부터 가팔라진 경험치 곡선: 집중 빌드도 일부(6/40)는 최종 보스 전 융합 2개에 머문다.
+    assert.equal(result.planned.beforeBoss10Finals[3], 34);
+    assert.equal((result.planned.beforeBoss10Finals[2] || 0) + result.planned.beforeBoss10Finals[3], 40);
     assert.equal(result.absolute.beforeBoss10Absolutes[1], 40);
     assert.ok((result.scattered.beforeBoss10Finals[0] || 0) + (result.scattered.beforeBoss10Finals[1] || 0) > 0);
     // 보조 아이템은 슬롯 제한이 없어 진화 짝을 얻으려고 교체할 필요가 없다.

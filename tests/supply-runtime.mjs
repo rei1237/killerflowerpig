@@ -64,11 +64,12 @@ test('healthy real kills never drop heals; magnet guarantee at 36 with exact coi
  assert.ok(xp>0);close(G.gems.items[0].value,ENEMIES.shambler.xp*5/3);
 }));
 
-test('low HP real kills guarantee at8; elites retain their 8 coins without a chest',()=>withRandom(.99,()=>{
+test('low HP real kills guarantee at8; elites drop their 6 coins on a winning roll without a chest',()=>withRandom(.99,()=>{
  reset(1,20);for(let n=0;n<7;n++)kill();assert.equal(field('meat').length,0);
  kill();assert.equal(field('meat').length,1);
- const before={...G.supplyDrought};kill(true);assert.deepEqual(G.supplyDrought,before);
- assert.equal(field('chest').length,0);assert.equal(field('coin').at(-1).value,8);
+ // 네임드 금화는 30% 확률: 당첨 굴림(.29)을 주입해 6개 확인
+ const before={...G.supplyDrought};coinRandom.next=()=>.29;try{kill(true);}finally{coinRandom.next=()=>.99;}assert.deepEqual(G.supplyDrought,before);
+ assert.equal(field('chest').length,0);assert.equal(field('coin').at(-1).value,6);
 }));
 
 test('field cap retains pending guarantees and useful collection releases slots',()=>withRandom(.99,()=>{

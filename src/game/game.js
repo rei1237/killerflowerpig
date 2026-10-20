@@ -4,7 +4,7 @@ import { resetPets, updatePets } from './pets.js';
 import { G, clearWorld, configureCaps, emit } from './state.js';
 import { STAGES } from '../data/stages.js';
 import { STARTING_WEAPON, PASSIVES } from '../data/weapons.js';
-import { TECHS } from '../data/techs.js';
+import { TECHS, techStartingWeapons } from '../data/techs.js';
 import { DIFFICULTIES } from '../data/difficulty.js';
 import { createPlayer, updatePlayer, recomputeStats } from './player.js';
 import { updateEnemies, updateEnemyShots, flushExplosions } from './enemies.js';
@@ -69,7 +69,8 @@ export function newRun(stage = 1, techId = null, difficulty = 'easy') {
     const tech = TECHS[techId] ? techId : null;
     G.tech = tech;
     createPlayer();
-    G.weapons.push(createWeapon(tech ? TECHS[tech].start.weapon : STARTING_WEAPON, 0));
+    const startingWeapons = tech ? techStartingWeapons(TECHS[tech]) : [STARTING_WEAPON];
+    G.weapons = startingWeapons.map((id, slot) => createWeapon(id, slot));
     if (tech && PASSIVES[TECHS[tech].start.passive]) G.passives[TECHS[tech].start.passive] = 1;
     recomputeStats(true);
     // 스테이지 선택으로 중간부터 시작하면 그에 맞는 레벨 보정

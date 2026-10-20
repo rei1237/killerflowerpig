@@ -7,10 +7,11 @@ import { input } from '../core/input.js';
 import { atlases, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { relicStats } from '../data/relics.js';
-import { upgradeLevel, save } from '../core/save.js';
+import { upgradeLevel, save, onCosmeticsChanged } from '../core/save.js';
 import { MAGAZINE_BONUS } from '../data/weapons.js';
 import { applyTechPlayerBonus, resonanceTier } from './tech.js';
 import { blood, flash, shake, damageText, hitstop, sparks, floatText } from './effects.js';
+import { activeOutfit, outfitStats, incomingOutfitDamage } from './cosmetic-effects.js';
 // 꽃가루 장막 재충전 시간 (패시브 Lv 0~5)
 export const POLLEN_BARRIER_CD = Object.freeze([0, 12, 10, 8.5, 7, 6]);
 const POLLEN_PUSH_RADIUS = 120;
@@ -18,6 +19,16 @@ const POLLEN_PUSH_RADIUS = 120;
 import { markPlayerShot, PLAYER_HIT_RADIUS, advancePlayerMovement } from './player-motion.js';
 
 const BASE = { hp: 100, speed: 135, magnet: 70, radius: PLAYER_HIT_RADIUS };
+
+function refreshEquippedOutfit() {
+    const p = G.player;
+    if (p?.stats && !p.dead && (activeOutfit(save)?.id || null) !== (p.outfitId || null)) recomputeStats();
+}
+
+onCosmeticsChanged(() => {
+    // Paused live runs need the new values immediately, before their next frame.
+    if (['play', 'boss', 'clearing'].includes(G.mode)) refreshEquippedOutfit();
+});
 
 export function createPlayer() {
     G.player = {
@@ -27,7 +38,8 @@ export function createPlayer() {
         facingX: 1, facingY: 0, flip: false,
         iframes: 0, hurtT: 0,
         anim: 0, animT: 0,
-        shotAt: -Infinity, shotFlip: false,
+        shotAt: -Infinity, shotFlip: false, attackPose: null,
+        outfitId: null, outfitGuardHitAt: -Infinity,
         trailT: 0,
         stats: null,
         dead: false,
@@ -67,6 +79,10 @@ export function recomputeStats(fullHeal = false) {
     p.techTier = resonanceTier();
     Object.assign(s, relicStats(s, save));
     Object.assign(s, accessoryStats(s, save));
+    Object.assign(s, outfitStats(s, save));
+    const outfitId = activeOutfit(save)?.id || null;
+    if (outfitId !== (p.outfitId || null)) p.outfitGuardHitAt = -Infinity;
+    p.outfitId = outfitId;
     const accessoryId = activeAccessory(save)?.id || null;
     const accessoryChanged = accessoryId !== (p.accessoryId || null);
     p.accessoryId = accessoryId;
@@ -82,9 +98,10 @@ export function recomputeStats(fullHeal = false) {
 export function updatePlayer(dt) {
     const p = G.player;
     if (p.dead) return;
-    const s = p.stats;
+    refreshEquippedOutfit();
     // 테크 공명 단계가 바뀌면(무기 획득·융합 포함) 캐릭터 보너스를 다시 계산
     if (G.tech && resonanceTier() !== p.techTier) recomputeStats();
+    const s = p.stats;
     advancePlayerMovement(p, input.move, dt);
     constrainEncirclementPlayer();
 
@@ -108,11 +125,12 @@ export function damagePlayer(amount, srcX, srcY) {
         pollenBurst(p);
         return true;
     }
-    const dmg = Math.max(1, amount - p.stats.armor);
+    const dmg = incomingOutfitDamage(amount, p.stats.armor, p.stats.outfitDamageMultiplier);
     p.iframes = 0.5;
     p.hurtT = 0.25;
     if (G.godMode) return true;
     p.hp -= dmg;
+    if (p.outfitId === 'jade_lotus_guard') p.outfitGuardHitAt = G.clock;
     audio.sfx('hurt');
     flash(0.35, '#ff0022');
     shake(5);

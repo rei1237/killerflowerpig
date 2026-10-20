@@ -110,12 +110,33 @@ export function setAccessory(itemId, expectedRevision = save.revision) {
     return finishAccessoryAction(equipAccessory(save, itemId));
 }
 
-// Appearance changes do not recompute stats or touch current health.
+// Notify runtime subscribers only after an outfit/ornament change is durable.
+// This keeps failed writes and repeated requests from applying temporary bonuses.
+const cosmeticChangeListeners = new Set();
+export function onCosmeticsChanged(listener) {
+    cosmeticChangeListeners.add(listener);
+    return () => cosmeticChangeListeners.delete(listener);
+}
 function finishCosmeticAction(result) {
     if (!result.ok) { lastSaveError = result.code; return { ok: false, code: result.code }; }
-    if (!result.duplicate && !commit(result.state)) return { ok: false, code: lastSaveError };
+    if (!result.duplicate && !commit(result.state)) {
+        const code = lastSaveError;
+        if (code === 'REVISION_CONFLICT') {
+            const fresh = adapter.refresh();
+            if (fresh.ok) { Object.assign(save, fresh.state); notifyCosmeticsChanged(); }
+        }
+        return { ok: false, code };
+    }
     lastSaveError = null;
+    if (!result.duplicate) notifyCosmeticsChanged();
     return { ok: true, duplicate: !!result.duplicate };
+}
+function notifyCosmeticsChanged() {
+    for (const listener of cosmeticChangeListeners) {
+        // A view/runtime listener cannot turn a completed purchase into a false
+        // transaction failure. The player also reconciles on its next update.
+        try { listener(save); } catch (error) { console.error('Cosmetic refresh failed', error); }
+    }
 }
 export function buyCosmetic(itemId, expectedRevision = save.revision, requestId = `cosmetic:${itemId}`) {
     return finishCosmeticAction(purchaseCosmetic(save, { itemId, expectedRevision, requestId }));

@@ -127,6 +127,18 @@ export function createGuestAdapter(storage, { profile = 'guest' } = {}) {
             }
             return defaultProgress();
         },
+        // Read the current durable record after an optimistic-lock conflict.
+        // No merge, mutation or automatic replay of the rejected purchase.
+        refresh() {
+            if (!writable || !storage) return { ok: false, code: 'STORAGE_UNAVAILABLE' };
+            try {
+                const raw = storage.getItem(key);
+                if (!raw) return { ok: false, code: 'STORAGE_UNAVAILABLE' };
+                const state = validateProgress(JSON.parse(raw));
+                storedRevision = state.revision;
+                return { ok: true, state };
+            } catch { return { ok: false, code: 'STORAGE_UNAVAILABLE' }; }
+        },
         commit(state) {
             if (!writable || !storage) return { ok: false, code: 'STORAGE_UNAVAILABLE' };
             try {

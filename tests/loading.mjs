@@ -83,7 +83,7 @@ function installImageBoundary(fail = () => false, hang = () => false) {
     const instances = [];
     globalThis.Image = class {
         constructor() { this.width = 64; this.height = 64; instances.push(this); }
-        set src(value) { this.url = value; if (!hang(value)) queueMicrotask(() => fail(value) ? this.onerror?.() : this.onload?.()); }
+        set src(value) { this.url = value; if (/player-.*(?:fire|layer)\.png$/.test(value)) { this.width = value.includes('halo') ? 1536 : 3072; this.height = 256; } if (!hang(value)) queueMicrotask(() => fail(value) ? this.onerror?.() : this.onload?.()); }
         removeAttribute(name) { if (name === 'src') this.removed = true; }
     };
     const context = new Proxy({ createRadialGradient: () => ({ addColorStop() {} }) }, {

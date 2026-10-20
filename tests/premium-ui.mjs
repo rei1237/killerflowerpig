@@ -148,9 +148,9 @@ function takeChest() { node('btn-chest').click(); advanceTime(901); node('btn-ch
 test.afterEach(() => { if (isTutorialOpen()) closeTutorial(); if (isPracticeOpen()) closePractice(); showTitle(); timers.clear(); clearWorld(); });
 
 test('shot phase uses fixed-size cells and an invariant foot anchor', () => {
-    assert.deepEqual([shotFrame(-1), shotFrame(Infinity), shotFrame(0), shotFrame(.05), shotFrame(.115), shotFrame(.2)], [0, 0, 1, 2, 3, 0]);
+    assert.deepEqual([shotFrame(-1), shotFrame(Infinity), shotFrame(0), shotFrame(.05), shotFrame(.075), shotFrame(.12), shotFrame(.18), shotFrame(.23), shotFrame(.28), shotFrame(.3)], [0, 0, 1, 2, 3, 4, 5, 6, 7, 0]);
     const base = firingDrawRect(0);
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 8; i++) {
         const rect = firingDrawRect(i);
         assert.equal(rect[0], i * FIRING_SPRITE.cellWidth);
         assert.deepEqual(rect.slice(1), base.slice(1));
@@ -161,7 +161,7 @@ test('shot phase uses fixed-size cells and an invariant foot anchor', () => {
 });
 
 test('firing pose starts on an actual shotgun shot and on each actual pistol burst projectile', () => {
-    freshRun(); images.playerFire = { width: 1536, height: 256 };
+    freshRun(); images.playerFire = { width: 3072, height: 256 };
     const p = G.player; const w = G.weapons[0];
     updateWeapons(.01); assert.equal(p.shotAt, -Infinity); assert.equal(G.shots.count, 0);
     G.clock = 10; w.cd = 0; updateWeapons(.016);
@@ -176,11 +176,11 @@ test('firing pose starts on an actual shotgun shot and on each actual pistol bur
 test('combat draws the animated firing atlas with no per-frame scaling or static UI portrait', () => {
     freshRun(); const drawCalls = []; const transforms = [];
     const ctx = { globalAlpha: 1, save: noop, restore: noop, translate: (...v) => transforms.push(v), scale: noop, drawImage: (...v) => drawCalls.push(v) };
-    const fire = images.playerFire = { width: 1536, height: 256 };
+    const fire = images.playerFire = { width: 3072, height: 256 };
     G.player.iframes = G.player.hurtT = 0; G.player.shotAt = 4; G.player.vx = 0; G.player.vy = 0;
     const x = G.player.x, y = G.player.y;
-    for (const time of [4, 4.06, 4.15, 4.3]) { G.clock = time; drawPlayer(ctx); }
-    assert.deepEqual(drawCalls.map(c => c[1]), [384, 768, 1152, 0]);
+    for (const time of [4, 4.05, 4.075, 4.12, 4.18, 4.23, 4.28, 4.31]) { G.clock = time; drawPlayer(ctx); }
+    assert.deepEqual(drawCalls.map(c => c[1]), [384, 768, 1152, 1536, 1920, 2304, 2688, 0]);
     for (const call of drawCalls) { assert.equal(call[0], fire); assert.deepEqual(call.slice(2), drawCalls[0].slice(2)); }
     assert.equal(G.player.x, x); assert.equal(G.player.y, y);
     assert.ok(transforms.every(([tx]) => tx === x));
@@ -401,7 +401,7 @@ test('premium accessory shop shows six actual items with ownership, locks and re
 
 test('field boxes explain one existing upgrade while boss boxes disclose stronger odds and named premium reward',()=>{
  freshRun();showChest('elite');assert.match(node('chest-description').textContent,/보유 장비 1회 강화/);takeChest();
- showChest('boss');assert.match(node('chest-description').textContent,/기본 강화 2개 확정/);assert.match(node('chest-description').textContent,/20%/);assert.match(node('chest-description').textContent,/100코인/);
+ showChest('boss');assert.match(node('chest-description').textContent,/기본 강화 2개 확정/);assert.match(node('chest-description').textContent,/20%/);assert.match(node('chest-description').textContent,/10코인/); // stage1 만렙 회수금 8+2*1
  const rng=Math.random;Math.random=()=>.01;
  try{node('btn-chest').click();advanceTime(901);}finally{Math.random=rng;}
  assert.equal(node('rewards').children.length,3);const premium=node('rewards').children[2];assert.match(premium.textContent,/연꽃 정밀 강화재/);assert.match(premium.textContent,/최대 8/);assert.match(premium.querySelector('img').src,/violet-orb/);
@@ -562,4 +562,61 @@ test('main menu bestiary opens its real modal and Escape restores launcher focus
  window.dispatch('keydown',{code:'Escape',key:'Escape',target:document.activeElement});
  assert.equal(isBestiaryOpen(),false);assert.equal(topModalId(),null);assert.equal(document.activeElement,launcher);
  launcher.click();showTitle();assert.equal(isBestiaryOpen(),false);
+});
+
+test('new bloom runs receive two distinct Lv1 weapon slots once, while every other start stays unchanged',async()=>{
+ const {TECHS}=await import('../src/data/techs.js');
+ const {resonanceCount,resonanceTier}=await import('../src/game/tech.js');
+ const {loadRun,startStage}=await import('../src/game/game.js');
+ const {applyChoice}=await import('../src/game/progression.js');
+ const inventory=()=>G.weapons.map(w=>[w.id,w.level,w.evolved,w.slot]);
+ for(const id of Object.keys(TECHS)){
+  newRun(1,id);
+  assert.deepEqual(inventory(),id==='bloom'?[['thorns',1,false,0],['cannon',1,false,1]]:[[TECHS[id].start.weapon,1,false,0]],id);
+  assert.deepEqual(G.passives,{[TECHS[id].start.passive]:1});
+  assert.equal(resonanceCount(),id==='bloom'?3:2);assert.equal(resonanceTier(),1);
+ }
+ for(const id of [null,'missing-tech']){
+  newRun(1,id);assert.equal(G.tech,null);assert.deepEqual(inventory(),[['shotgun',1,false,0]]);assert.deepEqual(G.passives,{});
+ }
+ newRun(1,'bloom');const firstRun=G.runId;
+ applyChoice({kind:'weapon',id:'cannon',level:2});startStage(2);startStage(3);
+ assert.deepEqual(inventory(),[['thorns',1,false,0],['cannon',2,false,1]],'stage transitions neither grant duplicates nor reset levels');
+ assert.deepEqual(loadRun().weapons.map(w=>[w.id,w.level]),[['thorns',1],['cannon',2]]);
+ newRun(1,'bloom');assert.notEqual(G.runId,firstRun);assert.deepEqual(inventory(),[['thorns',1,false,0],['cannon',1,false,1]]);
+ newRun(5,'bloom');assert.deepEqual(inventory(),[['thorns',1,false,0],['cannon',1,false,1]],'advanced stage starts do not grant levels or evolution');
+ assert.equal(G.pendingLevelUps,20);assert.deepEqual(G.passives,{regen:1});
+});
+
+test('continuing old, dual-starter and fused bloom checkpoints never retroactively grants starter equipment',async()=>{
+ const {loadRun,continueRun}=await import('../src/game/game.js');
+ const {snapshotBuild}=await import('../src/game/progression.js');
+ newRun(1,'bloom');const current=loadRun();
+ for(let i=0;i<3;i++){assert.equal(continueRun(current),true);assert.deepEqual(snapshotBuild().weapons,current.weapons);}
+ const old={...current,weapons:[{id:'thorns',level:4,evolved:false}],passives:{regen:2}};
+ assert.equal(continueRun(old),true);assert.deepEqual(snapshotBuild().weapons,old.weapons);assert.deepEqual(G.passives,{regen:2});
+ const evolved={...current,weapons:[{id:'thorns',level:8,evolved:true},{id:'cannon',level:8,evolved:true}],passives:{regen:2,pollen:1}};
+ assert.equal(continueRun(evolved),true);assert.deepEqual(snapshotBuild().weapons,evolved.weapons);assert.deepEqual(G.passives,evolved.passives);
+ const fused={...current,weapons:[{id:'lotus_bloom',level:3,evolved:false}],consumedItems:['thorns','cannon']};
+ assert.equal(continueRun(fused),true);assert.deepEqual(snapshotBuild().weapons,fused.weapons);assert.deepEqual([...G.consumedItems],fused.consumedItems);
+});
+
+test('bloom selection shows both starters and correct slot/resonance counts; cancel and double-confirm cannot grant extras',async()=>{
+ const {openTechSelect}=await import('../src/ui/tech-select.js');
+ const {snapshotBuild}=await import('../src/game/progression.js');
+ freshRun();const before=snapshotBuild();let starts=0;
+ const pick=(id,difficulty)=>{starts++;newRun(1,id,difficulty);};
+ openTechSelect(pick);
+ const bloom=node('tech-list').querySelector('[data-tech="bloom"]');bloom.click();
+ assert.equal(bloom.querySelector('.tech-arts').children.length,3);
+ assert.ok(node('tech-detail').textContent.includes(`${WEAPONS.thorns.name} Lv1 + ${WEAPONS.cannon.name} Lv1 + ${PASSIVES.regen.name} Lv1`));
+ assert.match(node('tech-detail').textContent,/무기 2\/6칸 · 공명 3\/6 · I단계/);
+ node('btn-tech-back').click();assert.equal(starts,0);assert.deepEqual(snapshotBuild(),before);
+ openTechSelect(pick);
+ node('tech-list').querySelector('[data-tech="gunline"]').click();
+ assert.match(node('tech-detail').textContent,/무기 1\/6칸 · 공명 2\/6/);
+ node('tech-list').querySelector('[data-tech="bloom"]').click();
+ node('btn-tech-go').click();const runId=G.runId;node('btn-tech-go').click();
+ assert.equal(starts,1);assert.equal(G.runId,runId);assert.deepEqual(G.weapons.map(w=>[w.id,w.level]),[['thorns',1],['cannon',1]]);
+ openTechSelect(pick);node('btn-tech-back').click();assert.equal(starts,1);assert.equal(G.weapons.length,2);
 });

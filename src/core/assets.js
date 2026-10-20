@@ -5,6 +5,8 @@
 import { COSMETICS } from '../data/cosmetics.js';
 import { SPRITES } from '../data/sprites.js';
 import { BOSS_ART } from '../game/boss-appearance.js';
+import { FIRING_SPRITE } from '../game/player-motion.js';
+import { save } from './save.js';
 
 export const images = {};
 export const atlases = {};
@@ -33,6 +35,106 @@ export function loadImage(src, { signal, timeoutMs = 20000 } = {}) {
         timeout = setTimeout(() => finish(null), Math.max(1, Math.min(60000, timeoutMs || 20000)));
         img.src = src;
     });
+}
+
+// Full-body RGBA atlases are 3 MiB each. Never decode every outfit × weapon
+// combination at boot. Four resident/requested bodies and two lazily-created
+// hit flashes bound this cache at 18 MiB (plus the small shared halo).
+export const CHARACTER_CACHE_LIMITS = Object.freeze({ bodies: 4, flashes: 2 });
+const sheetEntries = new Map(), flashEntries = new Map(), failedSheetKeys = new Set();
+const sheetDefinitions = {
+    playerFire: 'asset/sprites/player-fire.png', playerLotusFire: 'asset/sprites/player-lotus-fire.png',
+};
+for (const item of COSMETICS) if (item.bodySprites) for (const [variant, src] of Object.entries(item.bodySprites))
+    sheetDefinitions[`costume_${item.id}_${variant}`] = src;
+const OUTFIT_PREFIX = Object.freeze({ dusk_lotus_cape: 'cape', jade_lotus_guard: 'jade' });
+for (const outfit of [null, ...Object.keys(OUTFIT_PREFIX)]) for (const family of ['dual', 'throw', 'cannon', 'blade', 'channel'])
+    sheetDefinitions[outfit ? `costume_${outfit}_${family}` : `player_${family}`] = `asset/sprites/player-${OUTFIT_PREFIX[outfit] || 'base'}-${family}.png`;
+export const CHARACTER_SHEETS = Object.freeze(sheetDefinitions);
+export function characterSheetKey(outfit, family = 'fire', lotus = false) {
+    const validOutfit = OUTFIT_PREFIX[outfit] ? outfit : null;
+    if (family === 'fire') return validOutfit ? `costume_${validOutfit}_${lotus ? 'lotus' : 'normal'}` : lotus ? 'playerLotusFire' : 'playerFire';
+    return validOutfit ? `costume_${validOutfit}_${family}` : `player_${family}`;
+}
+function touch(map, key, value) { map.delete(key); map.set(key, value); }
+function removeSheet(key) {
+    const entry = sheetEntries.get(key);
+    entry?.abort?.abort();
+    if (entry?.image) entry.image.removeAttribute?.('src');
+    sheetEntries.delete(key); delete images[key];
+    const flash = flashEntries.get(key);
+    if (flash) { flash.width = flash.height = 1; flashEntries.delete(key); }
+    delete images[`${key}Flash`];
+}
+function reserveSheet(key) {
+    while (sheetEntries.size >= CHARACTER_CACHE_LIMITS.bodies) {
+        // Keep the small, known-good neutral fallback and existing physics
+        // art-capability checks stable. Other bodies are a true LRU.
+        const victim = [...sheetEntries.keys()].find(k => k !== 'playerFire' && k !== key);
+        if (!victim) break;
+        removeSheet(victim);
+    }
+}
+function storeSheet(key, image) {
+    const valid = !!image && image.width === FIRING_SPRITE.frameCount * FIRING_SPRITE.cellWidth && image.height === FIRING_SPRITE.cellHeight;
+    const entry = sheetEntries.get(key) || {};
+    if (valid) failedSheetKeys.delete(key); else failedSheetKeys.add(key);
+    entry.image = valid ? image : null; entry.status = valid ? 'ready' : 'failed'; entry.promise = null;
+    if (!sheetEntries.has(key)) reserveSheet(key);
+    touch(sheetEntries, key, entry); images[key] = entry.image;
+    return valid;
+}
+export function characterBody(key) {
+    const entry = sheetEntries.get(key); if (entry) touch(sheetEntries, key, entry);
+    return images[key] || null;
+}
+export function characterSheetStatus(key) { return images[key] ? 'ready' : failedSheetKeys.has(key) ? 'failed' : sheetEntries.get(key)?.status || 'unloaded'; }
+export function requestCharacterSheet(key, options = {}) {
+    if (!CHARACTER_SHEETS[key] || typeof Image === 'undefined') return Promise.resolve(null);
+    if (images[key]) { const entry = sheetEntries.get(key); if (entry) touch(sheetEntries, key, entry); return Promise.resolve(images[key]); }
+    if (failedSheetKeys.has(key)) return Promise.resolve(null);
+    const existing = sheetEntries.get(key);
+    if (existing) { touch(sheetEntries, key, existing); return existing.promise || Promise.resolve(null); }
+    reserveSheet(key);
+    const abort = new AbortController(), entry = { status: 'loading', abort, image: null };
+    sheetEntries.set(key, entry);
+    entry.promise = loadImage(CHARACTER_SHEETS[key], { ...options, signal: abort.signal }).then(image => {
+        if (sheetEntries.get(key) !== entry) return null;
+        storeSheet(key, image); return images[key];
+    }).catch(error => {
+        if (sheetEntries.get(key) === entry) { entry.status = 'failed'; entry.promise = null; }
+        if (error.name !== 'AbortError') return null;
+        return null;
+    });
+    return entry.promise;
+}
+export function characterFlash(key) {
+    if (images[`${key}Flash`]) {
+        const old = flashEntries.get(key); if (old) touch(flashEntries, key, old);
+        return images[`${key}Flash`];
+    }
+    const body = images[key];
+    if (!body || typeof document === 'undefined') return null;
+    while (flashEntries.size >= CHARACTER_CACHE_LIMITS.flashes) {
+        const victim = flashEntries.keys().next().value, canvas = flashEntries.get(victim);
+        canvas.width = canvas.height = 1; flashEntries.delete(victim); delete images[`${victim}Flash`];
+    }
+    const flash = makeCanvas(body.width, body.height), g = flash.getContext('2d');
+    g.drawImage(body, 0, 0); g.globalCompositeOperation = 'source-atop';
+    g.fillStyle = 'rgba(255,255,255,0.72)'; g.fillRect(0, 0, body.width, body.height);
+    flashEntries.set(key, flash); images[`${key}Flash`] = flash;
+    return flash;
+}
+export function characterCacheInfo() {
+    return { bodies: [...sheetEntries.keys()], flashes: [...flashEntries.keys()],
+        pending: [...sheetEntries.values()].filter(entry => entry.status === 'loading').length,
+        decodedBytes: [...sheetEntries.values()].filter(entry => entry.image).length * 3072 * 256 * 4 + flashEntries.size * 3072 * 256 * 4 };
+}
+export function clearCharacterCache() {
+    failedSheetKeys.clear();
+    for (const key of [...sheetEntries.keys()]) removeSheet(key);
+    // Test/legacy callers may have supplied a body outside the cache.
+    for (const key of Object.keys(CHARACTER_SHEETS)) { delete images[key]; delete images[`${key}Flash`]; }
 }
 
 export function makeCanvas(w, h) {
@@ -447,47 +549,17 @@ export async function loadAssets(onProgress, { signal, timeoutMs = 20000 } = {})
             for (const tint of ['normal', 'flash', 'elite', 'hallu']) atlases[key].variant(tint);
         });
     }
-    // Pose-matched complete costumes: no inventory art is composited onto the body.
-    const addCharacterSheet = (key, src, flashEnabled = true) => add(key, src, img => {
-        if (img && (img.width !== 1536 || img.height !== 256)) img = null;
-        images[key] = img;
-        images[`${key}Flash`] = null;
-        if (!img || !flashEnabled) return;
-        const flash = makeCanvas(img.width, img.height), g = flash.getContext('2d');
-        g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-atop';
-        g.fillStyle = 'rgba(255,255,255,0.72)'; g.fillRect(0, 0, img.width, img.height);
-        images[`${key}Flash`] = flash;
+    clearCharacterCache();
+    // Only the known fallback and currently equipped ready outfit are boot jobs.
+    // Family poses and flash canvases are requested only when actually needed.
+    for (const key of new Set(['playerFire', characterSheetKey(save.equippedCosmetics?.outfit)]))
+        add(key, CHARACTER_SHEETS[key], img => storeSheet(key, img));
+    add('playerHaloLayer', 'asset/sprites/player-halo-layer.png', img => {
+        const valid = !!img && img.width === 4 * FIRING_SPRITE.cellWidth && img.height === FIRING_SPRITE.cellHeight;
+        images.playerHaloLayer = valid ? img : null; images.playerHaloLayerFlash = null;
+        return valid;
     });
-    for (const item of COSMETICS) {
-        if (item.bodySprites) for (const [variant, src] of Object.entries(item.bodySprites))
-            addCharacterSheet(`costume_${item.id}_${variant}`, src);
-    }
-    addCharacterSheet('playerHaloLayer', 'asset/sprites/player-halo-layer.png', false);
     add('petYeongnyang', 'asset/items/pet-yeongnyang.png', img => { images.petYeongnyang = img; });
-    add('playerLotusFire', 'asset/sprites/player-lotus-fire.png', (img) => {
-        if (img && (img.width !== 1536 || img.height !== 256)) img = null;
-        images.playerLotusFire = img;
-        images.playerLotusFireFlash = null;
-        if (!img) return;
-        const flash = makeCanvas(img.width, img.height);
-        const g = flash.getContext('2d');
-        g.drawImage(img, 0, 0);
-        g.globalCompositeOperation = 'source-atop';
-        g.fillStyle = 'rgba(255,255,255,0.72)';
-        g.fillRect(0, 0, img.width, img.height);
-        images.playerLotusFireFlash = flash;
-    });
-    add('playerFire', 'asset/sprites/player-fire.png', (img) => {
-        if (!img) return;
-        images.playerFire = img;
-        const flash = makeCanvas(img.width, img.height);
-        const g = flash.getContext('2d');
-        g.drawImage(img, 0, 0);
-        g.globalCompositeOperation = 'source-atop';
-        g.fillStyle = 'rgba(255,255,255,0.72)';
-        g.fillRect(0, 0, img.width, img.height);
-        images.playerFireFlash = flash;
-    });
     // The final unit is real work too: building the procedural rendering caches.
     // Never report completion merely because all image requests have settled.
     const total = jobs.length + 1;
@@ -498,7 +570,8 @@ export async function loadAssets(onProgress, { signal, timeoutMs = 20000 } = {})
         const img = await loadImage(src, { signal, timeoutMs });
         if (signal?.aborted) throw new DOMException('Asset loading was cancelled', 'AbortError');
         if (!img) failed.push({ key, src, required });
-        store(img);
+        const stored = store(img);
+        if (img && stored === false) failed.push({ key, src, required });
         done++;
         onProgress?.(key, done / total, { done, total, phase: 'images' });
     }));

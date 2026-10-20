@@ -13,5 +13,5 @@ export function bossRewardTier(stage, difficulty = { chestPenalty: 0, premiumMul
     const n=Number.isInteger(stage)?Math.max(1,Math.min(10,stage)):1;
     const base=BOSS_REWARD_TIERS.find(t=>n>=t.minStage&&n<=t.maxStage);
     return {...base,guaranteedCount:Math.max(1,base.guaranteedCount-(difficulty.chestPenalty||0)),premiumChance:base.premiumChance*(difficulty.premiumMul??1),
-        stage:n,premiumLevels:2,premiumFallbackCoins:90+10*n};
+        stage:n,premiumLevels:2,premiumFallbackCoins:8+2*n};
 }

@@ -98,7 +98,8 @@ function parseInto(root, markup) {
     }
 }
 
-const context = new Proxy({ createRadialGradient: () => ({ addColorStop: noop }), createLinearGradient: () => ({ addColorStop: noop }) }, { get: (o, k) => o[k] ?? noop });
+const previewDraws = [], previewTransforms = [];
+const context = new Proxy({ drawImage: (...args) => previewDraws.push(args), translate: (...args) => previewTransforms.push(args), createRadialGradient: () => ({ addColorStop: noop }), createLinearGradient: () => ({ addColorStop: noop }) }, { get: (o, k) => o[k] ?? noop });
 const wrapper = new Element('root'); parseInto(wrapper, html);
 globalThis.document = Object.assign(new Events(), {
     documentElement: wrapper.querySelector('html'), body: wrapper.querySelector('body'),
@@ -118,7 +119,7 @@ globalThis.clearInterval = globalThis.clearTimeout;
 globalThis.Image = class { complete=false; naturalWidth=0; };
 globalThis.requestAnimationFrame = fn => { const id = ++timerId; frames.set(id, fn); return id; };
 globalThis.cancelAnimationFrame = id => frames.delete(id);
-function frame() { now += 17; for (const [id, fn] of [...frames]) { frames.delete(id); fn(now); } }
+function frame(ms = 17) { now += ms; for (const [id, fn] of [...frames]) { frames.delete(id); fn(now); } }
 function advanceTime(ms) {
     now += ms;
     for (const [id, t] of [...timers]) if (t.due <= now) {
@@ -128,7 +129,7 @@ function advanceTime(ms) {
 }
 
 const { G } = await import('../src/game/state.js');
-const { images } = await import('../src/core/assets.js');
+const { images, requestCharacterSheet, clearCharacterCache } = await import('../src/core/assets.js');
 const { save, persist } = await import('../src/core/save.js');
 const { validateProgress } = await import('../src/core/progression-store.js');
 const { COSMETICS } = await import('../src/data/cosmetics.js');
@@ -146,14 +147,15 @@ function openShop({ owned = [], equipped = { outfit: null, ornament: null }, gol
     showTitle();
     Object.assign(save, validateProgress({ gold, maxClearedStage: stage, cosmeticInventory: owned, equippedCosmetics: equipped, revision: save.revision }));
     assert.equal(persist(), true);
-    images.playerFire = { width: 1536, height: 256 };
+    images.playerFire = { width: 3072, height: 256 };
     images.playerHaloLayer = { width:1536, height:256 };
-    for (const item of COSMETICS) if(item.bodySprites)for(const variant of ['normal','lotus'])images[`costume_${item.id}_${variant}`]={width:1536,height:256};
+    for (const item of COSMETICS) if(item.bodySprites)for(const variant of ['normal','lotus'])images[`costume_${item.id}_${variant}`]={width:3072,height:256};
     G.player = { x: 7, y: 13, hp: 83, maxHp: 100, stats: { might: 1.25 }, shotAt: -Infinity };
     node('btn-shop').click();
     assert.equal(topModalId(), 'shop');
 }
-test.afterEach(() => { showTitle(); frames.clear(); timers.clear(); document.hidden = false; reduced = false; });
+test.afterEach(() => { showTitle(); clearCharacterCache(); frames.clear(); timers.clear(); previewDraws.length = previewTransforms.length = 0; document.hidden = false; reduced = false; });
+const lastBodyFrame = () => previewDraws.findLast(call => call[0]?.width === 3072)?.[1] / 384;
 
 test('unowned try-on changes only the preview, with no debit, persistence, equip or live-player mutation', () => {
     openShop();
@@ -222,7 +224,7 @@ test('stale and detached controls cannot purchase after rerender or after shop c
 test('concurrent revision and storage failures do not charge or grant and produce recoverable status', () => {
     openShop();
     save.revision++; const before = snapshot(); buy('dusk_lotus_cape');
-    assert.equal(snapshot(), before); assert.match(node('cosmetic-status').textContent, /갱신되었습니다/);
+    assert.equal(snapshot(), before); assert.match(node('cosmetic-status').textContent, /저장 정보가 변경되어/);
     const original = localStorage.setItem; localStorage.setItem = () => { throw new Error('disk full'); };
     try { const beforeWrite = snapshot(); buy('dusk_lotus_cape'); assert.equal(snapshot(), beforeWrite); assert.match(node('cosmetic-status').textContent, /저장하지 못했습니다/); }
     finally { localStorage.setItem = original; }
@@ -243,10 +245,14 @@ test('one animation loop runs only while the shop is topmost and visible; reopen
     showTitle(); assert.equal(frames.size, 0);
 });
 
-test('reduced-motion draws a static preview without starting RAF', () => {
+test('reduced-motion rests idle but plays one explicitly requested shot at combat speed', () => {
     reduced = true; openShop(); assert.equal(frames.size, 0);
     tryOn('dawn_petal_halo'); node('cosmetic-preview-fire').click();
+    assert.equal(frames.size, 1);
+    for (let i = 0; i < 20; i++) frame();
     assert.equal(frames.size, 0); assert.match(node('cosmetic-preview-look').textContent, /새벽 꽃잎 광환/);
+    node('cosmetic-preview-fire').click(); assert.equal(frames.size, 1);
+    node('cosmetic-preview-idle').click(); assert.equal(frames.size, 0);
 });
 
 test('missing canvas APIs gracefully show fallback while the shop remains interactive', () => {
@@ -261,18 +267,94 @@ test('missing canvas APIs gracefully show fallback while the shop remains intera
     } finally { showTitle(); parent.children[index] = original; original.parentNode = parent; }
 });
 
-test('responsive fitting-room controls use real buttons, visible focus and stats-neutral copy', () => {
+test('responsive fitting-room controls use real buttons, visible focus and explicit outfit effect copy', () => {
     const css = fs.readFileSync(new URL('../src/ui/cosmetic-shop.css', import.meta.url), 'utf8');
     assert.match(css, /@media\(max-width:480px\)/); assert.match(css, /min-height:44px/);
     assert.match(css, /focus-visible/); assert.match(css, /prefers-reduced-motion/);
-    assert.match(html, /의상과 장식은 전투 능력치를 바꾸지 않습니다/);
+    assert.match(html, /망토는 이동·수집을, 예복은 방어를 돕습니다/);
     assert.match(html, /입어보기는 저장·구매·장착되지 않습니다/);
     assert.match(html, /구매하면 영구 보유되며 해당 슬롯에 바로 장착됩니다/);
     openShop();
     for (const control of node('cosmetic-room').querySelectorAll('button')) assert.equal(control.type, 'button');
 });
-test('missing wearing atlas is disclosed and never replaced with a flat inventory icon',()=>{
+test('missing wearing atlas is disclosed after its lazy request fails without using a flat inventory icon',async()=>{
  openShop();delete images.costume_jade_lotus_guard_normal;tryOn('jade_lotus_guard');
+ assert.match(node('cosmetic-preview-state').textContent,/동작 외형 준비 중/);
+ advanceTime(20001); await requestCharacterSheet('costume_jade_lotus_guard_normal'); renderCosmeticShop();
  assert.match(node('cosmetic-preview-state').textContent,/외형 파일을 불러오지 못해 기본 모습 표시/);
  assert.deepEqual(save.cosmeticInventory,[]);
+});
+
+test('preview uses all eight combat poses and actual base shotgun cadence, with immediate repeat clicks', () => {
+    openShop();
+    const before = snapshot(), player = JSON.stringify(G.player);
+    node('cosmetic-preview-fire').click(); assert.equal(lastBodyFrame(), 1);
+    let last = 0;
+    for (const [elapsed, expected] of [[17, 1], [50, 2], [85, 3], [130, 4], [180, 5], [235, 6], [280, 7], [315, 0], [1005, 1]]) {
+        frame(elapsed - last); last = elapsed;
+        assert.equal(lastBodyFrame(), expected, `preview t=${elapsed}ms`);
+    }
+    frame(160); assert.equal(lastBodyFrame(), 5);
+    node('cosmetic-preview-fire').click(); assert.equal(lastBodyFrame(), 1);
+    assert.equal(frames.size, 1);
+    assert.equal(snapshot(), before); assert.equal(JSON.stringify(G.player), player);
+});
+
+test('legendary preview repeats at the actual 450ms cadence without changing progression or the live player', () => {
+    openShop(); save.upgrades.lotus_gun = 1;
+    images.playerLotusFire = { width: 3072, height: 256 };
+    const before = snapshot(), player = JSON.stringify(G.player);
+    node('cosmetic-preview-fire').click(); assert.equal(lastBodyFrame(), 1);
+    frame(310); assert.equal(lastBodyFrame(), 0);
+    frame(145); assert.equal(lastBodyFrame(), 1);
+    frame(230); assert.equal(lastBodyFrame(), 6);
+    frame(220); assert.equal(lastBodyFrame(), 1);
+    assert.equal(snapshot(), before); assert.equal(JSON.stringify(G.player), player);
+});
+
+test('hiding the preview freezes its shot clock and reduced motion removes its bob', () => {
+    openShop(); node('cosmetic-preview-fire').click(); frame(85);
+    assert.equal(lastBodyFrame(), 3);
+    document.hidden = true; document.dispatch('visibilitychange'); assert.equal(frames.size, 0);
+    now += 10000;
+    document.hidden = false; document.dispatch('visibilitychange'); assert.equal(lastBodyFrame(), 3);
+    frame(45); assert.equal(lastBodyFrame(), 4);
+    reduced = true;
+    node('cosmetic-preview-fire').click(); frame(85);
+    assert.equal(lastBodyFrame(), 3);
+    assert.deepEqual(previewTransforms.at(-1), [160, 260]);
+    for (let i = 0; i < 20; i++) frame();
+    assert.equal(frames.size, 0); assert.equal(lastBodyFrame(), 0);
+});
+
+test('every card discloses its exact bounded effect and purchase announces the equipped bonus', () => {
+    openShop();
+    for (const item of COSMETICS) assert.equal(card(item.id).querySelector('.cosmetic-effect').textContent, item.effectDesc);
+    buy('jade_lotus_guard');
+    assert.ok(node('cosmetic-status').textContent.includes(COSMETICS.find(item => item.id === 'jade_lotus_guard').effectDesc));
+    assert.doesNotMatch(node('cosmetic-status').textContent, /능력치는 그대로/);
+});
+
+test('six family controls use the real attack renderer, preserve try-on isolation, and return to matching ready stances', () => {
+    openShop();
+    const before = snapshot(), player = JSON.stringify(G.player);
+    const control = node('cosmetic-preview-family');
+    assert.equal(control.tagName, 'SELECT');
+    for (const family of ['fire','dual','throw','cannon','blade','channel']) {
+        const key = family === 'fire' ? 'playerFire' : `player_${family}`;
+        images[key] = { id: key, width:3072, height:256 };
+        control.value = family; control.dispatch('change');
+        node('cosmetic-preview-fire').click();
+        let draw = previewDraws.findLast(call => call[0]?.width === 3072);
+        assert.equal(draw[0].id, key, family); assert.equal(draw[1],384);
+        frame(130);
+        draw = previewDraws.findLast(call => call[0]?.width === 3072);
+        assert.equal(draw[0].id,key);
+        assert.equal(draw[1]/384, family === 'cannon' || family === 'channel' ? 3 : 4, family);
+        node('cosmetic-preview-idle').click();
+        draw = previewDraws.findLast(call => call[0]?.width === 3072);
+        assert.equal(draw[0].id,key);assert.equal(draw[1],0);
+    }
+    assert.equal(snapshot(),before);assert.equal(JSON.stringify(G.player),player);
+    closeModal('shop');assert.equal(frames.size,0);
 });

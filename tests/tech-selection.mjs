@@ -3,18 +3,19 @@ import assert from 'node:assert/strict';
 import { G, clearWorld } from '../src/game/state.js';
 import { createPlayer, recomputeStats } from '../src/game/player.js';
 import { createWeapon, weaponStats } from '../src/game/weapons.js';
-import { resetBuild, applyChoice, rollChoices, snapshotBuild, restoreBuild } from '../src/game/progression.js';
+import { resetBuild, applyChoice, rollChoices, snapshotBuild, restoreBuild, evolvable, rollChest } from '../src/game/progression.js';
 import { resonanceCount, resonanceTier, techChoiceWeight, isFamilyItem } from '../src/game/tech.js';
-import { TECHS, WEAPON_TAGS, MISMATCH_DAMAGE, FAMILY_WEIGHT, OFF_FAMILY_NEW_WEAPON_WEIGHT, IMPRINT_LEVELS } from '../src/data/techs.js';
+import { TECHS, WEAPON_TAGS, MISMATCH_DAMAGE, FAMILY_WEIGHT, OFF_FAMILY_NEW_WEAPON_WEIGHT, IMPRINT_LEVELS, techStartingWeapons } from '../src/data/techs.js';
 import { WEAPONS, PASSIVES } from '../src/data/weapons.js';
 import { FUSION_RECIPES } from '../src/data/fusions.js';
+import { previewFusion } from '../src/game/fusion.js';
 
 function startTech(id) {
     resetBuild(); clearWorld();
     G.tech = id;
     createPlayer();
     const t = TECHS[id];
-    G.weapons = [createWeapon(t.start.weapon, 0)];
+    G.weapons = techStartingWeapons(t).map((weaponId, slot) => createWeapon(weaponId, slot));
     G.passives = { [t.start.passive]: 1 };
     recomputeStats(true);
 }
@@ -26,6 +27,12 @@ test('every tech starts with a real weapon and its evolution partner passive, al
         assert.ok(PASSIVES[t.start.passive], id);
         assert.equal(WEAPONS[t.start.weapon].evolve.with, t.start.passive, `${id}: start passive evolves the start weapon`);
         assert.ok(t.family.weapons.includes(t.start.weapon) && t.family.passives.includes(t.start.passive));
+        const starters = techStartingWeapons(t);
+        assert.deepEqual(starters, id === 'bloom' ? ['thorns', 'cannon'] : [t.start.weapon]);
+        for (const weaponId of starters) {
+            assert.ok(WEAPONS[weaponId] && !WEAPONS[weaponId].fusionOnly && t.family.weapons.includes(weaponId));
+            assert.ok(WEAPON_TAGS[weaponId].some(tag => t.tags.includes(tag)), `${id}: ${weaponId} benefits from its own tech`);
+        }
         assert.equal(t.family.weapons.length, 3); assert.equal(t.family.passives.length, 3);
         assert.equal(t.tiers.length, 3);
         for (const w of t.family.weapons) assert.ok(WEAPON_TAGS[w], `${id}: ${w} tagged`);
@@ -72,7 +79,8 @@ test('tech weapon bonus applies only to matching tags and grows with tiers', () 
 test('player-wide tier bonuses (HP, regen, armor, crit multiplier) follow resonance', () => {
     startTech('bloom');
     assert.equal(G.player.maxHp, 100 + 20);
-    applyChoice({ kind: 'weapon', id: 'cannon', level: 1 });
+    assert.equal(resonanceCount(), 3);
+    assert.equal(resonanceTier(), 1, 'two starter weapons and one passive do not skip tier II');
     applyChoice({ kind: 'passive', id: 'pollen', level: 1 });
     recomputeStats();
     assert.equal(resonanceTier(), 2);
@@ -90,6 +98,32 @@ test('player-wide tier bonuses (HP, regen, armor, crit multiplier) follow resona
     recomputeStats();
     assert.equal(G.player.stats.armor, 1 + 1, 'hide Lv1 + tier II armor');
     assert.equal(G.player.maxHp, 130);
+});
+
+test('bloom starter cannon still needs ordinary upgrades, pollen, chest evolution and evolved fusion partners', () => {
+    startTech('bloom');
+    assert.deepEqual(G.weapons.map(w => [w.id, w.level, w.evolved, w.slot]), [['thorns', 1, false, 0], ['cannon', 1, false, 1]]);
+    assert.deepEqual(G.passives, { regen: 1 });
+    assert.deepEqual(evolvable(), []);
+    assert.equal(previewFusion('lotus_bloom').code, 'ITEM_LEVEL_REQUIRED');
+    assert.equal(previewFusion('absolute_bloom').code, 'MISSING_INGREDIENT');
+    for (const id of ['thorns', 'cannon']) {
+        assert.equal(applyChoice({ kind: 'weapon', id, level: 1 }), false, 'repeated starter grant cannot upgrade an owned weapon');
+        const card = rollChoices(99).find(c => c.id === id);
+        assert.equal(card.level, 2); assert.equal(!!card.isNew, false);
+        for (let level = 2; level <= 8; level++) assert.equal(applyChoice({ kind: 'weapon', id, level }), true);
+    }
+    assert.deepEqual(evolvable().map(w => w.id), ['thorns'], 'regen does not replace pollen for the cannon');
+    assert.equal(previewFusion('lotus_bloom').code, 'EVOLUTION_REQUIRED');
+    assert.equal(rollChest(1, () => 0)[0].id, 'thorns');
+    assert.deepEqual(evolvable(), []);
+    assert.equal(previewFusion('lotus_bloom').code, 'EVOLUTION_REQUIRED');
+    applyChoice({ kind: 'passive', id: 'pollen', level: 1 });
+    assert.deepEqual(evolvable().map(w => w.id), ['cannon']);
+    assert.equal(previewFusion('lotus_bloom').code, 'EVOLUTION_REQUIRED', 'qualifying for a chest is not itself evolution');
+    assert.deepEqual(rollChest(1, () => 0).map(r => [r.kind, r.id]), [['evolve', 'cannon']]);
+    assert.equal(previewFusion('lotus_bloom').ok, true);
+    assert.equal(previewFusion('absolute_bloom').code, 'MISSING_INGREDIENT', 'absolute fusion still needs the third evolved weapon');
 });
 
 test('fused outputs keep the resonance of the family parents they consumed', () => {

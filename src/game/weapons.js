@@ -1,6 +1,7 @@
 import { applyTechWeaponBonus } from './tech.js';
 import { FUSION_RECIPES } from '../data/fusions.js';
 import { firingMuzzle } from './player-motion.js';
+import { markPlayerAttack } from './attack-animation.js';
 import { createWeaponVfxFrame, drawWeaponProjectile, drawWeaponOrbit, drawWeaponBeam, drawBeamHitAccents, drawFusionResidues, drawFusionHitAccents } from './weapon-vfx.js';
 // 무기 런타임: 쿨다운 → 발사 패턴, 플레이어 투사체/광선/궤도체 업데이트 및 충돌
 import { G, rand } from './state.js';
@@ -10,7 +11,7 @@ import { audio } from '../core/audio.js';
 import { hitEnemy } from './enemies.js';
 import { spawnHazard, limitFriendlyFields } from './hazards.js';
 import { sparks, petals, embers, shake, floatText } from './effects.js';
-import { healPlayer, triggerPlayerShot } from './player.js';
+import { healPlayer } from './player.js';
 import { preferredTarget } from './targeting.js';
 import { upgradeLevel } from '../core/save.js';
 
@@ -35,6 +36,7 @@ export function activeWeaponCores(create = true) {
     return out;
 }
 const ownerId = w => w.sourceId || w.id;
+const animateAttack = (w, dx, options) => markPlayerAttack(G.player, G.clock, w, dx, { tech: G.tech, ...options });
 const hitChannel = w => w.coreIndex ? 6 + w.slot * 3 + w.coreIndex - 1 : w.slot;
 function ensureHitChannels(e) {
     if (e.hits instanceof Float32Array && e.hits.length >= 24) return;
@@ -178,6 +180,7 @@ function lob(w, s, tx, ty, hazardKind) {
     const sh = G.shots.spawn();
     sh.kind = 'lob';
     sh.weapon = ownerId(w); sh.coreId = w.sourceId ? w.id : null; sh.coreIndex = w.coreIndex || 0; sh.slot = w.slot;
+    animateAttack(w, tx - p.x, { family: 'throw' });
     sh.sx = p.x; sh.sy = p.y - 30; sh.tx = tx; sh.ty = ty;
     sh.x = sh.sx; sh.y = sh.sy;
     sh.t = 0; sh.dur = 0.55; sh.life = 1;
@@ -225,7 +228,7 @@ const FIRE = {
         }
         const t = nearestEnemy(p.x, p.y, 700);
         const [dx, dy] = aimAt(w, t);
-        triggerPlayerShot(dx);
+        animateAttack(w, dx);
         const base = Math.atan2(dy, dx);
         for (const off of [-0.08, 0, 0.08]) shoot(w, { ...s, dmg: s.dmg * 2 }, Math.cos(base + off), Math.sin(base + off), { img: fx.rail, radius: 7, knock: 120 });
         shake(2); audio.sfx('zap');
@@ -257,7 +260,7 @@ const FIRE = {
     shotgun(w, s) {
         const t = nearestEnemy(G.player.x, G.player.y, 420);
         const [dx, dy] = aimAt(w, t);
-        triggerPlayerShot(dx);
+        animateAttack(w, dx);
         const base = Math.atan2(dy, dx);
         const n = s.amount;
         for (let i = 0; i < n; i++) {
@@ -276,7 +279,7 @@ const FIRE = {
     rifle(w, s) {
         const t = nearestEnemy(G.player.x, G.player.y, 700);
         const [dx, dy] = aimAt(w, t);
-        triggerPlayerShot(dx);
+        animateAttack(w, dx);
         const base = Math.atan2(dy, dx);
         for (let i = 0; i < s.amount; i++) {
             const a = base + (i === 0 ? 0 : rand(-0.35, 0.35));
@@ -285,6 +288,7 @@ const FIRE = {
         audio.sfx(w.evolved ? 'zap' : 'shot');
     },
     thorns(w, s) {
+        animateAttack(w, G.player.facingX, { activation: true });
         w.activeT = s.duration;
     },
     molotov(w, s) {
@@ -304,6 +308,8 @@ const FIRE = {
         if (!focused && (p.vx || p.vy || !t)) base = Math.atan2(p.facingY, p.facingX);
         else { const [dx, dy] = aimAt(w, t); base = Math.atan2(dy, dx); }
         const n = s.amount;
+        const firstBeamAngle = base + (w.evolved && !focused ? G.clock * 0.6 : 0);
+        animateAttack(w, Math.cos(firstBeamAngle), { family: 'cannon' });
         for (let i = 0; i < n; i++) {
             const a = base + (i / n) * Math.PI * 2 + (w.evolved && !focused ? G.clock * 0.6 : 0);
             fireBeam(w, s, a);
@@ -315,6 +321,7 @@ const FIRE = {
         const p = G.player;
         if (s.follow) {
             if (!w.follow || !w.follow.alive) {
+                animateAttack(w, p.facingX, { follow: true, activation: true });
                 w.follow = spawnHazard('gas', p.x, p.y, { radius: s.radius * s.area, duration: 9999, dmg: s.dmg, tick: s.tick, slow: s.slow, weapon: ownerId(w), follow: true });
             } else {
                 w.follow.radius = s.radius * s.area; w.follow.dmg = s.dmg; w.follow.slow = s.slow;
@@ -327,6 +334,7 @@ const FIRE = {
         }
     },
     saw(w, s) {
+        animateAttack(w, G.player.facingX, { family: 'blade' });
         // 화면 정리: 이전 톱날 묶음은 짧게 사라지고, 한 번에 최대 SAW_VISUAL_CAP개만 날린다.
         // 상한을 넘는 톱날 수는 피해로 환산해 총 화력은 유지한다.
         const owner = ownerId(w);
@@ -350,7 +358,6 @@ const FIRE = {
 };
 
 function fireBeam(w, s, angle) {
-    triggerPlayerShot(Math.cos(angle));
     const p = G.player;
     const b = G.beams.spawn();
     const muzzle = images.playerFire ? firingMuzzle(p, G.clock, Math.cos(angle)) : { x: p.x, y: p.y - 22 };
@@ -402,6 +409,7 @@ function updateLotusGun(dt) {
     if (!t) { lotusGun.cd = 0.15; return; }
     lotusGun.cd = LOTUS_GUN.cd * (p.stats.cooldown || 1);
     const s = lotusGunStats(), [dx, dy] = aimAt(lotusGun, t), base = Math.atan2(dy, dx);
+    animateAttack(lotusGun, dx); // Pose/flash starts on the actual lotus volley, never before it.
     for (let i = 0; i < LOTUS_GUN.shots; i++) {
         const a = base + (i - (LOTUS_GUN.shots - 1) / 2) * LOTUS_GUN.spread;
         shoot(lotusGun, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: 7, knock: 70 });
@@ -428,10 +436,15 @@ export function updateWeapons(dt) {
                 const sh = shoot(w, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: executioner ? 7 : 5, knock: executioner ? 80 : 50 });
                 // 처형인의 쌍권총: 진홍빛 총구 섬광
                 if (executioner) sparks(sh.x, sh.y, 4, w.burst % 2 ? '#ff3b5c' : '#ffd36b', 180);
-                triggerPlayerShot(dx);
+                animateAttack(w, dx);
                 audio.sfx('shot');
                 w.burst--;
             }
+        }
+        // A permanent orbit has no FIRE call: announce its first activation
+        // exactly once, never on contact ticks or subsequent cooldown checks.
+        if (w.id === 'thorns' && s.permanent && !w.poseActivated) {
+            animateAttack(w, p.facingX, { activation: true }); w.poseActivated = true;
         }
         // 연꽃 가시 궤도
         if (['thorns', 'lotus_bloom', 'orbit_saw'].includes(w.id) && (w.activeT > 0 || s.permanent)) {

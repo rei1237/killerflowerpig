@@ -57,7 +57,7 @@ function seedScene() {
     G.mode = 'play'; G.paused = false; G.clock = 20; G.stage = 7; G.time = 60;
     G.camera.x = 0; G.camera.y = -20; G.weapons = []; G.passives = {}; G.shake = 0;
     G.player = { x: 0, y: 0, vx: 0, vy: 0, hp: 100, maxHp: 100, dead: false, shotAt: 19.96, shotFlip: false, iframes: 0, hurtT: 0, anim: 0, stats: { magnet: 70 } };
-    images.playerFire = { width: 1536, height: 256 }; images.playerFireFlash = images.playerFire;
+    images.playerFire = { width: 3072, height: 256 }; images.playerFireFlash = images.playerFire;
     for (const key of ['bullet', 'rail', 'bossShot', 'enemyShot', 'petal', 'petalBlood', 'saw', 'bomb', 'meat', 'magnet', 'chest']) fx[key] = sprite;
     fx.gems = [sprite, sprite, sprite]; fx.splats = { red: [sprite] };
     for (let i = 0; i < 180; i++) Object.assign(G.enemies.spawn(), { ...place(i, i % 4 === 0), alive: true, atlas: enemyAtlas, radius: 14, state: 'walk', anim: i % 8, scale: .52, flip: false, tint: 'normal', id: i, hp: 10, maxHp: 10, flash: 0, elite: false });
