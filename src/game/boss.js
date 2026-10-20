@@ -77,6 +77,7 @@ export class Boss {
     enterPhase(n) {
         this.cancelPatternWarnings();
         this.phase = n;
+        if (this.def.signature === 'faultline') this.lastPattern = null;
         this.invuln = 1.0;
         this.task = null;
         this.attackT = this.def.pacing?.phaseRest ?? 1.4;
@@ -129,7 +130,7 @@ export class Boss {
         this.motionVX = 0; this.motionVY = 0;
         // A discarded Hunter must not release its second lock into a new stage
         // or a replacement player. Other boss lifecycles are unchanged.
-        if (['hunt', 'trainingCharge'].includes(this.def.signature) && (G.stage !== this.stage || this.task?.target && this.task.target !== G.player)) {
+        if (['hunt', 'trainingCharge', 'faultline'].includes(this.def.signature) && (G.stage !== this.stage || this.task?.target && this.task.target !== G.player)) {
             this.cancelPatternWarnings(); this.task = null; return;
         }
         updateBossMotion(this, dt);
@@ -166,7 +167,7 @@ export class Boss {
             if (this.attackT <= 0 && this.invuln <= 0) this.startPattern();
         }
         // 화면 밖으로 너무 멀어지면 빠르게 복귀
-        if (!['hunt', 'trainingCharge'].includes(this.def.signature) && dist > Math.max(G.view.w, G.view.h) * 0.9) {
+        if ((this.def.signature !== 'faultline' || !this.task) && !['hunt', 'trainingCharge'].includes(this.def.signature) && dist > Math.max(G.view.w, G.view.h) * 0.9) {
             this.x += (dx / dist) * 300 * dt;
             this.y += (dy / dist) * 300 * dt;
         }
@@ -237,9 +238,10 @@ export class Boss {
     }
 
     warn(kind, x, y, options, release) {
-        const epoch = this.patternEpoch;
+        const epoch = this.patternEpoch, target = G.player;
         const onFire = h => {
             if (!this.alive || this.patternEpoch !== epoch) return;
+            if (this.def.signature === 'faultline' && (G.stage !== this.stage || G.player !== target)) return;
             setBossMotion(this, 'attack', .2);
             release?.(h);
         };
@@ -500,7 +502,7 @@ export class Boss {
         return this.signatureTask(1.55 + (echoes - 1) * gapT, 2.1, 1.35);
     }
 
-    // Legacy hammer encounter (not assigned): outer fault lines hit first; then the delayed
+    // 9: restored Brutus King. Outer fault lines hit first; then the delayed
     // hammer splits that center. The warning footprints are the damage test.
     task_faultline() {
         setBossMotion(this, 'windup');
@@ -529,8 +531,27 @@ export class Boss {
             }
             last = xDelay;
         }
+        // Mutation reacquires the player's NEW position after the fixed grid;
+        // frenzy repeats with an off-beat second verdict. Each circle gets its
+        // full warning after acquisition, never an invisible tracking hit.
+        const target = G.player, verdicts = this.phase, warning = 1.05;
+        let queued = 0, next = last + .15;
         audio.sfx('warn');
-        return this.signatureTask(last + .4, 2.3, 1.4);
+        return { t: 0, target, step: (dt, task) => {
+            if (queued < verdicts && task.t >= next) {
+                setBossMotion(this, 'windup');
+                this.warn('tcircle', target.x, target.y, { radius: 82, delay: warning, color: '#ffb36b' }, h => {
+                    this.circleHit(h, .9); shake(8); audio.sfx('explode');
+                });
+                queued++;
+                next = task.t + warning + .35;
+            }
+            const finish = verdicts ? next : last + .4;
+            if (queued === verdicts && task.t >= finish) {
+                this.endTask(2.3);
+                this.attackT = Math.max(1.5, this.attackT);
+            }
+        } };
     }
 
     // 10: a contract snapshots your position. Coin interest is paid first;
@@ -633,7 +654,24 @@ export class Boss {
         };
     }
 
+    // King's support volley: three locked fans with explicit shot lanes,
+    // never the generic rapid unmarked ring. Fifteen projectiles maximum.
+    task_royalVolley() {
+        setBossMotion(this, 'windup');
+        const a = Math.atan2(G.player.y - 18 - this.bodyY(), G.player.x - this.x);
+        const waves = this.phase === 2 ? 3 : 2;
+        for (let wave = 0; wave < waves; wave++) for (let i = 0; i < 5; i++) {
+            const angle = a + (i - 2) * .18 + (wave % 2 ? .09 : 0);
+            this.warn('tline', this.x, this.bodyY(), { angle, len: 760, width: 18, delay: 1.05 + wave * .65, color: '#ffd08b' }, h => {
+                this.fan(h.x, h.y, h.angle, 1, 0, 215, 'boss', 7);
+            });
+        }
+        audio.sfx('warn');
+        return this.signatureTask(1.4 + (waves - 1) * .65, 2.2, 1.5);
+    }
+
     task_ring() {
+        if (this.def.signature === 'faultline') return this.task_royalVolley();
         setBossMotion(this, 'windup');
         return {
             n: 0,
@@ -669,6 +707,7 @@ export class Boss {
     }
 
     task_aimed() {
+        if (this.def.signature === 'faultline') return this.task_royalVolley();
         setBossMotion(this, 'windup');
         return {
             n: 0,

@@ -20,10 +20,6 @@ import { input } from '../src/core/input.js';
 
 const previousBosses=JSON.parse(readFileSync(new URL('./fixtures/bosses-before-relocation.json',import.meta.url)));
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
-const originalAlpha={name:'알파 청토끼',title:'지면이 고동친다...',sheet:'boss1',tint:'normal',scale:.62,hp:1400,speed:48,dmg:10,
- pacing:{opening:3,phaseRest:2.2,recovery:1.5,chargeWarning:1.15,chargeSpeed:480,summons:.6},
- signature:'charge',signatureHint:'돌진 선 옆으로 피한 뒤 긴 빈틈을 노리세요.',phaseSummons:true,
- phases:[['charge','summon'],['charge','ring','summon'],['charge','ring','aimed']]};
 function reset(stage=1,tech='gunline'){
  resetBuild();clearWorld();clearFocus();
  Object.assign(save,{upgrades:{},relics:[],accessoryInventory:[],equippedAccessory:null,cosmeticInventory:[],equippedCosmetics:{outfit:null,ornament:null},equippedPet:null});
@@ -41,12 +37,14 @@ function tick(b,dt){G.clock+=dt;updatePlayer(dt);updateHazards(dt);b.update(dt);
 function advance(b,time,dt=1/60){for(let elapsed=0;elapsed<time-1e-9;elapsed+=dt)tick(b,Math.min(dt,time-elapsed));}
 
 // A captured definition, not a copy of the new runtime's expected fields.
-test('stage 9 is the exact former Alpha definition with only base HP and art lookup changed',()=>{
- assert.deepEqual(BOSSES[9],{...originalAlpha,hp:13000,artStage:1});
- const b=reset(9);assert.equal(b.maxHp,13000*7*3.2);assert.equal(b.artStage,1);assert.equal(b.speed,48);assert.equal(b.dmg,14);
- assert.equal(b.def.signature,'charge');assert.equal(b.attackT,100);
- assert.equal(bestiaryEntries().find(e=>e.id==='boss-9').image,BOSS_ART[1].src);
+test('stage 9 restores Brutus King identity, original art and no phase adds',()=>{
+ for(const field of ['name','title','sheet','tint','scale','speed','dmg','signature'])assert.equal(BOSSES[9][field],previousBosses[9][field]);
+ const b=reset(9);assert.equal(b.maxHp,24000*7*3.2);assert.equal(b.artStage,9);
+ assert.equal(b.def.signature,'faultline');assert.equal(b.attackT,100);
+ assert.equal(bestiaryEntries().find(e=>e.id==='boss-9').image,BOSS_ART[9].src);
  assert.match(bestiaryEntries().find(e=>e.id==='boss-1').pattern,/소환·탄막이 없습니다/);
+ assert.ok(!bestiaryEntries().some(e=>e.id==='boss-10'));
+ for(const phase of [1,2]){b.enterPhase(phase);assert.equal(G.enemies.count,0);}
 });
 
 test('stages 2 through 8 and stage 10 retain every definition field unchanged',()=>{
@@ -106,19 +104,19 @@ test('beginner warnings and delayed dashes are canceled on phase, death, player 
  }
 });
 
-test('stage 9 prefetch resolves current Alpha plus actual stage 10, then evicts Alpha at stage 10',async()=>{
+test('stage 9 prefetch resolves King plus actual stage 10, then evicts King at stage 10',async()=>{
  const requested=[],canceled=[];
  const cache=new BossSheetCache(src=>{requested.push(src);return {promise:Promise.resolve({width:1024,height:512}),cancel(){canceled.push(src);}};});
- await cache.prepare(9);assert.deepEqual(requested,[BOSS_SHEETS[1].src,BOSS_SHEETS[10].src]);assert.equal(cache.entries.size,2);
- assert.ok(cache.get(1));assert.ok(cache.get(10));assert.equal(cache.get(9),null);
- await cache.prepare(10);assert.equal(cache.entries.size,1);assert.deepEqual(canceled,[BOSS_SHEETS[1].src]);assert.equal(requested.length,2);
+ await cache.prepare(9);assert.deepEqual(requested,[BOSS_SHEETS[9].src,BOSS_SHEETS[10].src]);assert.equal(cache.entries.size,2);
+ assert.ok(cache.get(9));assert.ok(cache.get(10));assert.equal(cache.get(1),null);
+ await cache.prepare(10);assert.equal(cache.entries.size,1);assert.deepEqual(canceled,[BOSS_SHEETS[9].src]);assert.equal(requested.length,2);
 });
 
-test('relocated Alpha uses original full-body and pose metadata without changing collision radius',()=>{
+test('restored King uses original full-body and pose metadata without changing collision radius',()=>{
  const b=reset(9),draws=[],ctx=new Proxy({globalAlpha:1,drawImage:(...a)=>draws.push(a)},{get:(o,k)=>k in o?o[k]:()=>{}}),radius=b.radius;
  const portrait={width:512,height:512},sheet={width:1024,height:512};
- drawBossArtwork(ctx,b,0,portrait);close(draws[0][3],512*radius*3.2/BOSS_ART[1].height);
- drawBossSpriteSheet(ctx,b,sheet);close(draws[1][7],256*radius*3.2/BOSS_SHEETS[1].bodyHeight);assert.equal(b.radius,radius);
+ drawBossArtwork(ctx,b,0,portrait);close(draws[0][3],512*radius*3.2/BOSS_ART[9].height);
+ drawBossSpriteSheet(ctx,b,sheet);close(draws[1][7],256*radius*3.2/BOSS_SHEETS[9].bodyHeight);assert.equal(b.radius,radius);
 });
 
 // Actual starter stats and weapon collision, finite HP, no god mode/healing or
@@ -158,5 +156,39 @@ for(const tech of Object.keys(TECHS))test(`${tech}: early grown build clears aft
   // Dedicated phase tests above still enforce the complete warning duration.
   if(r.shortestCompleteWarning!==null)assert.ok(r.shortestCompleteWarning>=1.49);if(r.shortestCompleteRecovery!==null)assert.ok(r.shortestCompleteRecovery>=2.49);
   assert.equal(r.budget,10);assert.ok(r.equivalentRunLevel>=6&&r.equivalentRunLevel<=10);
+ }
+});
+
+test('King fracture combo is escapable at real unupgraded mobile movement speed and finite HP at 60/15 FPS',()=>{
+ for(const phase of [0,1,2])for(const dt of [1/60,1/15]){
+  const b=reset(9);G.passives={};recomputeStats(true);b.phase=phase;
+  assert.equal(G.player.stats.speed,135);assert.equal(G.player.hp,100);assert.equal(G.godMode,false);
+  input.move.y=1;input.move.x=0;begin(b);
+  let elapsed=0,maxHazards=0;
+  while(b.task&&elapsed<9){tick(b,dt);elapsed+=dt;maxHazards=Math.max(maxHazards,G.hazards.count);}
+  assert.equal(b.task,null);assert.equal(G.player.hp,100);assert.equal(G.player.dead,false);
+  assert.ok(maxHazards<=6);assert.equal(G.enemyShots.count,0);assert.equal(G.enemies.count,0);
+  input.move.y=0;
+ }
+});
+
+test('King support volleys are locked, fully telegraphed and bounded at 15 projectiles',()=>{
+ for(const phase of [1,2]){
+  const b=reset(9);b.phase=phase;b.task=b.task_royalVolley();
+  assert.equal(G.hazards.count,phase===1?10:15);
+  const angles=G.hazards.items.slice(0,G.hazards.count).map(h=>h.angle);
+  input.move.y=1;advance(b,1);assert.equal(G.enemyShots.count,0);
+  assert.deepEqual(G.hazards.items.slice(0,G.hazards.count).map(h=>h.angle),angles);
+  while(b.task)tick(b,1/60);
+  assert.equal(G.enemyShots.count,phase===1?10:15);assert.ok(b.attackT>=1.5);input.move.y=0;
+ }
+});
+
+test('King warnings cannot fire after a player or stage replacement even before boss update',()=>{
+ for(const change of ['player','stage']){
+  const b=reset(9);begin(b);const h=G.hazards.items[0],callback=h.onFire;
+  if(change==='player')G.player={...G.player};else G.stage=10;
+  const hp=G.player.hp;callback(h);assert.equal(G.player.hp,hp);assert.equal(G.enemyShots.count,0);
+  b.update(.01);assert.equal(b.task,null);assert.equal(G.hazards.count,0);
  }
 });

@@ -38,21 +38,10 @@ test('ten encounters advertise ten different executable signatures and concise K
  }
 });
 
-test('relocated Alpha keeps its original charge warning, speed and recovery in every phase',()=>{
- const old=Math.random;Math.random=()=>.5;
- try { for(let phase=0;phase<3;phase++) {
-  const b=reset(9,phase);begin(b);const warning=1.15/Math.sqrt(b.phaseMul);
-  assert.equal(hazards()[0].delay,warning);advance(b,warning-.005);close(b.x,0);
-  advance(b,.01);assert.ok(b.x>0&&b.x<=4.8);
-  while(b.task) advance(b,.01);
-  assert.ok(b.attackT>=1.4/b.phaseMul*1.5-.011);
- } } finally { Math.random=old; }
-});
-
 test('signatures preserve their full warning and release attack poses only at their gameplay event',()=>{
  for(let stage=2;stage<=10;stage++) for(const phase of [0,2]) {
   const b=reset(stage,phase);begin(b);const first=Math.min(...hazards().map(h=>h.delay));
-  assert.ok(first>=(stage===3?.65:stage===9?1.15/Math.sqrt(b.phaseMul):1.05),`${stage}: phase cannot shorten the warning`);
+  assert.ok(first>=(stage===3?.65:1.05),`${stage}: phase cannot shorten the warning`);
   advance(b,first-.005);assert.equal(bossSpriteFrame(b),BOSS_FRAMES.windup,`${stage}: premature attack`);assert.equal(G.enemyShots.count,0);
   advance(b,.01);assert.equal(bossSpriteFrame(b),BOSS_FRAMES.attack,`${stage}: release pose`);
  }
@@ -139,14 +128,26 @@ test('psychic echoes use separate origins, staggered release and a wide missing 
  }
 });
 
-test('stage 9 uses Alpha charge, landing rings and phase summons rather than the replaced faultline',()=>{
+test('King fixes sequential fault lines then reacquires one/two fully warned verdicts without adds',()=>{
  for(const phase of [0,1,2]) {
-  const b=reset(9,phase);begin(b);assert.equal(hazards().length,1);
-  while(b.task)advance(b,.01);
-  assert.equal(G.enemyShots.count,phase?10+phase*4:0);
+  const b=reset(9,phase);const task=begin(b);const initial=hazards().map(h=>({...h}));
+  assert.equal(initial.length,phase?6:4);
+  assert.equal(initial[0].delay,1.05);assert.equal(initial[1].delay,1.05);assert.equal(initial[2].delay,2);
+  assert.equal(initial[0].width,58);
+  G.player.x=600;G.player.y=200;
+  let circles=0,seen=new Set();
+  while(b.task){advance(b,.01);for(const h of hazards())if(h.kind==='tcircle'&&!seen.has(h.onFire)){seen.add(h.onFire);circles++;assert.equal(h.delay,1.05);assert.equal(h.x,600);assert.equal(h.y,200);}}
+  assert.equal(circles,phase);assert.ok(b.attackT>=1.5);assert.equal(G.enemyShots.count,0);assert.equal(G.enemies.count,0);
  }
- const b=reset(9);b.enterPhase(1);assert.equal(G.enemies.count,4);
- G.enemies.clear();b.enterPhase(2);assert.equal(G.enemies.count,5);
+});
+
+test('King telegraph footprints have a reachable central opening and outside edges stay safe',()=>{
+ const b=reset(9);begin(b);G.player.iframes=0;
+ const marks=hazards().map(h=>({...h}));
+ assert.ok(!lineContains(marks[0],300,0)&&!lineContains(marks[1],300,0));
+ updateHazards(1.051);assert.equal(G.player.hp,10000,'first flank strike leaves center open');
+ G.player.y=45;updateHazards(.95);assert.equal(G.player.hp,10000,'45px sidestep clears center');
+ const hp=G.player.hp;G.player.x=300;G.player.y=0;b.lineHit(marks[2],1);close(hp-G.player.hp,b.dmg);assert.ok(b.dmg<50);
 });
 
 // 강화: 금화 사격선 7/9/11줄, 모래시계 2/2/3개(.65초 간격), 결산 금화 11발.
@@ -174,7 +175,7 @@ test('death and phase changes cancel owned warning callbacks without removing un
 test('phase reinforcement is an explicit brute/brood identity, not the same add wave on every boss',()=>{
  for(let stage=1;stage<=10;stage++) {
   const b=reset(stage);b.enterPhase(1);
-  assert.equal(G.enemies.count,stage===9?4:stage===6?5:0,`stage ${stage}`);
+  assert.equal(G.enemies.count,stage===6?5:0,`stage ${stage}`);
  }
 });
 
@@ -182,7 +183,7 @@ test('phase reinforcement is an explicit brute/brood identity, not the same add 
 test('each final-phase signature completes with bounded hazards/projectiles and a real recovery gap',()=>{
  for(let stage=2;stage<=10;stage++) {
   const b=reset(stage,2);begin(b);let maxHazards=0,maxShots=0;
-  for(let t=0;b.task&&t<6;t+=.01) {advance(b,.01);maxHazards=Math.max(maxHazards,G.hazards.count);maxShots=Math.max(maxShots,G.enemyShots.count);}
+  for(let t=0;b.task&&t<8;t+=.01) {advance(b,.01);maxHazards=Math.max(maxHazards,G.hazards.count);maxShots=Math.max(maxShots,G.enemyShots.count);}
   assert.equal(b.task,null,`stage ${stage}: stuck task`);assert.ok(b.attackT>=1.25);assert.ok(maxHazards<=16,`stage ${stage}: ${maxHazards} hazards`);assert.ok(maxShots<=110,`stage ${stage}: ${maxShots} shots`);
   assert.ok(Number.isFinite(b.x)&&Number.isFinite(b.y));
  }

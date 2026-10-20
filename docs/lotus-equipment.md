@@ -1,5 +1,7 @@
 # Lotus equipment and fitting room
 
+Current shop prices: [higher gold shop prices](shop-pricing.md). Price examples below describe earlier revisions and are superseded by catalog 6; reward rates and item effects remain unchanged.
+
 ## Scope
 
 Based on master `01bb4d8fc025186f92f4587c2a1ffd8b62c3e059`. Three permanent items use independent outfit/ornament slots, separate from stat accessories. Original wallet, purchases, titles and progression migrate in place. The legendary lotus gun retains its existing stage-3 unlock, 2,400-coin price and combat effect; its shop illustration is replaced with new premium artwork.
@@ -67,7 +69,7 @@ All six complete body variants now use 3,072 × 256 atlases with eight 384 × 25
 
 The halo retains its four-cell source and uses explicit mapping [0,1,2,2,3,3,3,0]. Body/halo crops are cached. A draw uses at most two image draws plus one bounded outfit accent, with no per-frame image cache, particle emitter or simulation writes. Reduced-motion suppresses idle bob and outfit accents while retaining essential shot feedback. The fitting room uses the same motion function and catalog shot cadence, with an isolated clock that freezes while hidden.
 
-`node tools/costume-native-qa.mjs` renders all 48 authored poses and 150 native frames at 50 fps. Normal-gun examples use the starter shotgun's 1.0-second cadence; legendary examples use 0.45 seconds. These are controlled renderer captures, not a recording of an actual phone/browser session.
+`node tools/costume-native-qa.mjs` renders all 48 authored poses and 150 native frames at 50 fps. Normal-gun examples use the starter shotgun's 1.0-second cadence; legendary examples use the current runtime cadence (0.36 seconds). These are controlled renderer captures, not a recording of an actual phone/browser session.
 
 ## Costume purchase investigation and recovery
 

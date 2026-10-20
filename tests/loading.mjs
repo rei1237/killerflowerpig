@@ -135,8 +135,8 @@ test('loading markup has accessible progress, actual hero art and a mobile/short
     const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
     assert.match(html, /id="loading-progress"[^>]+role="progressbar"/);
     assert.match(html, /id="loading-error"[^>]+role="alert"/);
-    assert.match(html, /id="loading-art"[^>]+src="asset\/ui\/menu-yeoni.webp"/);
-    assert.ok(fs.existsSync(new URL('../asset/ui/menu-yeoni.webp', import.meta.url)));
+    assert.match(html, /id="loading-art"[^>]+src="asset\/branding\/slayer-launch-900.webp"/);
+    assert.ok(fs.existsSync(new URL('../asset/branding/slayer-launch-900.webp', import.meta.url)));
     assert.match(css, /#loading\{[^}]*overflow-y:auto/);
     assert.match(css, /#loading-art\{[^}]*object-fit:contain/);
     assert.match(css, /#loading-retry\{[^}]*min-height:48px/);

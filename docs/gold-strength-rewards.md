@@ -1,5 +1,7 @@
 # Strong-enemy gold and guaranteed boss bounty
 
+Current shop prices: [higher gold shop prices](shop-pricing.md). Price examples below describe earlier revisions and are superseded by catalog 6; reward rates and item effects remain unchanged.
+
 Latest request replaces the former ordinary0%, elite30%×6, clear5×stage economy. Prices and existing wallets/purchases are unchanged.
 
 | Enemy | Chance | Bundle | Expected coins/kill |

@@ -141,6 +141,8 @@ function preparePreview() {
     }
     if (!visibilityBound && document.addEventListener) {
         document.addEventListener('visibilitychange', () => document.hidden ? stopCosmeticPreview() : startCosmeticPreview());
+        window.addEventListener('pagehide', stopCosmeticPreview);
+        window.addEventListener('pageshow', startCosmeticPreview);
         visibilityBound = true;
     }
     for (const mode of ['idle', 'walk', 'fire']) {

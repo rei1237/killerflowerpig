@@ -1,0 +1,311 @@
+{
+  "fixture": "20 seconds; deterministic RNG .99 (no crit); real updateWeapons/updateShots; immortal body-capsule targets; moving packs with velocity; no assets loaded in numerical probes",
+  "baselineCommit": "51ea88a463e2607edab18fd35a22af8337c86455",
+  "before": {
+    "stats": {
+      "cd": 0.45,
+      "shots": 3,
+      "spread": 0.16,
+      "baseDmg": 18,
+      "dmgPerStage": 8,
+      "pierce": 4,
+      "speed": 820,
+      "crit": 0.1
+    },
+    "scenes": {
+      "1:boss": {
+        "damage": 3276,
+        "targetsHit": 1,
+        "peakShots": 6
+      },
+      "1:boss-far": {
+        "damage": 1066,
+        "targetsHit": 1,
+        "peakShots": 6
+      },
+      "1:moving-pack": {
+        "damage": 8476,
+        "targetsHit": 17,
+        "peakShots": 6
+      },
+      "1:focus": {
+        "damage": 9776,
+        "targetsHit": 16,
+        "peakShots": 6
+      },
+      "4:boss": {
+        "damage": 6300,
+        "targetsHit": 1,
+        "peakShots": 6
+      },
+      "4:boss-far": {
+        "damage": 2050,
+        "targetsHit": 1,
+        "peakShots": 6
+      },
+      "4:moving-pack": {
+        "damage": 16300,
+        "targetsHit": 17,
+        "peakShots": 6
+      },
+      "4:focus": {
+        "damage": 18800,
+        "targetsHit": 16,
+        "peakShots": 6
+      },
+      "10:boss": {
+        "damage": 12348,
+        "targetsHit": 1,
+        "peakShots": 6
+      },
+      "10:boss-far": {
+        "damage": 4018,
+        "targetsHit": 1,
+        "peakShots": 6
+      },
+      "10:moving-pack": {
+        "damage": 31948,
+        "targetsHit": 17,
+        "peakShots": 6
+      },
+      "10:focus": {
+        "damage": 36848,
+        "targetsHit": 16,
+        "peakShots": 6
+      }
+    },
+    "nonowner": {
+      "damage": 0,
+      "targetsHit": 0,
+      "peakShots": 0
+    },
+    "lowFps": {
+      "damage": 6300,
+      "targetsHit": 1,
+      "peakShots": 6
+    }
+  },
+  "after": {
+    "stats": {
+      "cd": 0.36,
+      "shots": 3,
+      "spread": 0.07,
+      "baseDmg": 40,
+      "dmgPerStage": 14,
+      "pierce": 7,
+      "speed": 960,
+      "crit": 0.1,
+      "bloomRadius": 90,
+      "bloomDamage": 1,
+      "bloomBossDamage": 0.75,
+      "bloomTargets": 8
+    },
+    "scenes": {
+      "1:boss": {
+        "damage": 10733,
+        "targetsHit": 1,
+        "peakShots": 9
+      },
+      "1:boss-far": {
+        "damage": 10733,
+        "targetsHit": 1,
+        "peakShots": 9
+      },
+      "1:moving-pack": {
+        "damage": 57780,
+        "targetsHit": 18,
+        "peakShots": 9
+      },
+      "1:focus": {
+        "damage": 60750,
+        "targetsHit": 16,
+        "peakShots": 9
+      },
+      "4:boss": {
+        "damage": 19080,
+        "targetsHit": 1,
+        "peakShots": 9
+      },
+      "4:boss-far": {
+        "damage": 19080,
+        "targetsHit": 1,
+        "peakShots": 9
+      },
+      "4:moving-pack": {
+        "damage": 102720,
+        "targetsHit": 18,
+        "peakShots": 9
+      },
+      "4:focus": {
+        "damage": 108000,
+        "targetsHit": 16,
+        "peakShots": 9
+      },
+      "10:boss": {
+        "damage": 35775,
+        "targetsHit": 1,
+        "peakShots": 9
+      },
+      "10:boss-far": {
+        "damage": 35775,
+        "targetsHit": 1,
+        "peakShots": 9
+      },
+      "10:moving-pack": {
+        "damage": 192600,
+        "targetsHit": 18,
+        "peakShots": 9
+      },
+      "10:focus": {
+        "damage": 202500,
+        "targetsHit": 16,
+        "peakShots": 9
+      }
+    },
+    "nonowner": {
+      "damage": 0,
+      "targetsHit": 0,
+      "peakShots": 0
+    },
+    "lowFps": {
+      "damage": 17640,
+      "targetsHit": 1,
+      "peakShots": 9
+    }
+  },
+  "liveBoss": {
+    "fixture": "Real Boss AI/movement/phases/summons, fixed high-HP standing player, seed7, focus, actual stage10 maxHP; not human clear times",
+    "before": [
+      {
+        "stage": 10,
+        "owned": false,
+        "build": [
+          [
+            "scatter_rail",
+            6,
+            false
+          ],
+          [
+            "lotus_bloom",
+            8,
+            false
+          ]
+        ],
+        "hp": 2822400,
+        "death": 169.30000000002687,
+        "remainingHp": -1020.3334527991668,
+        "patterns": 40,
+        "phases": [
+          [
+            66.98333333333082,
+            1,
+            1692387.6476562826
+          ],
+          [
+            126.58333333332743,
+            2,
+            705152.9936535695
+          ]
+        ]
+      },
+      {
+        "stage": 10,
+        "owned": true,
+        "build": [
+          [
+            "scatter_rail",
+            6,
+            false
+          ],
+          [
+            "lotus_bloom",
+            8,
+            false
+          ]
+        ],
+        "hp": 2822400,
+        "death": 158.75000000001847,
+        "remainingHp": -2361.3589555226818,
+        "patterns": 37,
+        "phases": [
+          [
+            62.83333333333105,
+            1,
+            1693118.3587253778
+          ],
+          [
+            118.74999999999454,
+            2,
+            701817.7103017549
+          ]
+        ]
+      }
+    ],
+    "after": [
+      {
+        "stage": 10,
+        "owned": false,
+        "build": [
+          [
+            "scatter_rail",
+            6,
+            false
+          ],
+          [
+            "lotus_bloom",
+            8,
+            false
+          ]
+        ],
+        "hp": 2822400,
+        "death": 169.30000000002687,
+        "remainingHp": -1020.3334527991668,
+        "patterns": 40,
+        "phases": [
+          [
+            66.98333333333082,
+            1,
+            1692387.6476562826
+          ],
+          [
+            126.58333333332743,
+            2,
+            705152.9936535695
+          ]
+        ]
+      },
+      {
+        "stage": 10,
+        "owned": true,
+        "build": [
+          [
+            "scatter_rail",
+            6,
+            false
+          ],
+          [
+            "lotus_bloom",
+            8,
+            false
+          ]
+        ],
+        "hp": 2822400,
+        "death": 142.2833333333387,
+        "remainingHp": -122.0062991532593,
+        "patterns": 34,
+        "phases": [
+          [
+            56.24999999999809,
+            1,
+            1687516.4420917481
+          ],
+          [
+            106.11666666666193,
+            2,
+            705513.5193108505
+          ]
+        ]
+      }
+    ]
+  }
+}

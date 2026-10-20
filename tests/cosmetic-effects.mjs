@@ -128,7 +128,7 @@ test('failed purchase/equip, stale revision, and duplicate purchase never change
     assert.equal(api.buyCosmetic(CAPE).ok, true);
     close(G.player.stats.speed, 140.4);
     assert.equal(G.player.hp, 37);
-    assert.equal(api.save.gold, 9640);
+    assert.equal(api.save.gold, 8920);
     assert.equal(api.setCosmetic('outfit', JADE).code, 'NOT_OWNED');
     assert.equal(api.setCosmetic('outfit', null, 0).code, 'REVISION_CONFLICT');
     failWrite = true;
@@ -140,7 +140,7 @@ test('failed purchase/equip, stale revision, and duplicate purchase never change
     assert.equal(api.save.equippedCosmetics.outfit, null);
     assert.equal(G.player.stats.speed, 135);
     assert.equal(G.player.hp, 37);
-    assert.equal(api.save.gold, 9640);
+    assert.equal(api.save.gold, 8920);
 });
 
 test('ornament equip does not refresh stats and fresh frame reconciliation handles replaced saves', () => {

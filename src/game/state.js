@@ -86,6 +86,7 @@ export function setVisualTier(tier) {
 }
 
 export function clearWorld() {
+    G.worldRevision = (G.worldRevision || 0) + 1;
     G.enemies.clear();
     G.shots.clear();
     G.enemyShots.clear();

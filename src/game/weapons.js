@@ -3,7 +3,7 @@ import { FUSION_RECIPES } from '../data/fusions.js';
 import { MISMATCH_DAMAGE } from '../data/techs.js';
 import { firingMuzzle } from './player-motion.js';
 import { markPlayerAttack } from './attack-animation.js';
-import { createWeaponVfxFrame, drawWeaponProjectile, drawWeaponOrbit, drawWeaponBeam, drawBeamHitAccents, drawFusionResidues, drawFusionHitAccents } from './weapon-vfx.js';
+import { createWeaponVfxFrame, drawWeaponProjectile, drawWeaponOrbit, drawWeaponBeam, drawBeamHitAccents, drawFusionResidues, drawFusionHitAccents, recordLotusBloom, drawLotusBlooms, resetLotusBlooms } from './weapon-vfx.js';
 // 무기 런타임: 쿨다운 → 발사 패턴, 플레이어 투사체/광선/궤도체 업데이트 및 충돌
 import { G, rand } from './state.js';
 import { fireSword, drawButcherSword } from './butcher-sword.js';
@@ -529,9 +529,9 @@ function flushCannonVolleys() {
 }
 
 // 상점 전설 장비 「연꽃 총」: 슬롯 밖에서 자동 발사 (보유 시)
-export const LOTUS_GUN = Object.freeze({ cd: 0.45, shots: 3, spread: 0.16, baseDmg: 18, dmgPerStage: 8, pierce: 4, speed: 820, crit: 0.1 });
+export const LOTUS_GUN = Object.freeze({ cd: 0.36, shots: 3, spread: 0.07, baseDmg: 40, dmgPerStage: 14, pierce: 7, speed: 960, crit: 0.1, bloomRadius: 90, bloomDamage: 1, bloomBossDamage: 0.75, bloomTargets: 8 });
 const lotusGun = { id: 'lotus_gun', slot: 99, level: 1, evolved: false, coreIndex: 0, cd: 0.5 };
-export function resetWeaponRuntime() { lotusGun.cd = 0.5; lotusGun.coreIndex = 0; cannonRequests.length = 0; }
+export function resetWeaponRuntime() { lotusGun.cd = 0.5; lotusGun.coreIndex = 0; cannonRequests.length = 0; resetLotusBlooms(); }
 export function lotusGunStats() {
     const ps = G.player.stats;
     return { dmg: (LOTUS_GUN.baseDmg + LOTUS_GUN.dmgPerStage * (G.stage || 1)) * (ps.might || 1), speed: LOTUS_GUN.speed * (ps.projSpeed || 1),
@@ -544,12 +544,37 @@ function updateLotusGun(dt) {
     const p = G.player, t = nearestEnemy(p.x, p.y, 520);
     if (!t) { lotusGun.cd = 0.15; return; }
     lotusGun.cd = LOTUS_GUN.cd * (p.stats.cooldown || 1);
-    const s = lotusGunStats(), [dx, dy, origin] = aimAt(lotusGun, t), base = Math.atan2(dy, dx);
+    const s = lotusGunStats(), [, , origin] = aimAt(lotusGun, t);
+    const [dx, dy] = sawAimDirection(p, t, s.speed, origin), base = Math.atan2(dy, dx);
+    const volley = { bloomed: false }; // One bloom per volley, never per pierced target.
     animateAttack(lotusGun, origin ? origin.x-G.player.x : dx); // Pose/flash starts on the actual lotus volley, never before it.
     for (let i = 0; i < LOTUS_GUN.shots; i++) {
         const a = base + (i - (LOTUS_GUN.shots - 1) / 2) * LOTUS_GUN.spread;
-        shoot(lotusGun, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: 7, knock: 70, origin });
+        const shot = shoot(lotusGun, s, Math.cos(a), Math.sin(a), { img: fx.bullet, radius: 8, knock: 70, origin });
+        shot.lotusVolley = volley;
     }
+}
+
+// A finite, non-recursive impact bloom. Direct rounds still use normal collision,
+// crit and boss phase invulnerability. The bloom never creates more projectiles.
+const lotusTargets = [];
+function bloomLotus(shot, target, directDamage) {
+    if (!(directDamage > 0) || shot.weapon !== 'lotus_gun' || !shot.lotusVolley || shot.lotusVolley.bloomed) return;
+    shot.lotusVolley.bloomed = true;
+    const x = target.x, y = target.y - target.radius, radius = LOTUS_GUN.bloomRadius;
+    const nearby = G.grid.query(x, y + 45, radius + 95, lotusTargets)
+        .filter(e => e.alive && bodyDist2(e, x, y) <= (radius + e.radius) ** 2)
+        .sort((a, b) => bodyDist2(a, x, y) - bodyDist2(b, x, y)).slice(0, LOTUS_GUN.bloomTargets);
+    let landed = false;
+    for (const e of nearby) {
+        if (hitEnemy(e, shot.dmg * LOTUS_GUN.bloomDamage, { weapon: 'lotus_gun', knock: 0 }) > 0) landed = true;
+    }
+    const boss = G.boss;
+    if (boss?.alive && bodyDist2(boss, x, y) <= (radius + boss.radius) ** 2) {
+        if (boss.hurt(shot.dmg * LOTUS_GUN.bloomBossDamage, { weapon: 'lotus_gun' }) > 0) landed = true;
+    }
+    // An impact bloom remains honest even if the direct hit killed its seed.
+    if (landed || directDamage > 0) recordLotusBloom(x, y, radius, G.clock);
 }
 
 export function updateWeapons(dt) {
@@ -688,7 +713,7 @@ export function updateShots(dt) {
             }
         }
         // 몸통 캡슐 판정에 맞춰 발밑 좌표 기준으로 넉넉히 조회
-        const swept = sh.kind === 'saw';
+        const swept = sh.kind === 'saw' || sh.weapon === 'lotus_gun';
         const travel = swept ? Math.hypot(sh.x - previousX, sh.y - previousY) : 0;
         const list = G.grid.query(swept ? (sh.x + previousX) / 2 : sh.x, (swept ? (sh.y + previousY) / 2 : sh.y) + 45, sh.radius + 95 + travel / 2, shotList);
         let dead = false;
@@ -706,7 +731,8 @@ export function updateShots(dt) {
                 sh.lastHit.push(e.id);
             }
             const sp = Math.hypot(sh.vx, sh.vy) || 1;
-            hitEnemy(e, sh.dmg, { weapon: sh.weapon, kx: sh.vx / sp, ky: sh.vy / sp, knock: sh.knock, crit: precisionCrit(sh, e), critBonus: sh.critBonus, executeChance: sh.executeChance, bleed: sh.bleed, slow: sh.slow });
+            const directDamage = hitEnemy(e, sh.dmg, { weapon: sh.weapon, kx: sh.vx / sp, ky: sh.vy / sp, knock: sh.knock, crit: precisionCrit(sh, e), critBonus: sh.critBonus, executeChance: sh.executeChance, bleed: sh.bleed, slow: sh.slow });
+            if (sh.weapon === 'lotus_gun') bloomLotus(sh, e, directDamage);
             if (sh.precision || (sh.weapon === 'pistols' && sh.evolved) || sh.weapon === 'guillotine') executionerHitFx(e);
             if (--sh.pierce <= 0) dead = true;
         }
@@ -718,8 +744,9 @@ export function updateShots(dt) {
                     if (now - (boss.hits[hitChannel(sh)] || -9) >= sh.hitCd) { boss.hits[hitChannel(sh)] = now; boss.hurt(sh.dmg, { weapon: sh.weapon, crit: precisionCrit(sh, boss), critBonus: sh.critBonus }); }
                 } else if (!sh.lastHit.includes(-1)) {
                     sh.lastHit.push(-1);
-                    boss.hurt(sh.dmg, { weapon: sh.weapon, crit: precisionCrit(sh, boss), critBonus: sh.critBonus });
-                    sparks(sh.x, sh.y, 3, '#ff5a6a');
+                    const directDamage = boss.hurt(sh.dmg, { weapon: sh.weapon, crit: precisionCrit(sh, boss), critBonus: sh.critBonus });
+                    if (sh.weapon === 'lotus_gun') bloomLotus(sh, boss, directDamage);
+                    else sparks(sh.x, sh.y, 3, '#ff5a6a');
                     if (--sh.pierce <= 0) dead = true;
                 }
             }
@@ -740,6 +767,7 @@ export function drawShots(ctx) {
     ctx.save();
     const bounds = { x0: cam.x-hw, x1: cam.x+hw, y0: cam.y-hh, y1: cam.y+hh };
     drawFusionResidues(ctx, G.hazards, frame, bounds);
+    drawLotusBlooms(ctx, frame, bounds);
     for (let i = 0; i < G.shots.count; i++) {
         const sh = G.shots.items[i];
         if (Math.abs(sh.x - cam.x) > hw + (sh.radius || 12) || Math.abs(sh.y - cam.y) > hh + (sh.radius || 12)) continue;

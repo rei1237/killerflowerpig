@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { G, clearWorld } from '../src/game/state.js';
 import { createPlayer, recomputeStats, updatePlayer } from '../src/game/player.js';
-import { createWeapon, weaponStats, updateWeapons, updateShots, activeWeaponCores } from '../src/game/weapons.js';
+import { createWeapon, weaponStats, updateWeapons, updateShots, activeWeaponCores, resetWeaponRuntime } from '../src/game/weapons.js';
 import { spawnEnemy, updateEnemies } from '../src/game/enemies.js';
 import { updateHazards } from '../src/game/hazards.js';
 import { resetBuild } from '../src/game/progression.js';
@@ -63,15 +63,15 @@ export function waveConfiguration(id, phase, route = false) {
 }
 
 export function runFiniteWave({ id = 'saw', phase = 'mid', scene = 'dense', route = false,
-    seed = 1, seconds = 45, oneCast = false, count = 24 } = {}) {
+    seed = 1, seconds = 45, oneCast = false, count = 12, legendary = false, godMode = true, configOverride = null } = {}) {
     assert.ok(WAVE_SCENES.includes(scene));
-    const config = waveConfiguration(id, phase, route);
-    resetBuild(); clearWorld(); clearFocus();
-    Object.assign(save, { upgrades: {}, relics: [], accessoryInventory: [], equippedAccessory: null,
+    const config = configOverride || waveConfiguration(id, phase, route);
+    resetBuild(); clearWorld(); clearFocus(); resetWeaponRuntime();
+    Object.assign(save, { upgrades: legendary ? { lotus_gun: 1 } : {}, relics: [], accessoryInventory: [], equippedAccessory: null,
         cosmeticInventory: [], equippedCosmetics: { outfit: null, ornament: null }, equippedPet: null });
     Object.assign(G, { tech: config.tech, stage: config.stage, mode: 'play', time: 0, clock: 0,
         difficulty: 'easy', kills: 0, gold: 0, events: {}, damageBy: {}, boss: null, lowQ: true,
-        godMode: true, paused: false, caps: { enemies: 100, particles: 0, texts: 0, gems: 300, pickups: 30, decalScale: 0 },
+        godMode, paused: false, caps: { enemies: 100, particles: 0, texts: 0, gems: 300, pickups: 30, decalScale: 0 },
         view: { w: 1000, h: 600 } });
     G.camera.x = G.camera.y = 0;
     for (const sheet of ['rabbit1', 'rabbit2', 'rabbit3']) atlases[sheet] = { walkH: 112, frameCount: () => 8 };
@@ -144,7 +144,7 @@ export function runFiniteWave({ id = 'saw', phase = 'mid', scene = 'dense', rout
             // separation parity begins identically in the next before/after probe.
             if (killed === count) clearTime ??= G.clock;
         }
-        return { id, phase, scene, route, seed, oneCast, config, stats,
+        return { id, phase, scene, route, seed, oneCast, legendary, godMode, playerHP: G.player.hp, config, stats,
             hpRange: [Math.min(...targets.map(t => t.hp)), Math.max(...targets.map(t => t.hp))].map(round),
             totalHp: round(targets.reduce((sum, t) => sum + t.hp, 0)), kills: targets.filter(t => !t.enemy.alive).length,
             remainingHp: round(targets.reduce((sum, t) => sum + (t.enemy.alive ? Math.max(0, t.enemy.hp) : 0), 0)),

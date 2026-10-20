@@ -17,6 +17,12 @@ export function createStoryPacer(text, startedAt=0) {
     function complete(now){count=chars.length;done=true;guardUntil=now+STORY_PACING.tapGuardMs;}
     return {
         snapshot,
+        rebase(now) {
+            const previous = lastTime;
+            const delta = clock(now) - previous;
+            nextAt += delta;
+            guardUntil += delta;
+        },
         tick(now){
             now=clock(now);if(closed||done)return snapshot();
             let emitted=0;

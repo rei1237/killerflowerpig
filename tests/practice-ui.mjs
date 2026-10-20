@@ -48,3 +48,10 @@ test('manual replay, Escape skip and unavailable storage are safe and idempotent
  assert.equal(key('keydown','KeyP').stopped,true);key('keydown','Escape');assert.equal(p.isPracticeOpen(),false);assert.equal(frames.size,0);
  assert.equal(events.filter(x=>x==='skip').length,1);assert.equal(p.shouldOfferPractice(),false);assert.equal(launcher.inert,false);assert.equal(paused.inert,true);fail=false;
 });
+
+test('practice cancels in BFCache and resumes one frame chain without held movement',()=>{
+ p.openPractice();key('keydown','ArrowRight');tick(2);
+ listeners.pagehide.forEach(fn=>fn());assert.equal(frames.size,0);
+ now+=600000;listeners.pageshow.forEach(fn=>fn());listeners.pageshow.forEach(fn=>fn());assert.equal(frames.size,1);
+ tick(20);assert.equal(root.dataset.step,'0');p.cancelPractice();assert.equal(frames.size,0);
+});

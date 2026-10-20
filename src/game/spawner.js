@@ -9,7 +9,7 @@ import { startEncirclement } from './encirclement.js';
 
 let spawnAcc = 0;
 // 군체 러시 강화: 속도 배율, 반대편 협공 물결(지연·규모 비율·시작 스테이지)
-export const SWARM_RUSH = Object.freeze({ speed: 1.35, pincerDelay: 1.4, pincerRatio: 0.6, pincerStage: 2 });
+export const SWARM_RUSH = Object.freeze({ speed: 1.35, pincerDelay: 1.4, pincerRatio: 0.5, pincerStage: 2 });
 
 export function resetSpawner() {
     spawnAcc = 0;
@@ -49,7 +49,7 @@ function aliveCount() {
 export function spawnRate(st, target, alive) {
     return st.spawn
         ? Math.min(st.spawn.maxRate, st.spawn.baseRate + (target - alive) * st.spawn.gapRate)
-        : 2.112 + (target - alive) * 1.5;
+        : Math.min(3.6, 0.9 + (target - alive) * 0.35);
 }
 
 export function updateSpawner(dt) {
@@ -125,7 +125,7 @@ function runEvent(type, st, t) {
         const n = st.eventTuning?.swarmCount ?? 26 + G.stage * 3;
         spawnSwarmLine(st, a, n);
         if (G.stage >= SWARM_RUSH.pincerStage) {
-            G.pendingSwarm = { at: G.time + SWARM_RUSH.pincerDelay, angle: a + Math.PI, n: Math.max(3, Math.round(n * SWARM_RUSH.pincerRatio)) };
+            G.pendingSwarm = { at: G.time + SWARM_RUSH.pincerDelay, angle: a + Math.PI, n: Math.max(1, Math.round(n * SWARM_RUSH.pincerRatio)) };
         }
         floatText(p.x, p.y - 90, G.stage >= 5 ? '⚠ 자폭 돌격대 · 예고선 밖으로!' : '군체 러시!', '#ff2244', 1.4);
         audio.sfx('warn');

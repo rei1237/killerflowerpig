@@ -12,7 +12,7 @@ const STAGES = [
 ];
 let root, canvas, ctx, hooks = {}, opened = false, acknowledged = false, state, callback, restoreFocus;
 let isolated = [], frameId, lastTime = 0, previousStep = -1, keys = new Set(), pointer = null, joystick = {x:0,y:0};
-let hero, rabbit;
+let hero, rabbit, suspended = false;
 const MAP = { KeyW:[0,-1], ArrowUp:[0,-1], KeyS:[0,1], ArrowDown:[0,1], KeyA:[-1,0], ArrowLeft:[-1,0], KeyD:[1,0], ArrowRight:[1,0] };
 function el(tag, cls, text) { const n=document.createElement(tag); if(cls)n.className=cls;if(text)n.textContent=text;return n; }
 function btn(cls,text,fn){const b=el('button',cls,text);b.type='button';b.addEventListener('click',fn);return b;}
@@ -36,6 +36,8 @@ export function initPractice(options={}) {
     const safety=el('p','practice-safety','적 공격·시간 제한 없음 · 연습 결과는 실제 경험치·코인·장비에 저장되지 않아요');
     panel.append(top,info,canvas,actions,safety);root.append(panel);document.body.append(root);
     hero=new Image();hero.src='asset/sprites/player-fire.png';rabbit=new Image();rabbit.src='asset/ui-rabbit.png';
+    document.addEventListener?.('visibilitychange',()=>document.hidden?suspendPractice():resumePractice());
+    window.addEventListener('pagehide',suspendPractice);window.addEventListener('pageshow',resumePractice);
     window.addEventListener('keydown',keydown,true);window.addEventListener('keyup',keyup,true);window.addEventListener('blur',resetControls);
     canvas.addEventListener('pointerdown',pointerdown);canvas.addEventListener('pointermove',pointermove);canvas.addEventListener('pointerup',pointerup);canvas.addEventListener('pointercancel',()=>{pointer=null;joystick={x:0,y:0};});
     canvas.addEventListener('lostpointercapture',()=>{pointer=null;joystick={x:0,y:0};});
@@ -87,12 +89,16 @@ function sync(){
     root.dataset.step=String(state.step);
     if(state.step===3){resetControls();root.querySelector('[data-upgrade="whet"]').focus();}
 }
+function suspendPractice(){suspended=true;cancelAnimationFrame(frameId);frameId=null;resetControls();}
+function resumePractice(){if(document.hidden)return;suspended=false;resetControls();schedulePractice();}
+function schedulePractice(){if(opened&&!suspended&&!document.hidden&&frameId==null)frameId=requestAnimationFrame(tick);}
 function tick(time){
-    if(!opened)return;
+    frameId=null;
+    if(!opened||suspended||document.hidden)return;
     const dt=lastTime?Math.min(.05,(time-lastTime)/1000):0;lastTime=time;
     let x=0,y=0;for(const code of keys){const v=MAP[code];if(v){x+=v[0];y+=v[1];}}
     const len=Math.hypot(x,y);let move=len?{x:x/len,y:y/len}:joystick;
-    advancePractice(state,move,dt);sync();draw();frameId=requestAnimationFrame(tick);
+    advancePractice(state,move,dt);sync();draw();schedulePractice();
 }
 function draw(){
     if(!ctx)return;const p=state.player,w=canvas.width,h=canvas.height;
@@ -130,10 +136,10 @@ function draw(){
 export function openPractice({onDone}={}){
     if(opened)return false;if(!root)initPractice(hooks);opened=true;state=createPractice();callback=onDone;restoreFocus=document.activeElement;previousStep=-1;resetControls();
     hooks.onOpen?.();isolated=[...document.body.children].filter(n=>n!==root).map(n=>[n,n.inert]);for(const[n]of isolated)n.inert=true;
-    root.hidden=false;sync();root.querySelector('#practice-heading').focus({preventScroll:true});frameId=requestAnimationFrame(tick);return true;
+    root.hidden=false;sync();root.querySelector('#practice-heading').focus({preventScroll:true});schedulePractice();return true;
 }
 function endPractice(completed){
-    if(!opened)return false;opened=false;cancelAnimationFrame(frameId);resetControls();root.hidden=true;
+    if(!opened)return false;opened=false;cancelAnimationFrame(frameId);frameId=null;resetControls();root.hidden=true;
     if(completed){acknowledged=true;try{localStorage.setItem(PRACTICE_KEY,'done');}catch{/* Storage cannot block practice. */}}
     for(const[n,inert]of isolated)n.inert=inert;isolated=[];
     const done=completed?callback:null;callback=null;state=null;hooks.onClose?.();

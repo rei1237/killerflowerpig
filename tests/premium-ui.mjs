@@ -62,6 +62,7 @@ class Element extends Events {
     matches(selector) {
         return selector.split(',').some(s => {
             s = s.trim();
+            if (s.includes(':not(:disabled)')) { if (this.disabled) return false; s = s.replace(':not(:disabled)', ''); }
             const attr = s.match(/\[([^=\]]+)(?:=["']?([^"'\]]+)["']?)?\]/);
             if (attr) {
                 const value = attr[1].startsWith('data-') ? this.dataset[attr[1].slice(5)] : this.attributes[attr[1]];
@@ -81,6 +82,8 @@ class Element extends Events {
         return this.children.filter(n => n instanceof Element).flatMap(n => [...(n.matches(selector) ? [n] : []), ...n.querySelectorAll(selector)]);
     }
     querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
+    contains(node) { for (let n = node; n; n = n.parentNode) if (n === this) return true; return false; }
+    getClientRects() { for (let n = this; n; n = n.parentNode) if (n.hidden) return []; return [{}]; }
     getContext() { return context; }
 }
 
@@ -392,10 +395,10 @@ test('premium accessory shop shows six actual items with ownership, locks and re
  showTitle();save.maxClearedStage=9;earnCoins(10000,'accessory-ui-test');node('btn-shop').click();
  assert.equal(node('accessory-list').children.length,6);
  const card=node('accessory-list').children[0],button=card.querySelector('button'),gold=save.gold;
- assert.match(card.textContent,/90/);assert.match(card.textContent,/최대 HP \+40/);assert.match(card.textContent,/미보유/);
- button.click();button.click();assert.equal(save.gold,gold-90);assert.equal(save.equippedAccessory,'moon_guard');assert.match(node('accessory-equipped').textContent,/달빛 수호 망토/);
- node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,null);assert.equal(save.gold,gold-90);
- node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,'moon_guard');assert.equal(save.gold,gold-90);
+ assert.match(card.textContent,/540/);assert.match(card.textContent,/최대 HP \+40/);assert.match(card.textContent,/미보유/);
+ button.click();button.click();assert.equal(save.gold,gold-540);assert.equal(save.equippedAccessory,'moon_guard');assert.match(node('accessory-equipped').textContent,/달빛 수호 망토/);
+ node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,null);assert.equal(save.gold,gold-540);
+ node('accessory-list').children[0].querySelector('button').click();assert.equal(save.equippedAccessory,'moon_guard');assert.equal(save.gold,gold-540);
  closeModal('shop');save.maxClearedStage=0;node('btn-shop').click();assert.equal(node('accessory-list').children[1].querySelector('button').disabled,true);
 });
 
@@ -521,10 +524,10 @@ test('new and restarted runs apply the modest mob HP increase once without raisi
     freshRun();
     const playerMax = G.player.maxHp;
     const first = spawnEnemy('shambler', 400, 0);
-    assert.ok(Math.abs(first.hp - 15.39) < 1e-9);
+    assert.ok(Math.abs(first.hp - 20.007) < 1e-9);
     onPlayerDeath(); retryStage();
     const second = spawnEnemy('shambler', 400, 0);
-    assert.ok(Math.abs(second.hp - 15.39) < 1e-9, 'retry does not compound mob toughness');
+    assert.ok(Math.abs(second.hp - 20.007) < 1e-9, 'retry does not compound mob toughness');
     assert.equal(G.stage, 1);
     assert.equal(G.player.maxHp, playerMax);
     assert.equal(G.player.hp, playerMax);
@@ -615,7 +618,7 @@ test('pet training shop shows ownership, current-next values, exact price and ca
  const prior={inventory:save.inventory,petUpgrades:save.petUpgrades,gold:save.gold};const list=document.createElement('div');
  save.inventory=[];save.petUpgrades={attack:0,heal:0,support:0};save.gold=2000;renderPetUpgradeShop(list,()=>{});
  assert.equal(list.children.length,3);assert.ok(list.querySelectorAll('button').every(b=>b.disabled));assert.match(list.querySelector('button').textContent,/보유 필요/);
- list.replaceChildren();save.inventory=['pet_yeongnyang'];renderPetUpgradeShop(list,()=>{});assert.match(list.children[0].querySelector('.s-desc').textContent,/14 → 16/);assert.match(list.children[0].querySelector('button').textContent,/30/);
+ list.replaceChildren();save.inventory=['pet_yeongnyang'];renderPetUpgradeShop(list,()=>{});assert.match(list.children[0].querySelector('.s-desc').textContent,/14 → 16/);assert.match(list.children[0].querySelector('button').textContent,/180/);
  list.replaceChildren();save.petUpgrades={attack:5,heal:3,support:3};renderPetUpgradeShop(list,()=>{});assert.ok(list.querySelectorAll('button').every(b=>b.disabled));assert.match(list.children[1].querySelector('.s-desc').textContent,/회복 HP 6/);Object.assign(save,prior);
 });
 
@@ -636,4 +639,54 @@ test('clear settlement atomically saves bounty, receipt, unlock and kills before
  localStorage.setItem=(key,value)=>{if(key==='kfp.progress.v5.guest'){writes++;throw Error('metadata quota');}return put(key,value);};
  try{showStageClear();assert.equal(writes,1);assert.equal(save.gold,before.gold);assert.equal(save.kills,before.kills);assert.equal(save.maxClearedStage,before.max);assert.equal(hasRunReward(save,id),false);assert.equal(loadRun().stage,5);assert.equal(G.settlement.pending,true);assert.match(node('btn-next').textContent,/저장/);}finally{localStorage.setItem=put;}
  node('btn-next').click();assert.equal(G.settlement.pending,undefined);assert.equal(hasRunReward(save,id),true);assert.equal(save.kills,before.kills+7);assert.ok(save.maxClearedStage>=5);assert.equal(loadRun().stage,6);
+});
+
+test('higher catalog prices appear consistently in shop UI with matching affordability', async () => {
+ const {save}=await import('../src/core/save.js');
+ const {defaultProgress}=await import('../src/core/progression-store.js');
+ const {SHOP}=await import('../src/data/shop.js');
+ const {RELICS,RELIC_CHEST}=await import('../src/data/relics.js');
+ const prior=structuredClone(save);
+ try {
+  for(const gold of [0,10000]) {
+   Object.assign(save,defaultProgress(),{gold,maxClearedStage:10});
+   showTitle();node('btn-shop').click();
+   SHOP.forEach((item,i)=>{const button=node('shop-list').children[i].querySelector('button');assert.equal(button.textContent,`구매 ● ${item.cost[0]}`);assert.equal(button.disabled,gold<item.cost[0]);});
+   RELICS.forEach((item,i)=>{const button=node('relic-list').children[i].querySelector('button');assert.equal(button.textContent,`확정 구매 · ${item.price} 코인`);assert.equal(button.disabled,gold<item.price);});
+   assert.equal(node('btn-coin-cache').textContent,`상자 1개 열기 · ${RELIC_CHEST.cost} 코인`);
+   assert.equal(node('btn-coin-cache').disabled,gold<RELIC_CHEST.cost);
+   closeModal('shop');
+  }
+ } finally { Object.assign(save,prior); }
+});
+
+
+test('modal Tab cycles both directions and restores the original trigger', () => {
+    freshRun(); const trigger = node('btn-pause'); trigger.focus(); openModal('settings');
+    const eligible = node('settings').querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, a[href], [tabindex="0"]').filter(n=>n.getClientRects().length);
+    eligible.at(-1).focus();
+    assert.equal(window.dispatch('keydown',{key:'Tab',target:document.activeElement}).defaultPrevented,true);
+    assert.equal(document.activeElement,eligible[0]);
+    window.dispatch('keydown',{key:'Tab',shiftKey:true,target:document.activeElement});
+    assert.equal(document.activeElement,eligible.at(-1));
+    closeModal('settings'); assert.equal(document.activeElement,trigger);
+});
+test('opening a modal clears held movement and ignores new movement keys while paused', () => {
+    freshRun(); input.enabled=true;
+    window.dispatch('keydown',{code:'KeyD',target:node('game')}); assert.equal(input.move.x,1);
+    openModal('pause'); assert.deepEqual(input.move,{x:0,y:0});
+    window.dispatch('keydown',{code:'KeyW',target:node('btn-resume')});
+    closeModal('pause'); assert.deepEqual(input.move,{x:0,y:0});
+    window.dispatch('keyup',{code:'KeyD'}); assert.deepEqual(input.move,{x:0,y:0});
+});
+
+
+test('story stops ticking in a hidden page and resumes without catching up unseen text', () => {
+    freshRun(); playStory('기록','오래 읽는 작전 기록입니다. 충분히 천천히 읽어 보세요.',()=>{});
+    advanceTime(130); const before=node('story-text').children[0].data;
+    document.hidden=true; document.dispatch('visibilitychange');
+    advanceTime(60000); assert.equal(node('story-text').children[0].data,before);
+    document.hidden=false; document.dispatch('visibilitychange');
+    advanceTime(1); assert.equal(node('story-text').children[0].data,before);
+    advanceTime(100); assert.ok(node('story-text').children[0].data.length>before.length);
 });

@@ -104,7 +104,7 @@ test('ring and aimed volleys release the attack frame on the actual projectile e
 test('spiral, snipe, summon and blink switch poses at their own gameplay events',()=>{
  let b=reset(8);begin(b,'spiral');assertFrame(b,'windup');b.update(.001);assertFrame(b,'attack');assert.equal(G.enemyShots.count,2);
  b=reset(4);begin(b,'snipe');b.update(1.099);assertFrame(b,'windup');assert.equal(G.enemyShots.count,0);b.update(.002);assertFrame(b,'attack');assert.equal(G.enemyShots.count,3);
- b=reset(9);begin(b,'summon');b.update(.599);assertFrame(b,'windup');assert.equal(G.enemies.count,0);b.update(.002);assertFrame(b,'attack');assert.equal(G.enemies.count,2);assert.equal(b.task,null);
+ b=reset(6);begin(b,'summon');b.update(.599);assertFrame(b,'windup');assert.equal(G.enemies.count,0);b.update(.002);assertFrame(b,'attack');assert.equal(G.enemies.count,4);assert.equal(b.task,null);
  b=reset(7);const task=begin(b,'blink');b.update(.699);assertFrame(b,'windup');assert.equal(b.x,0);b.update(.002);assertFrame(b,'attack');close(b.x,task.tx);close(b.y,task.ty);assert.equal(G.enemyShots.count,8);
 });
 

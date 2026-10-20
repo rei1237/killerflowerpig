@@ -35,7 +35,7 @@ test('three appearance-only items have stable IDs, independent slots and exact p
     assert.deepEqual(COSMETIC_SLOTS, ['outfit', 'ornament']);
     assert.deepEqual(COSMETICS.map(item => item.id), [CAPE, GUARD, HALO]);
     assert.deepEqual(COSMETICS.map(item => item.slot), ['outfit', 'outfit', 'ornament']);
-    assert.deepEqual(COSMETICS.map(item => item.price), [360, 780, 1200]);
+    assert.deepEqual(COSMETICS.map(item => item.price), [1080, 2340, 4800]);
     assert.deepEqual(COSMETICS.map(item => item.unlockStage), [1, 2, 3]);
     for (const item of COSMETICS) {
         assert.match(item.name, /[가-힣]/);
@@ -92,7 +92,7 @@ test('purchase is immutable, auto-equips only its slot and preserves all other s
         state = result.state;
     }
     assert.deepEqual(start, before);
-    assert.equal(state.gold, 7660);
+    assert.equal(state.gold, 1780);
     assert.equal(state.revision, 3);
     assert.deepEqual(state.equippedCosmetics, { outfit: GUARD, ornament: HALO });
     assert.deepEqual(state.cosmeticInventory, [CAPE, HALO, GUARD]);
@@ -159,7 +159,7 @@ test('exact equip retries survive reload and reused intents cannot undo a later 
     state = equip(state, 'outfit', GUARD).state;
     assert.equal(equipCosmetic(state, intent).code, 'USED_REQUEST');
     assert.equal(state.equippedCosmetics.outfit, GUARD);
-    assert.equal(state.gold, 8860);
+    assert.equal(state.gold, 6580);
     assert.equal(validateProgress({ ...state, lastCosmeticAction: { ...state.lastCosmeticAction, itemId: HALO } }).lastCosmeticAction, null);
 });
 
@@ -188,7 +188,7 @@ test('save facade commits purchase/equipment atomically, reloads and preserves e
         const api = await import(`../src/core/save.js?cosmetic-test=${Date.now()}`);
         const original = structuredClone(api.save);
         assert.equal(api.buyCosmetic(CAPE).ok, true);
-        assert.equal(api.save.gold, 9640);
+        assert.equal(api.save.gold, 8920);
         assert.equal(api.save.equippedCosmetics.outfit, CAPE);
         assert.equal(api.buyCosmetic(CAPE, original.revision).duplicate, true);
         assert.equal(api.setCosmetic('outfit', null).ok, true);

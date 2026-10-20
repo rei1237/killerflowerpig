@@ -1,9 +1,17 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v23-authored-sprite-polish-cannon-impact';
+const VERSION = 'v26-slayer-mobile-launch';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
 const PRECACHE = [
+    './src/ui/mobile.css',
+    './asset/branding/slayer-icon-180.png',
+    './asset/branding/slayer-icon-192.png',
+    './asset/branding/slayer-icon-32.png',
+    './asset/branding/slayer-icon-512.png',
+    './asset/branding/slayer-launch-480.webp',
+    './asset/branding/slayer-launch-900.webp',
+    './asset/branding/slayer-maskable-512.png',
     './src/core/run-rewards.js',
     './src/game/stage-checkpoint.js',
     './src/game/cannon-targeting.js',

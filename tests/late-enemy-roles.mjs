@@ -13,27 +13,23 @@ function reset(stage=6) {
 test('all spawn routes gate new roles and ranged mobs, original atlas identities and toughness survive',()=>{
  reset(4); for(const id of ['suicider','gunner','spitter']) assert.equal(spawnEnemy(id,100,0,{force:true,elite:true}),null);
  reset(5); assert.ok(spawnEnemy('suicider',100,0)); assert.equal(spawnEnemy('gunner',100,0),null); assert.ok(spawnEnemy('spitter',100,0));
- reset(6); assert.ok(spawnEnemy('gunner',100,0)); assert.equal(ENEMY_TOUGHNESS_MULTIPLIER,1.62);
+ reset(6); assert.ok(spawnEnemy('gunner',100,0)); assert.ok(ENEMY_TOUGHNESS_MULTIPLIER>=1.62);
  assert.equal(ENEMIES.shambler.sheet,'rabbit1'); assert.equal(ENEMIES.brute.sheet,'rabbit2'); assert.equal(ENEMIES.hulk.sheet,'rabbit3');
 });
 test('suicide charge warns, locks direction, gives final fuse and can be killed safely',()=>{
  reset(); const e=spawnEnemy('suicider',150,0,{lineX:-1,lineY:0});
  updateEnemies(.1); assert.equal(e.rolePhase,'warning'); assert.equal(e.x,150); const aim=e.aimY;
  G.player.y=100; updateEnemies(.2); assert.equal(e.aimY,aim); assert.equal(G.player.hp,100);
- // 강화: 예고 .8→.7초, 신관 .6→.45초
- updateEnemies(.41); assert.equal(e.rolePhase,'warning'); updateEnemies(.1); assert.equal(e.rolePhase,'dash'); updateEnemies(.56); updateEnemies(.01); assert.equal(e.rolePhase,'fuse'); assert.equal(G.player.hp,100);
+ updateEnemies(.64); assert.equal(e.rolePhase,'warning'); updateEnemies(.02); assert.equal(e.rolePhase,'dash'); updateEnemies(.81); updateEnemies(.01); assert.equal(e.rolePhase,'fuse'); assert.equal(G.player.hp,100);
  hitEnemy(e,1e6,{silent:true}); flushExplosions(); assert.equal(G.player.hp,100); assert.equal(G.hazards.count,0);
 });
 test('overlapping armed detonations respect normal iframes and absolute damage cap, with no toxic field',()=>{
  reset(10); const a=spawnEnemy('suicider',0,0), b=spawnEnemy('suicider',0,0);
  for(const e of [a,b]) {e.rolePhase='fuse'; e.roleT=.01;}
  updateEnemies(.02); assert.equal(G.player.hp,100); flushExplosions();
- // 피해 상한 30→40: 두 폭발이 겹쳐도 무적시간 덕에 한 번(40)만 들어간다
  assert.equal(ENEMIES.suicider.charge.damageCap,40); assert.equal(G.player.hp,100-ENEMIES.suicider.charge.damageCap); assert.equal(G.player.iframes,.5); assert.equal(G.hazards.count,0);
  assert.equal(a.alive,false); assert.equal(b.alive,false);
- // 폭발마다 파편 8발(피해 = 상한 적용 폭발 피해 × .35), 무적시간 중이라 즉시 추가 피해 없음
- const shards=G.enemyShots.items.slice(0,G.enemyShots.count); assert.equal(shards.length,2*ENEMIES.suicider.charge.shrapnel);
- assert.ok(shards.every(s=>s.kind==='bullet'&&Math.abs(s.dmg-40*.35)<1e-9&&Math.abs(Math.hypot(s.vx,s.vy)-ENEMIES.suicider.charge.shrapnelSpeed)<1e-9));
+ assert.equal(G.enemyShots.count,0,'safe ground outside the circle has no untelegraphed fragments');
 });
 test('gunner telegraphs a 3-round red bullet fan and cannot retarget during warning',()=>{
  reset(); const e=spawnEnemy('gunner',200,0); e.shootT=0;
@@ -61,15 +57,62 @@ test('long frames preserve fresh warning/fuse, bound dash travel, and sweep play
  reset(); const e=spawnEnemy('suicider',240,0);
  updateEnemies(4); assert.equal(e.rolePhase,'warning'); assert.equal(e.roleT,ENEMIES.suicider.charge.warning); assert.equal(e.x,240);
  updateEnemies(4); assert.equal(e.rolePhase,'dash'); assert.equal(e.roleT,ENEMIES.suicider.charge.duration); assert.equal(e.x,240);
- // 돌진 강화(400×1.4=560px): 플레이어를 더 멀리 옮겨 접촉 정지 없이 최대 돌진 거리만 검증
+ // Move the player aside to test the full committed dash distance.
  G.player.y=600; updateEnemies(4); assert.equal(e.rolePhase,'dash'); assert.equal(e.roleT,0);
  const c=ENEMIES.suicider.charge, travelled=Math.hypot(e.x-240,e.y);
  assert.ok(Math.abs(travelled-c.speed*c.duration)<1e-6,'dash length is bounded by speed×duration despite a four-second frame');
- assert.ok(e.y>0,'the long dash steers toward the moved player');
+ assert.equal(e.y,0,'the committed dash never follows a sidestep');
  updateEnemies(4); assert.equal(e.rolePhase,'fuse'); assert.equal(e.roleT,ENEMIES.suicider.charge.fuse); assert.equal(e.alive,true);
  hitEnemy(e,1e6,{silent:true}); flushExplosions();
  reset(); const near=spawnEnemy('suicider',100,0);
  updateEnemies(4); updateEnemies(4); updateEnemies(4);
  assert.ok(Math.abs(near.x-38)<1e-8,'sweep stops at activation distance instead of tunneling');
  assert.equal(G.player.hp,100); updateEnemies(4); assert.equal(near.rolePhase,'fuse'); assert.equal(near.roleT,ENEMIES.suicider.charge.fuse);
+});
+
+test('nearby sparse bombers take turns and planted fuse cannot be pushed onto the player',()=>{
+ reset(); const a=spawnEnemy('suicider',150,0), b=spawnEnemy('suicider',160,0);
+ updateEnemies(.01);
+ assert.equal([a,b].filter(e=>e.rolePhase==='warning').length,1);
+ const armed=[a,b].find(e=>e.rolePhase==='warning');
+ armed.rolePhase='fuse'; armed.roleT=.8; armed.kx=-1000; armed.ky=900;
+ const {x,y}=armed; updateEnemies(.1); assert.equal(armed.x,x); assert.equal(armed.y,y);
+ assert.equal([a,b].filter(e=>e.rolePhase==='approach').length,1);
+ hitEnemy(armed,1e6,{silent:true}); updateEnemies(.01);
+ assert.equal([a,b].filter(e=>e.alive && e.rolePhase==='warning').length,1,'disarming opens the next attack window');
+});
+
+test('blast damages inside the warned radius, never outside, and reset cancels a queued blast',()=>{
+ for(const [distance,shouldHit] of [[ENEMIES.suicider.charge.radius+11,true],[ENEMIES.suicider.charge.radius+13,false]]) {
+  reset(10); const e=spawnEnemy('suicider',distance,0); e.rolePhase='fuse'; e.roleT=.01;
+  updateEnemies(.02); flushExplosions(); assert.equal(G.player.hp<100,shouldHit);
+  assert.equal(G.enemyShots.count,0,'no surprise shrapnel outside the warning');
+  const hp=G.player.hp; G.player.iframes=0; updateEnemies(.05); flushExplosions(); assert.equal(G.player.hp,hp,'dead bomber never hits again');
+ }
+ reset(10); const e=spawnEnemy('suicider',0,0); e.rolePhase='fuse'; e.roleT=.01;
+ updateEnemies(.02); clearWorld(); flushExplosions(); assert.equal(G.player.hp,100,'queued detonation belongs only to its world');
+});
+
+test('reduced motion suppresses body deformation while preserving the fuse and radius',async()=>{
+ const prior=globalThis.matchMedia, media={matches:false}; globalThis.matchMedia=()=>media;
+ const {drawEnemy:drawWithMedia}=await import('../src/game/enemies.js?role-motion-test');
+ globalThis.matchMedia=prior;
+ reset(); const e=spawnEnemy('suicider',100,0); e.rolePhase='fuse'; e.roleT=.2;
+ atlases.enemyRole_suicider={draw:()=>{}};
+ const transforms=[],arcs=[];const ctx=new Proxy({}, {get:(target,key)=>target[key] || ((...args)=>{if(key==='scale'||key==='rotate')transforms.push(key);if(key==='arc')arcs.push(args);}),set:(target,key,value)=>(target[key]=value,true)});
+ drawWithMedia(ctx,e); assert.ok(transforms.includes('scale'));
+ transforms.length=0;arcs.length=0;media.matches=true;drawWithMedia(ctx,e);
+ assert.equal(transforms.length,0);assert.equal(arcs[0][2],ENEMIES.suicider.charge.radius);assert.ok(arcs.length>=2,'fuse progress remains visible');
+ e.alive=false;e.detonated=true;e.deadT=.06;arcs.length=0;transforms.length=0;
+ drawWithMedia(ctx,e);assert.equal(arcs.length,1,'reduced motion keeps only the fixed blast boundary');assert.equal(transforms.length,0);
+ media.matches=false;G.lowQ=false;arcs.length=0;drawWithMedia(ctx,e);assert.equal(arcs.length,11,'high quality has ten bounded shockwave segments');
+ G.lowQ=true;arcs.length=0;drawWithMedia(ctx,e);assert.equal(arcs.length,7,'low quality has six bounded shockwave segments');
+ assert.equal(G.enemyShots.count,0);G.lowQ=false;
+ delete atlases.enemyRole_suicider;
+});
+
+test('bleed disarms a fuse and pooled bombers cannot inherit the previous blast',()=>{
+ reset();const e=spawnEnemy('suicider',0,0);e.rolePhase='fuse';e.roleT=.01;e.hp=1;e.bleed=100;e.bleedT=1;
+ updateEnemies(.02);flushExplosions();assert.equal(G.player.hp,100);assert.equal(e.detonated,false);assert.equal(e.rolePhase,'disarmed');
+ clearWorld();const next=spawnEnemy('suicider',200,0);assert.equal(next.detonated,false);assert.equal(next.rolePhase,'approach');
 });

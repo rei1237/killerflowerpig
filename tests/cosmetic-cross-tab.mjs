@@ -10,10 +10,10 @@ test('cross-tab costume conflict refreshes durable state without replaying or do
   assert.ok(a.buyCosmetic('dusk_lotus_cape').ok);const durable=storage.getItem(seed.key);
   assert.deepEqual(b.buyCosmetic('jade_lotus_guard'),{ok:false,code:'REVISION_CONFLICT'});
   assert.equal(storage.getItem(seed.key),durable,'rejected intent never overwrites or auto-spends');
-  assert.equal(b.save.gold,9640);assert.deepEqual(b.save.cosmeticInventory,['dusk_lotus_cape']);assert.equal(b.save.equippedCosmetics.outfit,'dusk_lotus_cape');assert.equal(changes,1);
+  assert.equal(b.save.gold,8920);assert.deepEqual(b.save.cosmeticInventory,['dusk_lotus_cape']);assert.equal(b.save.equippedCosmetics.outfit,'dusk_lotus_cape');assert.equal(changes,1);
   assert.ok(b.buyCosmetic('jade_lotus_guard').ok,'next deliberate click uses refreshed revision');
-  assert.equal(b.save.gold,8860);assert.equal(b.save.equippedCosmetics.outfit,'jade_lotus_guard');assert.equal(changes,2);
-  assert.ok(b.buyCosmetic('jade_lotus_guard').duplicate);assert.equal(b.save.gold,8860);assert.equal(changes,2);
+  assert.equal(b.save.gold,6580);assert.equal(b.save.equippedCosmetics.outfit,'jade_lotus_guard');assert.equal(changes,2);
+  assert.ok(b.buyCosmetic('jade_lotus_guard').duplicate);assert.equal(b.save.gold,6580);assert.equal(changes,2);
   assert.deepEqual(createGuestAdapter(storage).load(),b.save);
  }finally{if(old===undefined)delete globalThis.localStorage;else globalThis.localStorage=old;}
 });

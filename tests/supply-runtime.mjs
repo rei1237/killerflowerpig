@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases, fx } from '../src/core/assets.js';
-import { ENEMIES, RANGED_UNLOCK_STAGE } from '../src/data/enemies.js';
+import { ENEMIES, SPARSE_ENEMY_XP, RANGED_UNLOCK_STAGE } from '../src/data/enemies.js';
 import { STAGES } from '../src/data/stages.js';
 import { supplyState } from '../src/game/supply-drops.js';
 import { spawnEnemy, hitEnemy, updateEnemies } from '../src/game/enemies.js';
@@ -61,7 +61,7 @@ test('healthy real kills never drop heals; magnet guarantee at 36 with exact coi
   assert.equal(field('magnet').length,count===36?1:0);
  }
  assert.equal(G.kills,36);assert.equal(field('coin').reduce((n,c)=>n+c.value,0),0);
- assert.ok(xp>0);close(G.gems.items[0].value,ENEMIES.shambler.xp*5/3);
+ assert.ok(xp>0);close(G.gems.items[0].value,ENEMIES.shambler.xp*SPARSE_ENEMY_XP[1]*5/3);
 }));
 
 test('low HP real kills guarantee at8; elites drop their 10 coins on a winning roll without a chest',()=>withRandom(.99,()=>{
@@ -108,7 +108,7 @@ test('ranged audit: boss summons cannot introduce ranged enemies before stage5; 
             const boss = new Boss(stage);
             boss.patternSummon(10);
         });
-        assert.equal(G.enemies.count, stage === 9 ? 4 : 6);
+        assert.equal(G.enemies.count, 6);
         assert.ok(active(G.enemies).every(enemy => stage < 5 ? !enemy.def.ranged : enemy.type === 'spitter'));
     }
 });

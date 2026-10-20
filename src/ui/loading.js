@@ -51,7 +51,7 @@ export function createLoadingScreen(root = document) {
         screen.hidden = false;
         screen.dataset.state = 'loading';
         screen.setAttribute('aria-busy', 'true');
-        title.textContent = '다음 새벽을 향해';
+        title.textContent = '꽃돼지 청토끼 슬레이어!';
         status.textContent = '꽃돼지의 장비와 감염 구역을 불러오고 있어요.';
         count.textContent = '준비 항목 확인 중';
         error.hidden = true;
@@ -77,7 +77,7 @@ export function createLoadingScreen(root = document) {
             needsReload = enteringGame;
             screen.dataset.state = 'error';
             screen.setAttribute('aria-busy', 'false');
-            title.textContent = '작전 준비가 멈췄어요';
+            title.textContent = '꽃돼지 청토끼 슬레이어!';
             status.textContent = enteringGame ? '게임 화면을 준비하지 못했어요.' : '필수 장비 데이터를 불러오지 못했어요.';
             error.textContent = enteringGame ? '화면을 새로고침한 뒤 다시 시도해 주세요. 저장된 진행 상황은 그대로 유지됩니다.' : '연결 상태를 확인한 뒤 다시 시도해 주세요. 저장된 진행 상황은 그대로 유지됩니다.';
             error.hidden = false;

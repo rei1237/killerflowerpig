@@ -1,0 +1,14 @@
+// Actual native game renderer; controlled snapshots, not a browser screenshot.
+import fs from 'node:fs';import {createRequire} from 'node:module';const require=createRequire(import.meta.url);const {createCanvas,Image}=require('@napi-rs/canvas');
+globalThis.Image=Image;globalThis.document={createElement:()=>createCanvas(1,1)};globalThis.window={matchMedia:()=>({matches:false})};globalThis.localStorage={getItem:()=>null,setItem:()=>{}};
+const {loadAssets}=await import('../src/core/assets.js');await loadAssets();
+const {G,clearWorld,configureCaps}=await import('../src/game/state.js');const {createPlayer,drawPlayer}=await import('../src/game/player.js');const {Boss}=await import('../src/game/boss.js');const {prepareBossSheets}=await import('../src/game/boss-sheets.js');const {drawHazards,updateHazards}=await import('../src/game/hazards.js');const {settings}=await import('../src/core/settings.js');
+settings.shake=false;settings.gore='off';configureCaps();Math.random=()=>.5;
+const c=createCanvas(1440,920),ctx=c.getContext('2d');ctx.fillStyle='#091423';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#fff4d8';ctx.font='bold 30px sans-serif';ctx.fillText('Stage 9 / Brutus King restored',32,46);ctx.font='16px sans-serif';ctx.fillStyle='#bacbd4';ctx.fillText('Actual native game renderer · existing King pose sheet · controlled attack snapshots',32,78);
+for(const [idx,label,phase,time,volley]of [[0,'Opening: sides, then center and cross',0,.65,false],[1,'Frenzy: diagonal fracture sequence',2,.65,false],[2,'Frenzy: newly acquired verdict / full 1.05s tell',2,3.8,false],[3,'Support volley: locked lanes / max 15 shots',2,.7,true]]){
+ clearWorld();Object.assign(G,{stage:9,time:0,clock:0,mode:'boss',godMode:true,events:{},passives:{},weapons:[],damageBy:{},view:{w:1000,h:600},camera:{x:0,y:0}});createPlayer();G.player.x=240;G.player.y=0;
+ const b=G.boss=new Boss(9);b.x=-70;b.y=0;b.phase=phase;b.attackT=100;await prepareBossSheets(9);b.task=volley?b.task_royalVolley():b.task_faultline();
+ while(G.clock<time-.00001){const dt=Math.min(.005,time-G.clock);G.clock+=dt;updateHazards(dt);b.update(dt);}
+ const x=32+(idx%2)*704,y=110+Math.floor(idx/2)*394;ctx.fillStyle='#17283a';ctx.fillRect(x,y,672,364);ctx.save();ctx.beginPath();ctx.rect(x,y,672,364);ctx.clip();ctx.translate(x+190,y+205);ctx.scale(.9,.9);ctx.strokeStyle='#263e50';ctx.lineWidth=1;for(let j=-140;j<170;j+=40){ctx.beginPath();ctx.moveTo(-180,j);ctx.lineTo(530,j);ctx.stroke();}drawHazards(ctx);b.draw(ctx);drawPlayer(ctx);ctx.restore();ctx.fillStyle='#fff4d8';ctx.font='bold 17px sans-serif';ctx.fillText(label,x+14,y+28);ctx.fillStyle='#a9bdc9';ctx.font='14px sans-serif';ctx.fillText(`t=${time.toFixed(2)}s · ${G.hazards.count} warning shapes · zero summoned adds`,x+14,y+342);
+}
+const out=process.argv[2]||'/workspace/shared/brutus-king-preview.png';fs.writeFileSync(out,c.toBuffer('image/png'));console.log(out);

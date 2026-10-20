@@ -1,5 +1,7 @@
 # Permanent Yeongnyang training
 
+Current shop prices: [higher gold shop prices](shop-pricing.md). Price examples below describe earlier revisions and are superseded by catalog 6; reward rates and item effects remain unchanged.
+
 Requires ownership of pet_yeongnyang. Deterministic gold purchases, no random draws or real money. Tracks are independent; no stage requirement beyond acquiring the shop-exclusive pet.
 
 | Track | Level cap | Effect at levels 0 → max | Consecutive costs | Total |

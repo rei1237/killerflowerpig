@@ -15,7 +15,7 @@ const notes={
  suicider:['고정 돌진·자폭형','노란 돌진선과 폭발 원이 먼저 표시됩니다.','방향을 고정해 돌진한 뒤 정지하여 점화하고 폭발합니다. 접촉 피해나 독 장판은 없습니다.','예고선 옆으로 피한 뒤 원 밖으로 나가세요. 폭발 전에 처치하면 해제됩니다.'],
  gunner:['조준 사격형','조준이 고정된 뒤 붉은 탄환 3발을 부채꼴로 동시에 쏩니다.','녹색 산성탄과 달리 빠르고 붉은 직선 탄환입니다.','선이 멈추면 옆으로 움직이거나 조준 중 처치하세요.'],
 };
-const bossTells={trainingCharge:'1.5초 고정 예고 · 단일 돌진 · 2.5초 안전한 회복',charge:'긴 직선 돌진 예고',barrage:"고정된 사격선과 재장전 · 변이 후 부채꼴, 광폭화 시 측면 교차 사격",hunt:`첫 돌진 ${HUNTER_TUNING.warning}초 · 두 번째 ${HUNTER_TUNING.secondWarning}초 예고 · 변이 후 3연속, 광폭화 시 엇박자`,lockshot:'정지하는 저격선과 연속 사격',artillery:'전방에 표시되는 포격 원',toxicTide:'독 웅덩이 사이 출구',crosscut:'연달아 교차하는 칼날 선',echo:'환영 탄막 이후 반대편 메아리',faultline:'양옆 균열 이후 중앙 강타'};
+const bossTells={trainingCharge:'1.5초 고정 예고 · 단일 돌진 · 2.5초 안전한 회복',charge:'긴 직선 돌진 예고',barrage:"고정된 사격선과 재장전 · 변이 후 부채꼴, 광폭화 시 측면 교차 사격",hunt:`첫 돌진 ${HUNTER_TUNING.warning}초 · 두 번째 ${HUNTER_TUNING.secondWarning}초 예고 · 변이 후 3연속, 광폭화 시 엇박자`,lockshot:'정지하는 저격선과 연속 사격',artillery:'전방에 표시되는 포격 원',toxicTide:'독 웅덩이 사이 출구',crosscut:'연달아 교차하는 칼날 선',echo:'환영 탄막 이후 반대편 메아리',faultline:'양옆→중앙→십자 균열 · 변이 후 새 위치에 1.05초 예고 강타, 광폭화 시 2회'};
 export function firstEnemyStage(id){
  const def=ENEMIES[id];if(!def)return null;
  const minimum=Math.max(def.unlockStage||1,def.ranged?RANGED_UNLOCK_STAGE:1);

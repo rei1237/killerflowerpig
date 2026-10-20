@@ -1,0 +1,102 @@
+/* Shared viewport and input ergonomics; keep the selected Blue Night palette. */
+:root {
+  --ui-top: max(12px, env(safe-area-inset-top, 0px));
+  --ui-right: max(12px, env(safe-area-inset-right, 0px));
+  --ui-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  --ui-left: max(12px, env(safe-area-inset-left, 0px));
+  --ui-height: calc(100dvh - var(--ui-top) - var(--ui-bottom));
+}
+.screen, .modal, .bestiary-overlay, .loadout-exchange, .practice-overlay, .tutorial-overlay, .fusion-reveal {
+  padding: var(--ui-top) var(--ui-right) var(--ui-bottom) var(--ui-left);
+}
+.modal-box, .loadout-exchange-panel, .practice-panel, .tutorial-panel, .fusion-reveal-panel, .bestiary-panel {
+  max-height: var(--ui-height);
+  min-width: 0;
+  overscroll-behavior: contain;
+  scroll-padding-block: 16px;
+}
+#shop .shop-box { width: min(980px, 100%) !important; }
+.modal-box { scrollbar-gutter: stable; }
+button, summary, select, input { touch-action: manipulation; }
+button:focus-visible, summary:focus-visible, select:focus-visible, input:focus-visible {
+  outline: 3px solid #c3e4d3;
+  outline-offset: 3px;
+}
+.modal :is(button, summary), .menu-system .btn, .diff-option, .titles-equipped .btn, .cosmetic-reset, .stage-grid button {
+  min-height: 44px;
+}
+.tech-box .modal-actions { bottom: 0; margin: 14px 0 0; padding: 12px 0 0; }
+.cosmetic-preview-controls { flex-wrap: wrap; }
+.cosmetic-heading, .cosmetic-collection-heading { flex-wrap: wrap; }
+.cosmetic-heading .cosmetic-pure-tag { margin-top: 0; }
+.bestiary-controls label { min-width: 0; }
+.bestiary-panel { overflow: auto; }
+/* Independent panel scroll remains usable when browser chrome or a keyboard shrinks the view. */
+@media (max-width: 700px), (max-height: 520px) {
+  .modal-box { padding: 18px 14px; }
+  .screen .story-panel, .screen .gameover-panel {
+    max-width: 100% !important;
+    max-height: var(--ui-height) !important;
+  }
+  .screen .story-panel { height: var(--ui-height) !important; }
+  .cosmetic-description, .cosmetic-unlock, .cosmetic-footnote, .cosmetic-intro, .cosmetic-slot strong { font-size: 12px; }
+  .cosmetic-button, .cosmetic-preview-controls button, .cosmetic-reset { font-size: 12px; }
+  .choice-recipes summary, .choice-recipe-detail small { font-size: 12px; }
+  input:not([type=checkbox]):not([type=range]), select { font-size: 16px; }
+  .guardian-card { left: var(--ui-left); top: var(--ui-top); }
+  .pause-btn { right: var(--ui-right); top: var(--ui-top); }
+  .hud-build { left: var(--ui-left); max-width: calc(100% - var(--ui-left) - var(--ui-right)); }
+  .fusion-hud { right: var(--ui-right); bottom: var(--ui-bottom); }
+  .hud-boss { bottom: calc(var(--ui-bottom) + 66px); width: min(88%, 520px); }
+  .movement-hint { left: var(--ui-left); bottom: var(--ui-bottom); max-width: 45%; }
+}
+@media (max-width: 700px) and (orientation: portrait) {
+  .guardian-card { max-width: calc(100% - var(--ui-left) - var(--ui-right) - 58px); }
+  .guardian-vitals { width: 155px; min-width: 0; }
+  .vitals-label { flex-wrap: wrap; gap: 3px; }
+  .mission-card { top: calc(var(--ui-top) + 72px); left: var(--ui-left); right: var(--ui-right); }
+  .operation-progress { top: calc(var(--ui-top) + 113px); left: var(--ui-left); right: var(--ui-right); }
+  .hud-build { top: calc(var(--ui-top) + 140px); }
+  .hud-tech { white-space: normal; }
+}
+@media (max-width: 360px) {
+  .modal-title { overflow-wrap: anywhere; }
+  .cosmetic-room { padding: 12px 9px; }
+  .cosmetic-card { grid-template-columns: 58px minmax(0, 1fr); padding: 10px; }
+  .cosmetic-card-art img { height: 86px; }
+  .cosmetic-card-actions { grid-template-columns: 1fr; }
+  .loadout-item-grid, .titles-list { grid-template-columns: 1fr; }
+  .bestiary-header { gap: 8px; }
+  .bestiary-header h2 { font-size: 21px; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  .guardian-card { padding: 7px; gap: 6px; }
+  .guardian-card > img { width: 30px; height: 30px; }
+  .guardian-vitals { width: 150px; }
+  .mission-card { top: var(--ui-top); right: calc(var(--ui-right) + 58px); padding: 8px; gap: 8px; }
+  .mission-card > span { max-width: 110px; }
+  .operation-progress { top: calc(var(--ui-top) + 52px); right: calc(var(--ui-right) + 58px); }
+  .hud-build { top: calc(var(--ui-top) + 68px); max-width: 50%; gap: 3px; }
+  .hud-slot > .inventory-art { width: 22px; height: 22px; }
+  .hud-slot { padding: 2px 4px; }
+  .movement-hint { display: none; }
+  .hud-boss { bottom: var(--ui-bottom); left: var(--ui-left); transform: none; width: min(55%, 420px); }
+  .bestiary-body { overflow: visible; flex: none; grid-template-columns: 180px minmax(0, 1fr); grid-template-rows: auto; }
+  .bestiary-list { max-height: 240px; }
+  .bestiary-detail { overflow: visible; min-height: 0; }
+  .tech-box .diff-option { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen *, .modal *, .battle-hud *, .bestiary-overlay *, .loadout-exchange * {
+    animation: none !important; transition: none !important; scroll-behavior: auto !important;
+  }
+}
+/* Make the entire labeled settings row tappable without enlarging its checkbox art. */
+.setting-row { min-height: 44px; flex-wrap: wrap; }
+.setting-row .seg { max-width: 100%; flex-wrap: wrap; }
+.setting-row input[type=range] { min-height: 44px; }
+.pause-btn { min-width: 44px; min-height: 44px; }
+@media (max-width: 360px) {
+  .setting-row .seg { flex-basis: 100%; }
+  .setting-row .seg button { flex: 1; }
+}

@@ -22,7 +22,7 @@ import { resize } from '../game/render.js';
 import { settings, setSetting } from '../core/settings.js';
 import { save, persist, settleRunStage, SHOP, upgradeLevel, buyUpgrade, equipPet, recordTitleProgress, equipTitle, lastSaveError, queueCoins, retryPendingCoins, pendingCoinTotal, openChest, buyRelic, buyAccessory, setAccessory } from '../core/save.js';
 import { audio } from '../core/audio.js';
-import { input, resetJoy, resetInput } from '../core/input.js';
+import { input, resetInput } from '../core/input.js';
 
 import { shopAccess, highestClearedStage } from '../core/shop-access.js';
 import { PET_REDEMPTION } from '../core/pet-redemption.js';
@@ -69,7 +69,7 @@ function setPlaying(on) {
     $('btn-pause').hidden = !on;
     $('battle-hud').hidden = !on;
     input.enabled = on;
-    if (!on) resetJoy();
+    if (!on) resetInput();
 }
 
 export function topModalId() { return modalStack.at(-1) || null; }
@@ -92,10 +92,12 @@ export function openModal(id) {
     modalFocus.set(id, document.activeElement);
     modalStack.push(id);
     G.paused = true;
-    resetJoy();
+    resetInput();
     show(id);
     syncModalState();
-    const first = $(id).querySelector('button, .card');
+    $(id).setAttribute('role', 'dialog');
+    $(id).setAttribute('aria-modal', 'true');
+    const first = $(id).querySelector('button:not(:disabled), [tabindex="0"]');
     first?.focus({ preventScroll: true });
     return true;
 }
@@ -198,7 +200,15 @@ function beginStageFlow(stage, start) {
 // ─────────────────────────── 스토리 (타자기) ───────────────────────────
 let storyTimer = null;
 let storyPacer = null;
-function cancelStory(){clearInterval(storyTimer);storyTimer=null;storyPacer?.cancel();storyPacer=null;}
+let resumeStoryTimer = null;
+function suspendStory() { clearInterval(storyTimer); storyTimer = null; }
+function resumeStory() {
+    if (!document.hidden && storyPacer && !storyPacer.snapshot().done && !storyTimer) {
+        storyPacer.rebase(performance.now());
+        resumeStoryTimer?.();
+    }
+}
+function cancelStory(){suspendStory();resumeStoryTimer=null;storyPacer?.cancel();storyPacer=null;}
 export function playStory(head, text, onDone, stage = STAGE_COUNT) {
     cancelStory();
     const art = $('story-art');
@@ -226,11 +236,12 @@ export function playStory(head, text, onDone, stage = STAGE_COUNT) {
         if(state.done){clearInterval(storyTimer);storyTimer=null;}
     };
     present();
-    storyTimer=setInterval(()=>{
+    resumeStoryTimer=()=>{storyTimer=setInterval(()=>{
         if(storyPacer!==pacer)return;
         pacer.tick(performance.now());present();
         box.scrollTop=box.scrollHeight;
-    },32);
+    },32);};
+    if (!document.hidden) resumeStoryTimer();
     let ended=false;
     const end=()=>{
         if(ended||storyPacer!==pacer)return;
@@ -880,6 +891,9 @@ function showInstall() {
 
 // ─────────────────────────── 바인딩 ───────────────────────────
 export function initUI() {
+    document.addEventListener('visibilitychange', () => { if (document.hidden) suspendStory(); else resumeStory(); });
+    window.addEventListener('pagehide', suspendStory);
+    window.addEventListener('pageshow', resumeStory);
     G.events.loadoutExchanged = markLoadoutExchangeSpent;
     G.events.runSaveError = () => toast('최신 체크포인트를 저장하지 못했습니다. 탭을 유지하고 브라우저 저장 공간을 확인하세요. 새로고침하면 진행이 되돌아갈 수 있습니다.', 6000);
     const click = (id, fn) => $(id).addEventListener('click', () => { audio.unlock(); audio.sfx('click'); fn(); });
@@ -983,6 +997,21 @@ export function initUI() {
     }
 
     bindSettings();
+
+    // Keep keyboard navigation inside the active dialog, including expanded recipes.
+    window.addEventListener('keydown', (e) => {
+        const id = topModalId();
+        if (!id || e.key !== 'Tab') return;
+        const dialog = $(id);
+        const focusable = [...dialog.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, a[href], [tabindex="0"]')]
+            .filter(node => node.getClientRects().length && !node.closest('[inert]'));
+        const first = focusable[0], last = focusable.at(-1);
+        if (!first) { e.preventDefault(); return; }
+        if (!dialog.contains(document.activeElement) || (e.shiftKey && document.activeElement === first) || (!e.shiftKey && document.activeElement === last)) {
+            e.preventDefault();
+            (e.shiftKey ? last : first).focus();
+        }
+    });
 
     // 레벨업 카드 숫자키 선택
     window.addEventListener('keydown', (e) => {

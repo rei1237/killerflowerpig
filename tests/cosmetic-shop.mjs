@@ -181,20 +181,20 @@ test('locked or unaffordable collections remain tryable, but cannot be purchased
     }
     assert.equal(save.gold, 0); assert.deepEqual(save.cosmeticInventory, []);
     closeModal('shop'); openShop({ gold: 100, stage: 10 });
-    assert.match(action('dusk_lotus_cape', '.cosmetic-purchase').textContent, /260 코인 부족/);
+    assert.match(action('dusk_lotus_cape', '.cosmetic-purchase').textContent, /980 코인 부족/);
 });
 
 test('purchase explicitly equips once; worn state is separate from temporary try-on', () => {
     openShop(); tryOn('dusk_lotus_cape');
     const stale = action('dusk_lotus_cape', '.cosmetic-purchase'), player = JSON.stringify(G.player);
     assert.equal(stale.textContent, '구매하고 장착'); stale.click();
-    assert.equal(save.gold, 9640); assert.deepEqual(save.cosmeticInventory, ['dusk_lotus_cape']);
+    assert.equal(save.gold, 8920); assert.deepEqual(save.cosmeticInventory, ['dusk_lotus_cape']);
     assert.equal(save.equippedCosmetics.outfit, 'dusk_lotus_cape');
     assert.equal(node('cosmetic-preview-state').textContent, '현재 장착 모습');
     assert.match(node('cosmetic-status').textContent, /구매·장착 완료/);
-    assert.equal(node('shop-gold').textContent, '● 9640');
+    assert.equal(node('shop-gold').textContent, '● 8920');
     assert.equal(document.activeElement.dataset.cosmeticFocus, 'clear-outfit');
-    stale.disabled = false; stale.click(); assert.equal(save.gold, 9640);
+    stale.disabled = false; stale.click(); assert.equal(save.gold, 8920);
     tryOn('jade_lotus_guard');
     assert.equal(save.equippedCosmetics.outfit, 'dusk_lotus_cape');
     assert.equal(JSON.stringify(G.player), player);
@@ -300,15 +300,15 @@ test('preview uses all eight combat poses and actual base shotgun cadence, with 
     assert.equal(snapshot(), before); assert.equal(JSON.stringify(G.player), player);
 });
 
-test('legendary preview repeats at the actual 450ms cadence without changing progression or the live player', () => {
+test('legendary preview repeats at the actual 360ms cadence without changing progression or the live player', () => {
     openShop(); save.upgrades.lotus_gun = 1;
     images.playerLotusFire = { width: 3072, height: 256 };
     const before = snapshot(), player = JSON.stringify(G.player);
     node('cosmetic-preview-fire').click(); assert.equal(lastBodyFrame(), 1);
     frame(310); assert.equal(lastBodyFrame(), 0);
-    frame(145); assert.equal(lastBodyFrame(), 1);
+    frame(55); assert.equal(lastBodyFrame(), 1);
     frame(230); assert.equal(lastBodyFrame(), 6);
-    frame(220); assert.equal(lastBodyFrame(), 1);
+    frame(130); assert.equal(lastBodyFrame(), 1);
     assert.equal(snapshot(), before); assert.equal(JSON.stringify(G.player), player);
 });
 

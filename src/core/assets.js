@@ -29,7 +29,13 @@ export function loadImage(src, { signal, timeoutMs = 20000 } = {}) {
         const abort = () => finish(null, true);
         if (signal?.aborted) return abort();
         img.decoding = 'async';
-        img.onload = () => finish(img);
+        img.onload = async () => {
+            // Transfer decode cost to preparation, before the first combat draw.
+            // Older engines without decode retain their successful onload path.
+            try { if (typeof img.decode === 'function') await img.decode(); }
+            catch { finish(null); return; }
+            finish(img);
+        };
         img.onerror = () => finish(null);
         signal?.addEventListener('abort', abort, { once: true });
         timeout = setTimeout(() => finish(null), Math.max(1, Math.min(60000, timeoutMs || 20000)));

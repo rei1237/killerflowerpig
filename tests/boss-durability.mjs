@@ -9,7 +9,7 @@ import { DAMAGE_SCENARIOS, measureBossDps, measureEarlyBossEncounter, measureBos
 
 const oldHp=[0,520,1600,3400,5600,8500,12000,16000,21000,28000,42000];
 // 최종 보스(10)는 의도적으로 67200 → 168000 (×2.5) 강화.
-const newHp=[0,600,2240,4930,8120,12750,18000,24800,32550,13000,168000];
+const newHp=[0,600,2240,4930,8120,12750,18000,24800,32550,24000,168000];
 // 실제 전투 체력: 기준치 × BOSS_HP_MULTIPLIER × 4스테이지 이후 진화 배율
 const effectiveHp=stage=>newHp[stage]*BOSS_HP_MULTIPLIER*(BOSS_EVOLUTION_HP[stage]||1);
 
@@ -25,16 +25,15 @@ test('boss HP matches selected encounter pacing without hidden resistance or a d
   // 2~9는 기존 1.4~1.6배 조정 유지, 10은 의도된 최종 보스 강화(×4)라 비율 검사에서 제외
   if(stage>1&&stage<9){assert.ok(ratio>=1.4&&ratio<=1.6);assert.ok(ratio>=previousRatio);previousRatio=ratio;}
   if(stage!==9){assert.ok(newHp[stage]>newHp[stage-1]);assert.ok(stage===1||effectiveHp(stage)>effectiveHp(stage-1),'unchanged encounters retain increasing effective HP');}
-  // Stage 9 intentionally reuses Alpha instead of the old king. Its 60–100s
-  // actual two-final pacing is guarded by alpha-boss-pacing.mjs, not an HP ladder.
+  // Restored King uses measured legal-build pacing rather than the historic HP ladder.
   assert.equal(b.hurt(100,{silent:true}),100);assert.equal(b.hp,b.maxHp-100,'no hidden damage reduction');
   assert.equal(b.dmg,def.dmg*(1+(stage-1)*.05));assert.equal(b.radius,SPRITES[def.sheet].walkH*def.scale*.32);
  }
 });
 
-test('relocated Alpha retains its old pacing while the beginner has a separate readable signature',()=>{
- assert.deepEqual(BOSSES[9].pacing,{opening:3,phaseRest:2.2,recovery:1.5,chargeWarning:1.15,chargeSpeed:480,summons:.6});
- assert.deepEqual(Object.values(BOSSES).map(b=>b.signature),['trainingCharge','barrage','hunt','lockshot','artillery','toxicTide','crosscut','echo','charge','contract']);
+test('restored King has a readable opening while the beginner keeps its separate signature',()=>{
+ assert.deepEqual(BOSSES[9].pacing,{opening:2.6,phaseRest:2.0});
+ assert.deepEqual(Object.values(BOSSES).map(b=>b.signature),['trainingCharge','barrage','hunt','lockshot','artillery','toxicTide','crosscut','echo','faultline','contract']);
  assert.equal(new Set(Object.values(BOSSES).map(b=>b.signatureHint)).size,10);
  for(let stage=2;stage<=10;stage++)if(stage!==9)assert.equal(BOSSES[stage].pacing,undefined,'other encounters keep their pacing');
 });
@@ -79,7 +78,7 @@ test('reachable mid and two/three-final late fixtures begin real attacks and fin
 
 
 test('explicit summon counts follow the 60% mob-count pass after the beginner multiplier',()=>{
- for(const [stage,counts] of [[9,[2,4,5]],[6,[4,5,7]]]){
+ for(const [stage,counts] of [[9,[4,5,7]],[6,[4,5,7]]]){
   for(const [index,input] of [6,9,12].entries()){
    clearWorld();G.stage=stage;G.time=0;G.caps={enemies:420,particles:0,texts:0};
    G.player={x:0,y:0,stats:{crit:0,armor:0}};

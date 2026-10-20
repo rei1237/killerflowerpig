@@ -74,16 +74,16 @@
       "seed": 101,
       "stage": 10,
       "distance": 130,
-      "level": 51,
+      "level": 50,
       "weapons": [
         {
           "id": "scatter_rail",
-          "level": 6,
+          "level": 8,
           "evolved": false
         },
         {
           "id": "lotus_bloom",
-          "level": 8,
+          "level": 7,
           "evolved": false
         }
       ],
@@ -124,7 +124,7 @@
       "seed": 101,
       "stage": 10,
       "distance": 130,
-      "level": 55,
+      "level": 54,
       "weapons": [
         {
           "id": "scatter_rail",
@@ -179,16 +179,16 @@
       "seed": 101,
       "stage": 10,
       "distance": 130,
-      "level": 51,
+      "level": 50,
       "weapons": [
         {
           "id": "scatter_rail",
-          "level": 2,
+          "level": 3,
           "evolved": false
         },
         {
           "id": "absolute_bloom",
-          "level": 5,
+          "level": 6,
           "evolved": false
         }
       ],
@@ -229,21 +229,21 @@
       "seed": 101,
       "stage": 10,
       "distance": 130,
-      "level": 51,
+      "level": 50,
       "weapons": [
         {
           "id": "sword_wheel",
-          "level": 8,
+          "level": 5,
           "evolved": false
         },
         {
           "id": "lotus_bloom",
-          "level": 1,
+          "level": 2,
           "evolved": false
         },
         {
           "id": "scatter_rail",
-          "level": 4,
+          "level": 5,
           "evolved": false
         }
       ],

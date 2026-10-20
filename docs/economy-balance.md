@@ -1,5 +1,7 @@
 # Starter economy easing
 
+Current shop prices: [higher gold shop prices](shop-pricing.md). Price examples below describe earlier revisions and are superseded by catalog 6; reward rates and item effects remain unchanged.
+
 Values were inspected in the gameplay/catalog sources and verified with deterministic tests. These are calculations for identical kills/collected drops, not measured human playtime or a promise of earnings per minute. Early enemy density is being lowered separately; higher value per kill makes fewer successful kills useful.
 
 ## Before → after

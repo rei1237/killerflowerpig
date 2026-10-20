@@ -1,0 +1,56 @@
+{
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "backend": "counting Canvas shim; no browser/GPU/phone"
+  },
+  "fixture": {
+    "scenario": "beam-lotus-king",
+    "tier": 2,
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 3,
+    "quality": "auto/coarse",
+    "enemies": 180,
+    "friendlyShots": 150,
+    "beams": 3,
+    "hostileShots": 60,
+    "hazards": 12,
+    "gems": 300,
+    "particles": 260,
+    "decals": 72,
+    "texts": 44
+  },
+  "rasterPixels": 185469,
+  "activeCanvasCalls": {
+    "setTransform": 3,
+    "fillRect": 108,
+    "drawImage": 399,
+    "save": 150,
+    "beginPath": 361,
+    "ellipse": 341,
+    "fill": 199,
+    "clip": 12,
+    "restore": 150,
+    "setLineDash": 37,
+    "stroke": 256,
+    "moveTo": 273,
+    "lineTo": 166,
+    "closePath": 18,
+    "translate": 135,
+    "scale": 2,
+    "arc": 20,
+    "rotate": 111,
+    "strokeText": 22,
+    "fillText": 22
+  },
+  "activeCallsTotal": 2785,
+  "paused120FramesCalls": 0,
+  "jsShimMedianMs": 0.18837299999998436,
+  "jsShimP95Ms": 0.24954499999998347,
+  "gameplayUnchanged": true,
+  "canvasCreates": 4
+}

@@ -132,3 +132,30 @@ test('merged short-wide and long-narrow components keep their real visible union
  drawWeaponBeam(ctx,b,f);const far=ctx.ops.filter(o=>o.name==='lineTo'&&o.args[0]>300);assert.ok(far.length);assert.ok(far.every(o=>Math.abs(o.args[1])<8));assert.equal(JSON.stringify(b),before);
  const impacts=createWeaponVfxFrame(false,2,{});drawBeamHitAccents(context(),{count:1,items:[b]},{count:1,items:[{x:600,y:56,radius:16,flash:1}]},null,impacts);assert.equal(impacts.impactsUsed,0,'phantom wide-far target is not decorated as a hit');
 });
+
+
+test('legendary lotus VFX has a bounded actual-impact ring and reduced-motion stable petals', async()=>{
+ const {recordLotusBloom,drawLotusBlooms,resetLotusBlooms,BONUS_VFX}=await import('../src/game/weapon-vfx.js');
+ reset();resetLotusBlooms();assert.equal(BONUS_VFX.lotus_gun.shape,'regalia');
+ for(let i=0;i<100;i++)recordLotusBloom(i,0,90,2);
+ for(const low of [false,true]){
+  const f=createWeaponVfxFrame(low,2.1),ctx=context();drawLotusBlooms(ctx,f);
+  assert.equal(ctx.ops.filter(o=>o.name==='ellipse').length,f.petalsUsed,'outer and inner petals both consume budget');
+  for(let i=0;i<200;i++)drawWeaponProjectile(ctx,shot('lotus_gun'),f);
+  assert.ok(f.petalsUsed<=(low?10:32));assert.ok(f.impactsUsed<=(low?3:8));
+  assert.equal(ctx.ops.filter(o=>o.name==='ellipse').length-200,f.petalsUsed);
+  assert.equal(ctx.globalAlpha,.71);assert.ok(ctx.ops.every(o=>o.composite==='source-over'));
+ }
+ media.matches=true;const f=createWeaponVfxFrame(false,2.1);assert.equal(f.motion,false);
+ const ctx=context();drawWeaponProjectile(ctx,shot('lotus_gun'),f);
+ assert.ok(!ctx.ops.some(o=>o.name==='moveTo'&&o.args[0]===-44),'no moving projectile trail');
+ resetLotusBlooms();const empty=context();drawLotusBlooms(empty,createWeaponVfxFrame(false,2.1));assert.equal(empty.ops.length,0);
+});
+
+test('adaptive minimal tier lowers optional budgets without hiding projectile or beam cores',()=>{
+ reset();const mobile=createWeaponVfxFrame(true,2,{tier:1}),minimal=createWeaponVfxFrame(true,2,{tier:2});
+ assert.ok(minimal.detailLeft<mobile.detailLeft);assert.ok(minimal.petalLeft<mobile.petalLeft);assert.ok(minimal.impactLeft<mobile.impactLeft);
+ const sh=shot('lotus_gun'),b=beam('cannon'),before=JSON.stringify({sh,b});minimal.detailLeft=0;minimal.petalLeft=0;
+ const ctx=context();drawWeaponProjectile(ctx,sh,minimal);drawWeaponBeam(ctx,b,minimal);
+ assert.ok(ctx.ops.some(op=>op.name==='ellipse'));assert.ok(ctx.ops.some(op=>op.name==='lineTo'&&op.args[0]===b.len));assert.equal(JSON.stringify({sh,b}),before);
+});

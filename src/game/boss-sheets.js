@@ -14,7 +14,11 @@ function requestImage(src) {
             image.onload = image.onerror = null;
             resolve(value);
         };
-        image.onload = () => finish(image);
+        image.onload = async () => {
+            try { if (typeof image.decode === 'function') await image.decode(); }
+            catch { finish(null); return; }
+            finish(image);
+        };
         image.onerror = () => finish(null);
         timer = setTimeout(() => { finish(null); image.src = ''; }, 15000);
         image.src = src;
