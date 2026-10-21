@@ -37,14 +37,14 @@ export const WEAPONS = {
     },
     thorns: {
         name: '연꽃 가시', icon: '🌸', color: '#ff4fa0',
-        desc: '강력한 가시 꽃잎이 몸 주위를 돈다. 꽃잎 하나가 적 하나에 닿으면 피해를 주고 사라지며, 각각 1.6초 후 재생한다.',
+        desc: '가시 꽃잎이 몸 주위를 돈다. 꽃잎 하나가 적에 닿거나 적 탄환을 막으면 사라지며 그 자리에서 터져 주변에도 피해를 주고(꽃잎 파열), 각각 1.6초 후 재생한다. 준비된 꽃잎 1개당 받는 피해 -4% (최대 20%). 꽃잎이 늘고 빨리 자랄수록 공격과 방어가 함께 강해진다.',
         base: { dmg: 54, cd: 3.3, amount: 2, speed: 3.4, duration: 3.0, area: 1, radius: 68, hitCd: 0.45, regrow: 1.6 },
         levels: [
             { amount: 1, t: '가시 꽃잎 +1' }, { area: 0.15, t: '반경 +15%' }, { dmg: 18, regrow: -0.4, t: '접촉 피해 +18, 기본 재생 -0.4초' },
             { dmg: 6, t: '접촉 피해 +6' }, { amount: 1, t: '가시 꽃잎 +1' }, { dmg: 18, t: '접촉 피해 +18' },
             { amount: 1, t: '가시 꽃잎 +1' },
         ],
-        evolve: { with: 'regen', name: '피의 연꽃', icon: '🥀', desc: '강한 접촉 피해와 흡혈. 닿은 꽃잎은 하나씩 사라지고 재생 간격이 15% 짧아진다 (Lv.8 기본 1.02초).',
+        evolve: { with: 'regen', name: '피의 연꽃', icon: '🥀', desc: '강한 접촉 피해와 흡혈. 재생 간격 15% 단축 (Lv.8 기본 1.02초). 꽃잎 파열 피해 +15%p·범위 +25%, 꽃잎 1개당 받는 피해 -5% (최대 30%).',
             mods: { dmg: 1.4, amount: 1.25, permanent: 1, lifesteal: 0.3, regrow: 0.85 } },
     },
     rifle: {
@@ -159,7 +159,7 @@ export const TIER_POWER = Object.freeze({
     fused: Object.freeze({
         // 2차 대폭 하향: 절대 무기는 이전 '최종' 화력대로, 최종 무기는 그보다 아래로 한 등급씩 내렸다.
         // (1차: 학살자의 검륜·맹독 회전톱·심판의 단두대·역병 종언 개별 하향 후, 최종 ×0.55 · 절대 ×0.7)
-        lotus_bloom: 0.33, venom_saw: 1.98, orbit_saw: 1.277, sword_wheel: 1.21, toxic_scatter: 1.9, plague_fire: 0.53,
+        lotus_bloom: 0.33, venom_saw: 1.98, orbit_saw: 1.4, sword_wheel: 1.21, toxic_scatter: 1.9, plague_fire: 0.53,
         scatter_rail: 1.9, burst_rail: 1.173, ember_lance: 0.12,
         absolute_bloom: 0.477, doom_barrage: 1.414, plague_end: 0.189, guillotine: 1.54, carnage_saw: 1.538 }),
     // 조합 무기 안에 계승된 꽃잎포 코어 배율(진화 꽃잎포 보정에 곱한다). 절대 > 최종 순서는 유지.

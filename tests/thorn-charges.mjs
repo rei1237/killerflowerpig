@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { G, clearWorld } from '../src/game/state.js';
 import { createPlayer, recomputeStats } from '../src/game/player.js';
 import { createWeapon, weaponStats, updateWeapons, orbitStats } from '../src/game/weapons.js';
-import { updateThornCharges, THORN_SWEEP_SEGMENTS } from '../src/game/thorn-charges.js';
+import { updateThornCharges, THORN_SWEEP_SEGMENTS, thornBurstRatio, thornGuardReduction, interceptEnemyShot, THORN_GUARD } from '../src/game/thorn-charges.js';
 import { spawnEnemy } from '../src/game/enemies.js';
 import { resetBuild, snapshotBuild, restoreBuild, rollChest } from '../src/game/progression.js';
 import { save } from '../src/core/save.js';
@@ -11,6 +11,7 @@ import { atlases, fx } from '../src/core/assets.js';
 import { drawWeaponOrbit, createWeaponVfxFrame } from '../src/game/weapon-vfx.js';
 import { WEAPONS } from '../src/data/weapons.js';
 import { Boss } from '../src/game/boss.js';
+import * as await_damage from '../src/game/player.js';
 
 function setup() {
     resetBuild(); clearWorld();
@@ -35,23 +36,26 @@ function tick(w, dt = 0) {
 const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-8, `${a} != ${b}`);
 test.beforeEach(setup);
 
-test('a petal damages exactly one overlapping enemy then disappears immediately', () => {
+test('a petal deals full damage to exactly one overlapping enemy, bursts on its neighbour, then disappears', () => {
     const w = G.weapons[0], first = enemy(), second = enemy();
-    const damage = weaponStats(w).dmg;
+    const damage = weaponStats(w).dmg, burst = damage * thornBurstRatio(w);
     tick(w);
-    close(first.hp, first.maxHp - damage); close(second.hp, second.maxHp);
+    // 직접 적중은 1명, 겹친 이웃은 꽃잎 파열 피해만 받는다.
+    close(first.hp, first.maxHp - damage); close(second.hp, second.maxHp - burst);
+    assert.ok(burst < damage * .25);
     assert.equal(w.thornState.slots.filter(s => s.ready).length, 1);
     for (let i = 0; i < 20; i++) tick(w, .01);
-    close(first.hp, first.maxHp - damage); close(second.hp, second.maxHp);
+    close(first.hp, first.maxHp - damage); close(second.hp, second.maxHp - burst);
 });
 
-test('lethal contact consumes the petal before kill callbacks and cannot hit a second body', () => {
+test('lethal contact consumes the petal before kill callbacks and cannot directly hit a second body (only its burst)', () => {
     const w = G.weapons[0], first = enemy(68, -8, 1), second = enemy();
     let consumedDuringCallback = false;
     G.events.kill = () => { consumedDuringCallback = !w.thornState.slots[0].ready; };
     tick(w);
     assert.equal(first.alive, false); assert.equal(consumedDuringCallback, true);
-    close(second.hp, second.maxHp);
+    // 두 번째 몸체는 직접 적중이 아니라 꽃잎 파열 피해만 받는다.
+    close(second.hp, second.maxHp - weaponStats(w).dmg * thornBurstRatio(w));
 });
 
 test('each petal regrows on its own deadline without refreshing the spent timer every update', () => {
@@ -185,4 +189,55 @@ test('renderer uses the same ready mask without changing it or closing the missi
     drawWeaponOrbit(ctx, w, orbitStats(w, weaponStats(w)), G.player, createWeaponVfxFrame(true, G.clock));
     assert.equal(moves.length, 1); close(moves[0][0], -68); close(moves[0][1], -20);
     assert.equal(JSON.stringify(w.thornState.slots), state);
+});
+
+// ── 연꽃 수호 · 꽃잎 파열 ──
+test('a ready petal blocks an enemy bullet, is consumed, and regrows; spent petals block nothing', () => {
+    const w = G.weapons[0];
+    const state = tick(w), s = orbitStats(w, weaponStats(w));
+    const a = state.angle, r = s.radius * s.area;
+    const shot = { x: state.x + Math.cos(a) * r, y: state.y - 20 + Math.sin(a) * r * .8, radius: 5 };
+    assert.equal(interceptEnemyShot(shot), true);
+    assert.equal(state.slots[0].ready, false);
+    // 같은 자리, 이미 소모된 꽃잎은 막지 못한다 (다른 꽃잎이 그 자리에 없으면).
+    const again = { ...shot };
+    const readyBefore = state.slots.filter(x => x.ready).length;
+    interceptEnemyShot(again);
+    assert.ok(state.slots.filter(x => x.ready).length >= readyBefore - 1);
+    tick(w, s.regrow + .01);
+    assert.equal(state.slots[0].ready, true, 'regrows after its regrow time');
+    // 꽃잎과 먼 탄은 그대로 지나간다.
+    assert.equal(interceptEnemyShot({ x: state.x + 400, y: state.y, radius: 5 }), false);
+});
+
+test('bloom guard: damage reduction grows with ready petals and upgrades, is capped, and drops while petals regrow', () => {
+    const w = G.weapons[0];
+    tick(w);
+    const ready = w.thornState.slots.filter(x => x.ready).length;
+    close(thornGuardReduction(), Math.min(THORN_GUARD.cap, ready * THORN_GUARD.perPetal));
+    // 꽃잎을 모두 소모하면 보호가 사라진다
+    for (const slot of w.thornState.slots) { slot.ready = false; slot.readyAt = G.clock + 5; }
+    assert.equal(thornGuardReduction(), 0);
+    // 업그레이드(Lv8)·진화로 꽃잎이 늘면 더 강해진다
+    w.level = 8; tick(w, 6); const lv8 = thornGuardReduction();
+    w.evolved = true; tick(w, 6); const evo = thornGuardReduction();
+    assert.ok(lv8 > ready * THORN_GUARD.perPetal - 1e-9 && lv8 <= THORN_GUARD.cap + 1e-9);
+    assert.ok(evo > lv8 && evo <= THORN_GUARD.evolvedCap + 1e-9);
+    // 실제 피격에 적용된다
+    const p = G.player; p.iframes = 0; p.hp = 100; const before = p.hp;
+    const { damagePlayer } = await_damage;
+    damagePlayer(20, p.x + 10, p.y);
+    close(before - p.hp, 20 * (1 - evo));
+});
+
+test('petal burst grows with level and evolution but hits a bounded number of neighbours', () => {
+    const w = G.weapons[0];
+    const lv1 = thornBurstRatio(w); w.level = 8; const lv8 = thornBurstRatio(w);
+    assert.ok(lv8 > lv1);
+    w.level = 1; tick(w);
+    const victim = enemy(), crowd = Array.from({ length: 8 }, () => enemy());
+    tick(w);
+    const burned = crowd.filter(e => e.hp < e.maxHp).length;
+    assert.ok(victim.hp < victim.maxHp);
+    assert.ok(burned >= 1 && burned <= THORN_GUARD.burstTargets, `burst hit ${burned}`);
 });

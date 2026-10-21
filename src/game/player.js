@@ -12,6 +12,7 @@ import { MAGAZINE_BONUS } from '../data/weapons.js';
 import { applyTechPlayerBonus, resonanceTier } from './tech.js';
 import { blood, flash, shake, damageText, hitstop, sparks, floatText } from './effects.js';
 import { activeOutfit, outfitStats, incomingOutfitDamage } from './cosmetic-effects.js';
+import { thornGuardReduction } from './thorn-charges.js';
 // 꽃가루 장막 재충전 시간 (패시브 Lv 0~5)
 export const POLLEN_BARRIER_CD = Object.freeze([0, 12, 10, 8.5, 7, 6]);
 const POLLEN_PUSH_RADIUS = 120;
@@ -125,7 +126,8 @@ export function damagePlayer(amount, srcX, srcY) {
         pollenBurst(p);
         return true;
     }
-    const dmg = incomingOutfitDamage(amount, p.stats.armor, p.stats.outfitDamageMultiplier);
+    // 연꽃 가시 '만개 수호': 준비된 꽃잎 수만큼 받는 피해 감소
+    const dmg = incomingOutfitDamage(amount, p.stats.armor, p.stats.outfitDamageMultiplier) * (1 - thornGuardReduction());
     p.iframes = 0.5;
     p.hurtT = 0.25;
     if (G.godMode) return true;

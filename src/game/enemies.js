@@ -16,6 +16,7 @@ import { damagePlayer } from './player.js';
 import { dropGem, dropPickup, dropCoin, pruneFieldSupplies } from './pickups.js';
 import { spawnHazard } from './hazards.js';
 import { recordFusionHit } from './weapon-vfx.js';
+import { interceptEnemyShot } from './thorn-charges.js';
 
 let nextId = 1;
 const explosionQueue = [];
@@ -442,6 +443,9 @@ export function updateEnemyShots(dt) {
         s.x += s.vx * dt; s.y += s.vy * dt;
         if (s.accel) { s.vx *= 1 + s.accel * dt; s.vy *= 1 + s.accel * dt; }
         if (s.life <= 0) { pool.release(i); continue; }
+        // 연꽃 가시: 준비된 꽃잎이 탄을 막는다. 파열이 보스 페이즈 전환(탄 전체 제거)을 일으킬 수 있으므로
+        // 이 탄이 아직 풀에 있을 때만 반납한다.
+        if (interceptEnemyShot(s)) { if (i < pool.count && pool.items[i] === s) pool.release(i); else i = Math.min(i, pool.count); continue; }
         const body = playerBody(p);
         const dx = body.x - s.x, dy = body.y - s.y;
         const r = s.radius + p.radius;
