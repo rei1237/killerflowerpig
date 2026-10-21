@@ -17,9 +17,12 @@ function paired(id, phase, scene, { route = false, oneCast = false } = {}) {
     return cache.get(key);
 }
 
-test('all ordinary gun definitions and existing crit modifiers are exactly unchanged', () => {
+test('all ordinary gun definitions and non-sword crit modifiers are exactly unchanged; sword gains melee crit', () => {
     for (const id of ['shotgun', 'pistols', 'rifle']) assert.deepEqual(WEAPONS[id], baseline.weapons[id]);
-    for (const id of ['saw', 'sword', 'molotov', 'gas', 'thorns']) {
+    // 도살검은 근접 보상으로 고유 치명타를 받았다 (기본 20%, 피해 +50%, 진화 +10%/+50%).
+    assert.equal(WEAPONS.sword.base.crit, 0.2); assert.equal(WEAPONS.sword.base.critBonus, 0.5);
+    assert.equal(WEAPONS.sword.evolve.mods.crit, 0.1); assert.equal(WEAPONS.sword.evolve.mods.critBonus, 0.5);
+    for (const id of ['saw', 'molotov', 'gas', 'thorns']) {
         assert.equal(WEAPONS[id].base.crit, baseline.weapons[id].base.crit);
         assert.equal(WEAPONS[id].evolve.mods.crit, baseline.weapons[id].evolve.mods.crit);
         assert.equal(WEAPONS[id].evolve.mods.critBonus, baseline.weapons[id].evolve.mods.critBonus);

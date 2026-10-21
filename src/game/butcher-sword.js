@@ -4,6 +4,7 @@ import { G } from './state.js';
 import { hitEnemy } from './enemies.js';
 import { preferredTarget } from './targeting.js';
 import { markPlayerAttack } from './attack-animation.js';
+import { shake, sparks } from './effects.js';
 export function swordStats(w, s = w.s) {
     return { damage: s.dmg, cooldown: s.cd,
         radius: Math.min(w.id === 'sword_wheel' ? 200 : 175, (s.radius || 100) * Math.sqrt(s.area)),
@@ -30,14 +31,20 @@ export function fireSword(w, s) {
     p.swordSwing = { at:G.clock,x,y,angle,radius:stats.radius,halfArc:stats.halfArc };
     markPlayerAttack(p,G.clock,w,Math.cos(angle),{tech:G.tech,family:'sword'});
     const weapon = w.sourceId || w.id;
-    for(let i=0;i<G.enemies.count;i++){const e=G.enemies.items[i];if(e.alive&&withinSwordArc(e,x,y,angle,stats.radius,stats.halfArc))
-        hitEnemy(e,stats.damage,{weapon,kx:Math.cos(angle),ky:Math.sin(angle),knock:180,bleed:stats.bleed,crit:stats.crit,critBonus:stats.critBonus});}
+    let crit=false;
+    for(let i=0;i<G.enemies.count;i++){const e=G.enemies.items[i];if(e.alive&&withinSwordArc(e,x,y,angle,stats.radius,stats.halfArc)){
+        hitEnemy(e,stats.damage,{weapon,kx:Math.cos(angle),ky:Math.sin(angle),knock:180,bleed:stats.bleed,crit:stats.crit,critBonus:stats.critBonus});
+        if(e.lastCrit){crit=true;sparks(e.x,e.y-e.radius,4,'#ff3b5c',220);}}}
     const boss=G.boss;if(boss?.alive&&withinSwordArc(boss,x,y,angle,stats.radius,stats.halfArc))boss.hurt(stats.damage,{weapon,crit:stats.crit,critBonus:stats.critBonus});
+    // 치명타 베기: 붉고 두꺼운 참격 + 짧은 흔들림으로 근접 타격감을 준다
+    if(crit){p.swordSwing.crit=true;shake(3);}
     return true;
 }
 export function drawButcherSword(ctx, reducedMotion=false) {
     const swing=G.player?.swordSwing;if(!swing)return;
     const age=G.clock-swing.at;if(age<0||age>.18)return;
-    ctx.save();ctx.strokeStyle='#ffe9b3';ctx.globalAlpha=.7*(1-age/.18);ctx.lineWidth=reducedMotion?3:7;
-    ctx.beginPath();ctx.arc(swing.x,swing.y,swing.radius,swing.angle-swing.halfArc,swing.angle+swing.halfArc);ctx.stroke();ctx.restore();
+    ctx.save();ctx.strokeStyle=swing.crit?'#ff3b5c':'#ffe9b3';ctx.globalAlpha=(swing.crit?.9:.7)*(1-age/.18);ctx.lineWidth=(reducedMotion?3:7)*(swing.crit?1.6:1);
+    ctx.beginPath();ctx.arc(swing.x,swing.y,swing.radius,swing.angle-swing.halfArc,swing.angle+swing.halfArc);ctx.stroke();
+    if(swing.crit){ctx.strokeStyle='#fff0f2';ctx.lineWidth=reducedMotion?1:2;ctx.beginPath();ctx.arc(swing.x,swing.y,swing.radius*.92,swing.angle-swing.halfArc,swing.angle+swing.halfArc);ctx.stroke();}
+    ctx.restore();
 }

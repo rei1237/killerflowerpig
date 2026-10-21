@@ -8,3 +8,10 @@ test('sword grows through its own level and evolution, with bounded reach',()=>{
 test('sword works on other techs; a saw alone never creates a hidden sword',()=>{const w=setup('gunline');const e=enemy(1,50,0);fireSword(w,w.s);assert.ok(e.hp<100000);setup('butcher',1,false,'saw');enemy(1,50,0);updateWeapons(.01);assert.equal(G.player.swordSwing,undefined);});
 test('empty sword release retries without a fake hit or animation',()=>{const w=setup();assert.equal(fireSword(w,w.s),false);assert.equal(G.player.swordSwing,undefined);assert.ok(w.cd<=.12);});
 test('sword forwards its real crit modifiers without pistol execution or hidden healing',()=>{const w=setup('executioner'),e=enemy(1,60,0);w.s.crit=1;w.s.critBonus=.75;const hp=G.player.hp,base=w.s.dmg;fireSword(w,w.s);assert.equal(e.lastCrit,true);assert.ok(Math.abs((100000-e.hp)-base*((G.player.stats.critMul||3)+.75))<1e-8);assert.equal(G.player.hp,hp);let options;G.enemies.clear();G.boss={alive:true,x:60,y:0,radius:10,hurt(d,o){options=o;}};fireSword(w,w.s);assert.equal(options.crit,1);assert.equal(options.critBonus,.75);assert.equal(options.executeChance,undefined);G.boss=null;});
+test('sword carries its own melee crit that grows with levels and evolution, and a crit swing is marked red',()=>{
+ const w=setup('executioner');const s=weaponStats(w);assert.ok(s.crit>=.2);assert.ok(s.critBonus>=.5);
+ const e=enemy(1,60,0);const r=Math.random;Math.random=()=>0;try{w.cd=0;fireSword(w,w.s);}finally{Math.random=r;}
+ assert.equal(e.lastCrit,true);assert.equal(G.player.swordSwing.crit,true);
+ G.enemies.clear();const f=enemy(2,60,0);Math.random=()=>.999;try{fireSword(w,w.s);}finally{Math.random=r;}
+ assert.equal(f.lastCrit,false);assert.ok(!G.player.swordSwing.crit);
+});
