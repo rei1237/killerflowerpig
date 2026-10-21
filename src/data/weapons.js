@@ -152,12 +152,15 @@ export const STARTING_WEAPON = 'shotgun';
 // 절대 Lv1은 같은 재료 계통의 조합 Lv8보다 강해진다. 서로 다른 역할의 모든 무기를 한 줄로 비교하지 않는다.
 // tests/tier-order.mjs 가 실제 전투 시뮬레이션으로 각 성장 경로를 검증한다.
 export const TIER_POWER = Object.freeze({
-    evolved: Object.freeze({ thorns: 2.4, cannon: 1.6, gas: 1.75, saw: 1.3 }),
+    // 척추 분쇄기(saw) 1.3 → 0.95: 무한 관통·화면 반사로 대군 상대 화력이 도살자 테크 보정과 겹쳐 붕괴를 일으켰다.
+    evolved: Object.freeze({ thorns: 2.4, cannon: 1.6, gas: 1.75, saw: 0.95 }),
     // 최종(조합·절대) 무기 하향: 진화 < 조합(Lv1) < 조합(Lv8) < 절대(Lv1) 순서는 유지하되 전반적으로 낮춘다.
     fused: Object.freeze({
-        lotus_bloom: 0.447, venom_saw: 4.538, orbit_saw: 2.321, sword_wheel: 3.186, toxic_scatter: 2.344, plague_fire: 0.739,
+        // 밸런스 붕괴 하향: 학살자의 검륜 3.186→2.2, 맹독 회전톱 4.538→3.6 (조합인데 대군 화력이 절대 무기를 넘었다),
+        // 심판의 단두대 2.589→2.2, 역병 종언 0.405→0.27 (다른 절대 무기보다 크게 앞섰다).
+        lotus_bloom: 0.447, venom_saw: 3.6, orbit_saw: 2.321, sword_wheel: 2.2, toxic_scatter: 2.344, plague_fire: 0.739,
         scatter_rail: 2.075, burst_rail: 2.133, ember_lance: 0.125,
-        absolute_bloom: 0.682, doom_barrage: 2.02, plague_end: 0.405, guillotine: 2.589, carnage_saw: 2.197 }),
+        absolute_bloom: 0.682, doom_barrage: 2.02, plague_end: 0.27, guillotine: 2.2, carnage_saw: 2.197 }),
 });
 // 조합 무기가 계승한 코어(sourceId)는 조합 무기의 보정을 함께 받는다.
 export function tierPower(w) {
