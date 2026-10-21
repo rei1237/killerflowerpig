@@ -17,6 +17,8 @@ export const BOSSES = {
         signature: 'barrage', signatureHint: '고정된 사격선 옆으로 빠지고 재장전 중 공격하세요.',
         phases: [['barrage'], ['barrage'], ['barrage', 'ring']] },
     3: { name: '헌터 청토끼', title: '냄새를 맡았다...', sheet: 'boss1', tint: 'shadow', scale: 0.64, hp: 4930, speed: 118, dmg: 18, stealth: true,
+        // 탄막 완화: 링 탄 수 60%·최대 2연발, 부채꼴 탄 -2(틈 확대)·2연발, 탄속 80%, 연발 간격 1.4배, 패턴 뒤 휴식 +0.8초.
+        barrage: { density: 0.6, maxVolleys: 2, fanReduce: 2, aimedVolleys: 2, speed: 0.8, interval: 1.4, rest: 0.8 },
         signature: 'hunt', signatureHint: '두 번의 돌진 예고선을 각각 옆으로 피하고, 멈춰 숨을 고를 때 공격하세요.',
         phases: [['hunt'], ['hunt', 'aimed'], ['hunt', 'ring', 'aimed']] },
     4: { name: '프레데터 알파', title: '저격이다!', sheet: 'boss1', tint: 'toxic', scale: 0.66, hp: 8120, speed: 60, dmg: 20,

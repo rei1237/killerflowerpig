@@ -48,7 +48,8 @@ test('stage 9 restores Brutus King identity, original art and no phase adds',()=
 });
 
 test('stages 2 through 8 and stage 10 retain every definition field unchanged',()=>{
- for(const stage of [2,3,4,5,6,7,8,10])assert.deepEqual(BOSSES[stage],previousBosses[stage]);
+ // 3구역 헌터만 탄막 완화 필드(barrage)가 추가됐다. 나머지 필드는 그대로여야 한다.
+ for(const stage of [2,3,4,5,6,7,8,10]){const {barrage,...rest}=BOSSES[stage];assert.equal(barrage===undefined,stage!==3);assert.deepEqual(rest,previousBosses[stage]);}
 });
 
 test('stage 1 has no summons, bullets or phase acceleration at the selected beginner HP',()=>{

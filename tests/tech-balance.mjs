@@ -34,7 +34,9 @@ for (const tech of Object.keys(TECH_ROUTES)) for (const stage of ['late', 'fusio
         for (const scene of TECH_SCENES) {
             const previous = baseline.techs[`${tech}:${stage}`][scene];
             const current = simulateTech(tech, build, scene), ratio = current / previous;
-            assert.ok(ratio >= 1 - baseline.tolerance, `${tech}/${stage}/${scene}: ${ratio.toFixed(4)} of ${baseline.commit}`);
+            // 최종·절대 무기 2차 대폭 하향(요청)으로 조합 단계는 과거 기록의 절반까지 내려갈 수 있다. 진화 단계 하한은 그대로.
+            const floor = stage === 'fusion' ? 0.5 : 1 - baseline.tolerance;
+            assert.ok(ratio >= floor, `${tech}/${stage}/${scene}: ${ratio.toFixed(4)} of ${baseline.commit}`);
             // The evolved-parents Gunline route is the unchanged control. Its final (scatter_rail) is not: the final-weapon
             // rebalance (TIER_POWER.fused, kept above the buffed evolved parents by tests/tier-order.mjs) puts it at ~1.9x the old baseline.
             if (tech === 'gunline' && stage === 'late') assert.ok(ratio <= 1 + baseline.tolerance, `unchanged Gunline control unexpectedly rose: ${ratio}`);

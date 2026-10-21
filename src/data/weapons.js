@@ -153,20 +153,23 @@ export const STARTING_WEAPON = 'shotgun';
 // tests/tier-order.mjs 가 실제 전투 시뮬레이션으로 각 성장 경로를 검증한다.
 export const TIER_POWER = Object.freeze({
     // 척추 분쇄기(saw) 1.3 → 0.95: 무한 관통·화면 반사로 대군 상대 화력이 도살자 테크 보정과 겹쳐 붕괴를 일으켰다.
-    evolved: Object.freeze({ thorns: 2.4, cannon: 1.6, gas: 1.75, saw: 0.95 }),
+    // 개화 꽃잎포(cannon) 1.6 → 0.9: 대군 화력이 다른 진화 무기의 3배여서 그 위의 조합 무기를 끝없이 끌어올렸다.
+    evolved: Object.freeze({ thorns: 2.4, cannon: 0.9, gas: 1.75, saw: 0.95 }),
     // 최종(조합·절대) 무기 하향: 진화 < 조합(Lv1) < 조합(Lv8) < 절대(Lv1) 순서는 유지하되 전반적으로 낮춘다.
     fused: Object.freeze({
-        // 밸런스 붕괴 하향: 학살자의 검륜 3.186→2.2, 맹독 회전톱 4.538→3.6 (조합인데 대군 화력이 절대 무기를 넘었다),
-        // 심판의 단두대 2.589→2.2, 역병 종언 0.405→0.27 (다른 절대 무기보다 크게 앞섰다).
-        lotus_bloom: 0.447, venom_saw: 3.6, orbit_saw: 2.321, sword_wheel: 2.2, toxic_scatter: 2.344, plague_fire: 0.739,
-        scatter_rail: 2.075, burst_rail: 2.133, ember_lance: 0.125,
-        absolute_bloom: 0.682, doom_barrage: 2.02, plague_end: 0.27, guillotine: 2.2, carnage_saw: 2.197 }),
+        // 2차 대폭 하향: 절대 무기는 이전 '최종' 화력대로, 최종 무기는 그보다 아래로 한 등급씩 내렸다.
+        // (1차: 학살자의 검륜·맹독 회전톱·심판의 단두대·역병 종언 개별 하향 후, 최종 ×0.55 · 절대 ×0.7)
+        lotus_bloom: 0.33, venom_saw: 1.98, orbit_saw: 1.277, sword_wheel: 1.21, toxic_scatter: 1.289, plague_fire: 0.53,
+        scatter_rail: 1.141, burst_rail: 1.173, ember_lance: 0.069,
+        absolute_bloom: 0.477, doom_barrage: 1.414, plague_end: 0.189, guillotine: 1.54, carnage_saw: 1.538 }),
+    // 조합 무기 안에 계승된 꽃잎포 코어 배율(진화 꽃잎포 보정에 곱한다). 절대 > 최종 순서는 유지.
+    retainedCannon: Object.freeze({ final: 1.1, absolute: 1.3 }),
 });
 // 조합 무기가 계승한 코어(sourceId)는 조합 무기의 보정을 함께 받는다.
 export function tierPower(w) {
     // A retained cannon is the same evolved core in every fusion; owner-specific
     // old compensation must not invert final vs absolute power.
-    if (w.sourceId && w.id === 'cannon') return TIER_POWER.evolved.cannon;
+    if (w.sourceId && w.id === 'cannon') return TIER_POWER.evolved.cannon * (TIER_POWER.retainedCannon[WEAPONS[w.sourceId]?.tier === 'absolute' ? 'absolute' : 'final'] || 1);
     if (w.sourceId) return TIER_POWER.fused[w.sourceId] || 1;
     if (WEAPONS[w.id]?.fusionOnly) return TIER_POWER.fused[w.id] || 1;
     return w.evolved ? (TIER_POWER.evolved[w.id] || 1) : 1;

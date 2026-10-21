@@ -14,12 +14,13 @@ test('final Lv1 fusions (except the explicitly balanced Absolute Bloom) still be
  for(const recipe of FUSION_RECIPES.filter(r=>r.id!=='absolute_bloom')){
   const ratios={};for(const scene of ['boss','scatter','corridor']){
    const before=simulate(recipe,false,scene),after=simulate(recipe,true,scene);assert.ok(before>0);ratios[scene]=after/before;
-   assert.ok(ratios[scene]>.65,`${recipe.id}/${scene}: ${ratios[scene]}`);
+   // 2차 대폭 하향 이후: 진화 부모 하나보다 강하다는 보장은 tier-order.mjs 가 맡고, 여기서는 두 부모 합의 절반 이상만 본다.
+   assert.ok(ratios[scene]>.5,`${recipe.id}/${scene}: ${ratios[scene]}`);
   }
   const mean=(ratios.boss+ratios.scatter+ratios.corridor)/3;means.push(mean);
-  assert.ok(mean>.75,`${recipe.id} mean ${mean}`);
+  assert.ok(mean>.65,`${recipe.id} mean ${mean}`);
  }
- const overall=means.reduce((a,b)=>a+b,0)/means.length;assert.ok(overall>1.5,`overall final premium ${overall}`);
+ const overall=means.reduce((a,b)=>a+b,0)/means.length;assert.ok(overall>1.3,`overall final premium ${overall}`); // 2차 하향 후 1.5 → 1.3
 });
 test('every final requires two evolved Lv8 parents, rejects partial evolution, preserves old fused saves and source attribution',()=>{
  for(const recipe of FUSION_RECIPES){

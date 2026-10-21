@@ -678,10 +678,12 @@ export class Boss {
         return {
             n: 0,
             step: (dt, s) => {
-                if (s.t > 0.35 * s.n + 0.3) {
-                    this.radial(14 + this.phase * 5, s.n * 0.22);
+                // def.barrage: 보스별 탄막 완화(밀도·연발 수·탄속·휴식). 없으면 기존 그대로.
+                const b = this.def.barrage || {};
+                if (s.t > 0.35 * (b.interval ?? 1) * s.n + 0.3) {
+                    this.radial(Math.round((14 + this.phase * 5) * (b.density ?? 1)), s.n * 0.22, SHOT_SPEED * (b.speed ?? 1));
                     s.n++;
-                    if (s.n >= 2 + this.phase) this.endTask(1.8);
+                    if (s.n >= Math.min(2 + this.phase, b.maxVolleys ?? Infinity)) this.endTask(1.8 + (b.rest || 0));
                 }
             },
         };
@@ -714,18 +716,20 @@ export class Boss {
         return {
             n: 0,
             step: (dt, s) => {
-                if (s.t > 0.28 * s.n + 0.35) {
+                const b = this.def.barrage || {};
+                if (s.t > 0.28 * (b.interval ?? 1) * s.n + 0.35) {
                     const p = G.player;
                     const base = Math.atan2(p.y - 18 - this.bodyY(), p.x - this.x);
                     setBossMotion(this, 'attack', .13);
                     this.flip = Math.cos(base) < 0;
-                    const fan = 5 + this.phase * 2;
+                    // 탄 수를 줄여도 부채꼴 폭은 같아서 탄 사이 틈이 넓어진다.
+                    const fan = Math.max(3, 5 + this.phase * 2 - (b.fanReduce || 0));
                     for (let i = 0; i < fan; i++) {
                         const a = base + (i / (fan - 1) - 0.5) * 0.9;
-                        fireEnemyShot(this.x, this.bodyY(), Math.cos(a), Math.sin(a), 240, this.dmg * 0.6, 'boss', 8);
+                        fireEnemyShot(this.x, this.bodyY(), Math.cos(a), Math.sin(a), 240 * (b.speed ?? 1), this.dmg * 0.6, 'boss', 8);
                     }
                     s.n++;
-                    if (s.n >= 3) this.endTask(1.5);
+                    if (s.n >= (b.aimedVolleys ?? 3)) this.endTask(1.5 + (b.rest || 0));
                 }
             },
         };

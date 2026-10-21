@@ -41,7 +41,8 @@ test('cannon Lv1–8 grows damage, width and range while rays stop at three',()=
 test('evolution preserves three rays while raising damage and firing another 15% faster',()=>{
     const w=setup('cannon',8,false), normal=weaponStats(w);w.evolved=true;const evolved=weaponStats(w);
     near(evolved.cd,normal.cd*.85);assert.equal(evolved.amount,3);
-    near(evolved.dmg,normal.dmg*1.5*1.35*tierPower(w));assert.ok(evolved.dmg/evolved.cd>normal.dmg/normal.cd*3.5);
+    near(evolved.dmg,normal.dmg*1.5*1.35*tierPower(w));// 개화 꽃잎포 하향(TIER_POWER 1.6→0.9) 후에도 진화는 일반 Lv8 대비 2배 이상
+    assert.ok(evolved.dmg/evolved.cd>normal.dmg/normal.cd*2);
 });
 
 test('all Cannon families cap bonus rays at three with no hidden overflow or fractional damage',()=>{
