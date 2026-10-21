@@ -74,21 +74,21 @@ test('elites roll distinct abilities by stage (1/2/3), keep ELITE multipliers, a
     assert.equal(e.alive, true);
 }));
 
-test('volatile champions explode on death for scaled damage; ordinary champions do not', () => withRandom(.5, () => {
+test('champion variants that duplicated ordinary rabbits are gone; those rolls spawn plain ordinary enemies', () => withRandom(.5, () => {
     reset(5);
-    const prior = treasureRandom.next; treasureRandom.next = () => .99;
-    try {
-        const blaster = spawnEnemy('shambler', 0, 0, { champion: 'volatile' }), blast = championDeathBlast(blaster);
-        assert.equal(blast.r, CHAMPIONS.volatile.blast.radius); close(blast.dmg, CHAMPIONS.volatile.blast.dmg * (1 + (G.stage - 1) * .16));
-        assert.equal(championDeathBlast(spawnEnemy('shambler', 0, 0, { champion: 'armored' })), null);
-        const hp = G.player.hp; hitEnemy(blaster, blaster.hp + 1, { silent: true }); flushExplosions();
-        assert.ok(G.player.hp < hp, 'the blast hurts a nearby player');
-    } finally { treasureRandom.next = prior; }
+    // 강철 = 변이 청토끼/사슬 도살자, 질풍 = 굶주린 청토끼, 폭발 = 팽창체 와 겹쳤다. 광폭만 남는다.
+    assert.deepEqual(CHAMPION_KEYS, ['frenzied']);
+    for (const removed of ['armored', 'swift', 'volatile']) {
+        const e = spawnEnemy('shambler', 0, 0, { champion: removed }), plain = spawnEnemy('shambler', 0, 0, { noAffix: true });
+        assert.equal(e.champion, null, removed); close(e.maxHp, plain.maxHp); close(e.dmg, plain.dmg); close(e.scale, plain.scale);
+        assert.equal(championDeathBlast(e), null);
+    }
+    assert.equal(championDeathBlast(spawnEnemy('shambler', 0, 0, { champion: 'frenzied' })), null);
 }));
 
 test('champions resist execute thresholds while ordinary enemies do not', () => withRandom(.5, () => {
     reset(3);
-    const plain = spawnEnemy('shambler', 300, 0, { noAffix: true }), champ = spawnEnemy('shambler', 300, 0, { champion: 'armored' });
+    const plain = spawnEnemy('shambler', 300, 0, { noAffix: true }), champ = spawnEnemy('shambler', 300, 0, { champion: 'frenzied' });
     for (const e of [plain, champ]) e.hp = e.maxHp * .1;
     // 실행(처형)은 확률 방식(executeChance, 상한 8%): 난수를 0으로 고정해 확정 발동시킨다.
     Math.random = () => 0;

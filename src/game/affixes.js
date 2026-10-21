@@ -19,11 +19,11 @@ if (globalThis.crypto?.getRandomValues) globalThis.crypto.getRandomValues(entrop
 export const affixRandom = { next: createAffixRandom(entropy[0]) };
 
 // ───────────── 챔피언 (일반 적의 강한 개체) ─────────────
+// 일반 청토끼와 효과가 겹치던 변이는 없앴다 (해당 개체는 일반 개체로 나온다):
+//   강철(체력↑) = 변이 청토끼·사슬 도살자, 질풍(빠름) = 굶주린 청토끼, 폭발(사망 폭발) = 팽창체.
+// 남은 챔피언은 일반 개체에 없는 '광폭'(큰 접촉 피해)뿐이다.
 export const CHAMPIONS = Object.freeze({
-    armored: { name: '강철', icon: '🛡', color: '#ffb347', hp: 2.6, speed: 1, dmg: 1.1, scale: 1.18, xp: 2.5, hint: '체력이 매우 높다' },
-    swift: { name: '질풍', icon: '💨', color: '#6fe0ff', hp: 1.4, speed: 1.65, dmg: 1, scale: 1.05, xp: 2.2, hint: '매우 빠르다' },
     frenzied: { name: '광폭', icon: '🔥', color: '#ff5a5a', hp: 1.6, speed: 1.2, dmg: 1.7, scale: 1.12, xp: 2.4, hint: '접촉 피해가 크다' },
-    volatile: { name: '폭발', icon: '💥', color: '#c86bff', hp: 1.5, speed: 1.1, dmg: 1, scale: 1.1, xp: 2.4, hint: '죽을 때 폭발한다', blast: { radius: 74, dmg: 14 } },
 });
 export const CHAMPION_KEYS = Object.freeze(Object.keys(CHAMPIONS));
 // 1스테이지는 변이 없음. 2스테이지 3% → 10스테이지 약 15%.
