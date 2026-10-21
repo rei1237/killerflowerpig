@@ -466,17 +466,20 @@ function flushCannonVolleys() {
         const volley = chooseCannonVolley({ targets, focus, count, length, width, rayProfiles,
             fallbackAngle: Math.atan2(p.facingY, p.facingX),
             muzzleAt: dx => Math.abs(dx) <= .08 ? center : dx < 0 ? left : right });
-        const damageTo = target => {
+        // 집중 사격 경로: 총구에서 집중 대상까지. 그 사이에 선 적들도 일반 광선 피해를 받는다.
+        const focusPathLength = volley.focused ? Math.hypot(volley.focusEndX - volley.rays[0].x, volley.focusEndY - volley.rays[0].y) : 0;
+        const damageTo = (target, path = false) => {
             const contributions = new Map();
+            const focusedHit = volley.focused && !path;
             for (const { w: core, s } of components) {
-                const len = s.length * Math.sqrt(s.area), wid = s.width * s.area;
+                const len = path ? Math.min(s.length * Math.sqrt(s.area), focusPathLength) : s.length * Math.sqrt(s.area), wid = s.width * s.area;
                 const rays = volley.focused ? 1 : Math.min(s.amount, volley.rays.length);
                 for (let i = 0; i < rays; i++) {
                     if (!cannonBeamHits(target, { ...volley.rays[i], length: len, width: wid, segments: null })) continue;
-                    const ratio = volley.focused ? cannonFocusMultiplier(s.amount) :
+                    const ratio = focusedHit ? cannonFocusMultiplier(s.amount) :
                         core.id === 'cannon' ? 1 - .05 * (Math.min(8, Math.max(1, core.level)) - 1) : .65;
                     const owner = ownerId(core), old = contributions.get(owner);
-                    const impact = (volley.focused ? s.focusBeamDamage : s.beamDamage) * ratio;
+                    const impact = (focusedHit ? s.focusBeamDamage : s.beamDamage) * ratio;
                     if (old) { old.damage += impact; old.crit = Math.max(old.crit, s.crit); }
                     else contributions.set(owner, { damage: impact, crit: s.crit });
                     break;
@@ -485,18 +488,26 @@ function flushCannonVolleys() {
             return contributions;
         };
         let focusHit = false;
-        const hit = target => {
+        const hit = (target, path = false) => {
             const before = target.hp, ray = volley.rays[0];
-            for (const [weapon, { damage, crit }] of damageTo(target)) {
+            for (const [weapon, { damage, crit }] of damageTo(target, path)) {
                 if (!target.alive || target.hp <= 0) break;
                 if (target === G.boss) target.hurt(damage, { weapon });
                 else hitEnemy(target, damage, { weapon, kx: ray.dx, ky: ray.dy, knock: 160, crit });
             }
-            if (volley.focused) focusHit = target.hp < before;
+            if (volley.focused && !path) focusHit = target.hp < before;
         };
         if (volley.focused) {
             const target = volley.focusTarget;
-            if (target.alive && target.hp > 0 && target.id === volley.focusTargetId) hit(target);
+            if (target.alive && target.hp > 0 && target.id === volley.focusTargetId) {
+                hit(target);
+                // 경로 위의 다른 적(보스 포함)도 관통해 맞힌다. 집중 배율은 집중 대상에게만 적용된다.
+                for (let i = 0; i < G.enemies.count; i++) {
+                    const e = G.enemies.items[i];
+                    if (e !== target && e.alive && e.hp > 0) hit(e, true);
+                }
+                if (G.boss?.alive && G.boss !== target) hit(G.boss, true);
+            }
         } else {
             for (let i = 0; i < G.enemies.count; i++) if (G.enemies.items[i].alive) hit(G.enemies.items[i]);
             if (G.boss?.alive) hit(G.boss);

@@ -54,7 +54,7 @@ test('early field elites keep the rabbit body with only a red tint; later stages
         assert.equal(elite.atlas, atlases.rabbit2); assert.equal(elite.bossSprite, false); assert.equal(elite.tint, 'elite');
         close(elite.scale, 0.6 * ELITE.scale);
     }
-    for (const [stage, sheet] of [[4, 'boss1'], [6, 'boss1'], [7, 'boss2'], [8, 'boss2'], [9, 'bossKing'], [10, 'bossKing']]) {
+    for (const [stage, sheet] of [[4, 'boss1'], [6, 'boss1'], [7, 'boss2'], [8, 'boss2'], [9, 'boss2'], [10, 'boss2']]) {
         assert.equal(eliteSheet(stage).sheet, sheet);
         const elite = spawn(stage, 'easy', { elite: true });
         assert.equal(elite.atlas, atlases[sheet]); assert.equal(elite.bossSprite, true); assert.equal(elite.tint, 'normal');

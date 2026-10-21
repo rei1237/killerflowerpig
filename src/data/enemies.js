@@ -21,13 +21,12 @@ export const ENEMIES = {
 
 export const ELITE = { scale: 1.45, hp: 12, xp: 8, dmg: 1.7, speed: 1.12 };
 // 필드 엘리트 외형 단계. 초반(1~3구역)은 기존 토끼 몸체에 붉은 색만 입힌다(sheet: null).
-// 4구역부터는 최초 버전의 보스 스프라이트로 바뀌고, 깊어질수록 더 큰 보스 몸체를 쓴다.
+// 4구역부터는 최초 버전의 보스 스프라이트로 바뀌고, 7구역부터 끝까지 더 큰 boss2 몸체를 쓴다(왕 스프라이트는 쓰지 않는다).
 // (현재 스테이지 보스는 전용 아트를 쓰므로 겹치지 않는다.) size = 토끼 걷기 높이 112px 기준 출력 높이 배율.
 export const ELITE_SHEETS = Object.freeze([
     { from: 1, sheet: null, size: 1 },
     { from: 4, sheet: 'boss1', size: 1.15 },
     { from: 7, sheet: 'boss2', size: 1.3 },
-    { from: 9, sheet: 'bossKing', size: 1.4 },
 ]);
 export function eliteSheet(stage) {
     let pick = ELITE_SHEETS[0];

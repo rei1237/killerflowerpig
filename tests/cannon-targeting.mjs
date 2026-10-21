@@ -100,10 +100,10 @@ test('visible far-edge enemies remain candidates, entirely unseen ones do not, a
     assert.deepEqual(ids(collectCannonTargets(options).targets), [1]);
     assert.deepEqual(ids(collectCannonTargets({ ...options, focus: unseen }).targets), [1, 2]);
     tapFocusAt(unseen.x, unseen.y - unseen.radius); updateWeapons(.001); assert.ok(unseen.hp < unseen.maxHp);
-    assert.equal(visible.hp, visible.maxHp, 'focus never cleaves an intervening enemy');
+    assert.ok(visible.hp < visible.maxHp, 'focus pierces an intervening enemy on its path');
 });
 
-test('focused ordinary/evolved/final volleys aggregate once with a bounded bonus and no bystander damage', () => {
+test('focused volleys aggregate once with a bounded bonus on the focus, pierce enemies on the path, and spare enemies behind it', () => {
     for (const [id, level, evolved] of [['cannon', 1, false], ['cannon', 4, false], ['cannon', 8, false],
         ['cannon', 8, true], ['lotus_bloom', 8, false], ['absolute_bloom', 8, false]]) {
         const w = setup(id, level, evolved); w.fusionCores = [];
@@ -111,7 +111,11 @@ test('focused ordinary/evolved/final volleys aggregate once with a bounded bonus
         tapFocusAt(focus.x, focus.y - focus.radius);
         const s = weaponStats(w); updateWeapons(.001);
         assert.ok(Math.abs(focus.maxHp - focus.hp - s.focusBeamDamage * cannonFocusMultiplier(s.amount)) < 1e-6, id);
-        assert.equal(bystander.hp, bystander.maxHp); assert.equal(behind.hp, behind.maxHp);
+        // 경로 위의 적은 집중 배율 없이 일반 광선 피해만 받는다. 집중 대상 뒤의 적은 맞지 않는다.
+        const pathDamage = bystander.maxHp - bystander.hp;
+        assert.ok(pathDamage > 0, `${id}: path enemy hit`);
+        assert.ok(pathDamage < focus.maxHp - focus.hp, `${id}: focus bonus only on the focus`);
+        assert.equal(behind.hp, behind.maxHp);
         const beams = G.beams.items.slice(0, G.beams.count);
         assert.equal(beams.filter(b => b.focusPrimary).length, 1); assert.equal(beams.filter(b => b.focusHit).length, 1);
         assert.ok(beams.every(b => b.focused && b.focusCount === s.amount && b.focusEndX <= focus.x + focus.radius));
@@ -122,9 +126,10 @@ test('a killed focus is not replaced mid-volley; next attack releases lock and r
     const w = setup('cannon', 8, true);
     const focus = enemy(1, 240, 12, 1), other = enemy(2, 150, 12);
     tapFocusAt(focus.x, focus.y - focus.radius); updateWeapons(.001);
-    assert.equal(focus.alive, false); assert.equal(other.hp, other.maxHp);
+    assert.equal(focus.alive, false); const afterFirst = other.hp;
+    assert.ok(afterFirst < other.maxHp, 'enemy on the focus path is pierced');
     G.beams.clear(); w.cd = 0; updateWeapons(.001);
-    assert.ok(other.hp < other.maxHp);
+    assert.ok(other.hp < afterFirst);
     for (const b of G.beams.items.slice(0, G.beams.count)) {
         assert.equal(b.focused, false); assert.equal(b.focusPrimary, false); assert.equal(b.focusHit, false);
         assert.equal(b.focusEndX, null); assert.equal(b.focusEndY, null); assert.equal(b.focusCount, 0);
@@ -148,8 +153,12 @@ test('two equipped Cannon-derived owners share three visible rays and retain bot
     for(const w of cores) if(['cannon','lotus_bloom','absolute_bloom'].includes(w.id)) {
         const s=weaponStats(w), id=w.sourceId||w.id;expected.set(id,(expected.get(id)||0)+s.focusBeamDamage*cannonFocusMultiplier(s.amount));
     }
-    updateWeapons(.001);assert.equal(G.beams.count,3);assert.equal(bystander.hp,bystander.maxHp);
-    for(const [id,damage] of expected) assert.ok(Math.abs(G.damageBy[id]-damage)<1e-6,`${id}: ${G.damageBy[id]} vs ${damage}`);
+    updateWeapons(.001);assert.equal(G.beams.count,3);
+    const pathDamage=bystander.maxHp-bystander.hp;assert.ok(pathDamage>0,'enemy on the focus path is pierced');
+    // 각 소유자 기록 = 집중 대상 피해 + 경로 위 적 피해. 합계로 정확히 맞춘다.
+    for(const [id,damage] of expected) assert.ok(G.damageBy[id]>=damage-1e-6,`${id}: ${G.damageBy[id]} vs ${damage}`);
+    const total=Object.values(G.damageBy).reduce((a,b)=>a+b,0),focusTotal=[...expected.values()].reduce((a,b)=>a+b,0);
+    assert.ok(Math.abs(total-focusTotal-pathDamage)<1e-6);
     assert.ok(Math.abs(focus.maxHp-focus.hp-[...expected.values()].reduce((a,b)=>a+b,0))<1e-6);
     for(let tick=0;tick<120;tick++){G.clock+=1/60;updateWeapons(1/60);assert.ok(G.beams.count<=3,'lingering beams never exceed the global cap');}
 });
