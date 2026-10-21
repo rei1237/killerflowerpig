@@ -135,7 +135,7 @@ if (process.env.RENDER_BENCHMARK) {
         state.setVisualTier(2); resetCounts(); effects.drawDecals(ctx, -1000, -1000, 1000, 1000); assert.equal(ctx.counts.drawImage, 36); assert.equal(G.decals.length, 72);
     });
     test('offscreen text is culled and reused damage text loses stale large-font state', () => {
-        seedScene(); resetCounts(); effects.drawTexts(ctx, -1000, -1000, 1000, 1000); assert.equal(ctx.counts.fillText, 22);
+        seedScene(); resetCounts(); effects.drawTexts(ctx, -1000, -1000, 1000, 1000); assert.equal(ctx.counts.drawImage, 22); assert.equal(ctx.counts.fillText || 0, 0, 'damage text uses cached sprites');
         G.texts.clear(); effects.floatText(0, 0, 'large'); G.texts.release(0); effects.damageText(0, 0, 5); assert.equal(G.texts.items[0].big, false);
     });
     test('adaptive CPU fallback has hysteresis, respects manual quality, and leaves simulation caps unchanged', () => {

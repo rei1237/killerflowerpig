@@ -145,6 +145,35 @@ export function clearCharacterCache() {
     for (const key of Object.keys(CHARACTER_SHEETS)) { delete images[key]; delete images[`${key}Flash`]; }
 }
 
+// 글자 스프라이트 캐시: 같은 글자/글꼴/색은 한 번만 래스터화하고 이후 drawImage 로 그린다.
+// 모바일에서 fillText/strokeText(특히 이모지)는 매 프레임 글리프를 다시 그려 비싸다.
+// (w,h) = 출력 크기(월드 또는 화면 단위). 내부 해상도는 TEXT_SPRITE_RES 배.
+const textSprites = new Map();
+const TEXT_SPRITE_LIMIT = 256, TEXT_SPRITE_RES = 2;
+let textScratch = null;
+if (typeof document !== 'undefined' && document.fonts?.addEventListener) document.fonts.addEventListener('loadingdone', () => textSprites.clear());
+export function textSprite(text, font, fill, stroke = null, strokeWidth = 0) {
+    const key = `${font}|${fill}|${stroke || ''}|${strokeWidth}|${text}`;
+    let s = textSprites.get(key);
+    if (s) { textSprites.delete(key); textSprites.set(key, s); return s; }
+    if (!textScratch) textScratch = makeCanvas(1, 1).getContext('2d');
+    if (textScratch) textScratch.font = font;
+    const size = +(/(\d+(?:\.\d+)?)px/.exec(font)?.[1] || 12);
+    const measured = textScratch?.measureText?.(String(text))?.width;
+    const w = Math.ceil((measured || size * String(text).length * 0.7) + strokeWidth * 2 + 4), h = Math.ceil(size * 1.5 + strokeWidth * 2);
+    const canvas = makeCanvas(w * TEXT_SPRITE_RES, h * TEXT_SPRITE_RES), g = canvas.getContext('2d');
+    if (!g) return { canvas, w, h };
+    g.scale?.(TEXT_SPRITE_RES, TEXT_SPRITE_RES);
+    g.font = font; g.textAlign = 'center'; g.textBaseline = 'middle';
+    if (stroke && strokeWidth) { g.lineWidth = strokeWidth; g.strokeStyle = stroke; g.lineJoin = 'round'; g.strokeText?.(String(text), w / 2, h / 2); }
+    g.fillStyle = fill; g.fillText?.(String(text), w / 2, h / 2);
+    s = { canvas, w, h };
+    textSprites.set(key, s);
+    if (textSprites.size > TEXT_SPRITE_LIMIT) textSprites.delete(textSprites.keys().next().value);
+    return s;
+}
+export function textSpriteCacheSize() { return textSprites.size; }
+
 export function makeCanvas(w, h) {
     const c = document.createElement('canvas');
     c.width = Math.max(1, Math.ceil(w));

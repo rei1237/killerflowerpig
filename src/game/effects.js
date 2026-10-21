@@ -1,7 +1,7 @@
 // 이펙트: 파티클(피·살점·불꽃·연기), 핏자국 데칼, 데미지 숫자, 화면 흔들림/플래시/히트스톱
 import { G, rand } from './state.js';
 import { settings, goreProfile } from '../core/settings.js';
-import { fx, glow } from '../core/assets.js';
+import { fx, glow, textSprite } from '../core/assets.js';
 
 // 파티클 종류
 const P_BLOOD = 0, P_GIB = 1, P_SPARK = 2, P_SMOKE = 3, P_PETAL = 4, P_EMBER = 5;
@@ -219,22 +219,15 @@ export function drawParticles(ctx, vx0, vy0, vx1, vy1) {
 export function drawTexts(ctx, vx0 = -Infinity, vy0 = -Infinity, vx1 = Infinity, vy1 = Infinity) {
     const ts = G.texts;
     if (!ts.count) return;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#120004';
-    let lastFont = '';
+    // 글자는 캐시된 스프라이트로 그린다 (텍스트 1개 = drawImage 1회, 래스터화는 처음 한 번).
     for (let i = 0; i < ts.count; i++) {
         const t = ts.items[i];
         const halfWidth = String(t.text).length * (t.big ? 8 : t.crit ? 7 : 5);
         if (t.x + halfWidth < vx0 || t.x - halfWidth > vx1 || t.y + 16 < vy0 || t.y - 16 > vy1) continue;
-        const a = Math.min(1, (t.life / t.max) * 2);
         const font = t.big ? 'bold 15px "Press Start 2P", monospace' : (t.crit ? 'bold 13px "Press Start 2P", monospace' : '9px "Press Start 2P", monospace');
-        if (font !== lastFont) { ctx.font = font; lastFont = font; }
-        ctx.globalAlpha = a;
-        ctx.strokeText(t.text, t.x, t.y);
-        ctx.fillStyle = t.color;
-        ctx.fillText(t.text, t.x, t.y);
+        const s = textSprite(t.text, font, t.color, '#120004', 3);
+        ctx.globalAlpha = Math.min(1, (t.life / t.max) * 2);
+        ctx.drawImage(s.canvas, t.x - s.w / 2, t.y - s.h / 2, s.w, s.h);
     }
     ctx.globalAlpha = 1;
 }

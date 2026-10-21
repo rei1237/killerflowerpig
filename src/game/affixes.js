@@ -7,6 +7,7 @@ import { fireEnemyShot } from './enemies.js';
 import { spawnHazard } from './hazards.js';
 import { floatText, sparks, shake } from './effects.js';
 import { audio } from '../core/audio.js';
+import { textSprite } from '../core/assets.js';
 import { difficultyOf } from '../data/difficulty.js';
 
 export function createAffixRandom(seed) {
@@ -160,26 +161,44 @@ export function updateAffixes(e, dt, p, dist, spawnMinion) {
 }
 
 // 변이 표식 + 엘리트 예고선 (월드 좌표)
+// 변이 고리는 바닥 표식이라 캐릭터보다 먼저, 색별로 한 번에 그린다 (개체마다 경로·stroke 를 만들지 않는다).
+const ringGroups = new Map();
+export function drawAffixRings(ctx, list) {
+    for (const group of ringGroups.values()) group.length = 0;
+    for (let i = 0; i < list.length; i++) {
+        const e = list[i];
+        if (!e.alive || !(e.champion || e.affixes)) continue;
+        const key = e.champion ? CHAMPIONS[e.champion].color + '|2' : ELITE_AFFIXES[e.affixes[0]].color + '|3';
+        let group = ringGroups.get(key);
+        if (!group) ringGroups.set(key, group = []);
+        group.push(e);
+    }
+    const championAlpha = 0.55 + Math.sin(G.clock * 6) * 0.2, eliteAlpha = 0.6 + Math.sin(G.clock * 5) * 0.2;
+    for (const [key, group] of ringGroups) {
+        if (!group.length) continue;
+        const [color, width] = key.split('|'), elite = width === '3';
+        ctx.globalAlpha = elite ? eliteAlpha : championAlpha;
+        ctx.strokeStyle = color; ctx.lineWidth = +width;
+        ctx.beginPath();
+        for (const e of group) {
+            const rx = e.radius * (elite ? 1.3 : 1.25), ry = e.radius * (elite ? 0.52 : 0.5);
+            ctx.moveTo(e.x + rx, e.y); ctx.ellipse(e.x, e.y, rx, ry, 0, 0, Math.PI * 2);
+        }
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+}
+
+// 변이 아이콘 + 엘리트 예고선 (월드 좌표). 고리는 drawAffixRings 가 그린다.
 export function drawAffixMarks(ctx, e) {
     if (e.champion) {
-        const c = CHAMPIONS[e.champion];
-        ctx.save();
-        ctx.globalAlpha = 0.55 + Math.sin(G.clock * 6 + e.id) * 0.2;
-        ctx.strokeStyle = c.color; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.ellipse(e.x, e.y, e.radius * 1.25, e.radius * 0.5, 0, 0, Math.PI * 2); ctx.stroke();
-        ctx.globalAlpha = 1;
-        ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText(c.icon, e.x, e.y - e.atlas.walkH * e.scale - 4);
-        ctx.restore();
+        const s = textSprite(CHAMPIONS[e.champion].icon, '11px sans-serif', '#ffffff');
+        ctx.drawImage(s.canvas, e.x - s.w / 2, e.y - e.atlas.walkH * e.scale - 4 - s.h * 0.7, s.w, s.h);
         return;
     }
-    if (!e.affixes) return;
+    if (!e.affixes || !(e.affixWarn > 0)) return;
     ctx.save();
-    ctx.globalAlpha = 0.6 + Math.sin(G.clock * 5) * 0.2;
-    ctx.strokeStyle = ELITE_AFFIXES[e.affixes[0]].color; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.ellipse(e.x, e.y, e.radius * 1.3, e.radius * 0.52, 0, 0, Math.PI * 2); ctx.stroke();
-    ctx.globalAlpha = 1;
-    if (e.affixWarn > 0) {
+    {
         const y0 = e.y - e.radius, len = e.affixKind === 'lunge' ? 330 : 520;
         ctx.strokeStyle = e.affixKind === 'lunge' ? '#ffe066' : '#ff9f43';
         ctx.lineWidth = e.affixKind === 'lunge' ? 14 : 2; ctx.globalAlpha = 0.45;

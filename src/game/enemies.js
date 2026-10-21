@@ -7,7 +7,7 @@ import { G, rand, emit } from './state.js';
 import { ENEMIES, ELITE, eliteSheet, DEATH_CLOUD_UNLOCK_STAGE, RANGED_UNLOCK_STAGE, stageScaling, BOSS_FIGHT_XP_MULTIPLIER } from '../data/enemies.js';
 import { STAGES } from '../data/stages.js';
 import { difficultyOf } from '../data/difficulty.js';
-import { atlases } from '../core/assets.js';
+import { atlases, textSprite } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { goreProfile } from '../core/settings.js';
 import { blood, gibs, decal, damageText, sparks, smoke, shake, hitstop, floatText } from './effects.js';
@@ -497,8 +497,8 @@ export function drawEnemy(ctx, e) {
         ctx.fillRect(x, y, w * Math.max(0, e.hp / e.maxHp), h);
         if (e.barrierMax > 0 && e.barrier > 0) { ctx.fillStyle = '#5aa9ff'; ctx.fillRect(x, y - 4, w * (e.barrier / e.barrierMax), 3); }
         if (e.affixes) {
-            ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText(e.affixes.map(k => ELITE_AFFIXES[k].icon).join(' '), e.x, y - 7);
+            const s = textSprite(e.affixes.map(k => ELITE_AFFIXES[k].icon).join(' '), '11px sans-serif', '#ffffff');
+            ctx.drawImage(s.canvas, e.x - s.w / 2, y - 7 - s.h * 0.7, s.w, s.h);
         }
     } else if (e.champion && e.alive && e.hp < e.maxHp) {
         const w = 28, h = 3, x = e.x - w / 2, y = e.y - atlas.walkH * e.scale - 2;

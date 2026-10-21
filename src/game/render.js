@@ -10,6 +10,7 @@ import { drawDecals, drawParticles, drawTexts } from './effects.js';
 import { drawHazards } from './hazards.js';
 import { drawPickups } from './pickups.js';
 import { drawEnemy, drawEnemyShots } from './enemies.js';
+import { drawAffixRings } from './affixes.js';
 import { drawPlayer } from './player.js';
 import { drawShots } from './weapons.js';
 import { drawHUD } from '../ui/hud.js';
@@ -194,6 +195,8 @@ export function render(dt) {
         ctx.ellipse(boss.x, boss.y, boss.radius * 1.3, boss.radius * 0.4, 0, 0, Math.PI * 2);
     }
     ctx.fill();
+    // 5.5 변이 고리 (색별 일괄)
+    drawAffixRings(ctx, drawList);
 
     // 6. Y 정렬 캐릭터
     drawList.push(p);
