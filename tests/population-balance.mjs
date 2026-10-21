@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { G, clearWorld, configureCaps, setVisualTier } from '../src/game/state.js';
 import { settings } from '../src/core/settings.js';
 import { atlases } from '../src/core/assets.js';
-import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, SPARSE_ENEMY_HP, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, eliteSheet, ENEMY_TOUGHNESS_MULTIPLIER, ENEMY_DAMAGE_MULTIPLIER, SPARSE_ENEMY_HP, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, stageScaling } from '../src/data/enemies.js';
 import { STAGES, EVENTS, POPULATION_BOOST } from '../src/data/stages.js';
 import { spawnEnemy, hitEnemy } from '../src/game/enemies.js';
 import { Boss } from '../src/game/boss.js';
@@ -75,27 +75,31 @@ test('refill rates track the smaller population without double-scaling the defic
     }
 });
 
-test('enemy HP rises11.7 percent from the previous1.45 tuning while speed, damage, collision and original appearance are unchanged (xp is cut by STAGE_XP_YIELD)', () => withFixedRandom(() => {
-    assert.equal(ENEMY_TOUGHNESS_MULTIPLIER, 1.62);
+test('enemy HP/damage follow the toughness and damage multipliers; collision is unchanged and field elites use the original boss sprites (xp is cut by STAGE_XP_YIELD)', () => withFixedRandom(() => {
+    assert.equal(ENEMY_TOUGHNESS_MULTIPLIER, 1.9);
+    assert.equal(ENEMY_DAMAGE_MULTIPLIER, 1.15);
     for (let stage = 1; stage <= 10; stage++) {
         for (const progress of [0, .5, 1]) {
             reset(stage); G.time = STAGES[stage].duration * progress;
             const old = originalScaling(stage, G.time), scaling = stageScaling(stage, G.time, STAGES[stage].duration);
-            close(scaling.hp, old.hp * 1.62);
-            for (const key of ['speed','dmg']) close(scaling[key], old[key]);
+            close(scaling.hp, old.hp * 1.9);
+            close(scaling.speed, old.speed);
+            close(scaling.dmg, old.dmg * 1.15);
             close(scaling.xp, old.xp * STAGE_XP_YIELD);
             for (const [id, def] of Object.entries(ENEMIES)) {
                 for (const elite of [false, true]) {
                     G.enemies.clear();
                     const enemy = spawnEnemy(id, 100, 0, { elite, force: true, noAffix: true }); // 변이/엘리트 능력은 별도 테스트
                     if ((def.ranged && stage < 5) || stage < (def.unlockStage || 1)) { assert.equal(enemy, null); continue; }
-                    close(enemy.hp, def.hp * old.hp * 1.62 * SPARSE_ENEMY_HP[stage] * (elite ? ELITE.hp : 1));
+                    close(enemy.hp, def.hp * old.hp * 1.9 * SPARSE_ENEMY_HP[stage] * (elite ? ELITE.hp : 1));
                     close(enemy.speed, def.speed * old.speed * (elite ? ELITE.speed : 1));
-                    close(enemy.dmg, def.dmg * old.dmg * (elite ? ELITE.dmg : 1));
+                    close(enemy.dmg, def.dmg * old.dmg * 1.15 * (elite ? ELITE.dmg : 1));
                     close(enemy.radius, def.radius * (elite ? ELITE.scale : 1));
-                    close(enemy.scale, def.scale * (elite ? ELITE.scale : 1));
-                    assert.equal(enemy.tint, elite ? 'elite' : def.tint);
-                    assert.equal(enemy.atlas, atlases[def.sheet]);
+                    const art = elite ? atlases[eliteSheet(stage).sheet] : atlases[def.sheet];
+                    close(enemy.scale, elite ? def.scale * ELITE.scale * 112 * eliteSheet(stage).size / art.walkH : def.scale);
+                    assert.equal(enemy.tint, elite ? 'normal' : def.tint);
+                    assert.equal(enemy.bossSprite, elite);
+                    assert.equal(enemy.atlas, art);
                 }
             }
         }
@@ -107,7 +111,7 @@ test('fixed-damage kill-count and HP-per-DPS proxies reflect sturdier individual
         reset(stage);
         const beforeHp = ENEMIES.shambler.hp * originalScaling(stage, 0).hp;
         const enemy = spawnEnemy('shambler', 500, 0, { noAffix: true });
-        close(enemy.hp / 40, beforeHp / 40 * 1.62);
+        close(enemy.hp / 40, beforeHp / 40 * 1.9);
         const expectedHits = Math.ceil(enemy.hp / 9);
         let hits = 0;
         while (enemy.alive && hits < 1000) { hitEnemy(enemy, 9, { silent: true }); hits++; }

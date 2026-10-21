@@ -19,7 +19,19 @@ export const ENEMIES = {
     hulk: { name: '사슬 도살자', sheet: 'rabbit3', tint: 'shadow', scale: 0.82, hp: 130, speed: 34, dmg: 16, xp: 10, radius: 22, mass: 3.5 },
 };
 
-export const ELITE = { scale: 1.45, hp: 9, xp: 8, dmg: 1.5, speed: 1.1 };
+export const ELITE = { scale: 1.45, hp: 12, xp: 8, dmg: 1.7, speed: 1.12 };
+// 필드 엘리트는 최초 버전의 보스 스프라이트로 그린다 (현재 스테이지 보스는 전용 아트를 쓰므로 겹치지 않는다).
+// 구역이 깊어질수록 더 큰 보스 몸체를 쓴다. size = 일반 엘리트(토끼 걷기 높이 112px 기준) 대비 출력 높이 배율.
+export const ELITE_SHEETS = Object.freeze([
+    { from: 1, sheet: 'boss1', size: 1.15 },
+    { from: 5, sheet: 'boss2', size: 1.3 },
+    { from: 9, sheet: 'bossKing', size: 1.4 },
+]);
+export function eliteSheet(stage) {
+    let pick = ELITE_SHEETS[0];
+    for (const s of ELITE_SHEETS) if (stage >= s.from) pick = s;
+    return pick;
+}
 
 // 팽창체 사망 후 남는 산성 장판만 후반에 해금. 즉시 폭발은 그대로 유지한다.
 export const DEATH_CLOUD_UNLOCK_STAGE = 5;
@@ -27,7 +39,10 @@ export const DEATH_CLOUD_UNLOCK_STAGE = 5;
 export const RANGED_UNLOCK_STAGE = 5;
 
 // Fewer bodies, sturdier individual enemies; movement/contact damage are unchanged.
-export const ENEMY_TOUGHNESS_MULTIPLIER = 1.62;
+// 1.62 → 1.9: 전반적으로 적이 너무 약하다는 피드백 반영.
+export const ENEMY_TOUGHNESS_MULTIPLIER = 1.9;
+// 접촉·탄 피해 전반 강화.
+export const ENEMY_DAMAGE_MULTIPLIER = 1.15;
 // Fixed stage budgets, never derived from the player’s current damage/equipment.
 // 희소 조정(적 수 ↓, 개체 체력·경험치 ↑)을 되돌렸다: 개체 수를 다시 늘리고(POPULATION_BOOST + 대군 이벤트)
 // 개체당 경험치는 STAGE_XP_YIELD 로 낮춘다. 기존 이름은 유지하되 중립(1배) 값이다.
@@ -57,7 +72,7 @@ export function stageScaling(stage, t, duration) {
         // Equipment never changes this curve: permanent upgrades and good builds retain their power.
         hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp * ENEMY_TOUGHNESS_MULTIPLIER * SPARSE_ENEMY_HP[stage] * (1 + late * LATE_STAGE_SCALING.hp),
         speed: (1 + (stage - 1) * 0.035 + late * LATE_STAGE_SCALING.speed) * beginner.speed,
-        dmg: (1 + (stage - 1) * 0.24 + late * LATE_STAGE_SCALING.dmg) * beginner.dmg,
+        dmg: (1 + (stage - 1) * 0.24 + late * LATE_STAGE_SCALING.dmg) * beginner.dmg * ENEMY_DAMAGE_MULTIPLIER,
         xp: (1 + (stage - 1) * 0.15) * SPARSE_ENEMY_XP[stage] * STAGE_XP_YIELD,
     };
 }

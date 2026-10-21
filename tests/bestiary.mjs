@@ -56,11 +56,11 @@ test('short mobile panels keep the footer reachable through outer scrolling',()=
  assert.match(css,/\.bestiary-body\{flex:0 0 auto;grid-template-rows:116px auto;overflow:visible\}/);
  assert.match(css,/\.bestiary-detail\{max-height:52dvh;overflow-y:auto\}/);
 });
-test('cached gameplay atlas applies actual elite tint and clear encounter labeling',async()=>{
+test('elite entries draw the original boss sprite atlas with clear encounter labeling',async()=>{
  const {atlases}=await import('../src/core/assets.js');let tint;
  Element.prototype.getContext=()=>({});
- atlases.rabbit1={anims:{walk:[{sw:80,sh:112,ox:40}]},draw(...args){tint=args[7];}};
+ const saved=atlases.boss1;atlases.boss1={anims:{walk:[{sw:80,sh:112,ox:40}]},draw(...args){tint=args[7];}};
  ui.openBestiary();const select=root.querySelector('select');select.value='elite';select.listeners.change();
- assert.equal(tint,'elite');assert.ok(root.querySelector('canvas'));assert.match(root.querySelector('.bestiary-tag').textContent,/기본 개체 STAGE.*정예 출현은 이벤트 편성/);
- ui.closeBestiary();delete atlases.rabbit1;delete Element.prototype.getContext;
+ assert.equal(tint,'normal');assert.ok(root.querySelector('canvas'));assert.match(root.querySelector('.bestiary-tag').textContent,/기본 개체 STAGE.*정예 출현은 이벤트 편성/);
+ ui.closeBestiary();if(saved)atlases.boss1=saved;else delete atlases.boss1;delete Element.prototype.getContext;
 });

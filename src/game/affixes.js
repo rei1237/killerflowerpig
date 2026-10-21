@@ -7,6 +7,7 @@ import { fireEnemyShot } from './enemies.js';
 import { spawnHazard } from './hazards.js';
 import { floatText, sparks, shake } from './effects.js';
 import { audio } from '../core/audio.js';
+import { difficultyOf } from '../data/difficulty.js';
 
 export function createAffixRandom(seed) {
     let state = (seed >>> 0) || 0x9e3779b9;
@@ -51,7 +52,7 @@ export function applyVariant(e, def, opts, random = affixRandom.next) {
     e.affixT = 0; e.affixWarn = 0; e.affixAim = 0; e.affixKind = null; e.minions = 0; e.enraged = false; e.baseSpeed = e.speed;
     if (opts.noAffix) return e;
     if (e.elite) {
-        const n = opts.affixCount ?? eliteAffixCount(G.stage);
+        const n = opts.affixCount ?? Math.min(4, eliteAffixCount(G.stage) + (difficultyOf(G.difficulty).elite?.affixes || 0));
         e.affixes = opts.affixes || pickDistinct(ELITE_AFFIX_KEYS, n, random);
         e.affixT = 2 + random() * 2;
         if (e.affixes.includes('barrier')) { e.barrierMax = e.barrier = e.maxHp * 0.6; }
@@ -60,7 +61,7 @@ export function applyVariant(e, def, opts, random = affixRandom.next) {
     if (opts.lineX || opts.lineY || def.charge) return e; // 돌진 대열·자폭체는 변이하지 않는다
     let key = opts.champion;
     if (key === undefined) {
-        if (random() >= championChance(G.stage)) return e;
+        if (random() >= Math.min(0.4, championChance(G.stage) * (difficultyOf(G.difficulty).enemy?.champion || 1))) return e;
         key = CHAMPION_KEYS[Math.floor(random() * CHAMPION_KEYS.length)];
     }
     const c = CHAMPIONS[key];

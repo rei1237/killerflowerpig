@@ -1,4 +1,4 @@
-import { ENEMIES, ELITE, RANGED_UNLOCK_STAGE, DEATH_CLOUD_UNLOCK_STAGE } from './enemies.js';
+import { ENEMIES, ELITE, eliteSheet, RANGED_UNLOCK_STAGE, DEATH_CLOUD_UNLOCK_STAGE } from './enemies.js';
 import { ENCIRCLEMENT } from '../game/encirclement.js';
 import { BOSSES, HUNTER_TUNING, bossMaxHp } from './bosses.js';
 import { STAGES } from './stages.js';
@@ -31,8 +31,8 @@ export function bestiaryEntries(){
   if(def.explode)details.push(`사망 폭발 반경 ${def.explode.radius} · 기본 피해 ${def.explode.dmg}`);
   if(def.split)details.push(`사망 시 ${ENEMIES[def.split.type]?.name} ${def.split.count}마리`);
   entries.push({id:`${elite?'elite':'enemy'}-${id}`,enemyId:id,name:(elite?'정예 · ':'')+def.name,kind:elite?'elite':'ordinary',stage:firstEnemyStage(id),role,tell,pattern,counter,details,
-   hp:def.hp*(elite?ELITE.hp:1),speed:def.speed*(elite?ELITE.speed:1),damage:def.charge?0:def.dmg*(elite?ELITE.dmg:1),sprite:SPRITES[def.sheet],sheet:def.sheet,tint:elite?'elite':def.tint,
-   image:id==='suicider'?'asset/enemies/rabbit-suicider.png':id==='gunner'?'asset/enemies/rabbit-gunner.png':null,
+   hp:def.hp*(elite?ELITE.hp:1),speed:def.speed*(elite?ELITE.speed:1),damage:def.charge?0:def.dmg*(elite?ELITE.dmg:1),sprite:SPRITES[elite?eliteSheet(firstEnemyStage(id)).sheet:def.sheet],sheet:elite?eliteSheet(firstEnemyStage(id)).sheet:def.sheet,tint:elite?'normal':def.tint,
+   image:elite?null:id==='suicider'?'asset/enemies/rabbit-suicider.png':id==='gunner'?'asset/enemies/rabbit-gunner.png':null,
    reward:`경험치 · 코인 ${coinTier({type:id,elite}).chance*100}% 확률로 ${coinTier({type:id,elite}).value}개 · ${elite?'장비 상자 없음':'회복/자석은 별도 조건'}`,
    statNote:'스테이지·시간 배율 적용 전 기본값. 정예는 정예 배율 포함. 실제 체력·피해는 구역과 이벤트에 따라 달라집니다.'+(elite?' 정예화 가능한 변종이며 실제 출현은 이벤트 편성을 따릅니다.':'')});
  }

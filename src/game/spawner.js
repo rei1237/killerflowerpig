@@ -6,6 +6,7 @@ import { spawnEnemy, edgePosition } from './enemies.js';
 import { audio } from '../core/audio.js';
 import { floatText } from './effects.js';
 import { startEncirclement } from './encirclement.js';
+import { difficultyOf } from '../data/difficulty.js';
 
 let spawnAcc = 0;
 // 군체 러시 강화: 속도 배율, 반대편 협공 물결(지연·규모 비율·시작 스테이지)
@@ -103,7 +104,7 @@ function runEvent(type, st, t) {
     if (type === 'elite') {
         // 가장 무거운 유형 3종 중에서 엘리트를 뽑는다. 후반에는 여러 마리가 동시에 나타나고 각자 다른 능력을 가진다.
         const types = Object.keys(table).sort((a, b) => ENEMIES[b].hp - ENEMIES[a].hp).slice(0, 3);
-        const count = G.stage >= 9 ? 3 : G.stage >= 5 ? 2 : 1;
+        const count = (G.stage >= 9 ? 3 : G.stage >= 5 ? 2 : 1) + (difficultyOf(G.difficulty).elite?.count || 0);
         for (let i = 0; i < count; i++) {
             const pick = types[Math.floor(Math.random() * types.length)];
             const pos = edgePosition(0.5);

@@ -524,11 +524,11 @@ test('new and restarted runs apply the modest mob HP increase once without raisi
     const { onPlayerDeath, retryStage } = await import('../src/game/game.js');
     freshRun();
     const playerMax = G.player.maxHp;
-    const first = spawnEnemy('shambler', 400, 0); // 10 × 1.62 × 0.95(초반 완화) = 15.39 (희소 배율 되돌림)
-    assert.ok(Math.abs(first.hp - 15.39) < 1e-9);
+    const first = spawnEnemy('shambler', 400, 0); // 10 × 1.9 × 0.95(초반 완화) = 18.05
+    assert.ok(Math.abs(first.hp - 18.05) < 1e-9);
     onPlayerDeath(); retryStage();
     const second = spawnEnemy('shambler', 400, 0);
-    assert.ok(Math.abs(second.hp - 15.39) < 1e-9, 'retry does not compound mob toughness');
+    assert.ok(Math.abs(second.hp - 18.05) < 1e-9, 'retry does not compound mob toughness');
     assert.equal(G.stage, 1);
     assert.equal(G.player.maxHp, playerMax);
     assert.equal(G.player.hp, playerMax);

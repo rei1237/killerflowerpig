@@ -4,8 +4,9 @@ import { rollSupplies, KILL_OPPORTUNITY } from './supply-drops.js';
 import { playerBody } from './player-motion.js';
 // 적 시스템: 스폰, 추적 이동 + 상호 밀어내기(그리드), 원거리 공격, 상태이상, 피격/사망 처리
 import { G, rand, emit } from './state.js';
-import { ENEMIES, ELITE, DEATH_CLOUD_UNLOCK_STAGE, RANGED_UNLOCK_STAGE, stageScaling, BOSS_FIGHT_XP_MULTIPLIER } from '../data/enemies.js';
+import { ENEMIES, ELITE, eliteSheet, DEATH_CLOUD_UNLOCK_STAGE, RANGED_UNLOCK_STAGE, stageScaling, BOSS_FIGHT_XP_MULTIPLIER } from '../data/enemies.js';
 import { STAGES } from '../data/stages.js';
+import { difficultyOf } from '../data/difficulty.js';
 import { atlases } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { goreProfile } from '../core/settings.js';
@@ -34,14 +35,16 @@ export function spawnEnemy(typeId, x, y, opts = {}) {
     const sc = stageScaling(G.stage, G.time, st.duration);
     const e = G.enemies.spawn();
     const elite = !!opts.elite;
+    // 난이도는 적 체력·피해·속도를 올린다 (쉬움 = 1배). 엘리트는 추가 배율을 받는다.
+    const diff = difficultyOf(G.difficulty), de = diff.enemy || {}, dl = (elite && diff.elite) || {};
     e.id = nextId++;
     e.type = typeId;
     e.def = def;
     e.x = x; e.y = y;
     e.kx = 0; e.ky = 0;
-    e.maxHp = e.hp = def.hp * sc.hp * (elite ? ELITE.hp : 1) * (opts.hpMul || 1);
-    e.speed = def.speed * sc.speed * (elite ? ELITE.speed : 1) * rand(0.92, 1.08) * (opts.speedMul || 1);
-    e.dmg = def.dmg * sc.dmg * (elite ? ELITE.dmg : 1);
+    e.maxHp = e.hp = def.hp * sc.hp * (elite ? ELITE.hp : 1) * (opts.hpMul || 1) * (de.hp || 1) * (dl.hp || 1);
+    e.speed = def.speed * sc.speed * (elite ? ELITE.speed : 1) * rand(0.92, 1.08) * (opts.speedMul || 1) * (de.speed || 1);
+    e.dmg = def.dmg * sc.dmg * (elite ? ELITE.dmg : 1) * (de.dmg || 1) * (dl.dmg || 1);
     e.xp = def.xp * sc.xp * (elite ? ELITE.xp : 1);
     e.scale = def.scale * (elite ? ELITE.scale : 1);
     e.radius = def.radius * (elite ? ELITE.scale : 1);
@@ -49,6 +52,18 @@ export function spawnEnemy(typeId, x, y, opts = {}) {
     e.elite = elite;
     e.tint = elite ? 'elite' : def.tint;
     e.atlas = atlases[def.sheet];
+    e.bossSprite = false;
+    if (elite) {
+        // 필드 엘리트: 최초 보스 스프라이트로 교체. 화면 높이는 기존 엘리트보다 크게, 판정 반경은 그대로.
+        const pick = eliteSheet(G.stage), art = atlases[pick.sheet];
+        if (art) {
+            const targetH = 112 * e.scale * pick.size;
+            e.atlas = art;
+            e.scale = targetH / (art.walkH || 112);
+            e.tint = 'normal';
+            e.bossSprite = true;
+        }
+    }
     e.state = 'walk';
     e.anim = (Math.random() * 6) | 0;
     e.animT = 0;
@@ -449,7 +464,7 @@ export function drawEnemy(ctx, e) {
         }
         ctx.restore();
     }
-    const roleArt = atlases[`enemyRole_${e.type}`];
+    const roleArt = e.bossSprite ? null : atlases[`enemyRole_${e.type}`];
     if (roleArt) {
         // New roles use dedicated art with restrained walk/attack/death poses.
         const reduced = roleReducedMotion?.matches;
