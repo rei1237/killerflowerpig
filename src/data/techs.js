@@ -1,5 +1,5 @@
 // 시작 테크(빌드 계열). 뱀파이어 서바이버즈의 캐릭터 선택처럼 첫 조합이 이후 성장 방향을 정한다.
-// - start: 대표 시작 무기 + 그 무기의 진화 짝 패시브(Lv1). weapons가 있으면 해당 무기들을 모두 Lv1로 지급.
+// - start: 대표 시작 무기 + 그 무기의 진화 짝 패시브(Lv1). weapons 의 무기 2종을 모두 Lv1로 지급 (모든 테크 무기 2칸으로 시작).
 // - family: 이 테크의 '공명' 대상. 보유한 계열 아이템 수(무기·패시브 합산, 최대 6)로 공명 단계가 오른다.
 // - tags: 공명 무기 보너스가 적용되는 무기 태그. 다른 계열 무기는 테크 보너스를 받지 않는다.
 // - tiers: 공명 2/4/6개에서 누적 적용. weapon.* 는 태그 무기에만, player.* 는 캐릭터 전체에 적용.
@@ -36,7 +36,7 @@ export const TECHS = Object.freeze({
         strength: '전방 집중 화력·관통에 강함', weakness: '뒤쪽 포위에 약하고 별도 생존 보너스가 없음',
         name: '탄막 사수', icon: '🎯', color: '#9fd3ff', power: 1.0,
         summary: '산탄과 관통탄으로 화면을 쓸어버리는 투사체 테크',
-        start: { weapon: 'shotgun', passive: 'magazine' },
+        start: { weapon: 'shotgun', weapons: ['shotgun', 'rifle'], passive: 'magazine' },
         family: { weapons: ['shotgun', 'rifle', 'pistols'], passives: ['magazine', 'scope', 'focus'] },
         tags: ['projectile'],
         route: ['산탄총 + 탄창 확장 → 도살자의 산탄', '노획 소총 + 조준경 → 레일 소총', '두 진화 → 관통 산탄포 (쌍권총 진화까지 3종 → 절대 무기 종말의 탄막)'],
@@ -74,7 +74,7 @@ export const TECHS = Object.freeze({
         strength: '빠른 투척·지속 장판·둔화로 통로 장악', weakness: '진화 전 근접·원거리 압박에 약하고 장판 이탈 시 지속 피해가 끊김',
         name: '역병 화염', icon: '🔥', color: '#ffb36b', power: 0.85,
         summary: '빠른 투척과 지속 장판·둔화로 통로를 장악하는 테크',
-        start: { weapon: 'molotov', passive: 'spread' },
+        start: { weapon: 'molotov', weapons: ['molotov', 'gas'], passive: 'spread' },
         family: { weapons: ['molotov', 'gas', 'cannon'], passives: ['spread', 'sap', 'hide'] },
         tags: ['field'],
         route: ['화염병 + 확산 → 지옥 불꽃길', '독가스 수류탄 + 회전 수액 → 역병 안개', '두 진화 → 역병 화염병 (꽃잎포 진화까지 3종 → 절대 무기 역병 종언)'],
@@ -93,7 +93,7 @@ export const TECHS = Object.freeze({
         strength: '쌍권총 치명타 Lv1 3.25배→4배(배율 +0.75) · 집중 조준 치명타 +12%p · 일반 적 3~8% 확률 즉사', weakness: '처형은 보스·정예에게 적용되지 않고 방어 보너스가 없음',
         name: '처형자', icon: '☠️', color: '#e6c6ff', power: 0.82,
         summary: '쌍권총 치명타·집중 조준과 체력 무관 확률 처형의 정밀 테크',
-        start: { weapon: 'pistols', passive: 'focus' },
+        start: { weapon: 'pistols', weapons: ['pistols', 'rifle'], passive: 'focus' },
         family: { weapons: ['pistols', 'rifle', 'saw'], passives: ['focus', 'whet', 'madness'] },
         tags: ['projectile', 'blade'],
         route: ['쌍권총 + 집중 → 처형인의 쌍권총', '노획 소총 + 조준경 → 레일 소총', '두 진화 → 연쇄 관통권총 (뼈 톱날 진화까지 3종 → 절대 무기 심판의 단두대)'],

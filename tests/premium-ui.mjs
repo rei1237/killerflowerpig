@@ -557,7 +557,7 @@ test('main menu bestiary opens its real modal and Escape restores launcher focus
  launcher.click();showTitle();assert.equal(isBestiaryOpen(),false);
 });
 
-test('new bloom and butcher runs receive two distinct Lv1 weapon slots once',async()=>{
+test('every new tech run receives two distinct Lv1 weapon slots once',async()=>{
  const {TECHS}=await import('../src/data/techs.js');
  const {resonanceCount,resonanceTier}=await import('../src/game/tech.js');
  const {loadRun,startStage}=await import('../src/game/game.js');
@@ -565,9 +565,9 @@ test('new bloom and butcher runs receive two distinct Lv1 weapon slots once',asy
  const inventory=()=>G.weapons.map(w=>[w.id,w.level,w.evolved,w.slot]);
  for(const id of Object.keys(TECHS)){
   newRun(1,id);
-  assert.deepEqual(inventory(),id==='bloom'?[['thorns',1,false,0],['cannon',1,false,1]]:id==='butcher'?[['sword',1,false,0],['saw',1,false,1]]:[[TECHS[id].start.weapon,1,false,0]],id);
+  assert.deepEqual(inventory(),{gunline:[['shotgun',1,false,0],['rifle',1,false,1]],bloom:[['thorns',1,false,0],['cannon',1,false,1]],plague:[['molotov',1,false,0],['gas',1,false,1]],executioner:[['pistols',1,false,0],['rifle',1,false,1]],butcher:[['sword',1,false,0],['saw',1,false,1]]}[id],id);
   assert.deepEqual(G.passives,{[TECHS[id].start.passive]:1});
-  assert.equal(resonanceCount(),['bloom','butcher'].includes(id)?3:2);assert.equal(resonanceTier(),1);
+  assert.equal(resonanceCount(),3);assert.equal(resonanceTier(),1);
  }
  for(const id of [null,'missing-tech']){
   newRun(1,id);assert.equal(G.tech,null);assert.deepEqual(inventory(),[['shotgun',1,false,0]]);assert.deepEqual(G.passives,{});
@@ -607,7 +607,8 @@ test('bloom selection shows both starters and correct slot/resonance counts; can
  node('btn-tech-back').click();assert.equal(starts,0);assert.deepEqual(snapshotBuild(),before);
  openTechSelect(pick);
  node('tech-list').querySelector('[data-tech="gunline"]').click();
- assert.match(node('tech-detail').textContent,/무기 1\/6칸 · 공명 2\/6/);
+ assert.match(node('tech-detail').textContent,/무기 2\/6칸 · 공명 3\/6/);
+ assert.equal(node('tech-list').querySelector('[data-tech="gunline"] .tech-arts').children.length,3);
  node('tech-list').querySelector('[data-tech="bloom"]').click();
  node('btn-tech-go').click();const runId=G.runId;node('btn-tech-go').click();
  assert.equal(starts,1);assert.equal(G.runId,runId);assert.deepEqual(G.weapons.map(w=>[w.id,w.level]),[['thorns',1],['cannon',1]]);

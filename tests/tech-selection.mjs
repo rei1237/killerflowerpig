@@ -28,7 +28,9 @@ test('every tech starts with a real weapon and its evolution partner passive, al
         assert.equal(WEAPONS[t.start.weapon].evolve.with, t.start.passive, `${id}: start passive evolves the start weapon`);
         assert.ok(t.family.weapons.includes(t.start.weapon) && t.family.passives.includes(t.start.passive));
         const starters = techStartingWeapons(t);
-        assert.deepEqual(starters, id === 'bloom' ? ['thorns', 'cannon'] : id === 'butcher' ? ['sword', 'saw'] : [t.start.weapon]);
+        assert.deepEqual(starters, { gunline: ['shotgun', 'rifle'], bloom: ['thorns', 'cannon'], plague: ['molotov', 'gas'], executioner: ['pistols', 'rifle'], butcher: ['sword', 'saw'] }[id]);
+        assert.equal(starters.length, 2, `${id}: every tech starts with two weapons`);
+        assert.ok(starters.every(w => WEAPONS[w] && !WEAPONS[w].fusionOnly && t.family.weapons.includes(w)), `${id}: starters are family weapons`);
         for (const weaponId of starters) {
             assert.ok(WEAPONS[weaponId] && !WEAPONS[weaponId].fusionOnly && t.family.weapons.includes(weaponId));
             assert.ok(WEAPON_TAGS[weaponId].some(tag => t.tags.includes(tag)), `${id}: ${weaponId} benefits from its own tech`);
@@ -43,8 +45,7 @@ test('every tech starts with a real weapon and its evolution partner passive, al
 
 test('starting combo opens resonance tier I; tiers II and III need four and six family items', () => {
     startTech('gunline');
-    assert.equal(resonanceCount(), 2); assert.equal(resonanceTier(), 1);
-    applyChoice({ kind: 'weapon', id: 'rifle', level: 1 });
+    assert.equal(resonanceCount(), 3); assert.equal(resonanceTier(), 1); // 산탄총 + 노획 소총 + 탄창 확장
     applyChoice({ kind: 'passive', id: 'scope', level: 1 });
     assert.equal(resonanceCount(), 4); assert.equal(resonanceTier(), 2);
     applyChoice({ kind: 'weapon', id: 'cannon', level: 1 }); // 다른 계열 무기는 공명에 기여하지 않음

@@ -11,6 +11,10 @@ test('every equipment and shop entry resolves to a real illustrated asset',()=>{
  for(const relic of RELICS)assert.ok(exists(itemArt(relic.id)),relic.id);
  for(const item of SHOP)assert.ok(exists(itemArt(item.id,'shop')),item.id);
 });
+test('passive art never reuses base weapon art, so HUD passives cannot be mistaken for guns',()=>{
+ const weaponArt=new Set(Object.keys(WEAPONS).filter(id=>!WEAPONS[id].fusionOnly).map(id=>itemArt(id)));
+ for(const id of Object.keys(PASSIVES))assert.ok(!weaponArt.has(itemArt(id)),`${id} uses weapon art ${itemArt(id)}`);
+});
 test('all ten story chapters have distinct optimized scenes',()=>{
  const buffers=[];
  for(let i=1;i<=10;i++){const p=`asset/story/stage-${String(i).padStart(2,'0')}.webp`;assert.ok(exists(p),p);buffers.push(fs.readFileSync(new URL('../'+p,import.meta.url)).toString('base64'));}

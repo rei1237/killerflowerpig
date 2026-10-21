@@ -10,7 +10,7 @@ const weapons = {
 const passives = {
     premium_upgrade:'violet-orb.png',
     meat:'medical-kit.png',gold:'coin-stack.svg',magazine:'ammo-magazine.png',focus:'scope.svg',sap:'vial.svg',scope:'scope.svg',
-    spread:'shotgun.svg',pollen:'vial.svg',whet:'blade.svg',heart:'medical-kit.png',
+    spread:'spread.svg',pollen:'vial.svg',whet:'blade.svg',heart:'medical-kit.png',
     regen:'medical-kit.png',nose:'field-magnet.png',madness:'boots.svg',hide:'rusted-armor-plate.png',
 };
 const shop = {
