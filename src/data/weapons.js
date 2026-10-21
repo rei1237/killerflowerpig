@@ -148,14 +148,16 @@ export const PASSIVES = {
     whet: { name: '날 연마', icon: '🪓', desc: '모든 피해 +10%', per: '피해 +10%' },
     heart: { name: '썩은 심장', icon: '🫀', desc: '최대 체력 +20', per: '최대 HP +20' },
     regen: { name: '자동 회복 · 재생하는 살점', icon: '🩸', desc: '전투 중 초당 체력 +0.3 자동 회복 (최대 Lv.5)' , per: '재생 +0.3/s' },
-    nose: { name: '자석 코', icon: '🐽', desc: '경험치 획득 범위 +30%', per: '범위 +30%' },
+    // 저장 호환을 위해 id는 nose 그대로. 쓸모가 적던 '자석 코'(획득 범위만 +30%)를 재사용 대기 감소 아이템으로 바꿨다.
+    nose: { name: '자력 가속 코일', icon: '🧲', desc: '자력으로 무기를 빠르게 재충전한다. 모든 무기 재사용 대기 -6% · 경험치 획득 범위 +15%', per: '재사용 -6% · 범위 +15%' },
     madness: { name: '광기', icon: '🌀', desc: '이동 속도 +7%', per: '이속 +7%' },
     hide: { name: '철갑 피부', icon: '🛡️', desc: '받는 피해 -0.6 (방어)', per: '방어 +0.6' },
 };
 
 // 보조 아이템 레벨당 수치. 피해형(날 연마 +10%·집중 치명타 +4.5%≈+9%·탄창)은 서로 비슷하게,
 // 철갑 피부는 적 1회 피해가 작은 초반에 과하게 세지 않도록 0.6씩.
-export const PASSIVE_TUNING = Object.freeze({ focus: .045, spread: .13, hide: .6 });
+// 자력 가속 코일(nose): 레벨당 모든 무기 재사용 대기 -6% (Lv5 -30%, 화력 약 +43%로 날 연마 +50%와 비슷) · 획득 범위 +15%.
+export const PASSIVE_TUNING = Object.freeze({ focus: .045, spread: .13, hide: .6, coilCooldown: .06, coilMagnet: .15 });
 // 탄창 확장: 무기 투사체 수에 비례해 증가 (Lv당 +10%). 정수로 못 늘린 나머지 비율은 피해로 환산한다.
 export const MAGAZINE_BONUS = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
 

@@ -63,3 +63,11 @@ test('scope adds pierce to piercing shots at Lv1/3/5 and a small reach bonus onc
 test('shared boost tooltip explains later weapons, caps and non-bullet amount behavior',async()=>{
  const {passiveEffectNote}=await import('../src/ui/item-choice-info.js');const text=passiveEffectNote('magazine');assert.match(text,/나중에/);assert.match(text,/최대 레벨/);assert.match(text,/광선/);assert.match(text,/회전 꽃잎/);assert.match(text,/독구름은 하나/);assert.equal(passiveEffectNote('missing'),'');
 });
+test('magnetic acceleration coil (nose) shortens every weapon cooldown 6% per level and keeps a smaller pickup reach',()=>{
+ const base=Object.fromEntries(['shotgun','thorns','cannon','molotov','sword'].map(id=>[id,weaponStats(createWeapon(id,0))]));
+ const magnet=G.player.stats.magnet;
+ for(let level=1;level<=5;level++)applyChoice({kind:'passive',id:'nose',level});
+ assert.ok(Math.abs(G.player.stats.cooldown-.7)<1e-9);assert.ok(Math.abs(G.player.stats.magnet/magnet-1.75)<1e-9);
+ for(const [id,s] of Object.entries(base)){const now=weaponStats(createWeapon(id,0));
+  if(id==='thorns')assert.ok(Math.abs(now.regrow-s.regrow*.7)<1e-9,id);else assert.ok(Math.abs(now.cd-Math.max(id==='cannon'?.3:0,s.cd*.7))<1e-9,id);}
+});

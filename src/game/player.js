@@ -58,7 +58,7 @@ export function recomputeStats(fullHeal = false) {
     const s = {
         might: 1 + lv('whet') * 0.1 + upgradeLevel('might') * 0.05,
         area: 1 + lv('spread') * PASSIVE_TUNING.spread,
-        cooldown: 1,
+        cooldown: 1 - lv('nose') * PASSIVE_TUNING.coilCooldown,
         // 꽃가루 장막: 피격 1회 차단 보호막 재충전 시간 (0이면 없음)
         barrierCd: POLLEN_BARRIER_CD[lv('pollen')] || 0,
         duration: 1,
@@ -69,7 +69,7 @@ export function recomputeStats(fullHeal = false) {
         amountMul: MAGAZINE_BONUS[lv('magazine')] || 0, // 탄창 확장: 투사체 비례 보너스
         crit: lv('focus') * PASSIVE_TUNING.focus,
         regen: lv('regen') * 0.3,
-        magnet: BASE.magnet * (1 + lv('nose') * 0.3 + upgradeLevel('magnet') * 0.1),
+        magnet: BASE.magnet * (1 + lv('nose') * PASSIVE_TUNING.coilMagnet + upgradeLevel('magnet') * 0.1),
         speed: BASE.speed * (1 + lv('madness') * 0.07 + upgradeLevel('speed') * 0.04),
         armor: lv('hide') * PASSIVE_TUNING.hide,
         maxHp: BASE.hp + lv('heart') * 20 + upgradeLevel('maxHp') * 10,
