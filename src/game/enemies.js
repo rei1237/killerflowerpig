@@ -4,7 +4,8 @@ import { rollSupplies, KILL_OPPORTUNITY } from './supply-drops.js';
 import { playerBody } from './player-motion.js';
 // 적 시스템: 스폰, 추적 이동 + 상호 밀어내기(그리드), 원거리 공격, 상태이상, 피격/사망 처리
 import { G, rand, emit } from './state.js';
-import { ENEMIES, ELITE, eliteSheet, DEATH_CLOUD_UNLOCK_STAGE, RANGED_UNLOCK_STAGE, stageScaling, BOSS_FIGHT_XP_MULTIPLIER } from '../data/enemies.js';
+import { BOSSES, bossMaxHp } from '../data/bosses.js';
+import { ENEMIES, ELITE, ELITE_BOSS_CAP, eliteSheet, DEATH_CLOUD_UNLOCK_STAGE, RANGED_UNLOCK_STAGE, MAX_RANGED_ALIVE, stageScaling, BOSS_FIGHT_XP_MULTIPLIER } from '../data/enemies.js';
 import { STAGES } from '../data/stages.js';
 import { difficultyOf } from '../data/difficulty.js';
 import { atlases, textSprite } from '../core/assets.js';
@@ -24,14 +25,21 @@ let sepFrame = 0;
 const roleReducedMotion = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
 
 export function liveEnemyCount() { return G.enemies.count; }
+function rangedAlive() {
+    let n = 0;
+    for (let i = 0; i < G.enemies.count; i++) { const e = G.enemies.items[i]; if (e.alive && e.def?.ranged) n++; }
+    return n;
+}
 
 export function spawnEnemy(typeId, x, y, opts = {}) {
     const st = STAGES[G.stage];
     // Every route shares the population budget, including force/elite/summon/split.
     const cap = Math.min(st.enemyCap ?? Infinity, G.caps.enemies ?? Infinity);
     if (G.enemies.count >= cap) return null;
-    const def = ENEMIES[typeId];
+    let def = ENEMIES[typeId];
     if (!def || G.stage < (def.unlockStage || 1) || (def.ranged && G.stage < RANGED_UNLOCK_STAGE)) return null;
+    // 원거리 적 동시 수 상한 (엘리트 포함). 초과분은 근접 청토끼로 바꿔 낸다.
+    if (def.ranged && rangedAlive() >= MAX_RANGED_ALIVE) { typeId = 'shambler'; def = ENEMIES.shambler; }
     const sc = stageScaling(G.stage, G.time, st.duration);
     const e = G.enemies.spawn();
     const elite = !!opts.elite;
@@ -82,7 +90,23 @@ export function spawnEnemy(typeId, x, y, opts = {}) {
     if (!e.hits) e.hits = new Float32Array(HIT_CHANNELS);
     e.hits.fill(-99);
     applyVariant(e, def, opts);
+    if (elite) capEliteToBoss(e, diff);
     return e;
+}
+
+// 엘리트 상한: 같은 스테이지·난이도 보스 기준 (체력은 방벽 포함 합계를 비례 축소).
+function capEliteToBoss(e, diff) {
+    const boss = BOSSES[G.stage];
+    if (!boss) return;
+    const hpCap = bossMaxHp(G.stage) * (diff.boss?.hp || 1) * ELITE_BOSS_CAP.hp;
+    const total = e.maxHp + (e.barrierMax || 0);
+    if (total > hpCap) {
+        const k = hpCap / total;
+        e.maxHp *= k; e.hp = e.maxHp; e.barrierMax *= k; e.barrier = e.barrierMax;
+    }
+    const dmgCap = boss.dmg * (1 + (G.stage - 1) * 0.05) * (diff.boss?.dmg || 1) * ELITE_BOSS_CAP.dmg;
+    if (e.dmg > dmgCap) e.dmg = dmgCap;
+    e.dmgCap = dmgCap / ELITE_BOSS_CAP.dmg; // 격노해도 보스 피해를 넘지 않는다
 }
 
 // 소환사 엘리트의 부하: 평소 출현표의 잡몹을 변이 없이 곁에 불러낸다

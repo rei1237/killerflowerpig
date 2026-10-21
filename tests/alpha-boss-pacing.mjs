@@ -14,7 +14,7 @@ test('restored King preserves legal two-final growth and full frenzy challenge w
  // 느려진 레벨업 이후 9스테이지 직전: 레벨 31, 최종 무기 1개 (이전 40~60레벨·2개)
  assert.ok(snapshot.level>=25&&snapshot.level<=45);assert.equal(snapshot.finals,1);assert.equal(snapshot.absolutes,0);
  assert.ok(snapshot.weapons.length<=6&&Object.keys(snapshot.passives).length<=6);
- assert.equal(bossMaxHp(9),24000*7*1.9); // 319200: 보스 HP 진화 배율 BOSS_EVOLUTION_HP[9]=1.9
+ assert.equal(bossMaxHp(9),24000*7*2.0); // 336000: 보스 HP 진화 배율 BOSS_EVOLUTION_HP[9]=2.0 (총기 강화 후 광폭 단계 보장)
  const scenario={...snapshot,stage:9,name:'pre-stage-9 late build',weapons:snapshot.weapons.map(w=>[w.id,w.level,w.evolved])};
  const previous=save.upgrades.lotus_gun;
  try{for(const seed of [1,7,13]){

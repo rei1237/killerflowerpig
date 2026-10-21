@@ -65,8 +65,9 @@ test('reachable mid and two/three-final late fixtures begin real attacks and fin
  // 중반 고정 빌드는 집중 정책 기준이며, 경험치 곡선에 따라 첫 융합이 5스테이지 전후로 들어올 수 있다.
  assert.ok(DAMAGE_SCENARIOS[1].finals<=1);
  // 느려진 레벨업으로 픽스처 이름('2융합'·'3융합'·'절대+최종1')보다 실제 도달 개수가 적다: 10스테이지 직전 2융합=1개, '3융합'=2개, 절대+1=절대 무기 1개(일반 최종 0개).
- assert.equal(DAMAGE_SCENARIOS[2].finals,1);assert.equal(DAMAGE_SCENARIOS[3].finals,2);
- assert.equal(DAMAGE_SCENARIOS[4].finals,0);assert.equal(DAMAGE_SCENARIOS[4].absolutes,1);
+ // 원거리 적·엘리트 축소로 경험치 곡선이 바뀌어 재생성된 스냅샷: 2융합=1개, '3융합'=1개, 절대+1=절대 1개+최종 1개.
+ assert.equal(DAMAGE_SCENARIOS[2].finals,1);assert.equal(DAMAGE_SCENARIOS[3].finals,1);
+ assert.equal(DAMAGE_SCENARIOS[4].finals,1);assert.equal(DAMAGE_SCENARIOS[4].absolutes,1);
  for(const scenario of DAMAGE_SCENARIOS.slice(1)){
   assert.ok(Object.keys(scenario.passives).length<=6);assert.ok(scenario.weapons.length<=6);
   for(const distance of [100,300,500])for(let seed=1;seed<=12;seed++){

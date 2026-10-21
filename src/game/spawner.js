@@ -105,7 +105,8 @@ function runEvent(type, st, t) {
     if (type === 'elite') {
         // 가장 무거운 유형 3종 중에서 엘리트를 뽑는다. 후반에는 여러 마리가 동시에 나타나고 각자 다른 능력을 가진다.
         const types = Object.keys(table).sort((a, b) => ENEMIES[b].hp - ENEMIES[a].hp).slice(0, 3);
-        const count = (G.stage >= 9 ? 3 : G.stage >= 5 ? 2 : 1) + (difficultyOf(G.difficulty).elite?.count || 0);
+        // 엘리트 수 축소: 1~6구역 1마리, 7구역부터 2마리 (+난이도 추가)
+        const count = (G.stage >= 7 ? 2 : 1) + (difficultyOf(G.difficulty).elite?.count || 0);
         for (let i = 0; i < count; i++) {
             const pick = types[Math.floor(Math.random() * types.length)];
             const pos = edgePosition(0.5);

@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
-import { ELITE, eliteSheet } from '../src/data/enemies.js';
+import { ELITE, ELITE_BOSS_CAP, eliteSheet } from '../src/data/enemies.js';
+import { BOSSES, bossMaxHp } from '../src/data/bosses.js';
 import { DIFFICULTIES, DIFFICULTY_ORDER } from '../src/data/difficulty.js';
 import { eliteAffixCount } from '../src/game/affixes.js';
 import { spawnEnemy } from '../src/game/enemies.js';
@@ -37,12 +38,16 @@ test('every difficulty strengthens ordinary and elite rabbits monotonically; eas
 
 test('spawned enemies carry the difficulty hp/damage/speed multipliers, elites get an extra layer', () => {
     for (const stage of [2, 6]) {
-        const base = spawn(stage, 'easy', { noAffix: true }), baseElite = spawn(stage, 'easy', { elite: true, noAffix: true });
+        const base = spawn(stage, 'easy', { noAffix: true });
+        // 상한 전 원시값: 일반 개체 × 엘리트 배율
+        const baseElite = { rawHp: base.maxHp * ELITE.hp, rawDmg: base.dmg * ELITE.dmg };
         for (const id of DIFFICULTY_ORDER) {
             const d = DIFFICULTIES[id];
             const ordinary = spawn(stage, id, { noAffix: true }), elite = spawn(stage, id, { elite: true, noAffix: true });
             close(ordinary.maxHp, base.maxHp * d.enemy.hp); close(ordinary.dmg, base.dmg * d.enemy.dmg); close(ordinary.speed, base.speed * d.enemy.speed);
-            close(elite.maxHp, baseElite.maxHp * d.enemy.hp * d.elite.hp); close(elite.dmg, baseElite.dmg * d.enemy.dmg * d.elite.dmg);
+            const hpCap = bossMaxHp(stage) * d.boss.hp * ELITE_BOSS_CAP.hp, dmgCap = BOSSES[stage].dmg * (1 + (stage - 1) * 0.05) * d.boss.dmg * ELITE_BOSS_CAP.dmg;
+            const rawHp = Math.min(baseElite.rawHp, Infinity) * d.enemy.hp * d.elite.hp, rawDmg = baseElite.rawDmg * d.enemy.dmg * d.elite.dmg;
+            close(elite.maxHp, Math.min(rawHp, hpCap)); close(elite.dmg, Math.min(rawDmg, dmgCap));
         }
     }
 });
@@ -63,5 +68,19 @@ test('early field elites keep the rabbit body with only a red tint; later stages
         assert.equal(spawn(stage, 'hell', { elite: true }).affixes.length, Math.min(4, eliteAffixCount(stage) + DIFFICULTIES.hell.elite.affixes));
         const ordinary = spawn(stage, 'easy', { noAffix: true });
         assert.equal(ordinary.bossSprite, false); assert.equal(ordinary.atlas, atlases.rabbit2);
+    }
+});
+
+test('no elite is ever stronger than its stage boss: HP (with barrier) <= 15% and contact damage <= 80%, berserk included', () => {
+    for (const id of DIFFICULTY_ORDER) for (let stage = 1; stage <= 10; stage++) {
+        const d = DIFFICULTIES[id];
+        const hpCap = bossMaxHp(stage) * d.boss.hp * ELITE_BOSS_CAP.hp, bossDmg = BOSSES[stage].dmg * (1 + (stage - 1) * 0.05) * d.boss.dmg;
+        for (const type of ['hulk', 'splitter', 'brute']) {
+            const e = withRandom(() => { reset(stage, id); const x = spawnEnemy(type, 300, 0, { force: true, elite: true, affixes: ['barrier', 'berserk'] }); return x && { ...x }; });
+            if (!e) continue;
+            assert.ok(e.maxHp + e.barrierMax <= hpCap + 1e-6, `${id}/${stage}/${type} hp`);
+            assert.ok(e.dmg <= bossDmg * ELITE_BOSS_CAP.dmg + 1e-9, `${id}/${stage}/${type} dmg`);
+            assert.ok(Math.min(e.dmg * 1.4, e.dmgCap) <= bossDmg + 1e-9, 'berserk stays at or below boss damage');
+        }
     }
 });

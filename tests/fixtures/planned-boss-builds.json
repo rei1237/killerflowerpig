@@ -7,7 +7,7 @@
       "seed": 1,
       "stage": 5,
       "distance": 130,
-      "level": 20,
+      "level": 19,
       "weapons": [
         {
           "id": "shotgun",
@@ -22,11 +22,6 @@
         {
           "id": "thorns",
           "level": 8,
-          "evolved": false
-        },
-        {
-          "id": "gas",
-          "level": 1,
           "evolved": false
         }
       ],
@@ -65,11 +60,11 @@
       "seed": 101,
       "stage": 10,
       "distance": 130,
-      "level": 34,
+      "level": 33,
       "weapons": [
         {
           "id": "scatter_rail",
-          "level": 8,
+          "level": 5,
           "evolved": false
         },
         {
@@ -87,12 +82,12 @@
         "magazine": 5,
         "pollen": 5,
         "regen": 5,
+        "whet": 5,
         "scope": 5,
-        "heart": 5,
-        "whet": 3
+        "heart": 5
       },
       "stats": {
-        "might": 1.3,
+        "might": 1.5,
         "area": 1,
         "cooldown": 1,
         "barrierCd": 6,
@@ -120,46 +115,51 @@
       "seed": 101,
       "stage": 10,
       "distance": 130,
-      "level": 36,
+      "level": 35,
       "weapons": [
         {
-          "id": "shotgun",
+          "id": "scatter_rail",
+          "level": 2,
+          "evolved": false
+        },
+        {
+          "id": "gas",
           "level": 8,
           "evolved": true
         },
         {
-          "id": "plague_fire",
-          "level": 1,
-          "evolved": false
-        },
-        {
-          "id": "lotus_bloom",
-          "level": 1,
-          "evolved": false
-        },
-        {
-          "id": "rifle",
+          "id": "thorns",
           "level": 8,
+          "evolved": true
+        },
+        {
+          "id": "cannon",
+          "level": 8,
+          "evolved": false
+        },
+        {
+          "id": "molotov",
+          "level": 6,
           "evolved": false
         }
       ],
       "passives": {
         "magazine": 5,
         "regen": 5,
+        "spread": 4,
+        "scope": 3,
         "sap": 5,
-        "scope": 5,
-        "pollen": 5,
-        "spread": 1
+        "pollen": 3
       },
       "stats": {
         "might": 1,
-        "area": 1.1,
+        "area": 1.4,
         "cooldown": 1,
-        "barrierCd": 6,
+        "barrierCd": 8.5,
         "duration": 1,
         "growth": 1.4,
-        "projSpeed": 1.25,
-        "pierce": 3,
+        "projSpeed": 1.15,
+        "pierce": 2,
         "amount": 0,
         "amountMul": 0.5,
         "crit": 0,
@@ -171,7 +171,7 @@
         "greed": 1,
         "critMul": 3
       },
-      "finals": 2,
+      "finals": 1,
       "absolutes": 0
     },
     {
@@ -180,34 +180,29 @@
       "seed": 101,
       "stage": 10,
       "distance": 130,
-      "level": 34,
+      "level": 33,
       "weapons": [
         {
-          "id": "shotgun",
-          "level": 8,
-          "evolved": true
-        },
-        {
-          "id": "absolute_bloom",
+          "id": "scatter_rail",
           "level": 1,
           "evolved": false
         },
         {
-          "id": "rifle",
-          "level": 8,
+          "id": "absolute_bloom",
+          "level": 1,
           "evolved": false
         }
       ],
       "passives": {
         "regen": 5,
         "scope": 5,
+        "spread": 5,
         "magazine": 5,
-        "pollen": 5,
-        "spread": 3
+        "pollen": 5
       },
       "stats": {
         "might": 1,
-        "area": 1.3,
+        "area": 1.5,
         "cooldown": 1,
         "barrierCd": 6,
         "duration": 1,
@@ -225,7 +220,7 @@
         "greed": 1,
         "critMul": 3
       },
-      "finals": 0,
+      "finals": 1,
       "absolutes": 1
     },
     {
@@ -234,11 +229,11 @@
       "seed": 101,
       "stage": 10,
       "distance": 130,
-      "level": 34,
+      "level": 33,
       "weapons": [
         {
           "id": "sword_wheel",
-          "level": 5,
+          "level": 8,
           "evolved": false
         },
         {
@@ -258,17 +253,17 @@
         }
       ],
       "passives": {
-        "whet": 5,
-        "regen": 4,
+        "whet": 4,
+        "regen": 5,
         "scope": 5,
         "magazine": 5,
-        "pollen": 5
+        "pollen": 1
       },
       "stats": {
-        "might": 1.5,
+        "might": 1.4,
         "area": 1,
         "cooldown": 1,
-        "barrierCd": 6,
+        "barrierCd": 12,
         "duration": 1,
         "growth": 1,
         "projSpeed": 1.25,
@@ -276,7 +271,7 @@
         "amount": 0,
         "amountMul": 0.5,
         "crit": 0,
-        "regen": 1.2,
+        "regen": 1.5,
         "magnet": 70,
         "speed": 135,
         "armor": 1,

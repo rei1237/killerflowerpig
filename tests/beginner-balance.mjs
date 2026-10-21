@@ -166,7 +166,10 @@ test('later-stage damage, speed, event timing and legacy charges remain while po
         const { duration, weights, density } = STAGES[stage];
         const old = baseline.stages[stage];
         assert.equal(duration, old.duration);
-        assert.deepEqual(weights.map(([t, w]) => [t, Object.fromEntries(Object.entries(w).filter(([id]) => !['suicider','gunner'].includes(id)))]), old.weights);
+        // 원거리 적 축소: 총잡이가 나오는 구역(5+)은 산성 토사체 가중치가 절반(2→1). 나머지 가중치는 그대로.
+        const ranged = weights.some(([, w]) => w.gunner);
+        assert.deepEqual(weights.map(([t, w]) => [t, Object.fromEntries(Object.entries(w).filter(([id]) => !['suicider','gunner'].includes(id)).map(([id, v]) => [id, ranged && id === 'spitter' ? v * 2 : v]))]), old.weights);
+        if (ranged) for (const [, w] of weights) { assert.ok(!w.spitter || w.spitter <= 1); assert.ok(!w.gunner || w.gunner <= 0.5); }
         assert.deepEqual(density, old.density.map(count => Math.round(Math.round(Math.round(count * 0.6) * .88) * POPULATION_BOOST[stage])));
         assert.ok(STAGES[stage].enemyCap > density[1]);
         assert.equal(STAGES[stage].events, undefined);

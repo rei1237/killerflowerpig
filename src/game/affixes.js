@@ -50,7 +50,7 @@ function pickDistinct(keys, n, random) {
 // spawnEnemy 에서 호출: 챔피언/엘리트 변이를 확정하고 능력치를 조정한다.
 export function applyVariant(e, def, opts, random = affixRandom.next) {
     e.champion = null; e.affixes = null; e.barrier = 0; e.barrierMax = 0; e.barrierIdle = 0;
-    e.affixT = 0; e.affixWarn = 0; e.affixAim = 0; e.affixKind = null; e.minions = 0; e.enraged = false; e.baseSpeed = e.speed;
+    e.dmgCap = undefined; e.affixT = 0; e.affixWarn = 0; e.affixAim = 0; e.affixKind = null; e.minions = 0; e.enraged = false; e.baseSpeed = e.speed;
     if (opts.noAffix) return e;
     if (e.elite) {
         const n = opts.affixCount ?? Math.min(4, eliteAffixCount(G.stage) + (difficultyOf(G.difficulty).elite?.affixes || 0));
@@ -100,7 +100,7 @@ export function updateAffixes(e, dt, p, dist, spawnMinion) {
     // 격노: 체력 50% 이하에서 속도·피해 상승 (한 번만 선언)
     if (has('berserk')) {
         if (!e.enraged && e.hp <= e.maxHp * 0.5) {
-            e.enraged = true; e.dmg *= 1.4;
+            e.enraged = true; e.dmg = Math.min(e.dmg * 1.4, e.dmgCap ?? Infinity);
             floatText(e.x, e.y - e.radius * 2.6, '😡 격노!', '#ff3b3b', 1);
             shake(4); audio.sfx('warn');
         }
@@ -116,7 +116,7 @@ export function updateAffixes(e, dt, p, dist, spawnMinion) {
         e.affixWarn -= dt;
         if (e.affixWarn <= 0) {
             if (e.affixKind === 'volley') {
-                const base = e.affixAim, n = 7 + (G.stage >= 7 ? 2 : 0);
+                const base = e.affixAim, n = 5 + (G.stage >= 7 ? 2 : 0); // 난사 탄 수 축소 (이전 7~9발)
                 for (let i = 0; i < n; i++) {
                     const a = base + (i - (n - 1) / 2) * 0.15;
                     fireEnemyShot(e.x, e.y - e.radius, Math.cos(a), Math.sin(a), 230, e.dmg * 0.4, 'bullet', 5);
@@ -156,7 +156,7 @@ export function updateAffixes(e, dt, p, dist, spawnMinion) {
         e.affixKind = kind;
         e.affixAim = Math.atan2(p.y - 18 - (e.y - e.radius), p.x - e.x);
         e.affixWarn = kind === 'lunge' ? 0.75 : 0.6;
-        e.affixT = kind === 'lunge' ? 5.2 : 3.4;
+        e.affixT = kind === 'lunge' ? 5.2 : 5.5; // 난사 간격 3.4 → 5.5초
     }
 }
 

@@ -20,6 +20,9 @@ export const ENEMIES = {
 };
 
 export const ELITE = { scale: 1.45, hp: 12, xp: 8, dmg: 1.7, speed: 1.12 };
+// 엘리트는 절대 그 스테이지 보스보다 강하면 안 된다: 체력(방벽 포함)은 보스 체력의 15%, 접촉 피해는 보스 피해의 80%가 상한.
+// (상한 전에는 6~9구역 사슬 도살자 엘리트가 보스 체력의 40~66%, 헬에서는 보스를 넘었다)
+export const ELITE_BOSS_CAP = Object.freeze({ hp: 0.15, dmg: 0.8 });
 // 필드 엘리트 외형 단계. 초반(1~3구역)은 기존 토끼 몸체에 붉은 색만 입힌다(sheet: null).
 // 4구역부터는 최초 버전의 보스 스프라이트로 바뀌고, 7구역부터 끝까지 더 큰 boss2 몸체를 쓴다(왕 스프라이트는 쓰지 않는다).
 // (현재 스테이지 보스는 전용 아트를 쓰므로 겹치지 않는다.) size = 토끼 걷기 높이 112px 기준 출력 높이 배율.
@@ -38,6 +41,8 @@ export function eliteSheet(stage) {
 export const DEATH_CLOUD_UNLOCK_STAGE = 5;
 // All ordinary ranged spawn routes, including elite/forced/summoned mobs.
 export const RANGED_UNLOCK_STAGE = 5;
+// 총탄·산성탄을 쏘는 일반 적은 동시에 이 수까지만. 넘으면 같은 자리에 근접 청토끼가 대신 나온다.
+export const MAX_RANGED_ALIVE = 6;
 
 // Fewer bodies, sturdier individual enemies; movement/contact damage are unchanged.
 // 1.62 → 1.9: 전반적으로 적이 너무 약하다는 피드백 반영.

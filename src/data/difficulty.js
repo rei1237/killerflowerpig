@@ -13,11 +13,11 @@ export const DIFFICULTIES = Object.freeze({
         enemy: { hp: 1.3, dmg: 1.15, speed: 1.04, champion: 1.4 }, elite: { hp: 1.35, dmg: 1.15, affixes: 0, count: 0 }, boss: { hp: 1.15, dmg: 1.1 },
         desc: '레벨업 경험치 ×2 · 보스 상자 강화 -1 · 청토끼 체력 ×1.3, 엘리트 추가 강화. 몰려오는 대군 속에서도 테크 집중이 필요합니다.' },
     hard: { name: '어려움', icon: '🔥', xpMul: 3.2, chestPenalty: 2, premiumMul: 0.45,
-        enemy: { hp: 1.7, dmg: 1.3, speed: 1.08, champion: 1.8 }, elite: { hp: 1.6, dmg: 1.25, affixes: 1, count: 1 }, boss: { hp: 1.3, dmg: 1.2 },
-        desc: '레벨업 경험치 ×3.2 · 보스 상자 강화 -2 · 청토끼 체력 ×1.7, 엘리트 능력·출현 +1. 한 테크에 모든 걸 걸어야 합니다.' },
+        enemy: { hp: 1.7, dmg: 1.3, speed: 1.08, champion: 1.8 }, elite: { hp: 1.6, dmg: 1.25, affixes: 1, count: 0 }, boss: { hp: 1.3, dmg: 1.2 },
+        desc: '레벨업 경험치 ×3.2 · 보스 상자 강화 -2 · 청토끼 체력 ×1.7, 엘리트 능력 +1. 한 테크에 모든 걸 걸어야 합니다.' },
     hell: { name: '헬', icon: '☠️', xpMul: 5.5, chestPenalty: 3, premiumMul: 0.25,
-        enemy: { hp: 2.3, dmg: 1.5, speed: 1.12, champion: 2.4 }, elite: { hp: 2, dmg: 1.4, affixes: 2, count: 2 }, boss: { hp: 1.5, dmg: 1.35 },
-        desc: '레벨업 경험치 ×5.5 · 보스 상자 강화 최소화 · 청토끼 체력 ×2.3, 엘리트 능력·출현 +2. 모든 선택이 생사를 가릅니다.' },
+        enemy: { hp: 2.3, dmg: 1.5, speed: 1.12, champion: 2.4 }, elite: { hp: 2, dmg: 1.4, affixes: 2, count: 1 }, boss: { hp: 1.5, dmg: 1.35 },
+        desc: '레벨업 경험치 ×5.5 · 보스 상자 강화 최소화 · 청토끼 체력 ×2.3, 엘리트 능력 +2·출현 +1. 모든 선택이 생사를 가릅니다.' },
 });
 export const DIFFICULTY_ORDER = Object.freeze(['easy', 'normal', 'hard', 'hell']);
 export const DEFAULT_DIFFICULTY = 'easy';
