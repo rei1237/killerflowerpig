@@ -2,6 +2,7 @@ import { FUSION_RECIPES } from '../data/fusions.js';
 import { upgradeLevel } from '../core/save.js';
 import { bossRewardTier } from '../data/boss-rewards.js';
 import { supplyState } from './supply-drops.js';
+import { TREASURE_DROPS, treasureCoinValue } from './coin-drops.js';
 // 경험치/레벨업, 레벨업 카드 생성, 무기·패시브 적용, 진화, 상자 보상
 import { G, emit } from './state.js';
 import { WEAPONS, PASSIVES, MAX_WEAPONS, WEAPON_MAX_LEVEL, PASSIVE_MAX_LEVEL } from '../data/weapons.js';
@@ -271,11 +272,13 @@ export function rollChest(count, random = Math.random) {
     return rewards;
 }
 
-// 보물 상자: 강화 1회(진화 우선) + 확률로 새 보조 아이템 1개. 아주 드물게 얻는 보너스 보상.
-// (이전에는 강화 2회라 같은 무기가 한 번에 2레벨 오르는 일이 있었다)
-export const TREASURE_UPGRADES = 1;
-export function rollTreasure(random = Math.random, bonusChance = 0.25) {
-    const rewards = rollChest(TREASURE_UPGRADES, random);
+// 보물 상자: 코인 위주 보상. 코인은 확정, 강화(진화 우선)는 낮은 확률로 1회, 새 보조 아이템도 낮은 확률.
+// (이전에는 강화 2회 확정이라 같은 무기가 한 번에 2레벨 오르는 일이 있었다)
+export function rollTreasure(random = Math.random, bonusChance = TREASURE_DROPS.bonusPassiveChance, upgradeChance = TREASURE_DROPS.upgradeChance) {
+    const coins = Math.max(1, Math.round(treasureCoinValue(G.stage) * (G.player?.stats?.greed || 1)));
+    G.gold += coins;
+    const rewards = [{ kind: 'gold', id: 'gold', name: '보물 코인', icon: '🪙', desc: `코인 +${coins}` }];
+    if (random() < upgradeChance) rewards.push(...rollChest(1, random));
     if (random() < bonusChance) {
         const fresh = candidates().filter(c => c.kind === 'passive' && c.isNew);
         if (fresh.length) {

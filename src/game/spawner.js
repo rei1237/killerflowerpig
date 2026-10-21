@@ -15,6 +15,7 @@ export const SWARM_RUSH = Object.freeze({ speed: 1.35, pincerDelay: 1.4, pincerR
 export function resetSpawner() {
     spawnAcc = 0;
     G.eventIdx = 0;
+    G.treasureDrops = 0; // 스테이지당 보물 상자 드롭 수
     G.pendingSwarm = null;
 }
 

@@ -42,8 +42,8 @@ test('actual boss defeat guarantees one boss gear chest and repeated damage cann
 });
 
 test('treasure chest odds have exact boundaries per enemy kind and use a dedicated stream',()=>{
- assert.deepEqual({o:TREASURE_DROPS.ordinary,c:TREASURE_DROPS.champion,e:TREASURE_DROPS.elite,max:TREASURE_DROPS.maxOnField},{o:.0005,c:.012,e:.08,max:1});
- for(const [kind,chance] of [['ordinary',.0005],['champion',.012],['elite',.08]]){
+ assert.deepEqual({o:TREASURE_DROPS.ordinary,c:TREASURE_DROPS.champion,e:TREASURE_DROPS.elite,max:TREASURE_DROPS.maxOnField},{o:.0001,c:.002,e:.025,max:1});
+ for(const [kind,chance] of [['ordinary',.0001],['champion',.002],['elite',.025]]){
   assert.equal(treasureDropped(kind,()=>0),true);assert.equal(treasureDropped(kind,()=>chance-1e-9),true);
   for(const roll of [chance,.999,1,-1,NaN])assert.equal(treasureDropped(kind,()=>roll),false,`${kind} ${roll}`);
  }
@@ -58,4 +58,13 @@ test('a winning treasure roll drops exactly one treasure chest, and none while o
 test('stronger ordinary types have explicit higher rates and exact boundaries',()=>{
  for(const [type,chance,value] of [['runner',0,0],['shambler',0,0],['gunner',.15,2],['spitter',.15,2],['suicider',.15,2],['brute',.3,3],['bloater',.3,3],['splitter',.3,3],['hulk',.55,5]]){assert.deepEqual(coinTier({type}),{chance,value});assert.equal(coinDropValue({type},()=>0),value);assert.equal(coinDropValue({type},()=>chance),0);}
  for(const stage of [1,5,10])assert.equal(bossCoinValue(stage),20+5*stage);
+});
+test('at most one treasure chest drops per stage, even after the first is picked up; a new stage resets the cap',async()=>{
+ const {resetSpawner}=await import('../src/game/spawner.js');
+ const prior=treasureRandom.next,random=Math.random;Math.random=()=>.99;
+ try{reset();resetSpawner();treasureRandom.next=()=>0;
+  kill();assert.equal(field('chest').length,1);
+  G.pickups.clear();kill(true);kill();assert.equal(field('chest').length,0,'second chest in the same stage');
+  resetSpawner();kill();assert.equal(field('chest').length,1,'next stage may drop again');
+ }finally{treasureRandom.next=prior;Math.random=random;}
 });

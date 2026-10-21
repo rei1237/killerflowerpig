@@ -156,9 +156,10 @@ function killEnemy(e, opts) {
     // 보물 상자: 아주 드문 보너스 (필드에 이미 있으면 굴리지 않는다)
     let chestsOnField = 0;
     for (let i = 0; i < G.pickups.count; i++) if (G.pickups.items[i].kind === 'chest') chestsOnField++;
-    if (chestsOnField < TREASURE_DROPS.maxOnField && treasureDropped(e.elite ? 'elite' : e.champion ? 'champion' : 'ordinary')) {
+    if (chestsOnField < TREASURE_DROPS.maxOnField && (G.treasureDrops || 0) < TREASURE_DROPS.maxPerStage && treasureDropped(e.elite ? 'elite' : e.champion ? 'champion' : 'ordinary')) {
         const chest = dropPickup('chest', e.x, e.y);
         chest.treasure = true;
+        G.treasureDrops = (G.treasureDrops || 0) + 1;
         floatText(e.x, e.y - e.radius * 2.6, '🎁 보물 상자!', '#ffd76a', 1.4);
         audio.sfx('chest');
     }

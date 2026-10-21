@@ -25,7 +25,12 @@ else entropy[0] = Date.now() >>> 0;
 // Dedicated stream: coin rolls never consume combat, supply or cosmetic Math.random draws.
 export const coinRandom = { next: createCoinRandom(entropy[0]) };
 // 보물 상자: 아주 드물게, 어떤 적에게서든 떨어질 수 있다 (엘리트 > 챔피언 > 일반). 필드에는 한 번에 1개만.
-export const TREASURE_DROPS = Object.freeze({ ordinary: .0005, champion: .012, elite: .08, maxOnField: 1, bonusPassiveChance: .25 });
+// 드롭: 일반 0.01% · 챔피언 0.2% · 엘리트 2.5% (이전 0.05%/1.2%/8%), 스테이지당 최대 1개, 필드에도 1개.
+// 열면: 코인 확정(coinBase + coinPerStage×스테이지, 보스 현상금의 약 절반) · 강화는 upgradeChance 확률로 1회 · 새 보조 아이템은 bonusPassiveChance.
+// 보스 보상(현상금 + 확정 강화 여러 개)보다 항상 작아야 한다 (tests/boss-rewards.mjs).
+export const TREASURE_DROPS = Object.freeze({ ordinary: .0001, champion: .002, elite: .025, maxOnField: 1, maxPerStage: 1,
+    coinBase: 10, coinPerStage: 3, upgradeChance: .15, bonusPassiveChance: .05 });
+export const treasureCoinValue = stage => TREASURE_DROPS.coinBase + TREASURE_DROPS.coinPerStage * Math.max(1, Math.min(10, Number.isInteger(stage) ? stage : 1));
 // 전용 난수 스트림: 전투·코인·보급 난수를 소비하지 않는다.
 export const treasureRandom = { next: createCoinRandom((entropy[0] ^ 0x51ed270b) >>> 0) };
 export function treasureDropped(kind, random = treasureRandom.next) {

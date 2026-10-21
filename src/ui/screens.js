@@ -1,4 +1,4 @@
-import { bossCoinValue } from '../game/coin-drops.js';
+import { bossCoinValue, treasureCoinValue, TREASURE_DROPS } from '../game/coin-drops.js';
 import { renderPetUpgradeShop } from './pet-upgrade-shop.js';
 import { initBestiary, openBestiary, closeBestiary } from './bestiary.js';
 import { clearEncirclement } from '../game/encirclement.js';
@@ -399,7 +399,7 @@ function pickCard(idx,revision=choiceRenderRevision) {
 
 // ─────────────────────────── 관 상자 ───────────────────────────
 export function showChest(kind) {
-    toast(kind==='boss'?'보스 회수 물자 확보 · 열어서 강화 보상을 확인하세요.':kind==='treasure'?'🎁 보물 상자 발견! 열면 강화 1회, 운이 좋으면 새 아이템까지.':'엘리트 보급 상자 확보 · 열면 보유 장비가 강화됩니다.',3500);
+    toast(kind==='boss'?'보스 회수 물자 확보 · 열어서 강화 보상을 확인하세요.':kind==='treasure'?'🎁 보물 상자 발견! 코인이 가득, 운이 좋으면 강화나 새 아이템까지.':'엘리트 보급 상자 확보 · 열면 보유 장비가 강화됩니다.',3500);
     pendingRewardScreens.push({ type: 'chest', kind });
     drainRewardScreens();
 }
@@ -410,7 +410,7 @@ function presentChest(kind) {
     const tier=bossRewardTier(G.stage,difficultyOf(G.difficulty));
     const count=boss?tier.guaranteedCount:1;
     const receiptId=`boss:${G.runId}:${G.stage}`;
-    $('chest-description').textContent=treasure?'보물 상자: 보유 장비 강화 1회 (진화 우선) · 25% 확률로 새 보조 아이템 1개. 모두 만렙이면 코인으로 바뀝니다.':boss?`기본 강화 ${count}개 확정 · 연꽃 정밀 강화재 ${Math.round(tier.premiumChance*100)}%\n고급 강화재: 보유 무기 최대 +2레벨(최대8). 강화 가능한 무기가 없으면 ${tier.premiumFallbackCoins}코인. 상점 전용 상품은 나오지 않습니다.`:'보유 장비 1회 강화 · 진화 조건을 갖추면 진화 우선. 모두 만렙이면 '+(30+G.stage*10)+'코인을 받습니다.';
+    $('chest-description').textContent=treasure?`보물 상자: 코인 ${treasureCoinValue(G.stage)}개 확정 · ${Math.round(TREASURE_DROPS.upgradeChance*100)}% 확률로 보유 장비 강화 1회 (진화 우선) · ${Math.round(TREASURE_DROPS.bonusPassiveChance*100)}% 확률로 새 보조 아이템 1개.`:boss?`기본 강화 ${count}개 확정 · 연꽃 정밀 강화재 ${Math.round(tier.premiumChance*100)}%\n고급 강화재: 보유 무기 최대 +2레벨(최대8). 강화 가능한 무기가 없으면 ${tier.premiumFallbackCoins}코인. 상점 전용 상품은 나오지 않습니다.`:'보유 장비 1회 강화 · 진화 조건을 갖추면 진화 우선. 모두 만렙이면 '+(30+G.stage*10)+'코인을 받습니다.';
     $('chest-title').textContent = boss ? `${BOSSES[G.stage].name}의 회수 물자` : treasure ? '🎁 보물 상자' : '회수 물자';
     const coffin = $('coffin');
     coffin.className = 'coffin';

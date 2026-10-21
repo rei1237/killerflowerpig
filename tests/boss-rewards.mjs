@@ -9,6 +9,8 @@ const {createWeapon}=await import('../src/game/weapons.js');
 const {resetBuild,rollBossChest,rollChest,rollTreasure}=await import('../src/game/progression.js');
 const {queueCoins,retryPendingCoins,pendingCoinTotal,save}=await import('../src/core/save.js');
 const {WEAPONS,PASSIVES}=await import('../src/data/weapons.js');
+const coinDrops=await import('../src/game/coin-drops.js');
+const {DIFFICULTIES:DIFF}=await import('../src/data/difficulty.js');
 beforeEach(()=>{resetBuild();createPlayer();G.stage=1;G.gold=0;G.weapons=[createWeapon('shotgun',0)];});
 test('stage tiers provide exact guaranteed counts and published independent premium odds',()=>{
  for(const [stage,count,chance] of [[1,2,.2],[2,2,.2],[3,3,.35],[5,3,.35],[6,5,.5],[8,5,.5],[9,5,.65],[10,5,.65]]){
@@ -41,17 +43,32 @@ test('failed permanent coin write queues boss fallback once and retry never rero
  assert.equal(rollBossChest('storage-chest',()=>{throw Error('retry rolled');}).duplicate,true);assert.equal(G.gold,amount);
  failWrites=false;assert.equal(retryPendingCoins(),true);assert.equal(save.gold,before+amount);assert.equal(queueCoins(amount,'boss:storage-chest'),true);assert.equal(save.gold,before+amount);assert.equal(pendingCoinTotal(),0);
 });
-test('treasure chest gives exactly one upgrade (never +2 on one weapon) plus a new passive only below the 25 percent boundary',()=>{
- let r=rollTreasure(()=>.25);assert.equal(r.length,1);assert.ok(r.every(x=>x.kind!=='passive'||!x.isNew));assert.equal(G.weapons[0].level,2,'exactly one upgrade applied to the owned weapon');
- assert.equal(r[0].levelsGained,1);
+test('treasure chest always pays stage coins; one upgrade only below the 15 percent boundary, new passive only below 5 percent',()=>{
+ const {TREASURE_DROPS,treasureCoinValue}=coinDrops;
+ assert.equal(TREASURE_DROPS.upgradeChance,.15);assert.equal(TREASURE_DROPS.bonusPassiveChance,.05);
+ assert.deepEqual([1,5,10].map(treasureCoinValue),[13,25,40]);
+ // 경계 위: 코인만
  resetBuild();G.stage=1;G.gold=0;G.weapons=[createWeapon('shotgun',0)];
- r=rollTreasure(()=>.2499999);assert.equal(r.length,2);assert.equal(G.weapons[0].level,2);const bonus=r.at(-1);assert.equal(bonus.kind,'passive');assert.equal(bonus.isNew,true);assert.equal(bonus.levelsGained,1);assert.equal(G.passives[bonus.id],1);
- // 설정 가능한 보너스 확률: 0이면 새 아이템 없음, 1이면 항상 지급
- resetBuild();G.weapons=[createWeapon('shotgun',0)];assert.equal(rollTreasure(()=>0,0).length,1);
- resetBuild();G.weapons=[createWeapon('shotgun',0)];assert.equal(rollTreasure(()=>.9,1).length,2);
+ let r=rollTreasure(()=>.15);assert.equal(r.length,1);assert.equal(r[0].kind,'gold');assert.equal(G.gold,13);assert.equal(G.weapons[0].level,1,'no upgrade above the boundary');
+ // 강화 경계 아래: 코인 + 정확히 1회 강화 (+2 없음)
+ resetBuild();G.stage=1;G.gold=0;G.weapons=[createWeapon('shotgun',0)];
+ r=rollTreasure(()=>.1);assert.equal(r.length,2);assert.equal(G.weapons[0].level,2);assert.equal(r[1].levelsGained,1);
+ // 둘 다 경계 아래: 코인 + 강화 + 새 보조 아이템
+ resetBuild();G.stage=1;G.gold=0;G.weapons=[createWeapon('shotgun',0)];
+ r=rollTreasure(()=>.04);assert.equal(r.length,3);const bonus=r.at(-1);assert.equal(bonus.kind,'passive');assert.equal(bonus.isNew,true);assert.equal(G.passives[bonus.id],1);assert.equal(G.weapons[0].level,2);
+ // 설정 가능한 확률: 0이면 코인만, 1이면 항상 지급
+ resetBuild();G.weapons=[createWeapon('shotgun',0)];assert.equal(rollTreasure(()=>0,0,0).length,1);
+ resetBuild();G.weapons=[createWeapon('shotgun',0)];assert.equal(rollTreasure(()=>.9,1,1).length,3);
 });
-test('treasure chest evolves first and falls back to stage coins when nothing can be upgraded',()=>{
- G.stage=4;G.gold=0;G.weapons=[];const r=rollTreasure(()=>.99);
- // 업그레이드할 장비가 없으면 강화 1회가 3+stage 코인으로 대체된다.
- assert.equal(r.length,1);assert.ok(r.every(x=>x.kind==='gold'));assert.equal(G.gold,3+4);
+test('treasure chest coins scale with stage and the greed bonus',()=>{
+ resetBuild();G.stage=4;G.gold=0;G.weapons=[];const r=rollTreasure(()=>.99);
+ assert.equal(r.length,1);assert.equal(r[0].kind,'gold');assert.equal(G.gold,22);
+});
+test('a treasure chest is always worth less than the boss: fewer coins and fewer expected upgrades on every stage and difficulty',()=>{
+ const {TREASURE_DROPS,treasureCoinValue,bossCoinValue}=coinDrops;
+ for(let stage=1;stage<=10;stage++){
+  assert.ok(treasureCoinValue(stage)<=bossCoinValue(stage)*.6,`stage ${stage} coins`);
+  for(const d of ['easy','normal','hard','hell']){const tier=bossRewardTier(stage,DIFF[d]);assert.ok(TREASURE_DROPS.upgradeChance+TREASURE_DROPS.bonusPassiveChance<tier.guaranteedCount,`stage ${stage}/${d}`);}
+ }
+ assert.ok(TREASURE_DROPS.ordinary<=.0001&&TREASURE_DROPS.champion<=.002&&TREASURE_DROPS.elite<=.025);assert.equal(TREASURE_DROPS.maxPerStage,1);
 });

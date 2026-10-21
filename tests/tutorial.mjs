@@ -64,7 +64,7 @@ test('versioned offer preserves old guide/save keys and explains actual field-bo
  assert.equal(storage.get('kfp.save.v1'),'preserve-me');
  const box=guide.TUTORIAL_STEPS.find(s=>s.visual==='fieldbox');
  assert.ok(box);assert.match(box.image,/salvage-cache/);assert.match(box.text,/열기 → 보상 확인 → 받기/);
- assert.match(box.text,/진화/);assert.match(box.text,/강화 1회/);assert.match(box.text,/새 보조 아이템/);assert.match(box.text,/보물 상자/);assert.match(JSON.stringify(guide.TUTORIAL_STEPS),/코인/);
+ assert.match(box.text,/진화/);assert.match(box.text,/코인/);assert.match(box.text,/강화 1회/);assert.match(box.text,/새 보조 아이템/);assert.match(box.text,/보물 상자/);assert.match(JSON.stringify(guide.TUTORIAL_STEPS),/코인/);
  assert.match(box.tip,/변이체/);assert.match(box.tip,/보스 상자/);assert.match(JSON.stringify(guide.TUTORIAL_STEPS),/상점 재화/); // 코인은 상점 재화, 필드 상자는 전투 보상
  assert.doesNotMatch(JSON.stringify(guide.TUTORIAL_STEPS),/조각|파편/);
  const all=JSON.stringify(guide.TUTORIAL_STEPS);assert.match(all,/나중에 얻은 무기와 조합 무기/);assert.match(all,/STAGE 3 클리어/);assert.match(all,/1개만 장착/);
