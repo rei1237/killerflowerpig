@@ -8,7 +8,7 @@ import { atlases, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { relicStats } from '../data/relics.js';
 import { upgradeLevel, save, onCosmeticsChanged } from '../core/save.js';
-import { MAGAZINE_BONUS } from '../data/weapons.js';
+import { MAGAZINE_BONUS, PASSIVE_TUNING } from '../data/weapons.js';
 import { applyTechPlayerBonus, resonanceTier } from './tech.js';
 import { blood, flash, shake, damageText, hitstop, sparks, floatText } from './effects.js';
 import { activeOutfit, outfitStats, incomingOutfitDamage } from './cosmetic-effects.js';
@@ -57,7 +57,7 @@ export function recomputeStats(fullHeal = false) {
     const lv = (id) => G.passives[id] || 0;
     const s = {
         might: 1 + lv('whet') * 0.1 + upgradeLevel('might') * 0.05,
-        area: 1 + lv('spread') * 0.1,
+        area: 1 + lv('spread') * PASSIVE_TUNING.spread,
         cooldown: 1,
         // 꽃가루 장막: 피격 1회 차단 보호막 재충전 시간 (0이면 없음)
         barrierCd: POLLEN_BARRIER_CD[lv('pollen')] || 0,
@@ -67,11 +67,11 @@ export function recomputeStats(fullHeal = false) {
         pierce: Math.ceil(lv('scope') / 2),
         amount: 0, // 다른 출처의 고정 투사체 보너스
         amountMul: MAGAZINE_BONUS[lv('magazine')] || 0, // 탄창 확장: 투사체 비례 보너스
-        crit: lv('focus') * 0.07,
+        crit: lv('focus') * PASSIVE_TUNING.focus,
         regen: lv('regen') * 0.3,
         magnet: BASE.magnet * (1 + lv('nose') * 0.3 + upgradeLevel('magnet') * 0.1),
         speed: BASE.speed * (1 + lv('madness') * 0.07 + upgradeLevel('speed') * 0.04),
-        armor: lv('hide'),
+        armor: lv('hide') * PASSIVE_TUNING.hide,
         maxHp: BASE.hp + lv('heart') * 20 + upgradeLevel('maxHp') * 10,
         greed: 1 + upgradeLevel('greed') * 0.1,
         critMul: BASE_CRIT_MUL,

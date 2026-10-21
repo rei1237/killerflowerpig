@@ -53,7 +53,7 @@ export const TECHS = Object.freeze({
     },
     bloom: {
         strength: '최대 3발이 겹치는 일직선 광선·강화 집중 사격·접촉 소모형 가시·재생', weakness: '자동 광선은 한 방향 일직선만 공격·보스에게는 광선 중복 없이 1발, 소모된 가시는 다시 자랄 때까지 빈틈이 생김',
-        name: '연꽃 정원', icon: '🌸', color: '#ffb3d6', power: 2.6,
+        name: '연꽃 정원', icon: '🌸', color: '#ffb3d6', power: 2.3,
         summary: '회전 꽃잎과 광선으로 버티며 성장하는 생존 테크',
         start: { weapon: 'thorns', weapons: ['thorns', 'cannon'], passive: 'regen' },
         family: { weapons: ['thorns', 'cannon', 'saw'], passives: ['regen', 'pollen', 'heart'] },
@@ -110,7 +110,7 @@ export const TECHS = Object.freeze({
     },
     butcher: {
         strength: '검의 넓은 근접 베기·예측 조준 톱날·출혈과 방어', weakness: '후속 반사는 지형·거리 영향을 받고 먼 단일 적 추적은 약함',
-        name: '도살자', icon: '🪚', color: '#ff8f8f', power: 2.0,
+        name: '도살자', icon: '🪚', color: '#ff8f8f', power: 2.2,
         summary: '검과 예측 조준 톱날을 각각 성장시키고 조합하는 근접 전사 테크',
         start: { weapon: 'sword', weapons: ['sword', 'saw'], passive: 'whet' },
         family: { weapons: ['sword', 'saw', 'shotgun', 'thorns'], passives: ['whet', 'hide', 'heart'] },

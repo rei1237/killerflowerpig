@@ -17,12 +17,10 @@ function paired(id, phase, scene, { route = false, oneCast = false } = {}) {
     return cache.get(key);
 }
 
-test('gun definitions are unchanged except the evolved shotgun reach; non-sword crit modifiers are unchanged; sword gains melee crit', () => {
-    // 총기 역할 분리: 진화 산탄총만 사거리(지속) +30%. 피해 차이는 TIER_POWER.evolved 로 준다.
-    for (const id of ['pistols', 'rifle']) assert.deepEqual(WEAPONS[id], baseline.weapons[id]);
-    const { duration, ...shotgunMods } = WEAPONS.shotgun.evolve.mods;
-    assert.equal(duration, 1.3);
-    assert.deepEqual({ ...WEAPONS.shotgun, evolve: { ...WEAPONS.shotgun.evolve, mods: shotgunMods } }, baseline.weapons.shotgun);
+test('gun evolutions keep their mods (shotgun reach +30%); non-sword crit modifiers are unchanged; sword gains melee crit', () => {
+    // 무기 밸런스 재조정으로 총기 기본·레벨 수치는 바뀌었다(tools/weapon-balance-bench.mjs). 진화 모드와 치명타 성질은 그대로.
+    for (const id of ['pistols', 'rifle', 'shotgun']) assert.deepEqual(WEAPONS[id].evolve, { ...baseline.weapons[id].evolve, mods: id === 'shotgun' ? { ...baseline.weapons[id].evolve.mods, duration: 1.3 } : baseline.weapons[id].evolve.mods });
+    assert.equal(WEAPONS.shotgun.evolve.mods.duration, 1.3);
     // 도살검은 근접 보상으로 고유 치명타를 받았다 (기본 20%, 피해 +50%, 진화 +10%/+50%).
     assert.equal(WEAPONS.sword.base.crit, 0.2); assert.equal(WEAPONS.sword.base.critBonus, 0.5);
     assert.equal(WEAPONS.sword.evolve.mods.crit, 0.1); assert.equal(WEAPONS.sword.evolve.mods.critBonus, 0.5);
@@ -92,8 +90,8 @@ test('consumable thorns clears the moving finite wave within its measured charge
     assert.equal(after.cleared, 3); assert.ok(after.meanClearTime <= 30);
     // Requested close fixed ring (no radius growth) and a stronger pre-evolution petal.
     assert.equal(WEAPONS.thorns.base.radius, 50);
-    assert.equal(WEAPONS.thorns.base.dmg, 78); assert.equal(WEAPONS.thorns.base.regrow, 1.4);
-    assert.equal(WEAPONS.saw.base.hitCd, baseline.weapons.saw.base.hitCd);
+    assert.equal(WEAPONS.thorns.base.dmg, 95); assert.equal(WEAPONS.thorns.base.regrow, 1.4);
+    assert.equal(WEAPONS.saw.base.hitCd, .24); // 무기 밸런스: 뼈 톱날 다단 히트 간격 0.3 → 0.24
     assert.equal(SAW_VISUAL_CAP, 6); assert.equal(ORBIT_VISUAL_CAP, 8);
 });
 

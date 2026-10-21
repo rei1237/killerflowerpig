@@ -77,7 +77,9 @@ for (const phase of ['mid', 'evolved', 'final']) {
         assert.ok(bloom.dps > 0);
         assert.ok(role('bloom', phase, 'swarm_stationary').dps > bloom.dps * 3);
         assert.ok(role('bloom', phase, 'swarm_stationary').dps > role('gunline', phase, 'swarm_stationary').dps);
-        assert.ok(role('bloom', phase, 'dispersed_moving').dps > role('gunline', phase, 'dispersed_moving').dps);
+        // 무기 밸런스 재조정(tools/weapon-balance-bench.mjs --routes): 꽃잎포가 사기적이던 때만 흩어진 적에서도 탄막 사수를 앞섰다.
+        // 연꽃 정원의 무리 우위는 근접 무리(swarm)로 지키고, 흩어진 이동 적에서는 크게 뒤처지지만 않게 한다.
+        assert.ok(role('bloom', phase, 'dispersed_moving').dps > role('gunline', phase, 'dispersed_moving').dps * .55);
         assert.ok(bloom.survival.maxHp > gunline.survival.maxHp);
         assert.ok(bloom.survival.regenPerSecond > 0);
         assert.ok(bloom.survival.pollenRecharge > 0);

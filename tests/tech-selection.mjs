@@ -97,7 +97,7 @@ test('player-wide tier bonuses (HP, regen, armor, crit multiplier) follow resona
     startTech('butcher');
     for (const [kind, id] of [['weapon', 'shotgun'], ['passive', 'hide']]) applyChoice({ kind, id, level: 1 });
     recomputeStats();
-    assert.equal(G.player.stats.armor, 1 + 1, 'hide Lv1 + tier II armor');
+    assert.ok(Math.abs(G.player.stats.armor - (0.6 + 1)) < 1e-9, 'hide Lv1 (0.6) + tier II armor');
     assert.equal(G.player.maxHp, 130);
 });
 

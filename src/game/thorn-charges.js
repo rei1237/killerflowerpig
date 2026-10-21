@@ -17,8 +17,8 @@ export const THORN_GUARD = Object.freeze({ perPetal: .04, cap: .2, evolvedPerPet
 // 정지: 꽃잎이 직접 찌른 대상은 항상 정지한다. 진화(피의 연꽃)와 조합 무기에 계승된 가시 코어는 더 길게.
 // 보스는 짧게 정지하고, 이후 BOSS_STUN.immunity 초 동안은 다시 정지하지 않는다.
 export const THORN_STUN = Object.freeze({ enemy: .6, evolvedEnemy: .8, boss: .3, evolvedBoss: .4, bossImmunity: BOSS_STUN.immunity });
-// 가시는 몸에 붙은 무리를 찌르는 무기다: 거대한 보스에게는 접촉·파열 피해가 60%만 들어간다.
-export const THORN_BOSS_DAMAGE = .6;
+// 가시는 몸에 붙은 무리를 찌르는 무기다: 거대한 보스에게는 접촉·파열 피해가 75%만 들어간다.
+export const THORN_BOSS_DAMAGE = .75;
 export function thornStun(w, boss = false) { return w.evolved ? (boss ? THORN_STUN.evolvedBoss : THORN_STUN.evolvedEnemy) : (boss ? THORN_STUN.boss : THORN_STUN.enemy); }
 // 회전 반경은 고정이다: 반경이 넓어지면 몸에 붙은 적을 찌르지 못한다. 범위 보너스는 꽃잎 크기에 쓴다.
 export const THORN_PETAL_RADIUS = 14;

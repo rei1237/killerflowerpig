@@ -2,7 +2,7 @@
 // a visible beam is never steered after its angle has been scored.
 export const CANNON_TARGET_LIMIT = 64;
 export const CANNON_RAY_LIMIT = 3;
-export const cannonFocusMultiplier = count => [1.1,2.2,3.3][Math.max(1, Math.min(CANNON_RAY_LIMIT, Math.floor(finite(count))))-1];
+export const cannonFocusMultiplier = count => [1.3,2.6,3.9][Math.max(1, Math.min(CANNON_RAY_LIMIT, Math.floor(finite(count))))-1];
 const TAU = Math.PI * 2;
 const finite = value => Number.isFinite(value) ? value : 0;
 const angleDistance = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));

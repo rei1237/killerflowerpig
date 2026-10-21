@@ -104,7 +104,7 @@
     "fusionOnly": true,
     "desc": "산탄총의 부채꼴 7발에 소총의 4회 관통과 긴 사거리를 결합한다.",
     "base": {
-      "dmg": 15,
+      "dmg": 25,
       "cd": 1.35,
       "amount": 7,
       "speed": 800,

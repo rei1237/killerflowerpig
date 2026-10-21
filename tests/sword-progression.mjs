@@ -7,7 +7,7 @@ import { resetBuild, applyChoice, rollChoices, snapshotBuild, restoreBuild, evol
 import { previewFusion, fuseItems } from '../src/game/fusion.js';
 import { isFamilyItem, resonanceCount, resonanceTier } from '../src/game/tech.js';
 import { newRun, continueRun, loadRun, startStage } from '../src/game/game.js';
-import { WEAPONS, MAX_WEAPONS } from '../src/data/weapons.js';
+import { WEAPONS, MAX_WEAPONS, TIER_POWER } from '../src/data/weapons.js';
 import { TECHS, WEAPON_TAGS, techStartingWeapons } from '../src/data/techs.js';
 import { FUSION_RECIPES } from '../src/data/fusions.js';
 import { save } from '../src/core/save.js';
@@ -39,8 +39,9 @@ test('sword has eight real growth levels, a defined evolution and an ordinary we
     assert.equal(WEAPONS.sword.evolve.with, 'whet');
     assert.equal(WEAPONS.sword.evolve.name, '핏빛 연꽃검');
     const expected = [
-        [28, .95, 1], [36, .95, 1], [36, .874, 1], [36, .874, 1.15],
-        [46, .874, 1.15], [46, .798, 1.15], [58, .798, 1.15], [58, .722, 1.30],
+        // 무기 밸런스: 기본 베기 피해 28 → 19, Lv2 +8 → +12 (진화 보정 TIER_POWER.evolved.sword 로 후반 유지)
+        [19, .95, 1], [31, .95, 1], [31, .874, 1], [31, .874, 1.15],
+        [41, .874, 1.15], [41, .798, 1.15], [53, .798, 1.15], [53, .722, 1.30],
     ];
     for (let level = 1; level <= 8; level++) {
         const stats = weaponStats(Object.assign(createWeapon('sword', 0), { level }));
@@ -94,7 +95,7 @@ test('whet unlocks both sword and saw evolution only at Lv8; the real chest perf
 test('sword evolution applies its explicit damage, cadence, area and bleed exactly once', () => {
     const w = Object.assign(createWeapon('sword', 0), { level: 8 }), normal = weaponStats(w);
     w.evolved = true; const evolved = weaponStats(w);
-    near(evolved.dmg / normal.dmg, 1.55 * 1.35);
+    near(evolved.dmg / normal.dmg, 1.55 * 1.35 * TIER_POWER.evolved.sword);
     near(evolved.cd / normal.cd, .82);
     near(evolved.area / normal.area, 1.25);
     assert.equal(evolved.bleed, 4);

@@ -28,12 +28,13 @@ function enemy(id,x,y=0) {
 }
 
 test('cannon Lv1–8 grows damage, width and range while rays stop at three',()=>{
-    const w=setup();const damages=[44,56,60,68,74,84,92,100];let previous=Infinity;
+    // 무기 밸런스: 짧아진 기본 광선(340·굵기 32)과 느린 간격 성장(레벨당 -4%), 세 번째 광선은 Lv7.
+    const w=setup();const damages=[22,31,33,37,40,45,49,53];let previous=Infinity;
     for(let level=1;level<=8;level++){
         w.level=level;const s=weaponStats(w);
-        near(s.cd,2.6*(1-.09*(level-1)),`level ${level}`);assert.ok(s.cd<previous);previous=s.cd;
-        assert.equal(s.amount,[1,2,2,3,3,3,3,3][level-1]);assert.equal(s.dmg,damages[level-1]);assert.equal(s.speed,1,'hitscan does not claim travel-speed progression');
-        assert.equal(s.width,44+2*(level-1));assert.equal(s.length,520+20*(level-1));
+        near(s.cd,3.8*(1-.04*(level-1)),`level ${level}`);assert.ok(s.cd<previous);previous=s.cd;
+        assert.equal(s.amount,[1,2,2,2,2,2,3,3][level-1]);assert.equal(s.dmg,damages[level-1]);assert.equal(s.speed,1,'hitscan does not claim travel-speed progression');
+        assert.equal(s.width,40+2*(level-1));assert.equal(s.length,340+20*(level-1));
     }
     assert.equal(createWeapon('cannon',0).cd,.4,'initial acquisition delay remains unchanged');
 });
@@ -84,7 +85,7 @@ test('inherited Cannon and final main releases coalesce without losing their sch
     for(const id of ['lotus_bloom','ember_lance','absolute_bloom','plague_end']){
         setup(id,1,false);const cores=activeWeaponCores();const core=cores.find(w=>w.id==='cannon');
         assert.ok(core,id);assert.equal(core.level,8);assert.equal(core.evolved,true);
-        const s=weaponStats(core);assert.equal(s.amount,3);near(s.cd,2.6*.37*.85*(id==='absolute_bloom'?1.15:1));
+        const s=weaponStats(core);assert.equal(s.amount,3);near(s.cd,3.8*.72*.85*(id==='absolute_bloom'?1.15:1));
         const direct=cores.filter(c=>['cannon','lotus_bloom','ember_lance','absolute_bloom'].includes(c.id));
         const expected=direct.reduce((sum,c)=>{const s=weaponStats(c);return sum+s.focusBeamDamage*cannonFocusMultiplier(s.amount);},0);
         const hits=boss(350);tapFocusAt(G.boss.x,G.boss.y-G.boss.radius);updateWeapons(.001);
@@ -122,7 +123,7 @@ test('focused Cannon progression keeps evolved, final-entry and absolute-entry p
 });
 
 test('requested double impact and count-based focus apply exactly once at Lv1/4/8 in automatic and focused modes',()=>{
-    for(const [level,base,ratio] of [[1,44,1],[4,68,.85],[8,100,.65]]) {
+    for(const [level,base,ratio] of [[1,22,1],[4,37,.85],[8,53,.65]]) {
         for(const focused of [false,true]) for(const might of [1,1.7]) {
             const w=setup('cannon',level);G.player.stats.might=might;
             const s=weaponStats(w), hits=boss(250);
@@ -150,15 +151,15 @@ test('beam multiplier never changes non-beam stats or multiplies inherited core 
     }
 });
 
-test('focused total is exactly 1.1/2.2/3.3 strengthened beams, never multiplied by count twice',()=>{
-    for(const [count,expected] of [[0,1.1],[1,1.1],[2,2.2],[3,3.3],[100,3.3]])near(cannonFocusMultiplier(count),expected);
+test('focused total is exactly 1.3/2.6/3.9 strengthened beams, never multiplied by count twice',()=>{
+    for(const [count,expected] of [[0,1.3],[1,1.3],[2,2.6],[3,3.9],[100,3.9]])near(cannonFocusMultiplier(count),expected);
     for(const tech of ['gunline','executioner','plague','butcher']){
         const w=setup('cannon',8);G.tech=tech;
         const s=weaponStats(w);
-        near(s.dmg,80,'existing raw mismatch remains for shared non-beam stats');
-        near(s.beamDamage,190*CANNON_STRAIGHT_POWER,'Cannon-only mismatch is 5% of doubled100, then the straight-lane bonus');
-        near(s.beamFocusedImpact,627*CANNON_STRAIGHT_POWER,'three rays already included in total');
+        near(s.dmg,53*.8,'existing raw mismatch remains for shared non-beam stats');
+        near(s.beamDamage,53*2*.95*CANNON_STRAIGHT_POWER,'Cannon-only mismatch is 5% of doubled Lv8 53, then the straight-lane bonus');
+        near(s.beamFocusedImpact,53*2*.95*CANNON_STRAIGHT_POWER*3.9,'three rays already included in total');
         const hits=boss(250);tapFocusAt(G.boss.x,G.boss.y-G.boss.radius);updateWeapons(.001);
-        near(hits[0].dmg,627*CANNON_STRAIGHT_POWER);assert.equal(G.beams.count,3);
+        near(hits[0].dmg,53*2*.95*CANNON_STRAIGHT_POWER*3.9);assert.equal(G.beams.count,3);
     }
 });

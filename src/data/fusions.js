@@ -31,7 +31,7 @@ export const FUSED_WEAPONS = {
     },
     absolute_bloom: {
         name: '절대 만개', icon: '💮', color: '#fff0b8', fusionOnly: true, tier: 'absolute', amountCap: 12,
-        desc: '세 진화 무기의 공격을 계승한다. 연꽃 광선은 피해 2배 강화, 집중 총 피해는 1/2/3발에 1.1/2.2/3.3배, 보너스와 계승 공격을 합쳐 화면 전체 최대 3발. 자동 사격은 한 줄로 겹친 일직선 광선, 집중 조준은 선택한 적에게 강화 피해를 준다. 계승한 피의 연꽃 가시는 흡혈과 함께 찌른 적을 항상 정지시킨다(일반 0.8초 · 보스 0.4초).',
+        desc: '세 진화 무기의 공격을 계승한다. 연꽃 광선은 피해 2배 강화, 집중 총 피해는 1/2/3발에 1.3/2.6/3.9배, 보너스와 계승 공격을 합쳐 화면 전체 최대 3발. 자동 사격은 한 줄로 겹친 일직선 광선, 집중 조준은 선택한 적에게 강화 피해를 준다. 계승한 피의 연꽃 가시는 흡혈과 함께 찌른 적을 항상 정지시킨다(일반 0.8초 · 보스 0.4초).',
         base: { dmg: 125, cd: 3.2, amount: 8, speed: 1, duration: 0.6, area: 1, length: 680, width: 58 },
         levels: [{dmg:15,t:'절대 광선 피해 +15 · 계승 공격 강화'},{area:0.12,t:'절대 광선 범위 +12%'},{cd:-0.08,t:'재사용 -8%'},{dmg:20,t:'절대 광선 피해 +20 · 계승 공격 강화'},{area:0.12,t:'절대 광선 범위 +12%'},{cd:-0.08,t:'재사용 -8%'},{dmg:25,t:'절대 광선 피해 +25 · 세 진화 공격 최종 강화'}],
     },
@@ -44,7 +44,7 @@ export const FUSED_WEAPONS = {
     scatter_rail: {
         name: '관통 산탄포', icon: '💥', color: '#a6deff', fusionOnly: true,
         desc: '산탄총의 부채꼴 7발에 소총의 4회 관통과 긴 사거리를 결합한다.',
-        base: { dmg: 15, cd: 1.35, amount: 7, speed: 800, duration: 0.8, pierce: 3, area: 1, spread: 0.55 },
+        base: { dmg: 25, cd: 1.35, amount: 7, speed: 800, duration: 0.8, pierce: 3, area: 1, spread: 0.55 },
         levels: [{dmg:3,t:'탄당 피해 +3'},{pierce:1,t:'관통 +1'},{cd:-0.1,t:'재사용 -10%'},{amount:1,t:'산탄 +1'},{dmg:4,t:'탄당 피해 +4'},{pierce:1,t:'관통 +1'},{amount:1,t:'산탄 +1'}],
     },
     doom_barrage: {

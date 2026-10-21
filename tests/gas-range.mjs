@@ -13,9 +13,9 @@ beforeEach(()=>{clearWorld();resetBuild();createPlayer();G.mode='play';G.stage=1
 const radius=w=>{const s=weaponStats(w);return s.radius*s.area};
 function fire(id,evolved=false,level=1){const w=Object.assign(createWeapon(id,0),{evolved,level,cd:0,fusionCores:[]});G.weapons=[w];updateWeapons(.01);updateShots(.6);return w;}
 test('gas range grows from its tuned base through level and evolution; spread propagates exactly once through restore',()=>{
- let w=createWeapon('gas',0);near(radius(w),106);w.level=8;near(radius(w),121.9);w.evolved=true;near(radius(w),170.66);
- G.weapons=[w];for(let level=1;level<=5;level++)applyChoice({kind:'passive',id:'spread',level});near(radius(w),255.99);
- const snap=snapshotBuild();resetBuild();restoreBuild(snap);near(radius(G.weapons[0]),255.99);
+ let w=createWeapon('gas',0);near(radius(w),106);w.level=8;near(radius(w),121.9);w.evolved=true;near(radius(w),219.42);
+ G.weapons=[w];for(let level=1;level<=5;level++)applyChoice({kind:'passive',id:'spread',level});near(radius(w),362.043);
+ const snap=snapshotBuild();resetBuild();restoreBuild(snap);near(radius(G.weapons[0]),362.043);
 });
 test('actual grenade fields use expanded radii and exact ellipse damage boundaries',()=>{
  for(const [id,r] of [['gas',106],['plague_fire',PF]]){
@@ -27,8 +27,8 @@ test('actual grenade fields use expanded radii and exact ellipse damage boundari
  }
 });
 test('evolved following cloud never shrinks back to old hardcoded radius on refresh',()=>{
- const w=fire('gas',true,8);const h=w.follow;near(h.radius,170.66);w.cd=0;updateWeapons(.01);assert.equal(w.follow,h);near(h.radius,170.66);
- applyChoice({kind:'passive',id:'spread',level:1});w.cd=0;updateWeapons(.01);near(h.radius,187.726);assert.equal(G.hazards.count,1);
+ const w=fire('gas',true,8);const h=w.follow;near(h.radius,219.42);w.cd=0;updateWeapons(.01);assert.equal(w.follow,h);near(h.radius,219.42);
+ applyChoice({kind:'passive',id:'spread',level:1});w.cd=0;updateWeapons(.01);near(h.radius,247.9446);assert.equal(G.hazards.count,1);
 });
 test('plague fire shares increased area while gas-derived bullet and saw hitboxes stay unchanged',()=>{
  const w=createWeapon('plague_fire',0);near(radius(w),PF);w.level=8;near(radius(w),PF*1.12);G.player.stats.area=100;near(radius(w),PF*2);G.player.stats.area=1;

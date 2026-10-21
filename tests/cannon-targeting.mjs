@@ -92,7 +92,7 @@ test('Lv1→4→8 straight lane grows in power, stacks up to three rays and pier
     const lane = [];
     for (const level of [1, 4, 8]) {
         const w = setup('cannon', level); Object.assign(G.player, { vx: -130, vy: 20, facingX: -1, facingY: 0 });
-        const line = Array.from({ length: 5 }, (_, i) => enemy(i + 1, 140 + i * 70, 12));
+        const line = Array.from({ length: 5 }, (_, i) => enemy(i + 1, 120 + i * 50, 12)); // Lv1 사거리 340 안
         const decoy = enemy(9, -260, 12);
         const s = weaponStats(w); updateWeapons(.001);
         assert.equal(G.beams.count, Math.min(3, s.amount));
@@ -129,7 +129,7 @@ test('focused volleys aggregate once with a bounded bonus on the focus, pierce e
         const beams = G.beams.items.slice(0, G.beams.count);
         assert.equal(beams.filter(b => b.focusPrimary).length, 1); assert.equal(beams.filter(b => b.focusHit).length, 1);
         assert.ok(beams.every(b => b.focused && b.focusCount === s.amount && b.focusEndX <= focus.x + focus.radius));
-        assert.ok(cannonFocusMultiplier(s.amount) <= 3.3 + 1e-9);
+        assert.ok(cannonFocusMultiplier(s.amount) <= 3.9 + 1e-9);
     }
 });
 test('a killed focus is not replaced mid-volley; next attack releases lock and resets pooled focus metadata', () => {
