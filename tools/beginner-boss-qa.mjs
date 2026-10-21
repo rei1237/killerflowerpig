@@ -7,6 +7,7 @@ import { readFileSync,readdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { G, clearWorld } from '../src/game/state.js';
 import { Boss } from '../src/game/boss.js';
+import { updateEnemyShots } from '../src/game/enemies.js';
 import { atlases, images, fx } from '../src/core/assets.js';
 import { SPRITES } from '../src/data/sprites.js';
 import { TECHS, techStartingWeapons } from '../src/data/techs.js';
@@ -45,7 +46,7 @@ export function measureBeginnerBoss({tech,seed=7,kiteRadius=100,maxSeconds=300,b
    const dx=G.player.x-b.x,dy=G.player.y-b.y,d=Math.hypot(dx,dy)||1,radial=Math.max(-1,Math.min(1,(kiteRadius-d)/60));
    let mx=-dy/d+dx/d*radial,my=dx/d+dy/d*radial;const norm=Math.hypot(mx,my);input.move.x=mx/norm;input.move.y=my/norm;
    const dt=1/60;G.clock+=dt;updatePlayer(dt);G.camera.x=G.player.x;G.camera.y=G.player.y;
-   updateWeapons(dt);updateShots(dt);updateHazards(dt);b.update(dt);
+   updateWeapons(dt);updateShots(dt);updateHazards(dt);b.update(dt);updateEnemyShots(dt); // 1구역 보스 탄막 포함
    if(G.player.hp<previousHp)hpLoss+=previousHp-G.player.hp;previousHp=G.player.hp;
    const next=b.task?.phase??'walk';
    if(next!==state||b.task!==lastTask){
@@ -55,7 +56,7 @@ export function measureBeginnerBoss({tech,seed=7,kiteRadius=100,maxSeconds=300,b
     if(next==='dash'){dashes++;firstDash??=G.clock;}if(next==='recover')recoveries++;
     state=next;stateAt=G.clock;lastTask=b.task;
    }
-   assert.equal(G.enemies.count,0);assert.equal(G.enemyShots.count,0);
+   assert.equal(G.enemies.count,0,'never summons');
   }
   return {tech,seed,kiteRadius,budget,choiceCount,equivalentRunLevel:choiceCount+1,weapons:G.weapons.map(w=>({id:w.id,level:w.level})),passives:{...G.passives},bossMaxHp:b.maxHp,
    killed:!b.alive,playerAlive:!G.player.dead,seconds:round(G.clock),hp:round(G.player.hp),maxHp:G.player.maxHp,hpLoss:round(hpLoss),remainingBossHp:round(Math.max(0,b.hp)),starts,dashes,recoveries,firstStart:round(firstStart??0),firstDash:round(firstDash??0),

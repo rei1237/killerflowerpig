@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
-import { ENEMIES, ELITE, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, ELITE_BOSS_CAP, stageScaling } from '../src/data/enemies.js';
+import { bossMaxHp } from '../src/data/bosses.js';
 import { STAGES } from '../src/data/stages.js';
 import { DIFFICULTIES } from '../src/data/difficulty.js';
 import { CHAMPIONS, CHAMPION_KEYS, ELITE_AFFIX_KEYS, championChance, eliteAffixCount, championDeathBlast, affixRandom, createAffixRandom } from '../src/game/affixes.js';
@@ -62,8 +63,11 @@ test('elites roll distinct abilities by stage (1/2/3), keep ELITE multipliers, a
         assert.equal(elite.affixes.length, count); assert.equal(new Set(elite.affixes).size, count);
         assert.ok(elite.affixes.every(k => ELITE_AFFIX_KEYS.includes(k)));
         assert.equal(plain.affixes, null);
-        close(elite.maxHp, plain.maxHp); close(elite.xp, plain.xp); close(elite.dmg, plain.dmg);
-        close(elite.maxHp, ENEMIES.brute.hp * stageScaling(stage, 0, STAGES[stage].duration).hp * ELITE.hp);
+        close(elite.xp, plain.xp); close(elite.dmg, plain.dmg);
+        // 보스 상한: 체력+방벽 합계가 보스 체력의 15%를 넘으면 비례 축소된다.
+        const raw = ENEMIES.brute.hp * stageScaling(stage, 0, STAGES[stage].duration).hp * ELITE.hp, cap = bossMaxHp(stage) * ELITE_BOSS_CAP.hp;
+        close(plain.maxHp, Math.min(raw, cap));
+        close(elite.maxHp, Math.min(raw, cap / (elite.affixes.includes('barrier') ? 1.6 : 1)));
     }
     reset(3);
     const e = spawnEnemy('brute', 300, 0, { elite: true, affixes: ['barrier'] });

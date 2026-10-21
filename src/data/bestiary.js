@@ -40,7 +40,7 @@ export function bestiaryEntries(){
  }
  // Deliberate allowlist: final boss never enters guide data/search/detail/navigation.
  for(let stage=1;stage<=9;stage++){const def=BOSSES[stage];if(!def)continue;
-  entries.push({id:`boss-${stage}`,name:def.name,kind:'boss',stage,role:'구역 보스',tell:bossTells[def.signature]||'바닥 예고 표시를 확인하세요.',pattern:stage===1?'같은 단일 돌진만 사용합니다. 체력이 줄어도 예고와 회복 시간은 줄지 않으며 소환·탄막이 없습니다.':stage===3?`빠른 추적 후 방향을 각각 고정하는 2연속 돌진. 돌진 속도 ${[0,1,2].map(p=>Math.round(HUNTER_TUNING.dashSpeed*(1+p*HUNTER_TUNING.phaseSpeedStep))).join(' / ')} (페이즈별), 회복 ${HUNTER_TUNING.recovery}초.`:`고유 패턴: ${bossTells[def.signature]||def.signature}. 체력이 줄면 후속 공격이 강화됩니다.`,counter:def.signatureHint,details:[],hp:bossMaxHp(stage),speed:def.speed,damage:def.dmg,image:`asset/bosses/boss-${String(def.artStage??stage).padStart(2,'0')}.webp`,reward:`처치 시 코인 ${bossCoinValue(stage)}개 + 보스 장비 상자 확정`,statNote:'보스 정의의 기본 능력치입니다. 개별 기술의 피해·속도는 접촉 능력치와 다릅니다.'});
+  entries.push({id:`boss-${stage}`,name:def.name,kind:'boss',stage,role:'구역 보스',tell:bossTells[def.signature]||'바닥 예고 표시를 확인하세요.',pattern:stage===1?'단일 돌진과 원형 탄막을 번갈아 씁니다. 체력 60% 이하에서 조준 부채꼴 탄이 더해집니다. 돌진 예고와 회복 시간은 줄지 않으며 소환은 없습니다.':stage===3?`빠른 추적 후 방향을 각각 고정하는 2연속 돌진. 돌진 속도 ${[0,1,2].map(p=>Math.round(HUNTER_TUNING.dashSpeed*(1+p*HUNTER_TUNING.phaseSpeedStep))).join(' / ')} (페이즈별), 회복 ${HUNTER_TUNING.recovery}초.`:`고유 패턴: ${bossTells[def.signature]||def.signature}. 체력이 줄면 후속 공격이 강화됩니다.`,counter:def.signatureHint,details:[],hp:bossMaxHp(stage),speed:def.speed,damage:def.dmg,image:`asset/bosses/boss-${String(def.artStage??stage).padStart(2,'0')}.webp`,reward:`처치 시 코인 ${bossCoinValue(stage)}개 + 보스 장비 상자 확정`,statNote:'보스 정의의 기본 능력치입니다. 개별 기술의 피해·속도는 접촉 능력치와 다릅니다.'});
  }
  return entries;
 }

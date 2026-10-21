@@ -95,7 +95,9 @@ test('strong early burst fixture stays bounded without artificial protection to 
  for(const distance of [100,300,500])for(let seed=1;seed<=12;seed++){
   const result=measureEarlyBossEncounter({distance,seed});
   assert.equal(result.hp,600);
-  assert.ok(result.starts.every(([at,pattern])=>at>=3&&at<result.death&&pattern==='trainingCharge'), 'any beginner attack is a warned single charge');
+  // 1스테이지 보스: 첫 공격은 항상 예고된 돌진, 이후 완화된 원형/조준 탄막이 섞인다.
+  assert.ok(result.starts.every(([at,pattern])=>at>=3&&at<result.death&&['trainingCharge','ring','aimed'].includes(pattern)), 'beginner attacks are its warned charge or softened barrage');
+  if(result.starts.length)assert.equal(result.starts[0][1],'trainingCharge');
   // Strong pistol crits can cross a phase boundary during charge windup.
   // Do not add hidden boss invulnerability just to force that dash to connect.
   if(result.first!==null){assert.ok(result.first<result.death);assert.ok(result.first>=3);}

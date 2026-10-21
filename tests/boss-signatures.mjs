@@ -196,10 +196,11 @@ test('hourglass marker is draw-only and pooled hazards reset it on reuse',()=>{
  G.hazards.clear();const plain=spawnHazard('tcircle',0,0,{delay:1});assert.equal(plain.symbol,null);
 });
 
-test('advanced bosses retain bullet mixing and signature escalation; beginner does not',()=>{
+test('advanced bosses retain bullet mixing and signature escalation; the stage-1 boss mixes a softened barrage',()=>{
  for(let stage=1;stage<=10;stage++) {
   const def=BOSSES[stage];
-  if(stage===1){assert.deepEqual(def.phases,[['trainingCharge'],['trainingCharge'],['trainingCharge']]);continue;}
+  // 1스테이지는 처음부터 완화된 원형 탄막을 섞는다 (너무 쉬워서 강화).
+  if(stage===1){assert.deepEqual(def.phases,[['trainingCharge','ring'],['trainingCharge','ring','aimed'],['trainingCharge','ring','aimed']]);assert.ok(def.barrage);continue;}
   assert.ok(!def.phases[0].some(k=>k==='ring'||k==='aimed')||stage===1,`${stage}: opening phase stays a pure signature read`);
   assert.ok(def.phases[2].some(k=>k==='ring'||k==='aimed'),`${stage}: frenzy mixes a bullet pattern`);
   // Hunter's 2 → 3 → off-beat 3 combo is verified with a moving player in hunter-speed.mjs.

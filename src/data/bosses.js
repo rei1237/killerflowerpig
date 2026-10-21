@@ -11,8 +11,11 @@ export const HUNTER_TUNING = Object.freeze({ warning: .65, secondWarning: .5, da
 export const BOSSES = {
     1: { name: '길목 경비 청토끼', title: '길목을 지키는 파수꾼...', sheet: 'boss1', tint: 'normal', scale: 0.62, hp: 600, speed: 48, dmg: 10,
         pacing: { opening: 3, phaseRest: 2.5, warning: 1.5, dashSpeed: 300, dashRange: 280, safeRecovery: 2.5 },
-        signature: 'trainingCharge', signatureHint: '1.5초 예고선 옆으로 피하고, 2.5초 멈춘 동안 공격하세요.',
-        phases: [['trainingCharge'], ['trainingCharge'], ['trainingCharge']] },
+        signature: 'trainingCharge', signatureHint: '1.5초 예고선 옆으로 피하고, 원형 탄막은 탄 사이 틈으로 빠지세요. 멈춘 동안 공격하세요.',
+        // 너무 쉬워서 탄막 추가: 처음부터 돌진과 원형 탄막을 번갈아 쓰고, 60% 이하에서 조준 부채꼴이 더해진다.
+        // 1구역용 완화: 원형 탄 70%(페이즈별 10·13·17발)·최대 2연발, 부채꼴 -2발·2연발, 탄속 85%.
+        barrage: { density: 0.7, maxVolleys: 2, fanReduce: 2, aimedVolleys: 2, speed: 0.85, interval: 1.2, rest: 0.4 },
+        phases: [['trainingCharge', 'ring'], ['trainingCharge', 'ring', 'aimed'], ['trainingCharge', 'ring', 'aimed']] },
     2: { name: '엘리트 청토끼', title: '전투 머신이 다가온다...', sheet: 'boss1', tint: 'elite', scale: 0.64, hp: 2240, speed: 66, dmg: 16,
         signature: 'barrage', signatureHint: '고정된 사격선 옆으로 빠지고 재장전 중 공격하세요.',
         phases: [['barrage'], ['barrage'], ['barrage', 'ring']] },

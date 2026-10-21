@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { updateEnemyShots } from '../src/game/enemies.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { BOSSES, BOSS_EVOLUTION_HP, bossMaxHp } from '../src/data/bosses.js';
@@ -42,7 +43,7 @@ test('stage 9 restores Brutus King identity, original art and no phase adds',()=
  const b=reset(9);assert.equal(b.maxHp,24000*7*BOSS_EVOLUTION_HP[9]);assert.equal(b.maxHp,bossMaxHp(9));assert.equal(b.artStage,9);
  assert.equal(b.def.signature,'faultline');assert.equal(b.attackT,100);
  assert.equal(bestiaryEntries().find(e=>e.id==='boss-9').image,BOSS_ART[9].src);
- assert.match(bestiaryEntries().find(e=>e.id==='boss-1').pattern,/소환·탄막이 없습니다/);
+ assert.match(bestiaryEntries().find(e=>e.id==='boss-1').pattern,/원형 탄막/);assert.match(bestiaryEntries().find(e=>e.id==='boss-1').pattern,/소환은 없습니다/);
  assert.ok(!bestiaryEntries().some(e=>e.id==='boss-10'));
  for(const phase of [1,2]){b.enterPhase(phase);assert.equal(G.enemies.count,0);}
 });
@@ -52,16 +53,23 @@ test('stages 2 through 8 and stage 10 retain every definition field unchanged',(
  for(const stage of [2,3,4,5,6,7,8,10]){const {barrage,...rest}=BOSSES[stage];assert.equal(barrage===undefined,stage!==3);assert.deepEqual(rest,previousBosses[stage]);}
 });
 
-test('stage 1 has no summons, bullets or phase acceleration at the selected beginner HP',()=>{
+test('stage 1 opens with its warned charge, then mixes a softened barrage; no summons or phase acceleration',()=>{
+ // 1스테이지 보스 강화: 돌진과 원형 탄막을 번갈아, 60% 이하에서 조준 부채꼴 추가. 탄막은 1구역용으로 완화.
  const b=reset();assert.equal(b.maxHp,4200);assert.equal(b.maxHp,bossMaxHp(1));
+ const expected=[['trainingCharge','ring'],['trainingCharge','ring','aimed'],['trainingCharge','ring','aimed']];
  for(const phase of [0,1,2]){
-  b.phase=phase;assert.deepEqual(b.def.phases[phase],['trainingCharge']);
+  b.phase=phase;assert.deepEqual(b.def.phases[phase],expected[phase]);
   if(phase)b.enterPhase(phase);
   assert.equal(G.enemies.count,0);assert.equal(b.speed,48);
-  begin(b);assert.equal(G.hazards.count,1);assert.equal(G.hazards.items[0].delay,1.5);
+  b.lastPattern=null;begin(b);assert.equal(b.lastPattern,'trainingCharge','every cycle opens with the warned charge');
+  assert.equal(G.hazards.count,1);assert.equal(G.hazards.items[0].delay,1.5);
   G.player.x=180;G.player.y=200;advance(b,5.1);
-  assert.equal(G.enemies.count,0);assert.equal(G.enemyShots.count,0);
+  assert.equal(G.enemies.count,0,'never summons');
  }
+ // 완화된 원형 탄막: 마지막 페이즈 17발 × 최대 2연발 (완화 없으면 24발 × 4연발).
+ const r=reset();r.phase=2;r.task=r.task_ring();r.task.t=0;let peak=0;
+ for(let t=0;r.task&&t<4;t+=1/60){r.task.t+=1/60;r.task.step(1/60,r.task);peak=Math.max(peak,G.enemyShots.count);}
+ assert.ok(peak>0&&peak<=34,`ring bullets ${peak}`);
 });
 
 test('beginner lock remains fixed, every phase gets the complete tell, and long frames cannot skip it',()=>{
@@ -135,8 +143,8 @@ for(const tech of Object.keys(TECHS))test(`${tech}: actual starter can sidestep 
    let mx=-dy/d+dx/d*radial,my=dx/d+dy/d*radial;const norm=Math.hypot(mx,my);
    input.move.x=mx/norm;input.move.y=my/norm;
    const dt=1/60;G.clock+=dt;updatePlayer(dt);G.camera.x=G.player.x;G.camera.y=G.player.y;
-   updateWeapons(dt);updateShots(dt);updateHazards(dt);b.update(dt);
-   assert.equal(G.enemies.count,0);assert.equal(G.enemyShots.count,0);
+   updateWeapons(dt);updateShots(dt);updateHazards(dt);b.update(dt);updateEnemyShots(dt); // 1구역 보스 탄막도 실제로 날아가 판정한다
+   assert.equal(G.enemies.count,0,'never summons');
   }
   assert.equal(G.player.dead,false);assert.ok(G.player.hp>0);assert.ok(starts>=(tech==='bloom'?2:5));
   const damage=Object.values(G.damageBy).reduce((a,n)=>a+n,0);

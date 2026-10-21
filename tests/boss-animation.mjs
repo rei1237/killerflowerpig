@@ -91,7 +91,7 @@ test('charge holds windup for the exact gameplay warning and attacks only during
 
 test('ring and aimed volleys release the attack frame on the actual projectile event, including the final shot',()=>{
  for(const [name,delay,gap,count] of [['ring',.3,.35,2],['aimed',.35,.28,3]]) {
-  const b=reset();begin(b,name);b.update(delay-.001);assertFrame(b,'windup');assert.equal(G.enemyShots.count,0);
+  const b=reset(2);begin(b,name);b.update(delay-.001); // 공통 탄막 타이밍: 완화 설정이 없는 2구역 보스로 검사assertFrame(b,'windup');assert.equal(G.enemyShots.count,0);
   b.update(.002);assertFrame(b,'attack');assert.ok(G.enemyShots.count>0);
   b.update(.17);assertFrame(b,'recover');
   for(let i=1;i<count;i++) {
