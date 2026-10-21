@@ -52,7 +52,7 @@ export const TECHS = Object.freeze({
         ],
     },
     bloom: {
-        strength: '최대 3발 자동 광선·강화 집중 사격·접촉 소모형 가시·재생', weakness: '자동 광선은 분산 피해·중복 타격 없음, 소모된 가시는 다시 자랄 때까지 빈틈이 생김',
+        strength: '최대 3발이 겹치는 일직선 광선·강화 집중 사격·접촉 소모형 가시·재생', weakness: '자동 광선은 한 방향 일직선만 공격·보스에게는 광선 중복 없이 1발, 소모된 가시는 다시 자랄 때까지 빈틈이 생김',
         name: '연꽃 정원', icon: '🌸', color: '#ffb3d6', power: 2.6,
         summary: '회전 꽃잎과 광선으로 버티며 성장하는 생존 테크',
         start: { weapon: 'thorns', weapons: ['thorns', 'cannon'], passive: 'regen' },

@@ -10,7 +10,7 @@ import { fireSword, drawButcherSword } from './butcher-sword.js';
 import { choosePlagueLanding } from './plague-targeting.js';
 import { updateThornCharges } from './thorn-charges.js';
 import { chooseCannonVolley, collectCannonTargets, cannonBeamHits, cannonFocusMultiplier, CANNON_RAY_LIMIT } from './cannon-targeting.js';
-import { WEAPONS, tierPower, CANNON_IMPACT_MULTIPLIER, CANNON_MISMATCH_DAMAGE } from '../data/weapons.js';
+import { WEAPONS, tierPower, CANNON_IMPACT_MULTIPLIER, CANNON_MISMATCH_DAMAGE, CANNON_STRAIGHT_POWER, cannonLaneRatio, cannonLaneStack } from '../data/weapons.js';
 import { fx, glow, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { hitEnemy } from './enemies.js';
@@ -121,9 +121,10 @@ export function weaponStats(w) {
     // Derived once after all stat multipliers/caps; inherited cores use this
     // same path without multiplying their owner's already-derived value.
     if (isCannonBeam(w.id)) {
-        result.beamDamage = result.dmg * CANNON_IMPACT_MULTIPLIER * (isMismatchedWeapon(w.id) ? CANNON_MISMATCH_DAMAGE / MISMATCH_DAMAGE : 1);
+        result.beamDamage = result.dmg * CANNON_IMPACT_MULTIPLIER * CANNON_STRAIGHT_POWER * (isMismatchedWeapon(w.id) ? CANNON_MISMATCH_DAMAGE / MISMATCH_DAMAGE : 1);
         result.focusBeamDamage = result.beamDamage;
-        result.beamAutoImpact = result.beamDamage * (w.id === 'cannon' ? 1 - .05 * (Math.min(8,Math.max(1,w.level))-1) : .65);
+        // One straight lane: all rays overlap, so a target on it takes the stacked lane.
+        result.beamAutoImpact = result.beamDamage * cannonLaneRatio(w.id, w.level) * cannonLaneStack(result.amount);
         result.beamFocusedImpact = result.focusBeamDamage * cannonFocusMultiplier(result.amount);
     }
     if (w.id === 'thorns') {
@@ -474,16 +475,15 @@ function flushCannonVolleys() {
             for (const { w: core, s } of components) {
                 const len = path ? Math.min(s.length * Math.sqrt(s.area), focusPathLength) : s.length * Math.sqrt(s.area), wid = s.width * s.area;
                 const rays = volley.focused ? 1 : Math.min(s.amount, volley.rays.length);
-                for (let i = 0; i < rays; i++) {
-                    if (!cannonBeamHits(target, { ...volley.rays[i], length: len, width: wid, segments: null })) continue;
-                    const ratio = focusedHit ? cannonFocusMultiplier(s.amount) :
-                        core.id === 'cannon' ? 1 - .05 * (Math.min(8, Math.max(1, core.level)) - 1) : .65;
-                    const owner = ownerId(core), old = contributions.get(owner);
-                    const impact = (focusedHit ? s.focusBeamDamage : s.beamDamage) * ratio;
-                    if (old) { old.damage += impact; old.crit = Math.max(old.crit, s.crit); }
-                    else contributions.set(owner, { damage: impact, crit: s.crit });
-                    break;
-                }
+                let hits = 0;
+                for (let i = 0; i < rays; i++) if (cannonBeamHits(target, { ...volley.rays[i], length: len, width: wid, segments: null })) hits++;
+                if (!hits) continue;
+                // The focus multiplier already counts every ray; a straight lane stacks its overlapping rays.
+                const ratio = focusedHit ? cannonFocusMultiplier(s.amount) : cannonLaneRatio(core.id, core.level) * cannonLaneStack(hits, target === G.boss);
+                const owner = ownerId(core), old = contributions.get(owner);
+                const impact = (focusedHit ? s.focusBeamDamage : s.beamDamage) * ratio;
+                if (old) { old.damage += impact; old.crit = Math.max(old.crit, s.crit); }
+                else contributions.set(owner, { damage: impact, crit: s.crit });
             }
             return contributions;
         };
@@ -527,6 +527,8 @@ function flushCannonVolleys() {
             b.focusCount = b.focused ? volley.rays.length : 0; b.focusHit = b.focusPrimary && focusHit;
             b.focusEndX = b.focused ? volley.focusEndX : null; b.focusEndY = b.focused ? volley.focusEndY : null;
             b.focusTargetId = b.focused ? volley.focusTargetId ?? null : null;
+            // Straight lane: the lead ray draws the full beam, stacked rays braid into it.
+            b.stack = b.focused ? 0 : volley.rays.length; b.stackIndex = b.focused ? 0 : i;
             if (b.focused) {
                 const end = Math.hypot(b.focusEndX - b.x, b.focusEndY - b.y);
                 b.len = Math.min(b.len,end); for (const segment of b.segments) segment.length=Math.min(segment.length,end);

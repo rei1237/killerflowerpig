@@ -37,7 +37,10 @@ test('actual mirrored muzzle, target radius, ray width and finite length share o
     const muzzleAt = dx => ({ x: dx < 0 ? -30 : 30, y: -22 });
     const targets = [target(1, 200, -10), target(2, -200, -10), target(3, 360, -10), target(4, 200, 50)];
     const result = chooseCannonVolley({ targets, count: 2, length: 220, width: 20, muzzleAt });
-    assert.deepEqual(ids(result.targets), [1, 2]); assert.ok(result.rays.every(r => r.x === (r.dx < 0 ? -30 : 30)));
+    assert.deepEqual(ids(result.targets), [1], 'one straight lane: the mirrored target needs the opposite side');
+    assert.ok(result.rays.every(r => r.x === (r.dx < 0 ? -30 : 30) && r.angle === result.rays[0].angle));
+    const left = chooseCannonVolley({ targets, count: 2, length: 220, width: 20, muzzleAt, fallbackAngle: Math.PI });
+    assert.deepEqual(ids(left.targets), [2]); assert.ok(left.rays.every(r => r.x === -30));
     assert.equal(cannonBeamHits(target(5, 100, 33, 25), { x: 0, y: 0, dx: 1, dy: 0, width: 10, length: 110 }), true);
     assert.equal(cannonBeamHits(target(6, 111, 12), { x: 0, y: 0, dx: 1, dy: 0, width: 50, length: 110 }), false);
 });
@@ -63,9 +66,10 @@ function enemy(id, x, y, hp = 1e6) {
     G.grid.insert(e); return e;
 }
 function predict(w) {
-    const s = weaponStats(w), p = G.player;
-    return chooseCannonVolley({ targets: G.enemies.items.slice(0, G.enemies.count), count: s.amount,
-        length: s.length * Math.sqrt(s.area), width: s.width * s.area,
+    const s = weaponStats(w), p = G.player, length = s.length * Math.sqrt(s.area);
+    // Same visible candidate set the live volley scores; a straight lane has no spare rays to cover unseen targets.
+    const { targets } = collectCannonTargets({ player: p, grid: G.grid, enemies: G.enemies, boss: null, focus: null, view: G.view, camera: G.camera, length });
+    return chooseCannonVolley({ targets, count: s.amount, length, width: s.width * s.area,
         fallbackAngle: Math.atan2(p.facingY, p.facingX), muzzleAt: dx => firingMuzzle(p, G.clock, dx) });
 }
 test('actual ordinary/evolved/inherited/final beam collisions exactly match predicted target unions while moving', () => {
@@ -84,14 +88,20 @@ test('actual ordinary/evolved/inherited/final beam collisions exactly match pred
         }
     }
 });
-test('Lv1→4→8 moving coverage improves then respects the explicit three-ray limit', () => {
-    const kills = [];
+test('Lv1→4→8 straight lane grows in power, stacks up to three rays and pierces the whole line', () => {
+    const lane = [];
     for (const level of [1, 4, 8]) {
-        setup('cannon', level); Object.assign(G.player, { vx: -130, vy: 20, facingX: -1, facingY: 0 });
-        for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8; enemy(i + 1, 280 * Math.cos(a), 12 + 280 * Math.sin(a), 40); }
-        updateWeapons(.001); kills.push(G.kills);
+        const w = setup('cannon', level); Object.assign(G.player, { vx: -130, vy: 20, facingX: -1, facingY: 0 });
+        const line = Array.from({ length: 5 }, (_, i) => enemy(i + 1, 140 + i * 70, 12));
+        const decoy = enemy(9, -260, 12);
+        const s = weaponStats(w); updateWeapons(.001);
+        assert.equal(G.beams.count, Math.min(3, s.amount));
+        for (let i = 1; i < G.beams.count; i++) assert.equal(G.beams.items[i].angle, G.beams.items[0].angle);
+        assert.ok(line.every(e => e.hp < e.maxHp), `Lv${level}: the lane pierces every enemy on the line`);
+        assert.equal(decoy.hp, decoy.maxHp, `Lv${level}: nothing fires in a second direction`);
+        lane.push(line[0].maxHp - line[0].hp);
     }
-    assert.ok(kills[0] < kills[1] && kills[1] <= kills[2], JSON.stringify(kills));
+    assert.ok(lane[0] < lane[1] && lane[1] < lane[2], JSON.stringify(lane));
 });
 test('visible far-edge enemies remain candidates, entirely unseen ones do not, and explicit focus may override', () => {
     setup('cannon', 8); const visible = enemy(1, 508, 0), unseen = enemy(2, 540, 0);

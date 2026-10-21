@@ -5,7 +5,7 @@ import { createPlayer, recomputeStats } from '../src/game/player.js';
 import { resetBuild } from '../src/game/progression.js';
 import { createWeapon, weaponStats, updateWeapons, updateShots, activeWeaponCores } from '../src/game/weapons.js';
 import { clearFocus, tapFocusAt } from '../src/game/targeting.js';
-import { WEAPONS, tierPower } from '../src/data/weapons.js';
+import { WEAPONS, tierPower, CANNON_STRAIGHT_POWER } from '../src/data/weapons.js';
 import { save } from '../src/core/save.js';
 import { cannonFocusMultiplier } from '../src/game/cannon-targeting.js';
 import { runBalanceScene } from '../tools/cannon-growth-qa.mjs';
@@ -66,12 +66,14 @@ test('three-ray cap preserves meaningful equipment might growth before the sourc
     near(high.dmg/low.dmg,2.15/1.5);assert.equal(high.amount,3);assert.ok(high.dmg>low.dmg*1.4);
 });
 
-test('each ordinary or evolved cannon volley hits each enemy and boss once even when many rays overlap',()=>{
+test('a straight cannon lane stacks its overlapping rays on ordinary enemies and counts once on a boss, once per volley',()=>{
     for(const evolved of [false,true]){
         const w=setup('cannon',8,evolved);G.player.stats.area=3;
         const hits=boss(),e=enemy(1,35), s=weaponStats(w);
         updateWeapons(.001);
-        assert.equal(G.beams.count,s.amount);assert.equal(hits.length,1);near(hits[0].dmg,s.beamDamage*.65);near(1e9-e.hp,s.beamDamage*.65);
+        assert.equal(G.beams.count,s.amount);assert.equal(s.amount,3);
+        for(let i=1;i<G.beams.count;i++)assert.equal(G.beams.items[i].angle,G.beams.items[0].angle,'every ray shares one straight lane');
+        assert.equal(hits.length,1);near(hits[0].dmg,s.beamDamage*.65);near(1e9-e.hp,s.beamDamage*.65*3);near(s.beamAutoImpact,s.beamDamage*.65*3);
         const hp=e.hp,bossHp=G.boss.hp;updateShots(.1);
         assert.equal(e.hp,hp);assert.equal(G.boss.hp,bossHp,'visible lifetime is not repeating DoT');
         w.cd=0;G.clock+=.01;updateWeapons(.001);assert.equal(hits.length,2,'dedup expires with the volley, not the weapon');
@@ -127,8 +129,8 @@ test('requested double impact and count-based focus apply exactly once at Lv1/4/
             if(focused)tapFocusAt(G.boss.x,G.boss.y-G.boss.radius);
             updateWeapons(.001);
             const oldImpact=base*might*(focused?cannonFocusMultiplier(s.amount):ratio);
-            near(s.beamDamage,s.dmg*2,'derived beam damage');
-            assert.equal(hits.length,1);near(hits[0].dmg,oldImpact*2);
+            near(s.beamDamage,s.dmg*2*CANNON_STRAIGHT_POWER,'derived beam damage');
+            assert.equal(hits.length,1);near(hits[0].dmg,oldImpact*2*CANNON_STRAIGHT_POWER);
             assert.ok(G.beams.count<=3);
         }
     }
@@ -139,7 +141,7 @@ test('beam multiplier never changes non-beam stats or multiplies inherited core 
         setup(id,8,id==='cannon');
         for(const w of activeWeaponCores()) {
             const s=weaponStats(w);
-            if(['cannon','lotus_bloom','ember_lance','absolute_bloom'].includes(w.id))near(s.beamDamage,s.dmg*2);
+            if(['cannon','lotus_bloom','ember_lance','absolute_bloom'].includes(w.id))near(s.beamDamage,s.dmg*2*CANNON_STRAIGHT_POWER);
             else assert.equal(s.beamDamage,undefined,w.id);
         }
     }
@@ -154,9 +156,9 @@ test('focused total is exactly 1.1/2.2/3.3 strengthened beams, never multiplied 
         const w=setup('cannon',8);G.tech=tech;
         const s=weaponStats(w);
         near(s.dmg,80,'existing raw mismatch remains for shared non-beam stats');
-        near(s.beamDamage,190,'Cannon-only mismatch is 5% of doubled100');
-        near(s.beamFocusedImpact,627,'three rays already included in total');
+        near(s.beamDamage,190*CANNON_STRAIGHT_POWER,'Cannon-only mismatch is 5% of doubled100, then the straight-lane bonus');
+        near(s.beamFocusedImpact,627*CANNON_STRAIGHT_POWER,'three rays already included in total');
         const hits=boss(250);tapFocusAt(G.boss.x,G.boss.y-G.boss.radius);updateWeapons(.001);
-        near(hits[0].dmg,627);assert.equal(G.beams.count,3);
+        near(hits[0].dmg,627*CANNON_STRAIGHT_POWER);assert.equal(G.beams.count,3);
     }
 });

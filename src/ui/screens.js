@@ -512,7 +512,7 @@ function fusionStatText(stats) {
     const area=stats?.area || 1;
     const shown={...stats,radius:stats?.radius*area,length:stats?.length*Math.sqrt(area),width:stats?.width*area};
     const parts=[];
-    for (const [key,label] of [['dmg','피해'],['beamAutoImpact','분산 광선 1회 피해'],['beamFocusedImpact','집중 광선 1회 피해'],['amount','발수'],['pierce','관통'],['radius','범위'],['length','사거리'],['orbitDamage','꽃잎 피해'],['orbitAmount','꽃잎 수'],['orbitRadius','꽃잎 범위'],['fieldDamage','화염 틱 피해'],['fieldAmount','화염 지대'],['fieldRadius','화염 범위'],['fieldDuration','화염 지속(초)'],['orbitDuration','꽃잎 지속(초)']]) {
+    for (const [key,label] of [['dmg','피해'],['beamAutoImpact','일직선 광선 1회 피해'],['beamFocusedImpact','집중 광선 1회 피해'],['amount','발수'],['pierce','관통'],['radius','범위'],['length','사거리'],['orbitDamage','꽃잎 피해'],['orbitAmount','꽃잎 수'],['orbitRadius','꽃잎 범위'],['fieldDamage','화염 틱 피해'],['fieldAmount','화염 지대'],['fieldRadius','화염 범위'],['fieldDuration','화염 지속(초)'],['orbitDuration','꽃잎 지속(초)']]) {
         if (key === 'dmg' && Number.isFinite(stats?.beamAutoImpact)) continue;
         if (Number.isFinite(shown[key])) parts.push(`${label} ${Math.round(shown[key]*10)/10}`);
     }

@@ -52,9 +52,10 @@ export function cannonBeamHits(target, ray) {
     return along <= ray.length && across < ray.width / 2 + radius;
 }
 
+// Straight line: every ray of a volley shares one angle and stacks on the same lane.
 function writeRays(rays, base, count, length, width, muzzleAt, profiles) {
     for (let i = 0; i < count; i++) {
-        const angle = base + i * TAU / count, dx = Math.cos(angle), dy = Math.sin(angle);
+        const angle = base, dx = Math.cos(angle), dy = Math.sin(angle);
         const muzzle = muzzleAt(dx);
         const ray = rays[i];
         ray.x = muzzle.x; ray.y = muzzle.y; ray.angle = angle;
@@ -67,8 +68,9 @@ function writeRays(rays, base, count, length, width, muzzleAt, profiles) {
 }
 
 // Supply no more than 64 nearby objects from the live world. A hittable focus
-// converges the entire volley exclusively on that target. Otherwise maximize
-// distinct targets across the whole volley, with a stable facing-angle tie.
+// converges the entire volley exclusively on that target. Otherwise the whole
+// volley fires as one straight lane aimed to cross the most targets, with a
+// stable facing-angle tie.
 export function chooseCannonVolley({ targets = [], focus = null, count = 1, length = 520, width = 38,
     fallbackAngle = 0, muzzleAt = () => ({ x: 0, y: 0 }), rayProfiles = null } = {}) {
     count = Math.max(1, Math.min(CANNON_RAY_LIMIT, Math.floor(finite(count))));
@@ -78,7 +80,6 @@ export function chooseCannonVolley({ targets = [], focus = null, count = 1, leng
     const profiles = rayProfiles ? Array.from({length:count}, (_,i) => (rayProfiles[i] || []).slice(0,12).map(s => ({
         length:Math.max(0,finite(s.length)),width:Math.max(0,finite(s.width))}))) : null;
     if (profiles) for (const profile of profiles) { profile.maxLength=Math.max(...profile.map(s=>s.length),0); profile.maxWidth=Math.max(...profile.map(s=>s.width),0); }
-    const symmetric = !profiles || profiles.every(p => JSON.stringify(p) === JSON.stringify(profiles[0]));
     const live = [], seen = new Set();
     let inspected = 0;
     const add = target => {
@@ -115,7 +116,7 @@ export function chooseCannonVolley({ targets = [], focus = null, count = 1, leng
         }
     }
     const candidates = [reference];
-    const period = symmetric ? TAU / count : TAU, equivalent = new Map();
+    const period = TAU, equivalent = new Map();
     const addAngle = angle => {
         const key = Math.round(((angle % period + period) % period) * 1e7);
         const index = equivalent.get(key);
@@ -142,16 +143,13 @@ export function chooseCannonVolley({ targets = [], focus = null, count = 1, leng
             addAngle(dy < 0 ? -Math.PI / 2 : Math.PI / 2);
             continue;
         }
-        // Asymmetric profiles cannot be rotation-merged: a one-ray long core
-        // exists only on its own ray. At most 64 * 3 rays * 3 alignments + 3 including vertical fallbacks.
-        for (let i=0;i<(symmetric?1:count);i++) {
-            const reachable = profiles?.[i]?.filter(s=>distance<=s.length+s.width/2+(target.radius||0));
-            if (reachable && !reachable.length) continue;
-            const candidateWidth = reachable ? Math.max(...reachable.map(s=>s.width)) : width;
-            const edge = Math.asin(Math.min(1, (candidateWidth / 2 + (target.radius || 0)) / Math.max(1, distance))) * .999999;
-            const base=center-i*TAU/count;
-            addAngle(base);addAngle(base-edge);addAngle(base+edge);
-        }
+        // Every ray shares the lane, so the union of all ray profiles decides reach.
+        // At most 64 targets * 3 alignments + 2 vertical fallbacks.
+        const reachable = profiles?.flat().filter(s=>distance<=s.length+s.width/2+(target.radius||0));
+        if (reachable && !reachable.length) continue;
+        const candidateWidth = reachable ? Math.max(...reachable.map(s=>s.width)) : width;
+        const edge = Math.asin(Math.min(1, (candidateWidth / 2 + (target.radius || 0)) / Math.max(1, distance))) * .999999;
+        addAngle(center);addAngle(center-edge);addAngle(center+edge);
     }
     const rays = Array.from({ length: count }, () => ({ x: 0, y: 0, angle: 0, dx: 0, dy: 0, length, width }));
     let bestAngle = reference, bestHits = -1, bestFocus = -1, bestTurn = Infinity;
@@ -171,10 +169,6 @@ export function chooseCannonVolley({ targets = [], focus = null, count = 1, leng
         }
     }
     writeRays(rays, bestAngle, count, length, width, muzzleAt, profiles);
-    // Put the focused ray first for the braced pose without changing the scored
-    // volley. Other rays retain exactly the same positions and directions.
-    const primary = focused ? rays.findIndex(ray => cannonBeamHits(focused, ray)) : 0;
-    if (primary > 0) rays.push(...rays.splice(0, primary));
     return { rays, targets: live.filter(target => rays.some(ray => cannonBeamHits(target, ray))),
-        focusHit: bestFocus > 0, focused: false, damageMultiplier: 1, inspected, candidateCount: candidates.length };
+        focusHit: bestFocus > 0, focused: false, straight: true, damageMultiplier: 1, inspected, candidateCount: candidates.length };
 }

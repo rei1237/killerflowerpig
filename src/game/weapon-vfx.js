@@ -159,6 +159,13 @@ export function drawWeaponOrbit(ctx,w,s,p,frame) {
 }
 
 export function drawWeaponBeam(ctx,b,frame) {
+ // Stacked rays of a straight lane braid into the lead beam instead of
+ // repainting the whole beam on top of it.
+ if (b.stackIndex>0&&!b.focused) {
+  const first=Array.isArray(b.segments)&&b.segments.length?b.segments[0]:null;
+  drawBeamBraid(ctx,b,frame,first?first.length:b.len,first?first.width:b.width,b.stackIndex);
+  return;
+ }
  // Coalesced releases may share an angle but not width/reach. Keep the real
  // union outline: a short wide component never becomes a long wide beam.
  if (Array.isArray(b.segments) && b.segments.length) {
@@ -176,10 +183,19 @@ function drawWeaponBeamLayer(ctx,b,frame,len=b.len,beamWidth=b.width,secondary=f
  const width=beamWidth*(.6+.4*k),decor=!secondary&&(!b.focused||primary)&&detail(frame,true),time=frame.motion?frame.clock:0;
  ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.angle);ctx.globalCompositeOperation='source-over';ctx.lineCap='round';
  // Translucent tapered layers stay inside the real beam width and length.
- ctx.globalAlpha=k*intensity*.18;ctx.fillStyle=style.color;
- ctx.beginPath();ctx.moveTo(0,-width*.48);ctx.lineTo(len*.93,-width*.22);ctx.lineTo(len,0);ctx.lineTo(len*.93,width*.22);ctx.lineTo(0,width*.48);ctx.closePath();ctx.fill();
- ctx.globalAlpha=k*intensity*.23;ctx.fillStyle=style.accent||style.color;
+ // A straight lane (not focused) is a pink-to-pearl body with a hot white core;
+ // more stacked rays make the same real lane denser, never wider.
+ const lane=!b.focused&&!secondary,dense=lane?Math.min(1,.7+.15*Math.max(1,b.stack||1)):1;
+ const body=(half,alpha)=>{
+  ctx.globalAlpha=k*intensity*alpha;ctx.fillStyle=style.color;
+  ctx.beginPath();ctx.moveTo(0,-width*half);ctx.lineTo(len*.93,-width*half*.46);ctx.lineTo(len,0);ctx.lineTo(len*.93,width*half*.46);ctx.lineTo(0,width*half);ctx.closePath();ctx.fill();
+ };
+ // Lane body: three nested layers fade toward the real edge instead of a hard slab.
+ if(lane){body(.48,.07*dense);body(.4,.1*dense);body(.32,.16*dense);}
+ else body(.48,.18);
+ ctx.globalAlpha=k*intensity*(lane?.3*dense:.23);ctx.fillStyle=lane?style.light:style.accent||style.color;
  ctx.beginPath();ctx.moveTo(0,-width*.25);ctx.lineTo(len,0);ctx.lineTo(0,width*.25);ctx.closePath();ctx.fill();
+ if(lane)segment(ctx,0,0,len*.98,0,'#ffffff',Math.max(1.5,width*.13),k*intensity*.42*dense);
  segment(ctx,0,0,len,0,style.light,Math.max(1,width*.055),k*intensity*.8);
  if(decor){
   // Five opening petals and a fine gold collar stay at the real muzzle.
@@ -188,14 +204,34 @@ function drawWeaponBeamLayer(ctx,b,frame,len=b.len,beamWidth=b.width,secondary=f
   const collar=Math.min(19,width*.28)*opening;
   ctx.globalAlpha=k*intensity*.6;ctx.strokeStyle=style.accent||style.light;ctx.lineWidth=1.2;
   ctx.beginPath();ctx.ellipse(0,0,collar*.48,collar,0,0,TAU);ctx.stroke();
+  if(!b.focused){
+   // Outer lotus rosette behind the collar: one outer petal ring per stacked ray.
+   const outer=Math.min(frame.petalLeft,frame.lowQ?3:6);frame.petalLeft-=outer;frame.petalsUsed+=outer;
+   ctx.globalAlpha=k*intensity*.42;
+   for(let i=0;i<outer;i++){const a=(i+.5)/outer*TAU+(frame.motion?(1-k)*.9:0);petal(ctx,Math.cos(a)*collar*.62,Math.sin(a)*collar*1.05,Math.min(9,width*.16),a,i%2?style.color:style.accent||style.light);}
+  }
   const muzzlePetals=Math.min(frame.petalLeft,frame.lowQ?3:5);frame.petalLeft-=muzzlePetals;frame.petalsUsed+=muzzlePetals;
   for(let i=0;i<muzzlePetals;i++){const a=(i-(muzzlePetals-1)/2)*.42;petal(ctx,-Math.cos(a)*collar*.5,Math.sin(a)*collar,Math.min(8,width*.14),a, i%2?style.light:style.accent||style.color);}
   segment(ctx,0,0,len,0,style.accent||style.color,Math.max(2,width*.10),k*intensity*.34);
   segment(ctx,0,0,len,0,style.light,Math.max(1,width*.035),k*intensity*.9);
   segment(ctx,0,-width*.24,len*.95,-width*.09,style.color,1,k*intensity*.55);
   segment(ctx,0,width*.24,len*.95,width*.09,style.color,1,k*intensity*.55);
+  if(!b.focused){
+   // Gilded lane: fine gold filigree edges, travelling bloom rings and the lead braid strand.
+   const gold=style.accent||style.light;
+   segment(ctx,len*.04,-width*.42,len*.9,-width*.17,gold,.9,k*intensity*.55);
+   segment(ctx,len*.04,width*.42,len*.9,width*.17,gold,.9,k*intensity*.55);
+   const rings=frame.lowQ?2:3,travel=frame.motion?1-k:.5;
+   ctx.lineWidth=1.1;ctx.strokeStyle=style.light;
+   for(let i=0;i<rings;i++){
+    const t=(travel+i/rings)%1,x=len*(.08+.84*t),taper=1-.55*t;
+    ctx.globalAlpha=k*intensity*.5*(1-t*.6);
+    ctx.beginPath();ctx.ellipse(x,0,width*.12*taper,width*.44*taper,0,0,TAU);ctx.stroke();
+   }
+   drawBeamBraid(ctx,b,frame,len,width,0,true);
+  }
   if(frame.glow){
-   const g=glow(style.color,32),r=Math.min(34,width*.72);
+   const g=glow(style.color,32),r=Math.min(34,width*.72)*(1+.12*Math.max(0,(b.stack||1)-1));
    ctx.globalAlpha=k*intensity*.48;ctx.drawImage(g,-r,-r,r*2,r*2);
   }
   // No fake impacts at the beam end. Petals decorate the light path only.
@@ -223,6 +259,29 @@ function drawWeaponBeamLayer(ctx,b,frame,len=b.len,beamWidth=b.width,secondary=f
   frame.impactLeft--;frame.impactsUsed++;
  }
  ctx.restore();
+}
+
+// One sinuous light strand inside the real beam width; stacked rays offset its
+// phase so a three-ray lane reads as a single braided beam.
+function drawBeamBraid(ctx,b,frame,len,width,index,inLead=false) {
+ const k=Math.max(0,Math.min(1,b.life/b.max));
+ if(!k||!(len>0))return;
+ const style=weaponVfxProfile(b.weapon),points=frame.lowQ?14:32,stack=Math.max(1,b.stack||1);
+ const phase=index/stack*TAU+(frame.motion?frame.clock*7:0),amp=width*.24*(.6+.4*k);
+ if(!inLead){ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.angle);ctx.lineCap='round';ctx.lineJoin='round';}
+ const strand=(color,lineWidth,alpha)=>{
+  ctx.globalAlpha=k*alpha*(b.weapon==='absolute_bloom'?.75:1);ctx.strokeStyle=color;ctx.lineWidth=lineWidth;
+  ctx.beginPath();
+  for(let i=0;i<=points;i++){
+   const t=i/points,x=t*len*.97,y=Math.sin(t*TAU*1.75+phase)*amp*(1-.55*t);
+   if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);
+  }
+  ctx.stroke();
+ };
+ // A soft pink sheath under a pearl thread gives each strand depth without glow composites.
+ strand(style.color,Math.max(2,width*.11),.32);
+ strand(index%2?style.accent||style.light:style.light,Math.max(1,width*.04),.78);
+ if(!inLead)ctx.restore();
 }
 
 // Bounded read-only hit accents: only currently flashing, damaged targets
