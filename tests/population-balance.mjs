@@ -75,7 +75,7 @@ test('refill rates track the smaller population without double-scaling the defic
     }
 });
 
-test('enemy HP/damage follow the toughness and damage multipliers; collision is unchanged and field elites use the original boss sprites (xp is cut by STAGE_XP_YIELD)', () => withFixedRandom(() => {
+test('enemy HP/damage follow the toughness and damage multipliers; collision is unchanged and field elites are tinted early and use the original boss sprites later (xp is cut by STAGE_XP_YIELD)', () => withFixedRandom(() => {
     assert.equal(ENEMY_TOUGHNESS_MULTIPLIER, 1.9);
     assert.equal(ENEMY_DAMAGE_MULTIPLIER, 1.15);
     for (let stage = 1; stage <= 10; stage++) {
@@ -95,10 +95,10 @@ test('enemy HP/damage follow the toughness and damage multipliers; collision is 
                     close(enemy.speed, def.speed * old.speed * (elite ? ELITE.speed : 1));
                     close(enemy.dmg, def.dmg * old.dmg * 1.15 * (elite ? ELITE.dmg : 1));
                     close(enemy.radius, def.radius * (elite ? ELITE.scale : 1));
-                    const art = elite ? atlases[eliteSheet(stage).sheet] : atlases[def.sheet];
-                    close(enemy.scale, elite ? def.scale * ELITE.scale * 112 * eliteSheet(stage).size / art.walkH : def.scale);
-                    assert.equal(enemy.tint, elite ? 'normal' : def.tint);
-                    assert.equal(enemy.bossSprite, elite);
+                    const bossArt = elite && eliteSheet(stage).sheet, art = bossArt ? atlases[bossArt] : atlases[def.sheet];
+                    close(enemy.scale, bossArt ? def.scale * ELITE.scale * 112 * eliteSheet(stage).size / art.walkH : def.scale * (elite ? ELITE.scale : 1));
+                    assert.equal(enemy.tint, bossArt ? 'normal' : elite ? 'elite' : def.tint);
+                    assert.equal(enemy.bossSprite, !!bossArt);
                     assert.equal(enemy.atlas, art);
                 }
             }

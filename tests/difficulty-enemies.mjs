@@ -47,12 +47,18 @@ test('spawned enemies carry the difficulty hp/damage/speed multipliers, elites g
     }
 });
 
-test('field elites use the original boss sprites, larger than the old tinted rabbit elites, and gain affixes on harder runs', () => {
-    for (const [stage, sheet] of [[1, 'boss1'], [4, 'boss1'], [5, 'boss2'], [8, 'boss2'], [9, 'bossKing'], [10, 'bossKing']]) {
+test('early field elites keep the rabbit body with only a red tint; later stages switch to the original boss sprites', () => {
+    for (const stage of [1, 2, 3]) {
+        assert.equal(eliteSheet(stage).sheet, null);
+        const elite = spawn(stage, 'easy', { elite: true });
+        assert.equal(elite.atlas, atlases.rabbit2); assert.equal(elite.bossSprite, false); assert.equal(elite.tint, 'elite');
+        close(elite.scale, 0.6 * ELITE.scale);
+    }
+    for (const [stage, sheet] of [[4, 'boss1'], [6, 'boss1'], [7, 'boss2'], [8, 'boss2'], [9, 'bossKing'], [10, 'bossKing']]) {
         assert.equal(eliteSheet(stage).sheet, sheet);
         const elite = spawn(stage, 'easy', { elite: true });
         assert.equal(elite.atlas, atlases[sheet]); assert.equal(elite.bossSprite, true); assert.equal(elite.tint, 'normal');
-        assert.ok(elite.scale * elite.atlas.walkH > 112 * 0.6 * ELITE.scale, 'boss-sprite elite is drawn taller than the old elite');
+        assert.ok(elite.scale * elite.atlas.walkH > 112 * 0.6 * ELITE.scale, 'boss-sprite elite is drawn taller than the tinted elite');
         assert.equal(elite.affixes.length, eliteAffixCount(stage));
         assert.equal(spawn(stage, 'hell', { elite: true }).affixes.length, Math.min(4, eliteAffixCount(stage) + DIFFICULTIES.hell.elite.affixes));
         const ordinary = spawn(stage, 'easy', { noAffix: true });

@@ -5,7 +5,7 @@ const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className
 function button(text,action){const n=el('button','bestiary-button',text);n.type='button';n.addEventListener('click',action);return n;}
 function sprite(entry){
  const box=el('div','bestiary-art');box.setAttribute('role','img');box.setAttribute('aria-label',entry.name);
- const role=entry.kind==='elite'?null:atlases[`enemyRole_${entry.enemyId}`],atlas=role||atlases[entry.sheet];
+ const role=entry.kind==='elite'&&entry.tint==='normal'?null:atlases[`enemyRole_${entry.enemyId}`],atlas=role||atlases[entry.sheet];
  if(atlas){const canvas=el('canvas','bestiary-sprite'),ctx=canvas.getContext?.('2d'),f=atlas.anims?.walk?.[0];if(ctx&&f){canvas.width=240;canvas.height=180;const scale=Math.min(220/f.sw,160/f.sh);atlas.draw(ctx,'walk',0,120+(f.ox-f.sw/2)*scale,170,scale,false,role&&entry.kind!=='elite'?'normal':entry.tint);box.append(canvas);return box;}}
  const fallback=()=>{box.replaceChildren();if(!entry.sprite){box.append(el('span','','이미지 준비 중'));return;}const m=entry.sprite,f=m.anims.walk[0],scale=1.25;
   const frame=el('span','bestiary-sprite');Object.assign(frame.style,{display:'block',width:`${f.sw*scale}px`,height:`${f.sh*scale}px`,backgroundImage:`url("${m.image}")`,backgroundSize:`${m.w*scale}px ${m.h*scale}px`,backgroundPosition:`-${f.sx*scale}px -${f.sy*scale}px`});box.append(frame);};

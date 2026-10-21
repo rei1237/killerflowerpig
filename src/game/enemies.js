@@ -54,8 +54,8 @@ export function spawnEnemy(typeId, x, y, opts = {}) {
     e.atlas = atlases[def.sheet];
     e.bossSprite = false;
     if (elite) {
-        // 필드 엘리트: 최초 보스 스프라이트로 교체. 화면 높이는 기존 엘리트보다 크게, 판정 반경은 그대로.
-        const pick = eliteSheet(G.stage), art = atlases[pick.sheet];
+        // 필드 엘리트: 초반은 색만 바꾸고, 이후 구역은 최초 보스 스프라이트로 교체. 화면 높이는 기존 엘리트보다 크게, 판정 반경은 그대로.
+        const pick = eliteSheet(G.stage), art = pick.sheet && atlases[pick.sheet];
         if (art) {
             const targetH = 112 * e.scale * pick.size;
             e.atlas = art;
