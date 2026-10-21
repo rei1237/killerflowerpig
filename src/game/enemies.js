@@ -54,6 +54,8 @@ export function spawnEnemy(typeId, x, y, opts = {}) {
     const mob = elite ? null : MOB_STRENGTH;
     e.maxHp = e.hp = def.hp * sc.hp * (elite ? ELITE.hp : mob.hp) * (opts.hpMul || 1) * (de.hp || 1) * (dl.hp || 1);
     e.speed = def.speed * sc.speed * (elite ? ELITE.speed : 1) * rand(0.92, 1.08) * (opts.speedMul || 1) * (de.speed || 1);
+    if (opts.maxSpeed > 0) e.speed = Math.min(e.speed, opts.maxSpeed); // 추격형 러시: 꽃돼지보다 빠르지 않게
+    e.swarm = !!opts.swarm;
     e.dmg = def.dmg * sc.dmg * (elite ? ELITE.dmg : mob.dmg) * (de.dmg || 1) * (dl.dmg || 1);
     e.xp = def.xp * sc.xp * (elite ? ELITE.xp : mob.xp);
     e.scale = def.scale * (elite ? ELITE.scale : 1);

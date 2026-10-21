@@ -9,8 +9,9 @@ import { startEncirclement } from './encirclement.js';
 import { difficultyOf } from '../data/difficulty.js';
 
 let spawnAcc = 0;
-// 군체 러시 강화: 속도 배율, 반대편 협공 물결(지연·규모 비율·시작 스테이지)
-export const SWARM_RUSH = Object.freeze({ speed: 1.35, pincerDelay: 1.4, pincerRatio: 0.5, pincerStage: 2 });
+// 군체 러시 강화: 속도 배율, 반대편 협공 물결(지연·규모 비율·시작 스테이지).
+// 러시는 꽃돼지를 추격한다. 추격 속도는 chaseSpeed(꽃돼지 기본 이동속도 135의 약 89%)를 넘지 않아 계속 움직이면 따돌릴 수 있다.
+export const SWARM_RUSH = Object.freeze({ speed: 1.35, pincerDelay: 1.4, pincerRatio: 0.5, pincerStage: 2, chaseSpeed: 120 });
 
 export function resetSpawner() {
     spawnAcc = 0;
@@ -19,7 +20,7 @@ export function resetSpawner() {
     G.pendingSwarm = null;
 }
 
-// 한 방향에서 일직선으로 쏟아지는 무리 한 줄
+// 한 방향에서 대열을 지어 나타나 꽃돼지를 추격하는 무리
 function spawnSwarmLine(st, angle, n) {
     const p = G.player;
     const dx = Math.cos(angle), dy = Math.sin(angle);
@@ -29,7 +30,7 @@ function spawnSwarmLine(st, angle, n) {
     for (let i = 0; i < n; i++) {
         const off = (i % 3 - 1) * (late ? 80 : 22), back = Math.floor(i / 3) * (late ? 115 : 34);
         spawnEnemy(late ? 'suicider' : 'runner', sx - dy * off - dx * back, sy + dx * off - dy * back,
-            { force: true, lineX: dx, lineY: dy, speedMul: (st.eventTuning?.swarmSpeed ?? 1.5) * SWARM_RUSH.speed });
+            { force: true, swarm: true, speedMul: (st.eventTuning?.swarmSpeed ?? 1.5) * SWARM_RUSH.speed, maxSpeed: SWARM_RUSH.chaseSpeed });
     }
 }
 
@@ -148,7 +149,7 @@ function runEvent(type, st, t) {
         if (G.stage >= SWARM_RUSH.pincerStage) {
             G.pendingSwarm = { at: G.time + SWARM_RUSH.pincerDelay, angle: a + Math.PI, n: Math.max(1, Math.round(n * SWARM_RUSH.pincerRatio)) };
         }
-        floatText(p.x, p.y - 90, G.stage >= 5 ? '⚠ 자폭 돌격대 · 예고선 밖으로!' : '군체 러시!', '#ff2244', 1.4);
+        floatText(p.x, p.y - 90, G.stage >= 5 ? '⚠ 자폭 돌격대 추격 · 예고선 밖으로!' : '군체 러시 · 쫓아온다!', '#ff2244', 1.4);
         audio.sfx('warn');
     }
     emit('event', type);

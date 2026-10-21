@@ -59,7 +59,7 @@ export function applyVariant(e, def, opts, random = affixRandom.next) {
         if (e.affixes.includes('barrier')) { e.barrierMax = e.barrier = e.maxHp * 0.6; }
         return e;
     }
-    if (opts.lineX || opts.lineY || def.charge) return e; // 돌진 대열·자폭체는 변이하지 않는다
+    if (opts.lineX || opts.lineY || opts.swarm || def.charge) return e; // 돌진 대열·러시·자폭체는 변이하지 않는다
     let key = opts.champion;
     if (key === undefined) {
         if (random() >= Math.min(0.4, championChance(G.stage) * (difficultyOf(G.difficulty).enemy?.champion || 1))) return e;

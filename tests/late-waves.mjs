@@ -5,6 +5,7 @@ import { atlases } from '../src/core/assets.js';
 import { STAGES, EVENTS, POPULATION_SCALE } from '../src/data/stages.js';
 import { resetSpawner, updateSpawner, currentWeights, SWARM_RUSH } from '../src/game/spawner.js';
 import { updateEncirclement } from '../src/game/encirclement.js';
+import { updateEnemies } from '../src/game/enemies.js';
 function reset(stage) {
  clearWorld(); resetSpawner(); Object.assign(G,{stage,time:0,clock:0,mode:'play',paused:false,runId:'wave-test',events:{},lowQ:false});
  G.view={w:360,h:640}; G.caps={enemies:252,particles:0,texts:0,gems:500,decalScale:0};
@@ -42,14 +43,29 @@ test('actual late ring event confines only after warning and releases before a l
  G.enemies.clear();event(5,'ring',1);assert.equal(G.encirclement.phase,'warning');
  assert.equal(G.clock,140);assert.equal(G.encirclement.x,G.player.x);
 });
-test('swarm rush is faster and, from stage 2, a pincer wave charges from the opposite side',()=>{
+test('swarm rush is faster and, from stage 2, a pincer wave closes in from the opposite side',()=>{
  reset(1);event(1,'swarm');updateSpawner(0);G.time+=SWARM_RUSH.pincerDelay+.01;updateSpawner(0);
  assert.equal(G.enemies.count,Math.max(1,Math.round(STAGES[1].eventTuning.swarmCount*POPULATION_SCALE)),'stage 1 tutorial rush has no pincer');
  for(const stage of [3,7]){
-  reset(stage);event(stage,'swarm');const first=G.enemies.items.slice(0,G.enemies.count).map(e=>({lineX:e.lineX,lineY:e.lineY}));
+  reset(stage);event(stage,'swarm');const first=G.enemies.items.slice(0,G.enemies.count).map(e=>({x:e.x,y:e.y}));
   G.time+=SWARM_RUSH.pincerDelay-.05;updateSpawner(0);assert.equal(G.enemies.count,first.length,'pincer waits for its delay');
   G.time+=.1;updateSpawner(0);const all=G.enemies.items.slice(0,G.enemies.count);const pincer=all.slice(first.length);
   assert.equal(pincer.length,Math.max(1,Math.round(first.length*SWARM_RUSH.pincerRatio)));
-  assert.ok(pincer.every(e=>Math.abs(e.lineX+first[0].lineX)<1e-9&&Math.abs(e.lineY+first[0].lineY)<1e-9),'second wave runs the opposite direction');
+  const side=list=>{const x=list.reduce((s,e)=>s+e.x,0),y=list.reduce((s,e)=>s+e.y,0);return Math.atan2(y,x);};
+  const gap=Math.abs(Math.atan2(Math.sin(side(pincer)-side(first)),Math.cos(side(pincer)-side(first))));
+  assert.ok(gap>Math.PI*.75,'second wave appears on the opposite side');
+ }
+});
+test('swarm rushes chase the flower pig, never outrun her base speed and carry no champion affixes',()=>{
+ for(const stage of [1,3,7]){
+  reset(stage);event(stage,'swarm');const swarm=G.enemies.items.slice(0,G.enemies.count);
+  assert.ok(swarm.length>0);
+  for(const e of swarm){assert.equal(e.lineX,0);assert.equal(e.lineY,0);assert.equal(e.swarm,true);assert.ok(e.speed<=SWARM_RUSH.chaseSpeed+1e-9);assert.ok(!e.champion&&!e.affixes?.length);}
+  assert.ok(SWARM_RUSH.chaseSpeed<135,'slower than the base flower-pig speed');
+  // 꽃돼지가 옆으로 비켜도 러시는 직선으로 지나가지 않고 새 위치로 다가온다.
+  G.player.x=400;G.player.y=-300;const before=swarm.map(e=>Math.hypot(e.x-G.player.x,e.y-G.player.y));
+  for(let i=0;i<30;i++)updateEnemies(1/30);
+  const closer=swarm.filter((e,i)=>e.alive&&Math.hypot(e.x-G.player.x,e.y-G.player.y)<before[i]).length;
+  assert.ok(closer>=swarm.length*.8,`stage ${stage}: ${closer}/${swarm.length} closed in`);
  }
 });

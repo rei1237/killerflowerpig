@@ -131,7 +131,7 @@ test('stage 1 leaves a 70-second learning window and smaller events run only onc
         for (const [stage, multiplier] of [[1, 1.15], [2, 1.3], [3, 1.5]]) {
             const swarm = runEvent(stage, 'swarm');
             const scaling = stageScaling(stage, G.time, STAGES[stage].duration);
-            close(swarm[0].speed, ENEMIES.runner.speed * scaling.speed * multiplier * SWARM_RUSH.speed);
+            close(swarm[0].speed, Math.min(SWARM_RUSH.chaseSpeed, ENEMIES.runner.speed * scaling.speed * multiplier * SWARM_RUSH.speed));
         }
         for (const [stage, hpMultiplier] of [[1, 0.65], [2, 0.8], [3, 1]]) {
             const [elite] = runEvent(stage, 'elite');
