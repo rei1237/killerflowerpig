@@ -4,7 +4,7 @@ import { prepareBossSheets, getBossSheet } from './boss-sheets.js';
 import { recordFusionHit } from './weapon-vfx.js';
 // 보스: 3페이즈, 예고(텔레그래프) 기반 패턴, 페이즈 전환 연출, 처치 시 관 상자
 import { G, rand, emit, pickWeighted } from './state.js';
-import { BOSSES, PHASE_THRESHOLDS, HUNTER_TUNING, bossMaxHp } from '../data/bosses.js';
+import { BOSSES, PHASE_THRESHOLDS, HUNTER_TUNING, BOSS_STUN, bossMaxHp } from '../data/bosses.js';
 import { STAGES } from '../data/stages.js';
 import { difficultyOf } from '../data/difficulty.js';
 import { currentWeights } from './spawner.js';
@@ -49,6 +49,7 @@ export class Boss {
         this.patternEpoch = 0;
         this.signatureCount = 0;
         this.invuln = 0;
+        this.stunT = 0; this.stunImmuneT = 0;
         this.deadT = 0;
         this.hits = {};
         this.alpha = 1;
@@ -74,6 +75,14 @@ export class Boss {
         if (this.hp > 0 && this.phase < PHASE_THRESHOLDS.length && ratio <= PHASE_THRESHOLDS[this.phase]) this.enterPhase(this.phase + 1);
         if (this.hp <= 0) this.die();
         return amount;
+    }
+
+    // 정지: 추적 중에만 걸린다(경고·돌진 패턴은 끊지 않는다). 정지 동안 이동·접촉 피해가 멈추고,
+    // 다음 패턴 일정은 그대로 흐른다. 끝난 뒤 BOSS_STUN.immunity 초 동안은 다시 정지하지 않는다.
+    stun(seconds) {
+        if (!this.alive || this.task || this.stunT > 0 || this.stunImmuneT > 0 || !(seconds > 0)) return 0;
+        this.stunT = seconds; this.stunImmuneT = seconds + BOSS_STUN.immunity;
+        return seconds;
     }
 
     enterPhase(n) {
@@ -145,6 +154,9 @@ export class Boss {
         }
         if (this.flash > 0) this.flash -= dt;
         if (this.invuln > 0) this.invuln -= dt;
+        if (this.stunImmuneT > 0) this.stunImmuneT = Math.max(0, this.stunImmuneT - dt);
+        if (this.stunT > 0) this.stunT = this.task ? 0 : Math.max(0, this.stunT - dt);
+        const stunned = this.stunT > 0;
         const p = G.player;
         const dx = p.x - this.x, dy = p.y - this.y;
         const dist = Math.hypot(dx, dy) || 1;
@@ -152,6 +164,10 @@ export class Boss {
         if (this.task) {
             this.task.t += dt;
             this.task.step(dt, this.task);
+        } else if (stunned) {
+            // 정지: 제자리에 멈추지만 패턴 일정은 그대로 흐른다(패턴이 시작되면 정지는 풀린다).
+            this.attackT -= dt;
+            if (this.attackT <= 0 && this.invuln <= 0) { this.stunT = 0; this.startPattern(); }
         } else {
             // 추적
             if (this.def.signature === 'hunt') {
@@ -182,8 +198,8 @@ export class Boss {
         if (['hunt', 'trainingCharge'].includes(this.def.signature)) {
             // Active dashes use their swept collision below. Windups and the
             // guaranteed stationary recovery are safe to punish at close range.
-            if (!this.task && Math.hypot(p.x - this.x, p.y - this.y) < this.radius + p.radius + 6) damagePlayer(this.dmg, this.x, this.y);
-        } else if (dist < this.radius + p.radius + 6) damagePlayer(this.dmg, this.x, this.y);
+            if (!this.task && !stunned && Math.hypot(p.x - this.x, p.y - this.y) < this.radius + p.radius + 6) damagePlayer(this.dmg, this.x, this.y);
+        } else if (!stunned && dist < this.radius + p.radius + 6) damagePlayer(this.dmg, this.x, this.y);
 
         const fd = this.state === 'attack' ? 0.09 : 0.13;
         if (this.animT > fd) {

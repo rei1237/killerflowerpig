@@ -1,6 +1,7 @@
 // One consumable charge per visible petal. No target hit cache survives pool reuse.
 import { G } from './state.js';
 import { hitEnemy } from './enemies.js';
+import { BOSS_STUN } from '../data/bosses.js';
 import { healPlayer } from './player.js';
 import { sparks } from './effects.js';
 import { TIER_POWER, tierPower } from '../data/weapons.js';
@@ -11,8 +12,18 @@ import { TIER_POWER, tierPower } from '../data/weapons.js';
 //  · 만개 수호: 준비된 꽃잎 1개당 받는 피해 -perPetal (상한 cap). 진화하면 더 단단해진다.
 //  · 꽃잎 파열: 꽃잎이 소모될 때(적중·탄 막기) 그 자리에서 터져 주변 적에게 피해. 레벨이 오를수록 비율이 커진다.
 export const THORN_GUARD = Object.freeze({ perPetal: .04, cap: .2, evolvedPerPetal: .05, evolvedCap: .3,
-    burstBase: .1, burstPerLevel: .01, evolvedBurst: 0, burstRadius: 40, evolvedBurstRadius: 1.25,
+    burstBase: .25, burstPerLevel: .01, evolvedBurst: 0, burstRadius: 40, evolvedBurstRadius: 1.25,
     burstTargets: 3 }); // 파열 1회 최대 대상: 3 (+1 Lv5, +1 진화) — 밀집 대군에서 화면 청소가 되지 않게
+// 정지: 꽃잎이 직접 찌른 대상은 항상 정지한다. 진화(피의 연꽃)와 조합 무기에 계승된 가시 코어는 더 길게.
+// 보스는 짧게 정지하고, 이후 BOSS_STUN.immunity 초 동안은 다시 정지하지 않는다.
+export const THORN_STUN = Object.freeze({ enemy: .6, evolvedEnemy: .8, boss: .3, evolvedBoss: .4, bossImmunity: BOSS_STUN.immunity });
+// 가시는 몸에 붙은 무리를 찌르는 무기다: 거대한 보스에게는 접촉·파열 피해가 60%만 들어간다.
+export const THORN_BOSS_DAMAGE = .6;
+export function thornStun(w, boss = false) { return w.evolved ? (boss ? THORN_STUN.evolvedBoss : THORN_STUN.evolvedEnemy) : (boss ? THORN_STUN.boss : THORN_STUN.enemy); }
+// 회전 반경은 고정이다: 반경이 넓어지면 몸에 붙은 적을 찌르지 못한다. 범위 보너스는 꽃잎 크기에 쓴다.
+export const THORN_PETAL_RADIUS = 14;
+export function thornOrbitRadius(s) { return s.radius; }
+export function thornPetalRadius(s) { return THORN_PETAL_RADIUS * (s.area || 1); }
 const liveStates = new Set();
 const fresh = state => state.player === G.player && G.clock - state.seen <= .25;
 export function thornBurstRatio(w) { return THORN_GUARD.burstBase + THORN_GUARD.burstPerLevel * (Math.min(8, Math.max(1, w.level || 1)) - 1) + (w.evolved ? THORN_GUARD.evolvedBurst : 0); }
@@ -43,7 +54,7 @@ function petalBurst(state, x, y, exclude = null) {
         hitEnemy(e, dmg, { weapon, kx: dx / d, ky: dy / d, knock: 60, bleed: s.bleed, silent: true });
     }
     const boss = G.boss;
-    if (boss?.alive && boss !== exclude && Math.hypot(boss.x - x, boss.y - boss.radius - y) <= r + boss.radius) boss.hurt(dmg, { weapon });
+    if (boss?.alive && boss !== exclude && Math.hypot(boss.x - x, boss.y - boss.radius - y) <= r + boss.radius) boss.hurt(dmg * THORN_BOSS_DAMAGE, { weapon });
 }
 // 적 탄환이 준비된 꽃잎에 닿으면 막는다. true = 탄 소멸.
 export function interceptEnemyShot(shot) {
@@ -134,7 +145,7 @@ export function updateThornCharges(w, s, dt) {
     const state = thornChargeState(w, s, p, now);
     const elapsed = Math.max(0, Math.min(Math.max(0, dt), now - state.time));
     const countChanged = state.count !== s.amount;
-    const radius = s.radius * s.area, petalRadius = 12 * s.area;
+    const radius = thornOrbitRadius(s), petalRadius = thornPetalRadius(s);
     const targets = G.enemies.items.slice(0, G.enemies.count);
     if (G.boss?.alive) targets.push(G.boss);
     // Conservative relative-motion broad phase. A target whose endpoints are far
@@ -148,6 +159,8 @@ export function updateThornCharges(w, s, dt) {
         const t = length ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / length)) : 0;
         return (ax + dx * t) ** 2 + (ay + dy * t) ** 2 <= (radius + petalRadius + target.radius) ** 2;
     });
+    // 고리 안쪽(몸에 겹친 적): 회전 궤도로는 닿지 않으므로 준비된 꽃잎이 곧바로 안으로 파고들어 찌른다.
+    const hole = target => Math.hypot(target.x - p.x, target.y - target.radius - (p.y - 20)) < radius - petalRadius - target.radius;
     const hitThisUpdate = new Set();
     for (let i = 0; i < state.slots.length; i++) {
         const slot = state.slots[i];
@@ -157,7 +170,7 @@ export function updateThornCharges(w, s, dt) {
         let victim = null, earliest = Infinity;
         for (const target of candidates) {
             if (!target.alive || hitThisUpdate.has(target)) continue;
-            const time = firstContact(target, state, p, w.angle, i / s.amount * TAU, radius, petalRadius, start, elapsed);
+            const time = hole(target) ? start : firstContact(target, state, p, w.angle, i / s.amount * TAU, radius, petalRadius, start, elapsed);
             if (time !== null && (time < earliest || time === earliest && (target.id || 0) < (victim?.id || 0))) {
                 victim = target; earliest = time;
             }
@@ -169,11 +182,12 @@ export function updateThornCharges(w, s, dt) {
         const angle = w.angle + i / s.amount * TAU, weapon = w.sourceId || w.id;
         const bx = victim.x, by = victim.y - victim.radius;
         if (victim === G.boss) {
-            const damage = victim.hurt(s.dmg, { weapon, crit: s.crit, critBonus: s.critBonus });
+            const damage = victim.hurt(s.dmg * THORN_BOSS_DAMAGE, { weapon, crit: s.crit, critBonus: s.critBonus });
+            if (damage > 0) victim.stun?.(thornStun(w, true));
             if (s.lifesteal && damage > 0) healPlayer(s.lifesteal);
         } else {
             const damage = hitEnemy(victim, s.dmg, { weapon, kx: Math.cos(angle + Math.PI / 2),
-                ky: Math.sin(angle + Math.PI / 2), knock: 90, crit: s.crit, critBonus: s.critBonus, bleed: s.bleed });
+                ky: Math.sin(angle + Math.PI / 2), knock: 45, crit: s.crit, critBonus: s.critBonus, bleed: s.bleed, stun: thornStun(w) });
             if (s.lifesteal && damage) healPlayer(s.lifesteal);
         }
         Object.assign(state, { owner: w, stats: s });

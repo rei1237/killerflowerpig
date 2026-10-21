@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import { G, clearWorld } from '../src/game/state.js';
 import { createPlayer, recomputeStats } from '../src/game/player.js';
 import { createWeapon, weaponStats, updateWeapons, orbitStats } from '../src/game/weapons.js';
-import { updateThornCharges, THORN_SWEEP_SEGMENTS, thornBurstRatio, thornGuardReduction, interceptEnemyShot, THORN_GUARD } from '../src/game/thorn-charges.js';
-import { spawnEnemy } from '../src/game/enemies.js';
+import { updateThornCharges, THORN_SWEEP_SEGMENTS, thornBurstRatio, thornGuardReduction, interceptEnemyShot, THORN_GUARD, THORN_BOSS_DAMAGE, THORN_PETAL_RADIUS, THORN_STUN, thornStun } from '../src/game/thorn-charges.js';
+import { spawnEnemy, updateEnemies } from '../src/game/enemies.js';
+import { SPRITES } from '../src/data/sprites.js';
+import { BOSS_STUN } from '../src/data/bosses.js';
 import { resetBuild, snapshotBuild, restoreBuild, rollChest } from '../src/game/progression.js';
 import { save } from '../src/core/save.js';
 import { atlases, fx } from '../src/core/assets.js';
@@ -42,7 +44,7 @@ test('a petal deals full damage to exactly one overlapping enemy, bursts on its 
     tick(w);
     // 직접 적중은 1명, 겹친 이웃은 꽃잎 파열 피해만 받는다.
     close(first.hp, first.maxHp - damage); close(second.hp, second.maxHp - burst);
-    assert.ok(burst < damage * .25);
+    assert.ok(burst <= damage * .25 + 1e-9, 'Lv1 burst is a quarter of the contact damage');
     assert.equal(w.thornState.slots.filter(s => s.ready).length, 1);
     for (let i = 0; i < 20; i++) tick(w, .01);
     close(first.hp, first.maxHp - damage); close(second.hp, second.maxHp - burst);
@@ -88,7 +90,8 @@ test('swept relative motion catches a fast crossing even when both endpoint circ
 test('swept orbit catches a midpoint contact and never extends beyond the visible radius', () => {
     for (const outside of [false, true]) {
         const w = setup(); w.angle = -.4; delete w.thornState; tick(w);
-        const e = enemy(outside ? 81.01 : 68, -19); e.radius = 1;
+        // Fixed 50px ring: the petal reaches 50 + petal radius + target radius and no further.
+        const e = enemy(outside ? 50 + THORN_PETAL_RADIUS + 1.01 : 50, -19); e.radius = 1;
         w.angle = .4; tick(w, .25);
         close(e.maxHp - e.hp, outside ? 0 : weaponStats(w).dmg);
     }
@@ -106,7 +109,7 @@ test('pooled enemy reuse cannot bypass a spent charge or retain an old hit ident
 test('boss contact consumes before hurt and respects the same independent regeneration', () => {
     const w = G.weapons[0]; let calls = 0;
     G.boss = { id: -1, x: 68, y: -8, radius: 12, alive: true, hurt(damage) {
-        calls++; assert.equal(w.thornState.slots[0].ready, false); close(damage, weaponStats(w).dmg);
+        calls++; assert.equal(w.thornState.slots[0].ready, false); close(damage, weaponStats(w).dmg * THORN_BOSS_DAMAGE);
     } };
     tick(w); tick(w, .1); assert.equal(calls, 1);
     tick(w, 1.71); assert.equal(calls, 2);
@@ -166,15 +169,15 @@ test('same-player stage advance resets spent slots and never sweeps a stale tele
     assert.equal(w.thornState.x, 500); assert.equal(w.thornState.stage, G.stage);
 });
 
-test('regrowth is 1.6→1.2 from Lv4→1.02 evolved, with cooldown applied once and a safe floor', () => {
-    const w = G.weapons[0]; close(weaponStats(w).regrow, 1.6);
-    w.level = 4; close(weaponStats(w).regrow, 1.2);
-    w.level = 8; close(weaponStats(w).regrow, 1.2);
-    w.evolved = true; close(weaponStats(w).regrow, 1.02);
-    G.player.stats.cooldown = .5; close(weaponStats(w).regrow, .51);
+test('regrowth is 1.4→1.0 from Lv4→0.85 evolved, with cooldown applied once and a safe floor', () => {
+    const w = G.weapons[0]; close(weaponStats(w).regrow, 1.4);
+    w.level = 4; close(weaponStats(w).regrow, 1.0);
+    w.level = 8; close(weaponStats(w).regrow, 1.0);
+    w.evolved = true; close(weaponStats(w).regrow, .85);
+    G.player.stats.cooldown = .5; close(weaponStats(w).regrow, .425);
     G.player.stats.cooldown = .001; close(weaponStats(w).regrow, .35);
     G.player.stats.cooldown = 1; G.tech = 'bloom'; G.passives = { regen: 1, pollen: 1, heart: 1 }; recomputeStats();
-    close(weaponStats(w).regrow, 1.02 * .78);
+    close(weaponStats(w).regrow, .85 * .78);
     assert.equal(weaponStats(w).duration, 0);
     assert.match(WEAPONS.thorns.desc, /하나.*사라/); assert.match(WEAPONS.thorns.evolve.desc, /재생/);
 });
@@ -187,7 +190,7 @@ test('renderer uses the same ready mask without changing it or closing the missi
     fx.petal = { width: 26, height: 26 };
     const state = JSON.stringify(w.thornState.slots);
     drawWeaponOrbit(ctx, w, orbitStats(w, weaponStats(w)), G.player, createWeaponVfxFrame(true, G.clock));
-    assert.equal(moves.length, 1); close(moves[0][0], -68); close(moves[0][1], -20);
+    assert.equal(moves.length, 1); close(moves[0][0], -50); close(moves[0][1], -20);
     assert.equal(JSON.stringify(w.thornState.slots), state);
 });
 
@@ -195,7 +198,7 @@ test('renderer uses the same ready mask without changing it or closing the missi
 test('a ready petal blocks an enemy bullet, is consumed, and regrows; spent petals block nothing', () => {
     const w = G.weapons[0];
     const state = tick(w), s = orbitStats(w, weaponStats(w));
-    const a = state.angle, r = s.radius * s.area;
+    const a = state.angle, r = s.radius;
     const shot = { x: state.x + Math.cos(a) * r, y: state.y - 20 + Math.sin(a) * r * .8, radius: 5 };
     assert.equal(interceptEnemyShot(shot), true);
     assert.equal(state.slots[0].ready, false);
@@ -240,4 +243,53 @@ test('petal burst grows with level and evolution but hits a bounded number of ne
     const burned = crowd.filter(e => e.hp < e.maxHp).length;
     assert.ok(victim.hp < victim.maxHp);
     assert.ok(burned >= 1 && burned <= THORN_GUARD.burstTargets, `burst hit ${burned}`);
+});
+
+// ── 정지 · 고정 반경 ──
+
+test('every direct petal hit stuns: the enemy stops moving and touching, elites half as long, evolved longer', () => {
+    const w = G.weapons[0], e = enemy(); tick(w);
+    close(e.stunT, THORN_STUN.enemy);
+    const x = e.x, y = e.y; e.kx = e.ky = 0;
+    G.player.iframes = 0; const hp = G.player.hp;
+    e.x = G.player.x; e.y = G.player.y; // even overlapping the player, a stunned body deals no contact damage
+    updateEnemies(.2); close(e.x, G.player.x); close(e.y, G.player.y); assert.equal(G.player.hp, hp);
+    e.x = x; e.y = y; updateEnemies(.5); assert.ok(!(e.stunT > 0)); updateEnemies(.1); assert.notEqual(e.x, x, 'walks again once the stun ends');
+    const elite = enemy(); elite.elite = true; for (const slot of w.thornState.slots) slot.ready = true; e.x = 1000; tick(w);
+    close(elite.stunT, THORN_STUN.enemy * .5);
+    w.evolved = true; assert.equal(thornStun(w), THORN_STUN.evolvedEnemy); assert.ok(THORN_STUN.evolvedEnemy > THORN_STUN.enemy);
+});
+
+test('retained thorn cores in final weapons keep lifesteal and stun with the evolved duration', () => {
+    for (const owner of ['lotus_bloom', 'orbit_saw', 'absolute_bloom', 'carnage_saw']) {
+        setup(); G.weapons = [Object.assign(createWeapon(owner, 0), { level: 1, cd: 99 })]; updateWeapons(0);
+        const core = G.weapons[0].fusionCores.find(c => c.id === 'thorns');
+        assert.ok(core && core.evolved, owner);
+        G.player.hp = 50; const e = enemy(); G.clock += .01; updateWeapons(.01);
+        close(e.stunT, THORN_STUN.evolvedEnemy); assert.ok(G.player.hp > 50, `${owner}: lifesteal still heals`);
+        assert.match(WEAPONS[owner].desc, /정지/);
+    }
+});
+
+test('a boss is stunned briefly only between patterns, then resists re-stun while its schedule keeps running', () => {
+    for (const [name, data] of Object.entries(SPRITES)) atlases[name] = { walkH: data.walkH, frameCount: () => 8, draw() {} };
+    const w = G.weapons[0], b = new Boss(1); G.boss = b; b.x = 50; b.y = 12; b.attackT = 5;
+    tick(w);
+    close(b.stunT, THORN_STUN.boss); assert.ok(THORN_STUN.boss < THORN_STUN.enemy);
+    const x = b.x, attackT = b.attackT; G.player.iframes = 0; const hp = G.player.hp;
+    b.update(.1); close(b.x, x); close(b.attackT, attackT - .1, 'pattern timer is not frozen'); assert.equal(G.player.hp, hp);
+    b.update(.25); assert.equal(b.stunT, 0);
+    assert.equal(b.stun(1), 0, 're-stun immunity'); assert.ok(b.stunImmuneT > 0 && b.stunImmuneT <= BOSS_STUN.immunity);
+    b.update(BOSS_STUN.immunity); b.task = { t: 0, step() {} }; assert.equal(b.stun(1), 0, 'an active pattern is never interrupted');
+    b.task = null; assert.equal(b.stun(.3), .3);
+    b.stunT = .3; b.attackT = .05; b.invuln = 0; b.update(.1); assert.ok(b.task, 'a due pattern starts and ends the stun'); assert.equal(b.stunT, 0);
+});
+
+test('the petal ring stays at a fixed close radius; area grows petals, and bodies inside the ring are still struck', () => {
+    const w = G.weapons[0];
+    G.player.stats.area = 1.6; const s = orbitStats(w, weaponStats(w));
+    assert.equal(s.radius, 50); assert.equal(weaponStats(Object.assign(createWeapon('thorns', 0), { level: 8 })).radius, 50);
+    assert.ok(!WEAPONS.thorns.levels.some(level => level.area), 'no level-up widens the ring');
+    const hugging = enemy(0, 0); tick(w);
+    assert.ok(hugging.hp < hugging.maxHp, 'an enemy standing on the player is struck from inside the ring');
 });

@@ -5,7 +5,7 @@ import { createPlayer, recomputeStats } from '../src/game/player.js';
 import { resetBuild } from '../src/game/progression.js';
 import { createWeapon, weaponStats, updateWeapons, updateShots, activeWeaponCores } from '../src/game/weapons.js';
 import { clearFocus, tapFocusAt } from '../src/game/targeting.js';
-import { WEAPONS, tierPower, CANNON_STRAIGHT_POWER } from '../src/data/weapons.js';
+import { WEAPONS, tierPower, CANNON_STRAIGHT_POWER, cannonLaneStack } from '../src/data/weapons.js';
 import { save } from '../src/core/save.js';
 import { cannonFocusMultiplier } from '../src/game/cannon-targeting.js';
 import { runBalanceScene } from '../tools/cannon-growth-qa.mjs';
@@ -73,7 +73,7 @@ test('a straight cannon lane stacks its overlapping rays on ordinary enemies and
         updateWeapons(.001);
         assert.equal(G.beams.count,s.amount);assert.equal(s.amount,3);
         for(let i=1;i<G.beams.count;i++)assert.equal(G.beams.items[i].angle,G.beams.items[0].angle,'every ray shares one straight lane');
-        assert.equal(hits.length,1);near(hits[0].dmg,s.beamDamage*.65);near(1e9-e.hp,s.beamDamage*.65*3);near(s.beamAutoImpact,s.beamDamage*.65*3);
+        assert.equal(hits.length,1);near(hits[0].dmg,s.beamDamage*.65);near(cannonLaneStack(3),2.5);near(1e9-e.hp,s.beamDamage*.65*2.5);near(s.beamAutoImpact,s.beamDamage*.65*2.5);
         const hp=e.hp,bossHp=G.boss.hp;updateShots(.1);
         assert.equal(e.hp,hp);assert.equal(G.boss.hp,bossHp,'visible lifetime is not repeating DoT');
         w.cd=0;G.clock+=.01;updateWeapons(.001);assert.equal(hits.length,2,'dedup expires with the volley, not the weapon');

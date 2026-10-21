@@ -45,10 +45,10 @@ test('actual-weapon stationary samples remain bounded while boss HP gives strong
   assert.ok(Number.isFinite(result.dps)&&result.dps>0);assert.ok(newSeconds>oldSeconds);
   // 최종 보스 기준치 168000. 느려진 레벨업·하향된 최종 무기·재생성한 픽스처 이후 10스테이지 정지 표본: 융합1 19.6초 / 융합2 45.9초 / 절대+진화2 48.1초 / 도살 14.9초 → 10스테이지만 상한 100초
   assert.ok(newSeconds<(scenario.stage===10?100:35),'sample is not a stationary bullet sponge');assert.ok(newSeconds>0);
-  // 중반 고정 빌드의 연꽃 가시(공전 무기, 반경 68~)는 130 거리의 정지 보스에 닿지 않는다(진화해도 마찬가지). 그 외 무기는 모두 실제 Boss.hurt에 도달.
+  // 연꽃 가시는 몸에 붙은 고정 반경(50)으로 돈다: 100 이상 떨어져 멈춘 보스에는 닿지 않는다(진화해도 마찬가지). 그 외 무기는 모두 실제 Boss.hurt에 도달.
   if(scenario.stage===1)assert.ok(effectiveHp(1)/result.dps>10,'actual beginner HP still permits a readable encounter');
   const missed=scenario.weapons.filter(([id])=>!(id in result.byWeapon));
-  assert.ok(missed.every(([id])=>id==='thorns'&&scenario.distance>100),`every selected weapon reaches actual Boss.hurt: ${missed}`);
+  assert.ok(missed.every(([id])=>id==='thorns'&&scenario.distance>=100),`every selected weapon reaches actual Boss.hurt: ${missed}`);
   assert.ok(Math.abs(newSeconds/oldSeconds-newHp[scenario.stage]/oldHp[scenario.stage])<1e-9);
  }
 });

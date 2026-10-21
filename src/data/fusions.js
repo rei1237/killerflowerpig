@@ -31,13 +31,13 @@ export const FUSED_WEAPONS = {
     },
     absolute_bloom: {
         name: '절대 만개', icon: '💮', color: '#fff0b8', fusionOnly: true, tier: 'absolute', amountCap: 12,
-        desc: '세 진화 무기의 공격을 계승한다. 연꽃 광선은 피해 2배 강화, 집중 총 피해는 1/2/3발에 1.1/2.2/3.3배, 보너스와 계승 공격을 합쳐 화면 전체 최대 3발. 자동 사격은 한 줄로 겹친 일직선 광선, 집중 조준은 선택한 적에게 강화 피해를 준다.',
+        desc: '세 진화 무기의 공격을 계승한다. 연꽃 광선은 피해 2배 강화, 집중 총 피해는 1/2/3발에 1.1/2.2/3.3배, 보너스와 계승 공격을 합쳐 화면 전체 최대 3발. 자동 사격은 한 줄로 겹친 일직선 광선, 집중 조준은 선택한 적에게 강화 피해를 준다. 계승한 피의 연꽃 가시는 흡혈과 함께 찌른 적을 항상 정지시킨다(일반 0.8초 · 보스 0.4초).',
         base: { dmg: 125, cd: 3.2, amount: 8, speed: 1, duration: 0.6, area: 1, length: 680, width: 58 },
         levels: [{dmg:15,t:'절대 광선 피해 +15 · 계승 공격 강화'},{area:0.12,t:'절대 광선 범위 +12%'},{cd:-0.08,t:'재사용 -8%'},{dmg:20,t:'절대 광선 피해 +20 · 계승 공격 강화'},{area:0.12,t:'절대 광선 범위 +12%'},{cd:-0.08,t:'재사용 -8%'},{dmg:25,t:'절대 광선 피해 +25 · 세 진화 공격 최종 강화'}],
     },
     lotus_bloom: {
         name: '만개 연꽃포', icon: '💮', color: '#ff8bcc', fusionOnly: true,
-        desc: '꽃잎 관통 광선과 몸을 지키는 회전 연꽃 가시를 함께 발사한다.',
+        desc: '꽃잎 관통 광선과 몸을 지키는 회전 연꽃 가시를 함께 발사한다. 바깥 가시 고리도 찌른 적을 정지시킨다. 계승한 피의 연꽃 가시는 흡혈과 함께 찌른 적을 항상 정지시킨다(일반 0.8초 · 보스 0.4초).',
         base: { dmg: 50, cd: 3.8, amount: 1, speed: 3.4, duration: 0.35, area: 1, length: 560, width: 44, radius: 90, hitCd: 0.45 },
         levels: [{dmg:8,t:'광선 피해 +8 · 가시 피해 함께 성장'},{area:0.12,t:'광선·가시 범위 +12%'},{cd:-0.1,t:'재사용 -10%'},{dmg:10,t:'광선 피해 +10 · 가시 피해 함께 성장'},{area:0.12,t:'광선·가시 범위 +12%'},{cd:-0.1,t:'재사용 -10%'},{dmg:12,t:'광선 피해 +12 · 회전 꽃잎 최대 5개'}],
     },
@@ -67,7 +67,7 @@ export const FUSED_WEAPONS = {
     },
     carnage_saw: {
         name: '학살 톱니바퀴', icon: '🩸', color: '#ff8f8f', fusionOnly: true, tier: 'absolute', amountCap: 8,
-        desc: '세 진화 무기를 계승하고, 거대한 피의 톱날을 사방으로 튕겨 반복해서 베며 강한 출혈을 남긴다.',
+        desc: '세 진화 무기를 계승하고, 거대한 피의 톱날을 사방으로 튕겨 반복해서 베며 강한 출혈을 남긴다. 계승한 피의 연꽃 가시는 흡혈과 함께 찌른 적을 항상 정지시킨다(일반 0.8초 · 보스 0.4초).',
         base: { dmg: 30, cd: 3.0, amount: 4, speed: 420, duration: 3.2, area: 1.15, hitCd: 0.35, bleed: 4 },
         levels: [{dmg:4,t:'피해 +4 · 계승 공격 강화'},{area:0.1,t:'크기 +10%'},{amount:1,t:'톱날 +1'},{duration:0.15,t:'지속 +15%'},{dmg:5,t:'피해 +5 · 계승 공격 강화'},{cd:-0.1,t:'재사용 -10%'},{amount:1,dmg:5,t:'톱날 +1, 피해 +5 · 최종 강화'}],
     },
@@ -80,6 +80,6 @@ export const FUSED_WEAPONS = {
     burst_rail: {"name": "연쇄 관통권총", "icon": "✿", "color": "#c8a6ff", "fusionOnly": true, "amountCap": 8, "desc": "쌍권총의 초고속 4연발에 소총의 2회 관통과 긴 사거리를 결합한다.", "base": {"dmg": 10, "cd": 0.7, "amount": 4, "speed": 900, "duration": 0.8, "pierce": 2, "area": 1}, "levels": [{"dmg": 3, "t": "피해 +3"}, {"area": 0.1, "t": "범위 +10%"}, {"cd": -0.1, "t": "재사용 -10%"}, {"amount": 1, "t": "발사 수 +1 (상한 적용)"}, {"dmg": 3, "t": "피해 +3"}, {"area": 0.1, "t": "범위 +10%"}, {"cd": -0.1, "t": "재사용 -10%"}]},
     venom_saw: {"name": "맹독 회전톱", "icon": "✿", "color": "#c8a6ff", "fusionOnly": true, "amountCap": 4, "desc": "튕기는 톱날 2개가 적을 반복해서 베고 35% 둔화시킨다.", "base": {"dmg": 14, "cd": 3.5, "amount": 2, "speed": 340, "duration": 3.2, "area": 1, "hitCd": 0.4, "slow": 0.35}, "levels": [{"dmg": 3, "t": "피해 +3"}, {"area": 0.1, "t": "범위 +10%"}, {"cd": -0.1, "t": "재사용 -10%"}, {"amount": 1, "t": "발사 수 +1 (상한 적용)"}, {"dmg": 3, "t": "피해 +3"}, {"area": 0.1, "t": "범위 +10%"}, {"cd": -0.1, "t": "재사용 -10%"}]},
     ember_lance: {"name": "화염 꽃잎창", "icon": "✿", "color": "#c8a6ff", "fusionOnly": true, "amountCap": 2, "desc": "꽃잎 광선을 쏘면서 별도로 던진 병이 화염 장판을 남긴다.", "base": {"dmg": 48, "cd": 4, "amount": 1, "speed": 1, "duration": 0.35, "area": 1, "length": 540, "width": 40, "radius": 54, "tick": 0.3}, "levels": [{"dmg": 8, "t": "피해 +8"}, {"area": 0.1, "t": "범위 +10%"}, {"cd": -0.1, "t": "재사용 -10%"}, {"amount": 1, "t": "발사 수 +1 (상한 적용)"}, {"dmg": 8, "t": "피해 +8"}, {"area": 0.1, "t": "범위 +10%"}, {"cd": -0.1, "t": "재사용 -10%"}]},
-    orbit_saw: {"name": "연꽃 톱니진", "icon": "✿", "color": "#c8a6ff", "fusionOnly": true, "amountCap": 4, "desc": "몸 주위의 회전 꽃잎 3개와 튕기는 톱날 2개로 가까운 적과 먼 적을 함께 공격한다.", "base": {"dmg": 18, "cd": 3.8, "amount": 2, "speed": 350, "duration": 2.8, "area": 1, "radius": 78, "hitCd": 0.4}, "levels": [{"dmg": 3, "t": "피해 +3"}, {"area": 0.1, "t": "범위 +10%"}, {"cd": -0.1, "t": "재사용 -10%"}, {"amount": 1, "t": "발사 수 +1 (상한 적용)"}, {"dmg": 3, "t": "피해 +3"}, {"area": 0.1, "t": "범위 +10%"}, {"cd": -0.1, "t": "재사용 -10%"}]},
+    orbit_saw: {"name": "연꽃 톱니진", "icon": "✿", "color": "#c8a6ff", "fusionOnly": true, "amountCap": 4, "desc": "몸 주위의 회전 꽃잎 3개와 튕기는 톱날 2개로 가까운 적과 먼 적을 함께 공격한다. 계승한 피의 연꽃 가시는 흡혈과 함께 찌른 적을 항상 정지시킨다(일반 0.8초 · 보스 0.4초).", "base": {"dmg": 18, "cd": 3.8, "amount": 2, "speed": 350, "duration": 2.8, "area": 1, "radius": 78, "hitCd": 0.4}, "levels": [{"dmg": 3, "t": "피해 +3"}, {"area": 0.1, "t": "범위 +10%"}, {"cd": -0.1, "t": "재사용 -10%"}, {"amount": 1, "t": "발사 수 +1 (상한 적용)"}, {"dmg": 3, "t": "피해 +3"}, {"area": 0.1, "t": "범위 +10%"}, {"cd": -0.1, "t": "재사용 -10%"}]},
     toxic_scatter: {"name": "맹독 산탄총", "icon": "✿", "color": "#c8a6ff", "fusionOnly": true, "amountCap": 10, "desc": "부채꼴 독산탄 6발이 적 무리를 관통하며 맞은 적을 30% 둔화시킨다.", "base": {"dmg": 14, "cd": 1.3, "amount": 6, "speed": 560, "duration": 0.6, "pierce": 3, "area": 1, "spread": 0.65, "slow": 0.3}, "levels": [{"dmg": 3, "t": "피해 +3"}, {"area": 0.1, "t": "범위 +10%"}, {"cd": -0.1, "t": "재사용 -10%"}, {"amount": 1, "t": "발사 수 +1 (상한 적용)"}, {"dmg": 3, "t": "피해 +3"}, {"area": 0.1, "t": "범위 +10%"}, {"cd": -0.1, "t": "재사용 -10%"}]},
 };

@@ -19,7 +19,7 @@ beforeEach(()=>{
 test('recipes lock missing/low-level inputs and expose explicit stats preview without mutation',()=>{
  assert.equal(previewFusion('lotus_bloom').code,'MISSING_INGREDIENT');
  G.weapons=[weapon('cannon',4,0),weapon('thorns',5,1)];const before=JSON.stringify(G.weapons),p=previewFusion('lotus_bloom');
- assert.equal(p.code,'ITEM_LEVEL_REQUIRED');assert.equal(p.ingredients[0].requiredLevel,8);assert.equal(p.output.stats.dmg,50*TIER_POWER.fused.lotus_bloom);assert.ok(Math.abs(p.output.stats.orbitDamage-14*TIER_POWER.fused.lotus_bloom)<1e-9);assert.equal(JSON.stringify(G.weapons),before);
+ assert.equal(p.code,'ITEM_LEVEL_REQUIRED');assert.equal(p.ingredients[0].requiredLevel,8);assert.equal(p.output.stats.dmg,50*TIER_POWER.fused.lotus_bloom);assert.ok(Math.abs(p.output.stats.orbitDamage-50*.45*TIER_POWER.fused.lotus_bloom)<1e-9);assert.equal(JSON.stringify(G.weapons),before);
  assert.equal(fuseItems('lotus_bloom',p.signature).ok,false);assert.equal(G.weapons.length,2);
 });
 test('fusion atomically consumes two, frees full slot, rejects duplicate click and cleans old effects',()=>{

@@ -79,7 +79,7 @@ export function spawnEnemy(typeId, x, y, opts = {}) {
     e.flash = 0;
     e.deadT = 0; e.detonated = false;
     e.flip = x > G.player.x;
-    e.slow = 0; e.slowT = 0;
+    e.slow = 0; e.slowT = 0; e.stunT = 0;
     e.bleed = 0; e.bleedT = 0;
     e.motionVX = 0; e.motionVY = 0;
     e.shootT = def.ranged ? rand(0.5, def.ranged.cooldown) : 0;
@@ -127,6 +127,15 @@ export function edgePosition(bias = 0.6) {
 }
 
 // 피해 처리. 반환: 실제 피해량
+// 정지(기절): 이동·접촉 피해·사격·돌진이 모두 멈춘다. 엘리트·챔피언은 절반만 정지한다.
+export const STUN_ELITE_MULTIPLIER = 0.5;
+export function stunEnemy(e, seconds) {
+    if (!e?.alive || !(seconds > 0)) return 0;
+    const duration = seconds * (e.elite || e.champion ? STUN_ELITE_MULTIPLIER : 1);
+    e.stunT = Math.max(e.stunT || 0, duration);
+    return duration;
+}
+
 export function hitEnemy(e, dmg, opts = {}) {
     if (!e.alive) return 0;
     let amount = dmg;
@@ -154,6 +163,7 @@ export function hitEnemy(e, dmg, opts = {}) {
     }
     if (Math.random() < 0.35) blood(e.x, e.y - e.radius, 2, opts.kx || 0, opts.ky || 0);
     if (e.hp <= 0) killEnemy(e, opts);
+    else if (opts.stun) stunEnemy(e, opts.stun);
     return amount;
 }
 
@@ -280,6 +290,16 @@ export function updateEnemies(dt) {
             e.hp -= e.bleed * dt * 4;
             if (Math.random() < dt * 2) blood(e.x, e.y - e.radius, 1);
             if (e.hp <= 0) { killEnemy(e, {}); continue; }
+        }
+        // 정지: 넉백만 남기고 이동·공격·사격·변이 능력을 멈춘다. 애니메이션도 멈춘 자세로 고정.
+        if (e.stunT > 0) {
+            e.stunT = Math.max(0, e.stunT - dt);
+            const beforeX = e.x, beforeY = e.y;
+            e.x += e.kx * dt; e.y += e.ky * dt;
+            const damp = Math.exp(-8 * dt);
+            e.kx *= damp; e.ky *= damp;
+            e.motionVX = dt > 0 ? (e.x - beforeX) / dt : 0; e.motionVY = dt > 0 ? (e.y - beforeY) / dt : 0;
+            continue;
         }
 
         // 이동

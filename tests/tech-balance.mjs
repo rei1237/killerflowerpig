@@ -32,6 +32,9 @@ for (const tech of Object.keys(TECH_ROUTES)) for (const stage of ['late', 'fusio
         // of the modern-body moving probes below.
         delete images.playerFire;
         for (const scene of TECH_SCENES) {
+            // Thorns now orbit at a fixed close radius by request; the immobile scatter
+            // probe parks targets 85px+ away, outside any close ring, so it no longer measures them.
+            if (scene === 'scatter' && build.some(([id]) => id === 'thorns')) continue;
             const previous = baseline.techs[`${tech}:${stage}`][scene];
             const current = simulateTech(tech, build, scene), ratio = current / previous;
             // 최종·절대 무기 2차 대폭 하향(요청)으로 조합 단계는 과거 기록의 절반까지 내려갈 수 있다. 진화 단계 하한은 그대로.

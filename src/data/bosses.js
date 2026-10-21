@@ -57,3 +57,6 @@ export const BOSS_HP_MULTIPLIER = 7;
 export const BOSS_EVOLUTION_HP = Object.freeze({ 4: 1.0, 5: 1.15, 6: 1.4, 7: 1.5, 8: 1.7, 9: 2.0, 10: 1.2 });
 // 실제 전투 체력 (도감 표시와 보스 생성이 같은 값을 쓰도록)
 export const bossMaxHp = stage => (BOSSES[stage]?.hp || 0) * BOSS_HP_MULTIPLIER * (BOSS_EVOLUTION_HP[stage] || 1);
+
+// 보스 정지 후 재정지 면역 시간 (초). 연꽃 가시가 보스를 묶어 두지 못하게 한다.
+export const BOSS_STUN = Object.freeze({ immunity: 2.5 });

@@ -11,13 +11,15 @@ export const CANNON_IMPACT_MULTIPLIER = 2;
 export const CANNON_MISMATCH_DAMAGE = .95;
 // Straight-line beams: every ray of a volley stacks on one lane, so the beam
 // gives up coverage of other directions in exchange for this extra power.
-export const CANNON_STRAIGHT_POWER = 1.25;
+export const CANNON_STRAIGHT_POWER = 1.1;
 // Per-ray share of a stacked auto (non-focused) lane: the base Cannon goes
 // 100% -> 65% from Lv1 to Lv8 as rays are added; inherited cores keep 65%.
 export const cannonLaneRatio = (id, level = 1) => id === 'cannon' ? 1 - .05 * (Math.min(8, Math.max(1, level)) - 1) : .65;
-// Overlapping rays on the lane all hit ordinary enemies (1 / 2 / 3 rays). A boss
-// counts the lane as one ray: focused fire remains the boss-burst tool.
-export const cannonLaneStack = (rays, boss = false) => boss ? 1 : Math.max(1, Math.min(3, Math.floor(rays)));
+// Overlapping rays on the lane hit ordinary enemies: the first ray in full, each
+// extra ray at 75% (1 / 1.75 / 2.5 rays). A boss counts the lane as one ray:
+// focused fire remains the boss-burst tool.
+export const CANNON_STACK_SHARE = .75;
+export const cannonLaneStack = (rays, boss = false) => boss ? 1 : 1 + CANNON_STACK_SHARE * (Math.max(1, Math.min(3, Math.floor(rays))) - 1);
 
 export const WEAPONS = {
     shotgun: {
@@ -46,14 +48,14 @@ export const WEAPONS = {
     },
     thorns: {
         name: '연꽃 가시', icon: '🌸', color: '#ff4fa0',
-        desc: '가시 꽃잎이 몸 주위를 돈다. 꽃잎 하나가 적에 닿거나 적 탄환을 막으면 사라지며 그 자리에서 터져 주변에도 피해를 주고(꽃잎 파열), 각각 1.6초 후 재생한다. 준비된 꽃잎 1개당 받는 피해 -4% (최대 20%). 꽃잎이 늘고 빨리 자랄수록 공격과 방어가 함께 강해진다.',
-        base: { dmg: 54, cd: 3.3, amount: 2, speed: 3.4, duration: 3.0, area: 1, radius: 68, hitCd: 0.45, regrow: 1.6 },
+        desc: '가시 꽃잎이 몸에 바짝 붙어 돈다(회전 반경 고정, 범위 보너스는 꽃잎 크기·파열 범위를 키운다). 꽃잎에 찔린 적은 항상 정지한다(일반 0.6초 · 엘리트 절반 · 보스 0.3초, 보스는 재정지까지 2.5초). 꽃잎 하나가 적에 닿거나 적 탄환을 막으면 사라지며 그 자리에서 터져 주변에도 피해를 주고(꽃잎 파열), 각각 1.4초 후 재생한다. 준비된 꽃잎 1개당 받는 피해 -4% (최대 20%). 꽃잎이 늘고 빨리 자랄수록 공격과 방어가 함께 강해진다.',
+        base: { dmg: 78, cd: 3.3, amount: 2, speed: 3.4, duration: 3.0, area: 1, radius: 50, hitCd: 0.45, regrow: 1.4 },
         levels: [
-            { amount: 1, t: '가시 꽃잎 +1' }, { area: 0.15, t: '반경 +15%' }, { dmg: 18, regrow: -0.4, t: '접촉 피해 +18, 기본 재생 -0.4초' },
-            { dmg: 6, t: '접촉 피해 +6' }, { amount: 1, t: '가시 꽃잎 +1' }, { dmg: 18, t: '접촉 피해 +18' },
+            { amount: 1, t: '가시 꽃잎 +1' }, { dmg: 16, regrow: -0.1, t: '접촉 피해 +16, 기본 재생 -0.1초' }, { dmg: 26, regrow: -0.3, t: '접촉 피해 +26, 기본 재생 -0.3초' },
+            { dmg: 16, t: '접촉 피해 +16' }, { amount: 1, t: '가시 꽃잎 +1' }, { dmg: 26, t: '접촉 피해 +26' },
             { amount: 1, t: '가시 꽃잎 +1' },
         ],
-        evolve: { with: 'regen', name: '피의 연꽃', icon: '🥀', desc: '강한 접촉 피해와 흡혈. 재생 간격 15% 단축 (Lv.8 기본 1.02초). 꽃잎 파열 피해 +15%p·범위 +25%, 꽃잎 1개당 받는 피해 -5% (최대 30%).',
+        evolve: { with: 'regen', name: '피의 연꽃', icon: '🥀', desc: '강한 접촉 피해와 흡혈, 더 긴 정지(일반 0.8초 · 보스 0.4초). 재생 간격 15% 단축 (Lv.8 기본 0.85초). 꽃잎 파열 피해 +15%p·범위 +25%, 꽃잎 1개당 받는 피해 -5% (최대 30%).',
             mods: { dmg: 1.4, amount: 1.25, permanent: 1, lifesteal: 0.3, regrow: 0.85 } },
     },
     rifle: {
@@ -82,7 +84,7 @@ export const WEAPONS = {
     },
     cannon: {
         name: '꽃잎포', icon: '🌺', color: '#ff69b4',
-        desc: '모든 광선이 한 줄로 겹쳐 나가는 일직선 관통 광선. 적이 가장 많이 늘어선 방향을 자동 조준하고, 한 방향만 쏘는 대신 광선 피해 2.5배 강화(2배 × 일직선 1.25배): 테크·장비 보정 전 Lv1 110 / 집중 121. 줄 위의 일반 적은 겹친 광선을 모두 맞고(최대 3발, 광선당 피해율 100%→65%), 보스는 자동 사격 시 1발로 계산. 집중 사격은 강화 광선 1개 기준 1발 1.1배 / 2발 2.2배 / 3발 3.3배. 다른 테크의 광선 피해 감소는 5%만 적용.',
+        desc: '모든 광선이 한 줄로 겹쳐 나가는 일직선 관통 광선. 적이 가장 많이 늘어선 방향을 자동 조준하고, 한 방향만 쏘는 대신 광선 피해 2.2배 강화(2배 × 일직선 1.1배): 테크·장비 보정 전 Lv1 96.8 / 집중 106.5. 줄 위의 일반 적은 겹친 광선을 맞고(최대 3발, 추가 광선은 75%씩, 광선당 피해율 100%→65%), 보스는 자동 사격 시 1발로 계산. 집중 사격은 강화 광선 1개 기준 1발 1.1배 / 2발 2.2배 / 3발 3.3배. 다른 테크의 광선 피해 감소는 5%만 적용.',
         base: { dmg: 44, cd: 2.6, amount: 1, speed: 1, duration: 0.35, area: 1, length: 520, width: 44 },
         levels: [
             { dmg: 12, width: 2, length: 20, amount: 1, cd: -0.09, t: '광선 기본 피해 +24 · 광선 +1 · 굵기 +2 · 사거리 +20 · 간격 -9% · 광선당 95%' },
@@ -163,7 +165,7 @@ export const STARTING_WEAPON = 'shotgun';
 export const TIER_POWER = Object.freeze({
     // 척추 분쇄기(saw) 1.3 → 0.95: 무한 관통·화면 반사로 대군 상대 화력이 도살자 테크 보정과 겹쳐 붕괴를 일으켰다.
     // 개화 꽃잎포(cannon) 1.6 → 0.9: 대군 화력이 다른 진화 무기의 3배여서 그 위의 조합 무기를 끝없이 끌어올렸다.
-    evolved: Object.freeze({ thorns: 2.4, cannon: 0.9, gas: 1.75, saw: 0.95, shotgun: 2.1, rifle: 4.0, molotov: 1.15 }),
+    evolved: Object.freeze({ thorns: 1.15, cannon: 0.9, gas: 1.75, saw: 0.95, shotgun: 2.1, rifle: 4.0, molotov: 1.15 }),
     // 최종(조합·절대) 무기 하향: 진화 < 조합(Lv1) < 조합(Lv8) < 절대(Lv1) 순서는 유지하되 전반적으로 낮춘다.
     fused: Object.freeze({
         // 2차 대폭 하향: 절대 무기는 이전 '최종' 화력대로, 최종 무기는 그보다 아래로 한 등급씩 내렸다.
@@ -179,6 +181,8 @@ export function tierPower(w) {
     // A retained cannon is the same evolved core in every fusion; owner-specific
     // old compensation must not invert final vs absolute power.
     if (w.sourceId && w.id === 'cannon') return TIER_POWER.evolved.cannon * (TIER_POWER.retainedCannon[WEAPONS[w.sourceId]?.tier === 'absolute' ? 'absolute' : 'final'] || 1);
+    // A retained thorn core keeps at least its evolved power: fusing never weakens the petals.
+    if (w.sourceId && w.id === 'thorns') return Math.max(TIER_POWER.fused[w.sourceId] || 1, TIER_POWER.evolved.thorns);
     if (w.sourceId) return TIER_POWER.fused[w.sourceId] || 1;
     if (WEAPONS[w.id]?.fusionOnly) return TIER_POWER.fused[w.id] || 1;
     return w.evolved ? (TIER_POWER.evolved[w.id] || 1) : 1;

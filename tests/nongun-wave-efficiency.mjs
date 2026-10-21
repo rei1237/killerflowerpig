@@ -90,8 +90,9 @@ test('consumable thorns clears the moving finite wave within its measured charge
     // not concealed by comparing old damage under the new runtime.
     const after = summarizeWaves([1, 7, 13].map(seed => runFiniteWave({ id: 'thorns', phase: 'mid', scene: 'moving', seed })));
     assert.equal(after.cleared, 3); assert.ok(after.meanClearTime <= 30);
-    assert.equal(WEAPONS.thorns.base.radius, 68);
-    assert.equal(WEAPONS.thorns.base.dmg, 54); assert.equal(WEAPONS.thorns.base.regrow, 1.6);
+    // Requested close fixed ring (no radius growth) and a stronger pre-evolution petal.
+    assert.equal(WEAPONS.thorns.base.radius, 50);
+    assert.equal(WEAPONS.thorns.base.dmg, 78); assert.equal(WEAPONS.thorns.base.regrow, 1.4);
     assert.equal(WEAPONS.saw.base.hitCd, baseline.weapons.saw.base.hitCd);
     assert.equal(SAW_VISUAL_CAP, 6); assert.equal(ORBIT_VISUAL_CAP, 8);
 });

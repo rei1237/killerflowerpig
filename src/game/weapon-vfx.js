@@ -139,7 +139,8 @@ export function drawWeaponProjectile(ctx,sh,frame) {
 }
 
 export function drawWeaponOrbit(ctx,w,s,p,frame) {
- const style=weaponVfxProfile(w.id),n=s.amount,R=s.radius*s.area,size=26*s.area;
+ // Thorn rings keep a fixed radius (area grows the petal instead); the saw ring still widens.
+ const style=weaponVfxProfile(w.id),n=s.amount,R=w.id==='orbit_saw'?s.radius*s.area:s.radius,size=26*s.area*(w.id==='orbit_saw'?1:14/12);
  const img=w.id==='orbit_saw'?fx.saw:(w.evolved?fx.petalBlood:fx.petal);
  for(let i=0;i<n;i++){
   if(w.id==='thorns'&&w.thornState&&!w.thornState.slots[i]?.ready)continue;
@@ -282,6 +283,29 @@ function drawBeamBraid(ctx,b,frame,len,width,index,inLead=false) {
  strand(style.color,Math.max(2,width*.11),.32);
  strand(index%2?style.accent||style.light:style.light,Math.max(1,width*.04),.78);
  if(!inLead)ctx.restore();
+}
+
+// Stun crown: a small ring of lotus petals over each stunned enemy or boss,
+// read-only and bounded. Reduced motion keeps the ring still.
+export function drawStunMarks(ctx,enemies,boss,frame,bounds) {
+ let left=frame.lowQ?8:24;
+ const style=WEAPON_VFX.thorns,gold=WEAPON_VFX.cannon.accent;
+ const mark=(e,big)=>{
+  if(!(e?.alive&&e.stunT>0)||left<=0)return;
+  if(bounds&&(e.x<bounds.x0||e.x>bounds.x1||e.y<bounds.y0||e.y>bounds.y1))return;
+  left--;
+  // Float the crown just above the sprite's real head height.
+  const height=(e.atlas?.walkH||0)*(e.scale||e.def?.scale||0)||e.radius*(big?3.2:2.6);
+  const r=big?18:Math.min(13,Math.max(9,e.radius*.75)),y=e.y-height-r*.5-4,spin=frame.motion?frame.clock*4:0;
+  const fade=Math.min(1,e.stunT/.15);
+  ctx.save();ctx.translate(e.x,y);ctx.globalCompositeOperation='source-over';
+  ctx.globalAlpha=.75*fade;ctx.strokeStyle=gold;ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.ellipse(0,0,r,r*.38,0,0,TAU);ctx.stroke();
+  for(let i=0;i<3;i++){const a=spin+i/3*TAU;ctx.globalAlpha=.92*fade;petal(ctx,Math.cos(a)*r,Math.sin(a)*r*.38,big?6.5:4.8,a,i%2?style.light:style.color);}
+  ctx.restore();
+ };
+ mark(boss,true);
+ for(let i=0;i<enemies.count&&left>0;i++)mark(enemies.items[i],false);
 }
 
 // Bounded read-only hit accents: only currently flashing, damaged targets

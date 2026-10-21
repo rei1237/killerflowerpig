@@ -45,13 +45,14 @@ test('main drawShots is pure, preserves source sprite dimensions, and culls dist
  G.beams.clear();sh.x=5000;const culled=context();drawShots(culled);assert.equal(culled.ops.length,0);
 });
 
-test('orbital centers and sizes use the existing orbitStats geometry, including saw fusion',()=>{
+test('orbital centers and sizes use the existing orbitStats geometry: fixed thorn rings, widening saw fusion',()=>{
  reset();for(const id of ['thorns','lotus_bloom','orbit_saw']){
   const w={id,level:1,angle:.5,evolved:false},s=orbitStats(w,{amount:2,radius:78,area:1.3,duration:3,dmg:20,speed:3.4,hitCd:.4}),p={x:40,y:50};
   const before=JSON.stringify({w,s,p}),ctx=context();drawWeaponOrbit(ctx,w,s,p,createWeaponVfxFrame(false,2));assert.equal(JSON.stringify({w,s,p}),before);
   const positions=ctx.ops.filter(op=>op.name==='translate');assert.equal(positions.length,s.amount);
-  for(let i=0;i<s.amount;i++){const a=w.angle+(i/s.amount)*Math.PI*2,R=s.radius*s.area;assert.deepEqual(positions[i].args,[p.x+Math.cos(a)*R,p.y-20+Math.sin(a)*R*.8]);}
-  const sprite=ctx.ops.find(op=>op.name==='drawImage');assert.equal(sprite.args[3],26*s.area);assert.equal(sprite.args[4],26*s.area);
+  const saw=id==='orbit_saw',size=26*s.area*(saw?1:14/12);
+  for(let i=0;i<s.amount;i++){const a=w.angle+(i/s.amount)*Math.PI*2,R=saw?s.radius*s.area:s.radius;assert.deepEqual(positions[i].args,[p.x+Math.cos(a)*R,p.y-20+Math.sin(a)*R*.8]);}
+  const sprite=ctx.ops.find(op=>op.name==='drawImage');assert.equal(sprite.args[3],size);assert.equal(sprite.args[4],size);
  }
 });
 

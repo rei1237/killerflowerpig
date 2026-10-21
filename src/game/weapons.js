@@ -3,12 +3,12 @@ import { FUSION_RECIPES } from '../data/fusions.js';
 import { MISMATCH_DAMAGE } from '../data/techs.js';
 import { firingMuzzle } from './player-motion.js';
 import { markPlayerAttack } from './attack-animation.js';
-import { createWeaponVfxFrame, drawWeaponProjectile, drawWeaponOrbit, drawWeaponBeam, drawBeamHitAccents, drawFusionResidues, drawFusionHitAccents, recordLotusBloom, drawLotusBlooms, resetLotusBlooms } from './weapon-vfx.js';
+import { createWeaponVfxFrame, drawWeaponProjectile, drawWeaponOrbit, drawWeaponBeam, drawBeamHitAccents, drawStunMarks, drawFusionResidues, drawFusionHitAccents, recordLotusBloom, drawLotusBlooms, resetLotusBlooms } from './weapon-vfx.js';
 // 무기 런타임: 쿨다운 → 발사 패턴, 플레이어 투사체/광선/궤도체 업데이트 및 충돌
 import { G, rand } from './state.js';
 import { fireSword, drawButcherSword } from './butcher-sword.js';
 import { choosePlagueLanding } from './plague-targeting.js';
-import { updateThornCharges } from './thorn-charges.js';
+import { updateThornCharges, thornOrbitRadius, thornPetalRadius, thornStun } from './thorn-charges.js';
 import { chooseCannonVolley, collectCannonTargets, cannonBeamHits, cannonFocusMultiplier, CANNON_RAY_LIMIT } from './cannon-targeting.js';
 import { WEAPONS, tierPower, CANNON_IMPACT_MULTIPLIER, CANNON_MISMATCH_DAMAGE, CANNON_STRAIGHT_POWER, cannonLaneRatio, cannonLaneStack } from '../data/weapons.js';
 import { fx, glow, images } from '../core/assets.js';
@@ -296,7 +296,7 @@ export const SAW_VISUAL_CAP = 6;
 export const ORBIT_VISUAL_CAP = 8;
 export function orbitStats(w, s) {
     if (w.id === 'orbit_saw') return { ...s, dmg: s.dmg * 0.6, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3) + (s.bonusAmount || 0)), radius: 78, duration: Math.min(4.5, 2.8 * (s.durationScale || 1)), permanent: false };
-    return w.id === 'lotus_bloom' ? { ...s, dmg: s.dmg * 0.28, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3) + (s.bonusAmount || 0)), radius: 90, duration: Math.min(4.5, 2.8 * (s.durationScale || 1)), permanent: false }
+    return w.id === 'lotus_bloom' ? { ...s, dmg: s.dmg * 0.45, amount: Math.min(5, 3 + Math.floor((w.level - 1) / 3) + (s.bonusAmount || 0)), radius: 90, duration: Math.min(4.5, 2.8 * (s.durationScale || 1)), permanent: false }
         : s.amount > ORBIT_VISUAL_CAP ? { ...s, amount: ORBIT_VISUAL_CAP, dmg: s.dmg * s.amount / ORBIT_VISUAL_CAP } : s;
 }
 // 같은 무기의 장판은 한 번 투척 수 + 2 (최소 3)까지만 동시에 유지한다.
@@ -653,8 +653,11 @@ const orbitList = [];
 function updateOrbit(w, s) {
     const p = G.player;
     const n = s.amount;
-    const R = s.radius * s.area;
-    const pr = 12 * s.area;
+    // 연꽃 가시 궤도(만개 연꽃포)는 반경 고정·꽃잎 크기 성장. 회전 톱날은 기존처럼 범위만큼 넓어진다.
+    const thorn = w.id === 'lotus_bloom';
+    const R = thorn ? thornOrbitRadius(s) : s.radius * s.area;
+    const pr = thorn ? thornPetalRadius(s) : 12 * s.area;
+    const stun = thorn ? thornStun({ evolved: true }) : 0;
     const now = G.clock;
     for (let i = 0; i < n; i++) {
         const a = w.angle + (i / n) * Math.PI * 2;
@@ -668,7 +671,7 @@ function updateOrbit(w, s) {
             ensureHitChannels(e);
             if (now - e.hits[hitChannel(w)] < s.hitCd) continue;
             e.hits[hitChannel(w)] = now;
-            const d = hitEnemy(e, s.dmg, { weapon: ownerId(w), kx: Math.cos(a + 1.57), ky: Math.sin(a + 1.57), knock: 90, crit: s.crit, bleed: s.bleed });
+            const d = hitEnemy(e, s.dmg, { weapon: ownerId(w), kx: Math.cos(a + 1.57), ky: Math.sin(a + 1.57), knock: thorn ? 45 : 90, crit: s.crit, bleed: s.bleed, stun });
             if (s.lifesteal && d) healPlayer(s.lifesteal);
         }
         const boss = G.boss;
@@ -676,7 +679,7 @@ function updateOrbit(w, s) {
             const dx = boss.x - ox, dy = (boss.y - boss.radius) - oy;
             if (dx * dx + dy * dy < (pr + boss.radius) ** 2) {
                 boss.hits[hitChannel(w)] = now;
-                boss.hurt(s.dmg, { weapon: ownerId(w) });
+                if (boss.hurt(s.dmg, { weapon: ownerId(w) }) > 0 && thorn) boss.stun(thornStun({ evolved: true }, true));
                 if (s.lifesteal) healPlayer(s.lifesteal);
             }
         }
@@ -799,5 +802,6 @@ export function drawShots(ctx) {
     drawButcherSword(ctx, !frame.motion);
     drawFusionHitAccents(ctx, G.enemies, G.boss, frame, bounds);
     drawBeamHitAccents(ctx, G.beams, G.enemies, G.boss, frame);
+    drawStunMarks(ctx, G.enemies, G.boss, frame, bounds);
     ctx.restore();
 }

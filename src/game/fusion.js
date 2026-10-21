@@ -37,7 +37,7 @@ export function previewFusion(recipeId) {
     stats.coreDamageMultiplier = recipe.tier === 'absolute' ? 1.35 : 1.15;
     if (['lotus_bloom', 'orbit_saw'].includes(recipe.output)) {
         const orbit = orbitStats(candidate, stats);
-        Object.assign(stats, { orbitDamage: orbit.dmg, orbitAmount: orbit.amount, orbitRadius: orbit.radius * orbit.area, orbitDuration: orbit.duration });
+        Object.assign(stats, { orbitDamage: orbit.dmg, orbitAmount: orbit.amount, orbitRadius: recipe.output === 'orbit_saw' ? orbit.radius * orbit.area : orbit.radius, orbitDuration: orbit.duration });
     }
     if (recipe.output === 'ember_lance') {
         const field = emberFieldStats(stats);
