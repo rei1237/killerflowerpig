@@ -43,13 +43,13 @@ test('failed permanent coin write queues boss fallback once and retry never rero
  assert.equal(rollBossChest('storage-chest',()=>{throw Error('retry rolled');}).duplicate,true);assert.equal(G.gold,amount);
  failWrites=false;assert.equal(retryPendingCoins(),true);assert.equal(save.gold,before+amount);assert.equal(queueCoins(amount,'boss:storage-chest'),true);assert.equal(save.gold,before+amount);assert.equal(pendingCoinTotal(),0);
 });
-test('treasure chest always pays stage coins; one upgrade only below the 15 percent boundary, new passive only below 5 percent',()=>{
+test('treasure chest always pays stage coins; one upgrade only below the 50 percent boundary, new passive only below 5 percent',()=>{
  const {TREASURE_DROPS,treasureCoinValue}=coinDrops;
- assert.equal(TREASURE_DROPS.upgradeChance,.15);assert.equal(TREASURE_DROPS.bonusPassiveChance,.05);
+ assert.equal(TREASURE_DROPS.upgradeChance,.5);assert.equal(TREASURE_DROPS.bonusPassiveChance,.05);
  assert.deepEqual([1,5,10].map(treasureCoinValue),[13,25,40]);
  // 경계 위: 코인만
  resetBuild();G.stage=1;G.gold=0;G.weapons=[createWeapon('shotgun',0)];
- let r=rollTreasure(()=>.15);assert.equal(r.length,1);assert.equal(r[0].kind,'gold');assert.equal(G.gold,13);assert.equal(G.weapons[0].level,1,'no upgrade above the boundary');
+ let r=rollTreasure(()=>.5);assert.equal(r.length,1);assert.equal(r[0].kind,'gold');assert.equal(G.gold,13);assert.equal(G.weapons[0].level,1,'no upgrade above the boundary');
  // 강화 경계 아래: 코인 + 정확히 1회 강화 (+2 없음)
  resetBuild();G.stage=1;G.gold=0;G.weapons=[createWeapon('shotgun',0)];
  r=rollTreasure(()=>.1);assert.equal(r.length,2);assert.equal(G.weapons[0].level,2);assert.equal(r[1].levelsGained,1);

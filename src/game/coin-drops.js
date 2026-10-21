@@ -29,7 +29,7 @@ export const coinRandom = { next: createCoinRandom(entropy[0]) };
 // 열면: 코인 확정(coinBase + coinPerStage×스테이지, 보스 현상금의 약 절반) · 강화는 upgradeChance 확률로 1회 · 새 보조 아이템은 bonusPassiveChance.
 // 보스 보상(현상금 + 확정 강화 여러 개)보다 항상 작아야 한다 (tests/boss-rewards.mjs).
 export const TREASURE_DROPS = Object.freeze({ ordinary: .0001, champion: .002, elite: .025, maxOnField: 1, maxPerStage: 1,
-    coinBase: 10, coinPerStage: 3, upgradeChance: .15, bonusPassiveChance: .05 });
+    coinBase: 10, coinPerStage: 3, upgradeChance: .5, bonusPassiveChance: .05 });
 export const treasureCoinValue = stage => TREASURE_DROPS.coinBase + TREASURE_DROPS.coinPerStage * Math.max(1, Math.min(10, Number.isInteger(stage) ? stage : 1));
 // 전용 난수 스트림: 전투·코인·보급 난수를 소비하지 않는다.
 export const treasureRandom = { next: createCoinRandom((entropy[0] ^ 0x51ed270b) >>> 0) };
