@@ -272,7 +272,7 @@ export function rollChest(count, random = Math.random) {
     return rewards;
 }
 
-// 보물 상자: 코인 위주 보상. 코인은 확정, 강화(진화 우선)는 낮은 확률로 1회, 새 보조 아이템도 낮은 확률.
+// 보물 상자: 코인 확정, 강화(진화 우선) 1회 확정, 새 보조 아이템은 낮은 확률.
 // (이전에는 강화 2회 확정이라 같은 무기가 한 번에 2레벨 오르는 일이 있었다)
 export function rollTreasure(random = Math.random, bonusChance = TREASURE_DROPS.bonusPassiveChance, upgradeChance = TREASURE_DROPS.upgradeChance) {
     const coins = Math.max(1, Math.round(treasureCoinValue(G.stage) * (G.player?.stats?.greed || 1)));

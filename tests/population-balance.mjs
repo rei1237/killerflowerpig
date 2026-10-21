@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { G, clearWorld, configureCaps, setVisualTier } from '../src/game/state.js';
 import { settings } from '../src/core/settings.js';
 import { atlases } from '../src/core/assets.js';
-import { ENEMIES, ELITE, eliteSheet, ENEMY_TOUGHNESS_MULTIPLIER, ENEMY_DAMAGE_MULTIPLIER, SPARSE_ENEMY_HP, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, stageScaling } from '../src/data/enemies.js';
-import { STAGES, EVENTS, POPULATION_BOOST } from '../src/data/stages.js';
+import { ENEMIES, ELITE, eliteSheet, ENEMY_TOUGHNESS_MULTIPLIER, ENEMY_DAMAGE_MULTIPLIER, SPARSE_ENEMY_HP, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, MOB_STRENGTH, stageScaling } from '../src/data/enemies.js';
+import { STAGES, EVENTS, POPULATION_BOOST, POPULATION_SCALE } from '../src/data/stages.js';
 import { BOSSES, bossMaxHp } from '../src/data/bosses.js';
 import { ELITE_BOSS_CAP } from '../src/data/enemies.js';
 // 엘리트는 보스 기준 상한을 받는다 (쉬움 난이도).
@@ -15,11 +15,12 @@ import { resetSpawner, spawnRate, updateSpawner } from '../src/game/spawner.js';
 
 const oldDensity = [[8,36],[14,56],[26,100],[32,125],[38,150],[45,175],[52,200],[60,225],[68,250],[76,280]];
 const previousDensity = [[5,22],[8,34],[16,60],[19,75],[23,90],[27,105],[31,120],[36,135],[41,150],[46,168]];
-// 기준값(사전 하향 12% 적용 후) 위에 POPULATION_BOOST(1~3스테이지 ×1.2/1.25/1.3, 4스테이지~ ×1.5)를 곱한 것이 현재 밀도/상한이다.
+// 기준값(사전 하향 12% 적용 후) 위에 POPULATION_BOOST(1~3스테이지 ×1.2/1.25/1.3, 4스테이지~ ×1.5)와
+// 적 수 축소 POPULATION_SCALE(0.7)을 곱한 것이 현재 밀도/상한이다.
 const baseDensity = previousDensity.map(pair => pair.map(n => Math.round(n * .88)));
 const baseCaps = [29,43,84,100,116,132,148,164,180,196].map(n => Math.round(n * .88));
-const newDensity = baseDensity.map((pair, i) => pair.map(n => Math.round(n * POPULATION_BOOST[i + 1])));
-const caps = baseCaps.map((n, i) => Math.round(n * POPULATION_BOOST[i + 1]));
+const newDensity = baseDensity.map((pair, i) => pair.map(n => Math.round(n * (POPULATION_BOOST[i + 1] * POPULATION_SCALE))));
+const caps = baseCaps.map((n, i) => Math.round(n * (POPULATION_BOOST[i + 1] * POPULATION_SCALE)));
 const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
 const active = pool => pool.items.slice(0, pool.count);
 
@@ -50,7 +51,8 @@ function originalScaling(stage, time) {
     };
 }
 
-test('stage population endpoints are the reduced base times POPULATION_BOOST and late swarms are bounded specialists', () => {
+test('stage population endpoints are the reduced base times POPULATION_BOOST and POPULATION_SCALE, and late swarms are bounded specialists', () => {
+    assert.equal(POPULATION_SCALE, .7);
     assert.deepEqual(Object.values(POPULATION_BOOST).slice(0, 3), [1.2, 1.25, 1.3]);
     for (let stage = 4; stage <= 10; stage++) assert.equal(POPULATION_BOOST[stage], 1.5);
     for (let stage = 1; stage <= 10; stage++) {
@@ -59,7 +61,7 @@ test('stage population endpoints are the reduced base times POPULATION_BOOST and
         assert.equal(st.enemyCap, caps[stage - 1]);
         for (let index = 0; index < 2; index++) {
             const ratio = st.density[index] / old[index]; // 원래(최초) 밀도 대비: 감소분과 부스트가 겹친 값
-            assert.ok(ratio >= .55 && ratio <= .85, `stage ${stage} endpoint ${index}: ${ratio}`);
+            assert.ok(ratio >= .35 && ratio <= .6, `stage ${stage} endpoint ${index}: ${ratio}`);
         }
         assert.equal(st.eventTuning.ringCount, Math.round(Math.round((stage === 1 ? 10 : stage === 2 ? 16 : 18 + stage * 3) * .6) * .88));
         assert.equal(st.eventTuning.swarmCount, stage >= 5 ? Math.min(10, stage + 1) : Math.round(Math.round((stage === 1 ? 12 : stage === 2 ? 20 : 26 + stage * 3) * .6) * .88));
@@ -70,16 +72,18 @@ test('refill rates track the smaller population without double-scaling the defic
     for (let stage = 1; stage <= 10; stage++) {
         const st = STAGES[stage];
         for (const fullness of [0, .5, .9]) {
-            // 부스트된 목표로 계산한 투입 속도는 부스트 전 목표의 속도보다 크되, 부스트 배율 이상으로 뛰지 않는다 (부족분 이중 증폭 없음).
+            // 조정된 목표(부스트 × 축소)로 계산한 투입 속도는 그 배율 이상으로 뛰지 않는다 (부족분 이중 증폭 없음).
             const baseTarget = baseDensity[stage - 1][0], newTarget = st.density[0];
             const baseRate = spawnRate(st, baseTarget, baseTarget * fullness);
             const rate = spawnRate(st, newTarget, newTarget * fullness);
-            assert.ok(rate >= baseRate && rate / baseRate <= POPULATION_BOOST[stage] + 1e-9, `stage ${stage}, fullness ${fullness}: ${rate / baseRate}`);
+            const scale = newTarget / baseTarget; // 반올림된 실제 목표 비율
+            assert.ok(rate > 0 && rate / baseRate <= Math.max(1, scale) + 1e-9 && rate / baseRate >= Math.min(1, scale) - 1e-9, `stage ${stage}, fullness ${fullness}: ${rate / baseRate}`);
         }
     }
 });
 
-test('enemy HP/damage follow the toughness and damage multipliers; collision is unchanged and field elites are tinted early and use the original boss sprites later (xp is cut by STAGE_XP_YIELD)', () => withFixedRandom(() => {
+test('enemy HP/damage follow the toughness, damage and ordinary-mob multipliers; collision is unchanged and field elites are tinted early and use the original boss sprites later (xp is cut by STAGE_XP_YIELD)', () => withFixedRandom(() => {
+    assert.deepEqual({ ...MOB_STRENGTH }, { hp: 1.4, dmg: 1.1, xp: 1 / .7 });
     assert.equal(ENEMY_TOUGHNESS_MULTIPLIER, 1.9);
     assert.equal(ENEMY_DAMAGE_MULTIPLIER, 1.15);
     for (let stage = 1; stage <= 10; stage++) {
@@ -95,9 +99,9 @@ test('enemy HP/damage follow the toughness and damage multipliers; collision is 
                     G.enemies.clear();
                     const enemy = spawnEnemy(id, 100, 0, { elite, force: true, noAffix: true }); // 변이/엘리트 능력은 별도 테스트
                     if ((def.ranged && stage < 5) || stage < (def.unlockStage || 1)) { assert.equal(enemy, null); continue; }
-                    { const raw = def.hp * old.hp * 1.9 * SPARSE_ENEMY_HP[stage] * (elite ? ELITE.hp : 1); close(enemy.hp, elite ? Math.min(raw, eliteHpCap(stage)) : raw); }
+                    { const raw = def.hp * old.hp * 1.9 * SPARSE_ENEMY_HP[stage] * (elite ? ELITE.hp : MOB_STRENGTH.hp); close(enemy.hp, elite ? Math.min(raw, eliteHpCap(stage)) : raw); }
                     close(enemy.speed, def.speed * old.speed * (elite ? ELITE.speed : 1));
-                    { const raw = def.dmg * old.dmg * 1.15 * (elite ? ELITE.dmg : 1); close(enemy.dmg, elite ? Math.min(raw, eliteDmgCap(stage)) : raw); }
+                    { const raw = def.dmg * old.dmg * 1.15 * (elite ? ELITE.dmg : MOB_STRENGTH.dmg); close(enemy.dmg, elite ? Math.min(raw, eliteDmgCap(stage)) : raw); }
                     close(enemy.radius, def.radius * (elite ? ELITE.scale : 1));
                     const bossArt = elite && eliteSheet(stage).sheet, art = bossArt ? atlases[bossArt] : atlases[def.sheet];
                     close(enemy.scale, bossArt ? def.scale * ELITE.scale * 112 * eliteSheet(stage).size / art.walkH : def.scale * (elite ? ELITE.scale : 1));
@@ -115,7 +119,7 @@ test('fixed-damage kill-count and HP-per-DPS proxies reflect sturdier individual
         reset(stage);
         const beforeHp = ENEMIES.shambler.hp * originalScaling(stage, 0).hp;
         const enemy = spawnEnemy('shambler', 500, 0, { noAffix: true });
-        close(enemy.hp / 40, beforeHp / 40 * 1.9);
+        close(enemy.hp / 40, beforeHp / 40 * 1.9 * MOB_STRENGTH.hp);
         const expectedHits = Math.ceil(enemy.hp / 9);
         let hits = 0;
         while (enemy.alive && hits < 1000) { hitEnemy(enemy, 9, { silent: true }); hits++; }
@@ -193,9 +197,10 @@ test('actual timed rings and rushes use their reduced counts without changing th
             G.eventIdx = events.findIndex(event => event.type === type);
             G.time = events[G.eventIdx].t;
             updateSpawner(0);
-            assert.equal(G.enemies.count, STAGES[stage].eventTuning[field]);
+            const count = Math.max(1, Math.round(STAGES[stage].eventTuning[field] * POPULATION_SCALE));
+            assert.equal(G.enemies.count, count);
             updateSpawner(0);
-            assert.equal(G.enemies.count, STAGES[stage].eventTuning[field]);
+            assert.equal(G.enemies.count, count);
         }
     }
 });
@@ -210,7 +215,7 @@ test('horde events bring hordeCount enemies (x0.7 on low quality) and elite even
             G.time = events[G.eventIdx].t;
             updateSpawner(0);
             const base = STAGES[stage].eventTuning?.hordeCount ?? Math.round(16 + 6 * stage);
-            assert.equal(G.enemies.count, Math.min(Math.round(base * (lowQ ? .7 : 1)), Math.min(STAGES[stage].enemyCap, G.caps.enemies)));
+            assert.equal(G.enemies.count, Math.min(Math.round(base * POPULATION_SCALE * (lowQ ? .7 : 1)), Math.min(STAGES[stage].enemyCap, G.caps.enemies)));
         }
         reset(stage);
         const events = STAGES[stage].events || EVENTS;

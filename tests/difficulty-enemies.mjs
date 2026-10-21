@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
-import { ELITE, ELITE_BOSS_CAP, eliteSheet } from '../src/data/enemies.js';
+import { ELITE, ELITE_BOSS_CAP, MOB_STRENGTH, eliteSheet } from '../src/data/enemies.js';
 import { BOSSES, bossMaxHp } from '../src/data/bosses.js';
 import { DIFFICULTIES, DIFFICULTY_ORDER } from '../src/data/difficulty.js';
 import { eliteAffixCount } from '../src/game/affixes.js';
@@ -39,8 +39,8 @@ test('every difficulty strengthens ordinary and elite rabbits monotonically; eas
 test('spawned enemies carry the difficulty hp/damage/speed multipliers, elites get an extra layer', () => {
     for (const stage of [2, 6]) {
         const base = spawn(stage, 'easy', { noAffix: true });
-        // 상한 전 원시값: 일반 개체 × 엘리트 배율
-        const baseElite = { rawHp: base.maxHp * ELITE.hp, rawDmg: base.dmg * ELITE.dmg };
+        // 상한 전 원시값: 일반 개체(일반 청토끼 강화 MOB_STRENGTH 제외) × 엘리트 배율
+        const baseElite = { rawHp: base.maxHp / MOB_STRENGTH.hp * ELITE.hp, rawDmg: base.dmg / MOB_STRENGTH.dmg * ELITE.dmg };
         for (const id of DIFFICULTY_ORDER) {
             const d = DIFFICULTIES[id];
             const ordinary = spawn(stage, id, { noAffix: true }), elite = spawn(stage, id, { elite: true, noAffix: true });

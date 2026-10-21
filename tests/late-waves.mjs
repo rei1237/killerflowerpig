@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
-import { STAGES, EVENTS } from '../src/data/stages.js';
+import { STAGES, EVENTS, POPULATION_SCALE } from '../src/data/stages.js';
 import { resetSpawner, updateSpawner, currentWeights, SWARM_RUSH } from '../src/game/spawner.js';
 import { updateEncirclement } from '../src/game/encirclement.js';
 function reset(stage) {
@@ -27,7 +27,7 @@ test('late specialist spawn tables are gated while earlier stage roster stays un
 test('late rush events contain three to five spaced suiciders instead of dense runner crowds',()=>{
  for(let stage=1;stage<=10;stage++){
   reset(stage);event(stage,'swarm');const enemies=G.enemies.items.slice(0,G.enemies.count);
-  assert.equal(enemies.length,STAGES[stage].eventTuning.swarmCount);
+  assert.equal(enemies.length,Math.max(1,Math.round(STAGES[stage].eventTuning.swarmCount*POPULATION_SCALE)));
   assert.ok(enemies.every(e=>e.type===(stage>=5?'suicider':'runner')));
   if(stage>=5){assert.ok(enemies.length<=10);for(let i=0;i<enemies.length;i++)for(let j=0;j<i;j++)assert.ok(Math.hypot(enemies[i].x-enemies[j].x,enemies[i].y-enemies[j].y)>=79.9);}
   updateSpawner(0);assert.equal(G.enemies.count,enemies.length);
@@ -44,7 +44,7 @@ test('actual late ring event confines only after warning and releases before a l
 });
 test('swarm rush is faster and, from stage 2, a pincer wave charges from the opposite side',()=>{
  reset(1);event(1,'swarm');updateSpawner(0);G.time+=SWARM_RUSH.pincerDelay+.01;updateSpawner(0);
- assert.equal(G.enemies.count,STAGES[1].eventTuning.swarmCount,'stage 1 tutorial rush has no pincer');
+ assert.equal(G.enemies.count,Math.max(1,Math.round(STAGES[1].eventTuning.swarmCount*POPULATION_SCALE)),'stage 1 tutorial rush has no pincer');
  for(const stage of [3,7]){
   reset(stage);event(stage,'swarm');const first=G.enemies.items.slice(0,G.enemies.count).map(e=>({lineX:e.lineX,lineY:e.lineY}));
   G.time+=SWARM_RUSH.pincerDelay-.05;updateSpawner(0);assert.equal(G.enemies.count,first.length,'pincer waits for its delay');

@@ -64,7 +64,7 @@
       "weapons": [
         {
           "id": "scatter_rail",
-          "level": 5,
+          "level": 7,
           "evolved": false
         },
         {
@@ -233,7 +233,7 @@
       "weapons": [
         {
           "id": "sword_wheel",
-          "level": 8,
+          "level": 7,
           "evolved": false
         },
         {
@@ -248,22 +248,21 @@
         },
         {
           "id": "cannon",
-          "level": 5,
+          "level": 6,
           "evolved": false
         }
       ],
       "passives": {
-        "whet": 4,
+        "whet": 5,
         "regen": 5,
         "scope": 5,
-        "magazine": 5,
-        "pollen": 1
+        "magazine": 5
       },
       "stats": {
-        "might": 1.4,
+        "might": 1.5,
         "area": 1,
         "cooldown": 1,
-        "barrierCd": 12,
+        "barrierCd": 0,
         "duration": 1,
         "growth": 1,
         "projSpeed": 1.25,

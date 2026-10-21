@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases, fx } from '../src/core/assets.js';
-import { ENEMIES, RANGED_UNLOCK_STAGE, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, RANGED_UNLOCK_STAGE, MOB_STRENGTH, stageScaling } from '../src/data/enemies.js';
 import { STAGES } from '../src/data/stages.js';
 import { supplyState } from '../src/game/supply-drops.js';
 import { spawnEnemy, hitEnemy, updateEnemies } from '../src/game/enemies.js';
@@ -62,7 +62,7 @@ test('healthy real kills never drop heals; magnet guarantee at 36 with exact coi
   assert.equal(field('magnet').length,count===36?1:0);
  }
  assert.equal(G.kills,36);assert.equal(field('coin').reduce((n,c)=>n+c.value,0),0);
- assert.ok(xp>0);close(G.gems.items[0].value,ENEMIES.shambler.xp*stageScaling(1,0,STAGES[1].duration).xp*5/3); // 스테이지 XP 배율(STAGE_XP_YIELD 포함)
+ assert.ok(xp>0);close(G.gems.items[0].value,ENEMIES.shambler.xp*stageScaling(1,0,STAGES[1].duration).xp*MOB_STRENGTH.xp*5/3); // 스테이지 XP 배율(STAGE_XP_YIELD 포함) × 적 수 축소 보상
 }));
 
 test('low HP real kills guarantee at8; elites drop their 10 coins on a winning roll without a chest',()=>withRandom(.99,()=>{

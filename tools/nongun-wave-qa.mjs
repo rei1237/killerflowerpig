@@ -12,7 +12,7 @@ import { updateHazards } from '../src/game/hazards.js';
 import { resetBuild } from '../src/game/progression.js';
 import { clearFocus } from '../src/game/targeting.js';
 import { WEAPONS } from '../src/data/weapons.js';
-import { ENEMY_TOUGHNESS_MULTIPLIER } from '../src/data/enemies.js';
+import { ENEMY_TOUGHNESS_MULTIPLIER, MOB_STRENGTH } from '../src/data/enemies.js';
 import { TECHS } from '../src/data/techs.js';
 import { save } from '../src/core/save.js';
 import { atlases, images } from '../src/core/assets.js';
@@ -32,7 +32,7 @@ const ROUTES = { gunline: ['shotgun', 'rifle'], executioner: ['pistols', 'rifle'
     bloom: ['thorns', 'cannon'], plague: ['molotov', 'gas'], butcher: ['sword', 'saw'] };
 const round = value => +value.toFixed(3);
 // 무기 데이터 전후 비교는 측정 당시의 적 체력(강인함 1.62)에 고정한다. 이후 적 강화가 무기 비교를 흔들지 않게.
-const BENCH_HP = 1.62 / ENEMY_TOUGHNESS_MULTIPLIER;
+const BENCH_HP = 1.62 / ENEMY_TOUGHNESS_MULTIPLIER / MOB_STRENGTH.hp;
 const baseline = JSON.parse(fs.readFileSync(new URL('../tests/fixtures/nongun-data-before.json', import.meta.url)));
 export function withBeforeData(run) {
     const current = Object.fromEntries(NONGUN_IDS.map(id => [id, WEAPONS[id]]));

@@ -43,13 +43,16 @@ test('failed permanent coin write queues boss fallback once and retry never rero
  assert.equal(rollBossChest('storage-chest',()=>{throw Error('retry rolled');}).duplicate,true);assert.equal(G.gold,amount);
  failWrites=false;assert.equal(retryPendingCoins(),true);assert.equal(save.gold,before+amount);assert.equal(queueCoins(amount,'boss:storage-chest'),true);assert.equal(save.gold,before+amount);assert.equal(pendingCoinTotal(),0);
 });
-test('treasure chest always pays stage coins; one upgrade only below the 50 percent boundary, new passive only below 5 percent',()=>{
+test('treasure chest always pays stage coins and exactly one upgrade; new passive only below 5 percent',()=>{
  const {TREASURE_DROPS,treasureCoinValue}=coinDrops;
- assert.equal(TREASURE_DROPS.upgradeChance,.5);assert.equal(TREASURE_DROPS.bonusPassiveChance,.05);
- assert.deepEqual([1,5,10].map(treasureCoinValue),[13,25,40]);
- // 경계 위: 코인만
- resetBuild();G.stage=1;G.gold=0;G.weapons=[createWeapon('shotgun',0)];
- let r=rollTreasure(()=>.5);assert.equal(r.length,1);assert.equal(r[0].kind,'gold');assert.equal(G.gold,13);assert.equal(G.weapons[0].level,1,'no upgrade above the boundary');
+ assert.equal(TREASURE_DROPS.upgradeChance,1);assert.equal(TREASURE_DROPS.bonusPassiveChance,.05);
+ assert.deepEqual([1,5,10].map(treasureCoinValue),[22,38,58]);
+ // 어떤 굴림이든: 코인 + 강화 1회 확정
+ for(const roll of [.5,.99,.999999]){
+  resetBuild();G.stage=1;G.gold=0;G.weapons=[createWeapon('shotgun',0)];
+  const r=rollTreasure(()=>roll);assert.equal(r.length,2);assert.equal(r[0].kind,'gold');assert.equal(G.gold,22);assert.equal(G.weapons[0].level,2,'the upgrade is guaranteed');
+ }
+ let r;
  // 강화 경계 아래: 코인 + 정확히 1회 강화 (+2 없음)
  resetBuild();G.stage=1;G.gold=0;G.weapons=[createWeapon('shotgun',0)];
  r=rollTreasure(()=>.1);assert.equal(r.length,2);assert.equal(G.weapons[0].level,2);assert.equal(r[1].levelsGained,1);
@@ -62,13 +65,17 @@ test('treasure chest always pays stage coins; one upgrade only below the 50 perc
 });
 test('treasure chest coins scale with stage and the greed bonus',()=>{
  resetBuild();G.stage=4;G.gold=0;G.weapons=[];const r=rollTreasure(()=>.99);
- assert.equal(r.length,1);assert.equal(r[0].kind,'gold');assert.equal(G.gold,22);
+ // 강화 대상이 없을 때 확정 강화 칸은 대체 보상으로 바뀌므로, 보물 코인 줄만 확인한다.
+ assert.equal(r[0].kind,'gold');assert.equal(r[0].desc,'코인 +34');
 });
 test('a treasure chest is always worth less than the boss: fewer coins and fewer expected upgrades on every stage and difficulty',()=>{
  const {TREASURE_DROPS,treasureCoinValue,bossCoinValue}=coinDrops;
  for(let stage=1;stage<=10;stage++){
-  assert.ok(treasureCoinValue(stage)<=bossCoinValue(stage)*.6,`stage ${stage} coins`);
-  for(const d of ['easy','normal','hard','hell']){const tier=bossRewardTier(stage,DIFF[d]);assert.ok(TREASURE_DROPS.upgradeChance+TREASURE_DROPS.bonusPassiveChance<tier.guaranteedCount,`stage ${stage}/${d}`);}
+  // 보물 코인은 크게 늘었지만(이전 보스의 약 절반) 여전히 보스 현상금보다 작다.
+  assert.ok(treasureCoinValue(stage)<=bossCoinValue(stage)*.9,`stage ${stage} coins`);
+  for(const d of ['easy','normal','hard','hell']){const tier=bossRewardTier(stage,DIFF[d]);
+   // 기대 강화 레벨: 보물(확정 1회 + 새 보조) < 보스(확정 + 정밀 강화 +2 확률)
+   assert.ok(TREASURE_DROPS.upgradeChance+TREASURE_DROPS.bonusPassiveChance<tier.guaranteedCount+tier.premiumLevels*tier.premiumChance,`stage ${stage}/${d}`);}
  }
- assert.ok(TREASURE_DROPS.ordinary<=.0001&&TREASURE_DROPS.champion<=.002&&TREASURE_DROPS.elite<=.025);assert.equal(TREASURE_DROPS.maxPerStage,1);
+ assert.ok(TREASURE_DROPS.ordinary<=.00008&&TREASURE_DROPS.champion<=.0016&&TREASURE_DROPS.elite<=.02);assert.equal(TREASURE_DROPS.maxPerStage,1);
 });

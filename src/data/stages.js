@@ -101,8 +101,11 @@ export const STAGE_COUNT = 10;
 // 개체 수 복원: 이전 조정으로 줄어든 적을 다시 늘린다 (1~3스테이지는 완만하게, 4스테이지부터 크게).
 // 대신 적 한 마리당 경험치는 낮추고(STAGE_XP_YIELD) 레벨업 곡선은 가파르게 만들어 '많이 잡아도 쉽게 크지 않게' 한다.
 export const POPULATION_BOOST = Object.freeze({ 1: 1.2, 2: 1.25, 3: 1.3, 4: 1.5, 5: 1.5, 6: 1.5, 7: 1.5, 8: 1.5, 9: 1.5, 10: 1.5 });
+// 적 수 축소: 일반 밀도·상한·이벤트(대군·포위·군체 러시) 규모를 모두 이 비율로 줄인다.
+// 대신 일반 청토끼 한 마리는 MOB_STRENGTH 만큼 단단해지고 경험치도 그만큼 더 준다.
+export const POPULATION_SCALE = 0.7;
 for (const [id, st] of Object.entries(STAGES)) {
-    const k = POPULATION_BOOST[id] || 1;
+    const k = (POPULATION_BOOST[id] || 1) * POPULATION_SCALE;
     st.density = st.density.map(v => Math.round(v * k));
     if (st.enemyCap) st.enemyCap = Math.round(st.enemyCap * k);
 }

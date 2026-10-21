@@ -42,8 +42,8 @@ test('actual boss defeat guarantees one boss gear chest and repeated damage cann
 });
 
 test('treasure chest odds have exact boundaries per enemy kind and use a dedicated stream',()=>{
- assert.deepEqual({o:TREASURE_DROPS.ordinary,c:TREASURE_DROPS.champion,e:TREASURE_DROPS.elite,max:TREASURE_DROPS.maxOnField},{o:.0001,c:.002,e:.025,max:1});
- for(const [kind,chance] of [['ordinary',.0001],['champion',.002],['elite',.025]]){
+ assert.deepEqual({o:TREASURE_DROPS.ordinary,c:TREASURE_DROPS.champion,e:TREASURE_DROPS.elite,max:TREASURE_DROPS.maxOnField},{o:.00008,c:.0016,e:.02,max:1});
+ for(const [kind,chance] of [['ordinary',.00008],['champion',.0016],['elite',.02]]){
   assert.equal(treasureDropped(kind,()=>0),true);assert.equal(treasureDropped(kind,()=>chance-1e-9),true);
   for(const roll of [chance,.999,1,-1,NaN])assert.equal(treasureDropped(kind,()=>roll),false,`${kind} ${roll}`);
  }

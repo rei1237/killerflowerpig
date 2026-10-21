@@ -49,6 +49,9 @@ export const MAX_RANGED_ALIVE = 6;
 export const ENEMY_TOUGHNESS_MULTIPLIER = 1.9;
 // 접촉·탄 피해 전반 강화.
 export const ENEMY_DAMAGE_MULTIPLIER = 1.15;
+// 일반 청토끼(엘리트 제외) 강화: 적 수를 POPULATION_SCALE(0.7)로 줄인 만큼 한 마리가 더 단단하고 아프다.
+// 경험치도 줄어든 수만큼 올려 레벨업 속도는 그대로 둔다.
+export const MOB_STRENGTH = Object.freeze({ hp: 1.4, dmg: 1.1, xp: 1 / 0.7 });
 // Fixed stage budgets, never derived from the player’s current damage/equipment.
 // 희소 조정(적 수 ↓, 개체 체력·경험치 ↑)을 되돌렸다: 개체 수를 다시 늘리고(POPULATION_BOOST + 대군 이벤트)
 // 개체당 경험치는 STAGE_XP_YIELD 로 낮춘다. 기존 이름은 유지하되 중립(1배) 값이다.

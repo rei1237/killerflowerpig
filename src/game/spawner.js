@@ -1,7 +1,7 @@
 // 웨이브 디렉터: 시간에 따라 목표 밀도를 유지하며 적을 시야 밖에서 투입, 시간 이벤트 처리
 import { G, rand, pickWeighted, emit } from './state.js';
 import { ENEMIES, RANGED_UNLOCK_STAGE } from '../data/enemies.js';
-import { STAGES, EVENTS } from '../data/stages.js';
+import { STAGES, EVENTS, POPULATION_SCALE } from '../data/stages.js';
 import { spawnEnemy, edgePosition } from './enemies.js';
 import { audio } from '../core/audio.js';
 import { floatText } from './effects.js';
@@ -117,7 +117,7 @@ function runEvent(type, st, t) {
     } else if (type === 'ring') {
         // Late rings have a timed, visible poison boundary; early rings stay escapable.
         if (G.stage >= 5) startEncirclement();
-        const n = st.eventTuning?.ringCount ?? 18 + G.stage * 3;
+        const n = Math.max(1, Math.round((st.eventTuning?.ringCount ?? 18 + G.stage * 3) * POPULATION_SCALE));
         const R = Math.min(G.view.w, G.view.h) * 0.62;
         for (let i = 0; i < n; i++) {
             const a = (i / n) * Math.PI * 2;
@@ -130,7 +130,7 @@ function runEvent(type, st, t) {
         const a = Math.random() * Math.PI * 2, dx = Math.cos(a), dy = Math.sin(a);
         const r = Math.hypot(G.view.w, G.view.h) / 2 + 80;
         const base = st.eventTuning?.hordeCount ?? Math.round(16 + G.stage * 6);
-        const n = Math.round(base * (G.lowQ ? 0.7 : 1));
+        const n = Math.round(base * POPULATION_SCALE * (G.lowQ ? 0.7 : 1));
         const types = Object.keys(table);
         for (let i = 0; i < n; i++) {
             const across = (Math.random() - 0.5) * Math.min(G.view.w, G.view.h) * 1.1;
@@ -143,7 +143,7 @@ function runEvent(type, st, t) {
     } else if (type === 'swarm') {
         // 군체 러시: 한 방향에서 일직선으로 쏟아지는 무리 (+ 스테이지 2부터 반대편 협공)
         const a = Math.random() * Math.PI * 2;
-        const n = st.eventTuning?.swarmCount ?? 26 + G.stage * 3;
+        const n = Math.max(1, Math.round((st.eventTuning?.swarmCount ?? 26 + G.stage * 3) * POPULATION_SCALE));
         spawnSwarmLine(st, a, n);
         if (G.stage >= SWARM_RUSH.pincerStage) {
             G.pendingSwarm = { at: G.time + SWARM_RUSH.pincerDelay, angle: a + Math.PI, n: Math.max(1, Math.round(n * SWARM_RUSH.pincerRatio)) };

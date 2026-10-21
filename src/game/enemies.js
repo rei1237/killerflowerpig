@@ -5,7 +5,7 @@ import { playerBody } from './player-motion.js';
 // 적 시스템: 스폰, 추적 이동 + 상호 밀어내기(그리드), 원거리 공격, 상태이상, 피격/사망 처리
 import { G, rand, emit } from './state.js';
 import { BOSSES, bossMaxHp } from '../data/bosses.js';
-import { ENEMIES, ELITE, ELITE_BOSS_CAP, eliteSheet, DEATH_CLOUD_UNLOCK_STAGE, RANGED_UNLOCK_STAGE, MAX_RANGED_ALIVE, stageScaling, BOSS_FIGHT_XP_MULTIPLIER } from '../data/enemies.js';
+import { ENEMIES, ELITE, ELITE_BOSS_CAP, eliteSheet, DEATH_CLOUD_UNLOCK_STAGE, RANGED_UNLOCK_STAGE, MAX_RANGED_ALIVE, MOB_STRENGTH, stageScaling, BOSS_FIGHT_XP_MULTIPLIER } from '../data/enemies.js';
 import { STAGES } from '../data/stages.js';
 import { difficultyOf } from '../data/difficulty.js';
 import { atlases, textSprite } from '../core/assets.js';
@@ -51,10 +51,11 @@ export function spawnEnemy(typeId, x, y, opts = {}) {
     e.def = def;
     e.x = x; e.y = y;
     e.kx = 0; e.ky = 0;
-    e.maxHp = e.hp = def.hp * sc.hp * (elite ? ELITE.hp : 1) * (opts.hpMul || 1) * (de.hp || 1) * (dl.hp || 1);
+    const mob = elite ? null : MOB_STRENGTH;
+    e.maxHp = e.hp = def.hp * sc.hp * (elite ? ELITE.hp : mob.hp) * (opts.hpMul || 1) * (de.hp || 1) * (dl.hp || 1);
     e.speed = def.speed * sc.speed * (elite ? ELITE.speed : 1) * rand(0.92, 1.08) * (opts.speedMul || 1) * (de.speed || 1);
-    e.dmg = def.dmg * sc.dmg * (elite ? ELITE.dmg : 1) * (de.dmg || 1) * (dl.dmg || 1);
-    e.xp = def.xp * sc.xp * (elite ? ELITE.xp : 1);
+    e.dmg = def.dmg * sc.dmg * (elite ? ELITE.dmg : mob.dmg) * (de.dmg || 1) * (dl.dmg || 1);
+    e.xp = def.xp * sc.xp * (elite ? ELITE.xp : mob.xp);
     e.scale = def.scale * (elite ? ELITE.scale : 1);
     e.radius = def.radius * (elite ? ELITE.scale : 1);
     e.mass = def.mass * (elite ? 4 : 1);

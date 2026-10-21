@@ -3,7 +3,7 @@ treasureRandom.next = () => .99; // 보물 상자 굴림 고정 (픽업 목록�
 coinRandom.next = () => .99;
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEATH_CLOUD_UNLOCK_STAGE, ENEMIES, ELITE, stageScaling } from '../src/data/enemies.js';
+import { DEATH_CLOUD_UNLOCK_STAGE, ENEMIES, ELITE, MOB_STRENGTH, stageScaling } from '../src/data/enemies.js';
 import { STAGES } from '../src/data/stages.js';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
@@ -51,7 +51,7 @@ function killBloater(stage, elite = false) {
     assert.equal(G.hazards.count, 0, 'death queues the explosion before hazard creation');
     assert.deepEqual({ tint: enemy.tint, scale: enemy.scale, radius: enemy.radius }, appearance);
     assert.equal(G.gems.count, 1);
-    close(G.gems.items[0].value, ENEMIES.bloater.xp * stageScaling(stage, 0, STAGES[stage].duration).xp * (elite ? ELITE.xp : 1) * (5 / 3));
+    close(G.gems.items[0].value, ENEMIES.bloater.xp * stageScaling(stage, 0, STAGES[stage].duration).xp * (elite ? ELITE.xp : MOB_STRENGTH.xp) * (5 / 3));
     assert.deepEqual(active(G.pickups).map(({ kind, value }) => ({ kind, value })), elite
         ? [{ kind: 'coin', value: 10 }]
         : [{ kind: 'coin', value: 3 }]);
