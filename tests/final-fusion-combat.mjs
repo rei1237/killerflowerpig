@@ -20,7 +20,7 @@ test('final Lv1 fusions (except the explicitly balanced Absolute Bloom) still be
   const mean=(ratios.boss+ratios.scatter+ratios.corridor)/3;means.push(mean);
   assert.ok(mean>.65,`${recipe.id} mean ${mean}`);
  }
- const overall=means.reduce((a,b)=>a+b,0)/means.length;assert.ok(overall>1.3,`overall final premium ${overall}`); // 2차 하향 후 1.5 → 1.3
+ const overall=means.reduce((a,b)=>a+b,0)/means.length;assert.ok(overall>1.05,`overall final premium ${overall}`); // 2차 하향 후 1.5 → 1.3, 총기 진화 강화 후 1.05 (레시피별 10% 우위는 tier-order.mjs)
 });
 test('every final requires two evolved Lv8 parents, rejects partial evolution, preserves old fused saves and source attribution',()=>{
  for(const recipe of FUSION_RECIPES){

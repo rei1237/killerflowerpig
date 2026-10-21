@@ -21,7 +21,7 @@ export const WEAPONS = {
             { amount: 2, cd: -0.1, t: '산탄 +2, 재장전 -10%' },
         ],
         evolve: { with: 'magazine', name: '도살자의 산탄', icon: '🩸', desc: '관통 산탄 + 출혈. 살점이 갈려 나간다.',
-            mods: { dmg: 1.35, amount: 1.5, pierce: 3, bleed: 4 } },
+            mods: { dmg: 1.35, amount: 1.5, pierce: 3, bleed: 4, duration: 1.3 } },
     },
     pistols: {
         name: '쌍권총', icon: '🔫', color: '#ffd27a',
@@ -154,13 +154,13 @@ export const STARTING_WEAPON = 'shotgun';
 export const TIER_POWER = Object.freeze({
     // 척추 분쇄기(saw) 1.3 → 0.95: 무한 관통·화면 반사로 대군 상대 화력이 도살자 테크 보정과 겹쳐 붕괴를 일으켰다.
     // 개화 꽃잎포(cannon) 1.6 → 0.9: 대군 화력이 다른 진화 무기의 3배여서 그 위의 조합 무기를 끝없이 끌어올렸다.
-    evolved: Object.freeze({ thorns: 2.4, cannon: 0.9, gas: 1.75, saw: 0.95 }),
+    evolved: Object.freeze({ thorns: 2.4, cannon: 0.9, gas: 1.75, saw: 0.95, shotgun: 2.1, rifle: 4.0, molotov: 1.15 }),
     // 최종(조합·절대) 무기 하향: 진화 < 조합(Lv1) < 조합(Lv8) < 절대(Lv1) 순서는 유지하되 전반적으로 낮춘다.
     fused: Object.freeze({
         // 2차 대폭 하향: 절대 무기는 이전 '최종' 화력대로, 최종 무기는 그보다 아래로 한 등급씩 내렸다.
         // (1차: 학살자의 검륜·맹독 회전톱·심판의 단두대·역병 종언 개별 하향 후, 최종 ×0.55 · 절대 ×0.7)
-        lotus_bloom: 0.33, venom_saw: 1.98, orbit_saw: 1.277, sword_wheel: 1.21, toxic_scatter: 1.289, plague_fire: 0.53,
-        scatter_rail: 1.141, burst_rail: 1.173, ember_lance: 0.069,
+        lotus_bloom: 0.33, venom_saw: 1.98, orbit_saw: 1.277, sword_wheel: 1.21, toxic_scatter: 1.9, plague_fire: 0.53,
+        scatter_rail: 1.9, burst_rail: 1.173, ember_lance: 0.12,
         absolute_bloom: 0.477, doom_barrage: 1.414, plague_end: 0.189, guillotine: 1.54, carnage_saw: 1.538 }),
     // 조합 무기 안에 계승된 꽃잎포 코어 배율(진화 꽃잎포 보정에 곱한다). 절대 > 최종 순서는 유지.
     retainedCannon: Object.freeze({ final: 1.1, absolute: 1.3 }),

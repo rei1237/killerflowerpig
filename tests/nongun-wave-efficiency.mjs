@@ -17,8 +17,12 @@ function paired(id, phase, scene, { route = false, oneCast = false } = {}) {
     return cache.get(key);
 }
 
-test('all ordinary gun definitions and non-sword crit modifiers are exactly unchanged; sword gains melee crit', () => {
-    for (const id of ['shotgun', 'pistols', 'rifle']) assert.deepEqual(WEAPONS[id], baseline.weapons[id]);
+test('gun definitions are unchanged except the evolved shotgun reach; non-sword crit modifiers are unchanged; sword gains melee crit', () => {
+    // 총기 역할 분리: 진화 산탄총만 사거리(지속) +30%. 피해 차이는 TIER_POWER.evolved 로 준다.
+    for (const id of ['pistols', 'rifle']) assert.deepEqual(WEAPONS[id], baseline.weapons[id]);
+    const { duration, ...shotgunMods } = WEAPONS.shotgun.evolve.mods;
+    assert.equal(duration, 1.3);
+    assert.deepEqual({ ...WEAPONS.shotgun, evolve: { ...WEAPONS.shotgun.evolve, mods: shotgunMods } }, baseline.weapons.shotgun);
     // 도살검은 근접 보상으로 고유 치명타를 받았다 (기본 20%, 피해 +50%, 진화 +10%/+50%).
     assert.equal(WEAPONS.sword.base.crit, 0.2); assert.equal(WEAPONS.sword.base.critBonus, 0.5);
     assert.equal(WEAPONS.sword.evolve.mods.crit, 0.1); assert.equal(WEAPONS.sword.evolve.mods.critBonus, 0.5);
