@@ -41,16 +41,17 @@ test('failed permanent coin write queues boss fallback once and retry never rero
  assert.equal(rollBossChest('storage-chest',()=>{throw Error('retry rolled');}).duplicate,true);assert.equal(G.gold,amount);
  failWrites=false;assert.equal(retryPendingCoins(),true);assert.equal(save.gold,before+amount);assert.equal(queueCoins(amount,'boss:storage-chest'),true);assert.equal(save.gold,before+amount);assert.equal(pendingCoinTotal(),0);
 });
-test('treasure chest gives two upgrades plus a new passive only below the 25 percent boundary',()=>{
- let r=rollTreasure(()=>.25);assert.equal(r.length,2);assert.ok(r.every(x=>x.kind!=='passive'||!x.isNew));assert.equal(G.weapons[0].level,3,'two upgrades applied to the owned weapon');
+test('treasure chest gives exactly one upgrade (never +2 on one weapon) plus a new passive only below the 25 percent boundary',()=>{
+ let r=rollTreasure(()=>.25);assert.equal(r.length,1);assert.ok(r.every(x=>x.kind!=='passive'||!x.isNew));assert.equal(G.weapons[0].level,2,'exactly one upgrade applied to the owned weapon');
+ assert.equal(r[0].levelsGained,1);
  resetBuild();G.stage=1;G.gold=0;G.weapons=[createWeapon('shotgun',0)];
- r=rollTreasure(()=>.2499999);assert.equal(r.length,3);const bonus=r.at(-1);assert.equal(bonus.kind,'passive');assert.equal(bonus.isNew,true);assert.equal(bonus.levelsGained,1);assert.equal(G.passives[bonus.id],1);
+ r=rollTreasure(()=>.2499999);assert.equal(r.length,2);assert.equal(G.weapons[0].level,2);const bonus=r.at(-1);assert.equal(bonus.kind,'passive');assert.equal(bonus.isNew,true);assert.equal(bonus.levelsGained,1);assert.equal(G.passives[bonus.id],1);
  // 설정 가능한 보너스 확률: 0이면 새 아이템 없음, 1이면 항상 지급
- resetBuild();G.weapons=[createWeapon('shotgun',0)];assert.equal(rollTreasure(()=>0,0).length,2);
- resetBuild();G.weapons=[createWeapon('shotgun',0)];assert.equal(rollTreasure(()=>.9,1).length,3);
+ resetBuild();G.weapons=[createWeapon('shotgun',0)];assert.equal(rollTreasure(()=>0,0).length,1);
+ resetBuild();G.weapons=[createWeapon('shotgun',0)];assert.equal(rollTreasure(()=>.9,1).length,2);
 });
 test('treasure chest evolves first and falls back to stage coins when nothing can be upgraded',()=>{
  G.stage=4;G.gold=0;G.weapons=[];const r=rollTreasure(()=>.99);
- // 업그레이드할 장비가 없으면 두 번 모두 3+stage 코인으로 대체된다.
- assert.equal(r.length,2);assert.ok(r.every(x=>x.kind==='gold'));assert.equal(G.gold,2*(3+4));
+ // 업그레이드할 장비가 없으면 강화 1회가 3+stage 코인으로 대체된다.
+ assert.equal(r.length,1);assert.ok(r.every(x=>x.kind==='gold'));assert.equal(G.gold,3+4);
 });

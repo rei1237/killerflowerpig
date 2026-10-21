@@ -271,9 +271,11 @@ export function rollChest(count, random = Math.random) {
     return rewards;
 }
 
-// 보물 상자: 강화 2회(진화 우선) + 확률로 새 보조 아이템 1개. 아주 드물게 얻는 보너스 보상.
+// 보물 상자: 강화 1회(진화 우선) + 확률로 새 보조 아이템 1개. 아주 드물게 얻는 보너스 보상.
+// (이전에는 강화 2회라 같은 무기가 한 번에 2레벨 오르는 일이 있었다)
+export const TREASURE_UPGRADES = 1;
 export function rollTreasure(random = Math.random, bonusChance = 0.25) {
-    const rewards = rollChest(2, random);
+    const rewards = rollChest(TREASURE_UPGRADES, random);
     if (random() < bonusChance) {
         const fresh = candidates().filter(c => c.kind === 'passive' && c.isNew);
         if (fresh.length) {
