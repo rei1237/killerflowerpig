@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
-import { createRequire } from 'node:module';
-const { createCanvas, loadImage } = createRequire(import.meta.url)('@napi-rs/canvas');
+// 네이티브 캔버스 의존성 없이 PNG 를 직접 디코딩한다 (이전: @napi-rs/canvas 가 없으면 실패).
+import { decodePng } from './helpers/png.mjs';
 const files = [];
 for (const outfit of ['base','cape','jade']) {
   for (const family of ['dual','throw','cannon','sword','blade','channel','fire-move','dual-move','throw-move','cannon-move','sword-move']) files.push(`player-${outfit}-${family}.png`);
@@ -15,12 +15,12 @@ test('all 39 role/outfit atlases retain eight distinct transparent fixed-size fr
   let bytes=0;
   for (const file of files) {
     const data=fs.readFileSync(new URL(`../asset/sprites/${file}`,import.meta.url)); bytes+=data.length;
-    const img=await loadImage(data);
+    const img=decodePng(data);
     assert.equal(img.width,3072,file);assert.equal(img.height,256,file);
-    const canvas=createCanvas(384,256),ctx=canvas.getContext('2d'),hashes=new Set();
+    const hashes=new Set();
     for(let f=0;f<8;f++) {
-      ctx.clearRect(0,0,384,256);ctx.drawImage(img,f*384,0,384,256,0,0,384,256);
-      const pixels=ctx.getImageData(0,0,384,256).data;
+      const pixels=Buffer.alloc(384*256*4);
+      for(let y=0;y<256;y++) img.data.copy(pixels,y*384*4,(y*3072+f*384)*4,(y*3072+f*384+384)*4);
       hashes.add(createHash('sha256').update(pixels).digest('hex'));
       let visible=0;
       for(let y=0;y<256;y++)for(let x=0;x<384;x++) {
