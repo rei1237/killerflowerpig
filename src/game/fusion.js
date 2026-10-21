@@ -4,6 +4,23 @@ import { FUSION_RECIPES } from '../data/fusions.js';
 import { createWeapon, weaponStats, orbitStats, emberFieldStats } from './weapons.js';
 export { FUSION_RECIPES };
 const signature = recipeId => JSON.stringify([recipeId, G.player?.stats, G.stage, G.stageStartTime, G.fusionRevision || 0, G.weapons.map(w => [w.id, w.level, !!w.evolved, w.slot])]);
+// 조합 가능 여부 판정 (미리보기와 버튼 표시가 같은 조건을 쓴다). null = 조합 가능.
+function fusionBlocker(recipe, ingredients) {
+    if (new Set(G.weapons.map(w => w.id)).size !== G.weapons.length) return 'INVALID_INVENTORY';
+    if (G.weapons.some(w => w.id === recipe.output)) return 'ALREADY_FUSED';
+    if (ingredients.some(i => !i.level)) return 'MISSING_INGREDIENT';
+    if (ingredients.some(i => i.level < i.requiredLevel)) return 'ITEM_LEVEL_REQUIRED';
+    if (ingredients.some(i => !i.evolved)) return 'EVOLUTION_REQUIRED';
+    if (G.weapons.length > MAX_WEAPONS || G.weapons.length - recipe.inputs.length + 1 > MAX_WEAPONS) return 'CAPACITY';
+    return null;
+}
+// 가벼운 판정: 무기 능력치를 계산하지 않고 지금 조합 가능한 레시피 id 목록만 돌려준다 (HUD 버튼용).
+export function readyFusions() {
+    return FUSION_RECIPES.filter(recipe => !fusionBlocker(recipe, recipe.inputs.map(input => {
+        const owned = G.weapons.find(w => w.id === input.id);
+        return { level: owned?.level || 0, requiredLevel: input.level, evolved: !!owned?.evolved };
+    }))).map(recipe => recipe.id);
+}
 export function previewFusion(recipeId) {
     const recipe = FUSION_RECIPES.find(r => r.id === recipeId);
     if (!recipe) return { ok: false, code: 'UNKNOWN_RECIPE' };
@@ -26,13 +43,7 @@ export function previewFusion(recipeId) {
         const field = emberFieldStats(stats);
         Object.assign(stats, { fieldDamage: field.dmg, fieldAmount: field.amount, fieldRadius: field.radius * field.area, fieldDuration: field.duration, fieldTick: field.tick });
     }
-    let code = null;
-    if (new Set(G.weapons.map(w => w.id)).size !== G.weapons.length) code = 'INVALID_INVENTORY';
-    else if (G.weapons.some(w => w.id === recipe.output)) code = 'ALREADY_FUSED';
-    else if (ingredients.some(i => !i.level)) code = 'MISSING_INGREDIENT';
-    else if (ingredients.some(i => i.level < i.requiredLevel)) code = 'ITEM_LEVEL_REQUIRED';
-    else if (ingredients.some(i => !i.evolved)) code = 'EVOLUTION_REQUIRED';
-    else if (G.weapons.length > MAX_WEAPONS || G.weapons.length - recipe.inputs.length + 1 > MAX_WEAPONS) code = 'CAPACITY';
+    const code = fusionBlocker(recipe, ingredients);
     return { ok: !code, code, signature: signature(recipeId), ingredients,
         output: { id: recipe.output, name: def.name, desc: def.desc, level: 1, tier: recipe.tier || 'final', stats }, slotsFreed: recipe.inputs.length - 1, slotsAfter: G.weapons.length - recipe.inputs.length + 1 };
 }

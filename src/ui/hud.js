@@ -6,6 +6,7 @@ import { STAGES } from '../data/stages.js';
 import { WEAPONS, PASSIVES } from '../data/weapons.js';
 import { techSummary } from '../game/tech.js';
 import { difficultyOf } from '../data/difficulty.js';
+import { syncFusionButtons } from './fusion-button.js';
 
 let lastUpdate = -Infinity;
 let buildKey = '';
@@ -54,6 +55,7 @@ export function drawHUD() {
     const nextKey = JSON.stringify([G.weapons.map(w=>[w.id,w.level,w.evolved]),G.passives]);
     if (nextKey !== buildKey) {
         buildKey = nextKey;
+        syncFusionButtons();
         const slots = [
             ...G.weapons.map(w => ({id:w.id,name:w.evolved?WEAPONS[w.id].evolve.name:WEAPONS[w.id].name, icon:w.evolved?WEAPONS[w.id].evolve.icon:WEAPONS[w.id].icon,level:w.level,evolved:w.evolved})),
             ...Object.entries(G.passives).map(([id,level])=>({id,name:PASSIVES[id].name,icon:PASSIVES[id].icon,level}))

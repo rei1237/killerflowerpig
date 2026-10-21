@@ -32,6 +32,7 @@ import { RELICS, RELIC_CHEST, strongestRelic, chestRates } from '../data/relics.
 import { mountItemArt, itemArt } from './item-art.js';
 import { initLoadoutExchange, openLoadoutExchange, closeLoadoutExchange, appendEvolutionInfo } from './loadout-exchange.js';
 import { initFusionReveal, openFusionReveal, closeFusionReveal } from './fusion-reveal.js';
+import { syncFusionButtons } from './fusion-button.js';
 import { initPractice, openPractice, closePractice, cancelPractice, shouldOfferPractice } from './practice.js';
 import { initTechSelect, openTechSelect } from './tech-select.js';
 import { techSummary } from '../game/tech.js';
@@ -305,6 +306,7 @@ function updateReroll() {
 }
 
 function renderCards() {
+    syncFusionButtons(true);
     const renderRevision=++choiceRenderRevision;
     const passiveCount=Object.keys(G.passives).length;
     $('choice-capacity').textContent=`무기 ${G.weapons.length}/${MAX_WEAPONS} · 보조 ${passiveCount}/${Object.keys(PASSIVES).length}종 (칸 제한 없음) · 만렙 장비는 선택에서 제외됩니다.${G.weapons.length>=MAX_WEAPONS?' 무기 슬롯이 가득 찼습니다. 선택을 마친 뒤 일시정지 → 장비 교체에서 새 무기를 확보할 수 있습니다.':''}`;
@@ -475,6 +477,7 @@ export function togglePause() {
 }
 
 function renderPauseBuild() {
+    syncFusionButtons(true);
     const wrap = $('pause-build');
     wrap.innerHTML = '';
     const ts = techSummary();
@@ -528,6 +531,7 @@ export function showFusion() {
     openModal('fusion');
 }
 function renderFusion() {
+    syncFusionButtons(true);
     const wrap=$('fusion-recipes');wrap.replaceChildren();
     const recipes=FUSION_RECIPES.map(recipe=>({recipe,preview:previewFusion(recipe.id)}));
     const ready=recipes.filter(row=>row.preview.ok).length;

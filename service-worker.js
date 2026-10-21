@@ -1,5 +1,5 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v31-treasure-rare-mobile-text';
+const VERSION = 'v32-fusion-ready-button';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
@@ -41,6 +41,7 @@ const PRECACHE = [
     './src/ui/practice.css',
     './src/ui/fusion-reveal.css',
     './src/ui/fusion-reveal.js',
+    './src/ui/fusion-button.js',
     './src/ui/practice.js',
     './src/game/practice.js',
     './src/game/targeting.js',

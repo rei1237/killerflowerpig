@@ -365,3 +365,10 @@ button:focus-visible,input:focus-visible,summary:focus-visible,.card:focus-visib
 .choice-card .loadout-evolution-info p{margin:2px 0;font-size:inherit;color:inherit}
 .choice-card .loadout-evolution-requirement{color:#d8c08e}
 .choice-card .loadout-evolution-state{color:#9fd8bd}
+
+/* 조합 가능: 조합 버튼 강조 (HUD·레벨업·일시정지 공통). 불가능할 때는 레시피 확인용으로 차분하게 둔다. */
+#btn-fusion:not(.fusion-available),#btn-levelup-fusion:not(.fusion-available),#btn-pause-fusion:not(.fusion-available){opacity:.72}
+.fusion-available{background:linear-gradient(180deg,#f2c14e,#c98a1e)!important;border-color:#ffe7a1!important;color:#2a1600!important;font-weight:700;opacity:1;box-shadow:0 0 0 2px #ffe7a166,0 0 18px #f2c14e99;animation:fusion-ready-pulse 1.6s ease-in-out infinite}
+.fusion-available span{color:#4a2c00!important}
+@keyframes fusion-ready-pulse{0%,100%{box-shadow:0 0 0 2px #ffe7a166,0 0 12px #f2c14e80}50%{box-shadow:0 0 0 3px #ffe7a1aa,0 0 26px #f2c14ecc}}
+@media (prefers-reduced-motion:reduce){.fusion-available{animation:none}}
