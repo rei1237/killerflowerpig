@@ -5,7 +5,7 @@ import { fx, glow } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { addXP } from './progression.js';
 import { healPlayer } from './player.js';
-import { flash, shake, floatText } from './effects.js';
+import { flash, shake, floatText, sparks } from './effects.js';
 import { earnCoins, save } from '../core/save.js';
 import { hitEnemy } from './enemies.js';
 import { SUPPLY_RULES } from './supply-drops.js';
@@ -73,19 +73,26 @@ export function magnetAll() {
     for (let i = 0; i < G.pickups.count; i++) if (G.pickups.items[i].kind === 'coin') G.pickups.items[i].pull = true;
 }
 
-function detonate() {
-    flash(0.8, '#ffdddd');
+// 다이너마이트: 필드의 엘리트·챔피언·보스를 제외한 모든 잡몹을 화면 밖까지 한 번에 처치한다.
+export const DYNAMITE = Object.freeze({ waveSeconds: 0.7, waveRadius: 700 });
+let wave = null;
+export function detonate() {
+    const p = G.player;
+    flash(0.8, '#ffe2c4');
     shake(14);
     audio.sfx('explode');
-    const p = G.player;
-    const hw = G.view.w / 2 + 40, hh = G.view.h / 2 + 40;
+    wave = { x: p.x, y: p.y - 14, t: 0 };
+    sparks(p.x, p.y - 20, 18, '#ffb347', 320);
+    floatText(p.x, p.y - 64, '💥 다이너마이트! 잡몹 전멸', '#ffb347', 1.6);
     const pool = G.enemies;
+    let killed = 0;
     for (let i = 0; i < pool.count; i++) {
         const e = pool.items[i];
-        if (!e.alive || Math.abs(e.x - p.x) > hw || Math.abs(e.y - p.y) > hh) continue;
-        hitEnemy(e, 40 + G.stage * 30, { silent: true, kx: Math.sign(e.x - p.x), ky: Math.sign(e.y - p.y), knock: 300 });
+        if (!e.alive || e.elite || e.champion) continue;
+        hitEnemy(e, e.hp + 1, { silent: true, bomb: true, kx: Math.sign(e.x - p.x), ky: Math.sign(e.y - p.y), knock: 120 });
+        killed++;
     }
-    if (G.boss && G.boss.alive) G.boss.hurt(60 + G.stage * 40, { silent: false });
+    if (killed) floatText(p.x, p.y - 44, `${killed}마리 처치`, '#fff1c9', 1.4);
 }
 
 let nextStorageNotice = -Infinity;
@@ -118,6 +125,7 @@ function collect(item) {
 
 export function updatePickups(dt) {
     pruneFieldSupplies();
+    if (wave && (wave.t += dt) >= DYNAMITE.waveSeconds) wave = null;
     const p = G.player;
     const mr = p.stats.magnet;
     const collection = Math.max(1, Math.min(1.25, p.stats.pickupMultiplier || 1));
@@ -187,8 +195,9 @@ export function drawPickups(ctx, vx0, vy0, vx1, vy1) {
             ctx.fillStyle = '#fff2b3'; ctx.fillRect(-1, -5, 2, 8);
             ctx.restore(); continue;
         }
-        const img = it.kind === 'meat' ? fx.meat : it.kind === 'magnet' ? fx.magnet : it.kind === 'bomb' ? fx.bomb : fx.chest;
         const bob = Math.sin(t * 3 + i) * 2;
+        if (it.kind === 'bomb') { drawDynamite(ctx, it.x, it.y, t, bob); continue; }
+        const img = it.kind === 'meat' ? fx.meat : it.kind === 'magnet' ? fx.magnet : fx.chest;
         if (it.kind === 'meat') {
             ctx.save(); ctx.strokeStyle = '#71ffae'; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.ellipse(it.x, it.y-4, 19, 9, 0, 0, Math.PI*2); ctx.stroke();
@@ -204,4 +213,36 @@ export function drawPickups(ctx, vx0, vy0, vx1, vy1) {
         }
         if (img) ctx.drawImage(img, it.x - img.width / 2, it.y - img.height + bob);
     }
+    if (wave) {
+        const k = wave.t / DYNAMITE.waveSeconds;
+        ctx.save(); ctx.globalAlpha = (1 - k) * 0.8; ctx.strokeStyle = '#ffb347'; ctx.lineWidth = 10 * (1 - k) + 2;
+        ctx.beginPath(); ctx.arc(wave.x, wave.y, 30 + k * DYNAMITE.waveRadius, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+}
+
+// 다이너마이트 아이콘: 붉은 막대 묶음 + 타오르는 심지, 맥박 치는 경고 고리와 이름표로 한눈에 알아보게 한다.
+function drawDynamite(ctx, x, y, t, bob) {
+    const pulse = 0.5 + Math.sin(t * 6) * 0.5;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.35 + pulse * 0.3;
+    const gl = glow('#ff7a1a', 44);
+    ctx.drawImage(gl, x - 44, y - 62);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 0.55 + pulse * 0.4; ctx.strokeStyle = '#ffb347'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(x, y - 4, 20 + pulse * 5, 9 + pulse * 2, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.translate(x, y - 22 + bob); ctx.rotate(Math.sin(t * 3) * 0.08);
+    for (const dx of [-8, 0, 8]) { // 막대 3개
+        ctx.fillStyle = '#b3201f'; ctx.fillRect(dx - 4, -13, 8, 26);
+        ctx.fillStyle = '#e8453c'; ctx.fillRect(dx - 4, -13, 3, 26);
+    }
+    ctx.fillStyle = '#3b2a1e'; ctx.fillRect(-13, -5, 26, 5); // 묶음 띠
+    ctx.strokeStyle = '#d9c9a3'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -13); ctx.quadraticCurveTo(5, -21, 1, -27); ctx.stroke(); // 심지
+    const fl = 3 + Math.sin(t * 25) * 1.5;
+    ctx.fillStyle = '#fff1a8'; ctx.beginPath(); ctx.arc(1, -28, fl, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ff7a1a'; ctx.beginPath(); ctx.arc(1, -28, fl * 0.55, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    ctx.save(); ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.fillStyle = '#ffd9a0';
+    ctx.strokeText('전멸', x, y - 52 + bob); ctx.fillText('전멸', x, y - 52 + bob); ctx.restore();
 }

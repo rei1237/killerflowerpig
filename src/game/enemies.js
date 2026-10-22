@@ -201,8 +201,8 @@ function killEnemy(e, opts) {
         floatText(e.x, e.y - e.radius * 2.6, '🎁 보물 상자!', '#ffd76a', 1.4);
         audio.sfx('chest');
     }
-    // Elite enemies award only XP and coins; gear chests are boss-exclusive.
-    if (!e.elite) {
+    // Elite enemies award only XP and coins; gear chests are boss-exclusive. A dynamite wipe drops no further supplies.
+    if (!e.elite && !opts.bomb) {
         pruneFieldSupplies();
         let healingOnField=0,magnetsOnField=0;
         for(let i=0;i<G.pickups.count;i++){
@@ -215,6 +215,7 @@ function killEnemy(e, opts) {
     }
 
     const def = e.def;
+    if (opts.bomb) { emit('kill', e); return; } // 다이너마이트 전멸: 연쇄 폭발·분열 없이 조용히 사라진다
     if (opts.detonate && def.charge) {
         const dmg = Math.min(def.charge.damageCap, def.charge.dmg * (1 + (G.stage - 1) * 0.16));
         explosionQueue.push({ x: e.x, y: e.y, r: def.charge.radius, dmg, suicide: true, revision: G.worldRevision || 0 });
