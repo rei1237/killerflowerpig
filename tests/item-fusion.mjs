@@ -56,7 +56,7 @@ test('lotus fusion actually fires piercing beam and activates damaging orbit tog
 });
 test('scatter fusion really creates spread with piercing bullets; plague lands slow-burning field',()=>{
  let w=weapon('scatter_rail',1);w.cd=0;G.weapons=[w];updateWeapons(.01);
- assert.equal(G.shots.count,7);assert.ok(G.shots.items.slice(0,7).every(s=>s.pierce===FUSED_WEAPONS.scatter_rail.base.pierce));assert.ok(new Set(G.shots.items.slice(0,7).map(s=>s.angle)).size>1);
+ assert.equal(G.shots.count,8);assert.ok(G.shots.items.slice(0,8).every(s=>s.pierce===FUSED_WEAPONS.scatter_rail.base.pierce));assert.ok(new Set(G.shots.items.slice(0,8).map(s=>s.angle)).size>1);
  G.shots.clear();w=weapon('plague_fire',1);w.cd=0;G.weapons=[w];updateWeapons(.01);assert.equal(G.shots.count,2);updateShots(.6);
  assert.equal(G.hazards.count,2);assert.ok(G.hazards.items.slice(0,2).every(h=>h.kind==='fire' && Math.abs(h.dmg-9*TIER_POWER.fused.plague_fire)<1e-9 && h.slow===FUSED_WEAPONS.plague_fire.base.slow && h.radius===FUSED_WEAPONS.plague_fire.base.radius));
 });

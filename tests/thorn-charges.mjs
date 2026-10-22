@@ -257,7 +257,10 @@ test('every direct petal hit stuns: the enemy stops moving and touching, elites 
     e.x = x; e.y = y; updateEnemies(.5); assert.ok(!(e.stunT > 0)); updateEnemies(.1); assert.notEqual(e.x, x, 'walks again once the stun ends');
     const elite = enemy(); elite.elite = true; for (const slot of w.thornState.slots) slot.ready = true; e.x = 1000; tick(w);
     close(elite.stunT, THORN_STUN.enemy * .5);
-    w.evolved = true; assert.equal(thornStun(w), THORN_STUN.evolvedEnemy); assert.ok(THORN_STUN.evolvedEnemy > THORN_STUN.enemy);
+    w.evolved = true; assert.equal(thornStun(w), THORN_STUN.evolvedEnemy); assert.equal(THORN_STUN.evolvedEnemy, 3);
+    w.evolved = false; w.level = 1; const lv1 = thornStun(w); w.level = 4; const lv4 = thornStun(w); w.level = 8; const lv8 = thornStun(w);
+    assert.ok(lv1 < lv4 && lv4 < lv8 && lv8 < THORN_STUN.evolvedEnemy, 'stun grows with level'); close(lv1, THORN_STUN.enemy); close(lv8, 1.3);
+    assert.ok(thornStun({ level: 1 }, true) < thornStun({ level: 8 }, true), 'boss stun grows with level too');
 });
 
 test('retained thorn cores in final weapons keep lifesteal and stun with the evolved duration', () => {
