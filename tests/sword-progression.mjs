@@ -39,9 +39,9 @@ test('sword has eight real growth levels, a defined evolution and an ordinary we
     assert.equal(WEAPONS.sword.evolve.with, 'whet');
     assert.equal(WEAPONS.sword.evolve.name, '핏빛 연꽃검');
     const expected = [
-        // 무기 밸런스: 기본 베기 피해 28 → 19, Lv2 +8 → +12 (진화 보정 TIER_POWER.evolved.sword 로 후반 유지)
-        [19, .95, 1], [31, .95, 1], [31, .874, 1], [31, .874, 1.15],
-        [41, .874, 1.15], [41, .798, 1.15], [53, .798, 1.15], [53, .722, 1.30],
+        // 무기 밸런스: 기본 베기 피해 28 → 19 → 23 (접근이 어려운 근접 무기 보상), Lv2 +15 · Lv4 +13 · Lv7 +15 (진화 보정 TIER_POWER.evolved.sword 1.2)
+        [23, .95, 1], [38, .95, 1], [38, .874, 1], [38, .874, 1.15],
+        [51, .874, 1.15], [51, .798, 1.15], [66, .798, 1.15], [66, .722, 1.30],
     ];
     for (let level = 1; level <= 8; level++) {
         const stats = weaponStats(Object.assign(createWeapon('sword', 0), { level }));

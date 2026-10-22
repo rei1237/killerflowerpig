@@ -126,10 +126,10 @@ export const WEAPONS = {
         name: '도살검', icon: '🗡️', color: '#ffd8df',
         desc: '가까운 적을 향해 넓게 베는 근접 무기. 근접의 위험을 감수하는 대신 치명타(기본 20%, 피해 3.5배)가 터진다. 피해·공격 간격·베기 범위·치명타가 성장한다.',
         // 근접 보상: 무기 고유 치명타. 치명타 베기는 붉은 참격으로 표시된다.
-        base: { dmg: 19, cd: 0.95, amount: 1, speed: 1, duration: 0.18, area: 1, radius: 110, crit: 0.2, critBonus: 0.5 },
+        base: { dmg: 23, cd: 0.95, amount: 1, speed: 1, duration: 0.18, area: 1, radius: 110, crit: 0.2, critBonus: 0.5 },
         levels: [
-            { dmg: 12, t: '베기 피해 +12' }, { cd: -0.08, crit: 0.05, t: '공격 간격 -8%, 치명타 확률 +5%' }, { area: 0.15, t: '베기 범위 +15%' },
-            { dmg: 10, t: '베기 피해 +10' }, { cd: -0.08, crit: 0.05, t: '공격 간격 -8%, 치명타 확률 +5%' }, { dmg: 12, critBonus: 0.5, t: '베기 피해 +12, 치명타 피해 +50%' },
+            { dmg: 15, t: '베기 피해 +15' }, { cd: -0.08, crit: 0.05, t: '공격 간격 -8%, 치명타 확률 +5%' }, { area: 0.15, t: '베기 범위 +15%' },
+            { dmg: 13, t: '베기 피해 +13' }, { cd: -0.08, crit: 0.05, t: '공격 간격 -8%, 치명타 확률 +5%' }, { dmg: 15, critBonus: 0.5, t: '베기 피해 +15, 치명타 피해 +50%' },
             { area: 0.15, cd: -0.08, t: '베기 범위 +15%, 공격 간격 -8%' },
         ],
         evolve: { with: 'whet', name: '핏빛 연꽃검', icon: '⚔️', desc: '피해와 범위가 커지고 더 빠르게 베며 출혈을 남긴다. 치명타 확률 +10%, 치명타 피해 +50%. 척추 분쇄기와 학살자의 검륜으로 조합할 수 있다.',
@@ -170,7 +170,7 @@ export const STARTING_WEAPON = 'shotgun';
 export const TIER_POWER = Object.freeze({
     // 척추 분쇄기(saw) 1.3 → 0.95: 무한 관통·화면 반사로 대군 상대 화력이 도살자 테크 보정과 겹쳐 붕괴를 일으켰다.
     // 개화 꽃잎포(cannon) 1.6 → 0.9: 대군 화력이 다른 진화 무기의 3배여서 그 위의 조합 무기를 끝없이 끌어올렸다.
-    evolved: Object.freeze({ thorns: 0.75, cannon: 1.4, gas: 4.5, saw: 1.0, shotgun: 0.9, rifle: 1.4, molotov: 0.95, pistols: 0.64, sword: 1.45 }),
+    evolved: Object.freeze({ thorns: 0.75, cannon: 1.4, gas: 4.5, saw: 1.0, shotgun: 0.9, rifle: 1.4, molotov: 0.95, pistols: 0.64, sword: 1.2 }),
     // 최종(조합·절대) 무기 하향: 진화 < 조합(Lv1) < 조합(Lv8) < 절대(Lv1) 순서는 유지하되 전반적으로 낮춘다.
     fused: Object.freeze({
         // 2차 대폭 하향: 절대 무기는 이전 '최종' 화력대로, 최종 무기는 그보다 아래로 한 등급씩 내렸다.
