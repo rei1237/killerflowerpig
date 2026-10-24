@@ -1,5 +1,5 @@
 // 출격 전 시작 테크 선택 화면. 고른 테크 id 를 onPick 으로 넘긴다.
-import { TECHS, RESONANCE_STEPS, DEFAULT_TECH, IMPRINT_LEVELS, MISMATCH_DAMAGE, techStartingWeapons } from '../data/techs.js';
+import { TECHS, RESONANCE_STEPS, DEFAULT_TECH, IMPRINT_LEVELS, MISMATCH_DAMAGE, techStartingWeapons, techBaseLabel } from '../data/techs.js';
 import { DIFFICULTIES, DIFFICULTY_ORDER } from '../data/difficulty.js';
 import { WEAPONS, PASSIVES } from '../data/weapons.js';
 import { mountItemArt } from './item-art.js';
@@ -91,7 +91,10 @@ function renderDetail() {
     const role = document.createElement('p');
     role.className = 'tech-combo';
     role.textContent = `강점 · ${t.strength} / 약점 · ${t.weakness}`;
-    head.append(combo, role);
+    const base = document.createElement('p');
+    base.className = 'tech-combo';
+    base.textContent = `초기 능력치 · ${techBaseLabel(t)}`;
+    head.append(combo, role, base);
 
     const tiers = document.createElement('ol');
     tiers.className = 'tech-tiers';

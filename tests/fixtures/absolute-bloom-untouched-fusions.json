@@ -5,7 +5,8 @@
     "color": "#ff91aa",
     "fusionOnly": true,
     "amountCap": 4,
-    "desc": "핏빛 연꽃검과 척추 분쇄기를 계승한다. 넓은 검격으로 가까운 적을 베고 진화 톱날이 바깥의 적을 추격한다.",
+    "dmgCap": 360,
+    "desc": "핏빛 연꽃검과 척추 분쇄기를 계승한다. 넓은 검격(치명타 25%, 피해 4배)으로 가까운 적을 베고 진화 톱날이 바깥의 적을 추격한다. 계승한 검은 진화 때보다 약해지지 않는다.",
     "base": {
       "dmg": 70,
       "cd": 1.15,
@@ -14,7 +15,9 @@
       "duration": 0.22,
       "area": 1,
       "radius": 125,
-      "bleed": 5
+      "bleed": 5,
+      "crit": 0.25,
+      "critBonus": 1
     },
     "levels": [
       {
@@ -104,11 +107,11 @@
     "fusionOnly": true,
     "desc": "산탄총의 부채꼴 8발에 소총의 5회 관통과 긴 사거리를 결합한다.",
     "base": {
-      "dmg": 28,
+      "dmg": 33,
       "cd": 1.25,
       "amount": 8,
       "speed": 820,
-      "duration": 0.85,
+      "duration": 0.75,
       "pierce": 4,
       "area": 1.2,
       "spread": 0.55
@@ -151,14 +154,14 @@
     "fusionOnly": true,
     "tier": "absolute",
     "amountCap": 10,
-    "desc": "세 총기의 공격을 계승하고, 360도 전방위로 관통 탄환 10발을 흩뿌린 뒤 조준 레일탄 3발을 꽂는다.",
+    "desc": "세 총기의 공격을 계승하고, 360도 전방위로 관통 탄환 10발(사거리 짧음)을 흩뿌린 뒤 조준 레일탄 3발을 꽂는다.",
     "base": {
       "dmg": 34,
       "cd": 1.8,
       "amount": 10,
       "speed": 760,
-      "duration": 0.85,
-      "pierce": 4,
+      "duration": 0.7,
+      "pierce": 3,
       "area": 1
     },
     "levels": [

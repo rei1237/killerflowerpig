@@ -108,7 +108,7 @@ test('orbit saw fires bouncing blades while activating its separate damaging orb
 });
 test('all expanded fusion caps hold under maximum item and extreme passive bonuses',()=>{
  Object.assign(G.player.stats,{amount:100,might:100,area:100,duration:100,cooldown:.01});
- for(const recipe of FUSION_RECIPES){const w=weapon(recipe.output,8);const s=weaponStats(w);assert.ok(s.dmg<=(recipe.tier==='absolute'?420:220)*tierPower(w)+1e-9);assert.ok(s.area<=2);assert.ok(s.cd>=.5);assert.ok(s.amount<=(WEAPONS[w.id].amountCap ||12));assert.ok(s.duration<=6);assert.ok(s.slow<=.65);}
+ for(const recipe of FUSION_RECIPES){const w=weapon(recipe.output,8);const s=weaponStats(w);assert.ok(s.dmg<=(WEAPONS[w.id].dmgCap||(recipe.tier==='absolute'?420:220))*tierPower(w)+1e-9);assert.ok(s.area<=2);assert.ok(s.cd>=.5);assert.ok(s.amount<=(WEAPONS[w.id].amountCap ||12));assert.ok(s.duration<=6);assert.ok(s.slow<=.65);}
 });
 test('all eight fusions preserve live enemy hit buffers through release and pooled respawn',async()=>{
  const {spawnEnemy}=await import('../src/game/enemies.js');const {ENEMIES}=await import('../src/data/enemies.js');

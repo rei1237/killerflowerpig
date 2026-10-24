@@ -52,6 +52,9 @@ function ensureHitChannels(e) {
     if (previous instanceof Float32Array) e.hits.set(previous.subarray(0, 24));
 }
 
+// 계승 코어 피해 상한. 검 코어는 진화 핏빛 연꽃검(도살자 풀빌드 약 790)보다 낮게 잘리면
+// 조합 후 오히려 약해지므로 상한을 높여 '조합 ≥ 진화'를 보장한다.
+const INHERITED_DAMAGE_CAP = Object.freeze({ cannon: 800, sword: 1000 });
 // 레벨·진화·패시브를 반영한 최종 수치
 export function weaponStats(w) {
     const def = WEAPONS[w.id];
@@ -104,13 +107,13 @@ export function weaponStats(w) {
         const sourcePower = restrainedBloom ? (w.id === 'cannon' ? 1.30 : 1.15) :
             absolute ? (w.id === 'cannon' ? 1.50 : 1.35) : 1.15;
         const sourceGrowth = restrainedBloom ? .05 : .08;
-        result.dmg = Math.min(w.id === 'cannon' ? 800 : 600, result.dmg * (sourcePower + sourceGrowth * (Math.min(8, Math.max(1, w.fusionLevel || 1)) - 1)));
+        result.dmg = Math.min(INHERITED_DAMAGE_CAP[w.id] || 600, result.dmg * (sourcePower + sourceGrowth * (Math.min(8, Math.max(1, w.fusionLevel || 1)) - 1)));
         if (restrainedBloom) { result.cd *= 1.15; result.lifesteal *= .5; }
         result.amount = Math.min(20, result.amount); result.area = Math.min(3, result.area);
         result.duration = Math.min(14, result.duration); result.cd = Math.max(0.2, result.cd);
     }
     if (def.fusionOnly) {
-        result.dmg = Math.min(def.tier === 'absolute' ? 420 : 220, result.dmg * (1 + 0.08 * (Math.min(8, Math.max(1, w.level)) - 1))); result.cd = Math.max(0.5, result.cd);
+        result.dmg = Math.min(def.dmgCap || (def.tier === 'absolute' ? 420 : 220), result.dmg * (1 + 0.08 * (Math.min(8, Math.max(1, w.level)) - 1))); result.cd = Math.max(0.5, result.cd);
         result.amount = Math.min(def.amountCap || (w.id === 'lotus_bloom' ? 3 : w.id === 'plague_fire' ? 5 : 12), result.amount);
         result.area = Math.min(2, result.area); result.duration = Math.min(['lotus_bloom', 'ember_lance', 'absolute_bloom'].includes(w.id) ? 0.7 : 6, result.duration);
         result.pierce = Math.min(12, result.pierce); result.slow = Math.min(0.65, result.slow);

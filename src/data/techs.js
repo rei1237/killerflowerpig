@@ -34,7 +34,9 @@ export const FAMILY_GUARANTEE_EVERY = 4;
 export const TECHS = Object.freeze({
     gunline: {
         strength: '전방 집중 화력·관통에 강함', weakness: '뒤쪽 포위에 약하고 별도 생존 보너스가 없음',
-        name: '탄막 사수', icon: '🎯', color: '#9fd3ff', power: 1.0,
+        // 기준 테크: 초기 능력치는 표준(HP 100 · 기본 이동 속도). 원거리 우위는 무기 사거리·관통 하향으로 조정한다.
+        base: {},
+        name: '탄막 사수', icon: '🎯', color: '#9fd3ff', power: 0.78,
         summary: '산탄과 관통탄으로 화면을 쓸어버리는 투사체 테크',
         start: { weapon: 'shotgun', weapons: ['shotgun', 'rifle'], passive: 'magazine' },
         family: { weapons: ['shotgun', 'rifle', 'pistols'], passives: ['magazine', 'scope', 'focus'] },
@@ -42,7 +44,7 @@ export const TECHS = Object.freeze({
         route: ['산탄총 + 탄창 확장 → 도살자의 산탄', '노획 소총 + 조준경 → 레일 소총', '두 진화 → 관통 산탄포 (쌍권총 진화까지 3종 → 절대 무기 종말의 탄막)'],
         imprints: {
             3: { label: '탄막 각인 I · 투사체 +1', mod: { amount: 1 } },
-            5: { label: '탄막 각인 II · 관통 +2 · 탄속 +20%', mod: { pierce: 2, speed: 0.2 } },
+            5: { label: '탄막 각인 II · 관통 +1 · 탄속 +10%', mod: { pierce: 1, speed: 0.1 } },
             7: { label: '탄막 각인 III · 투사체 +1 · 재장전 -10%', mod: { amount: 1, cd: -0.1 } },
         },
         tiers: [
@@ -53,6 +55,7 @@ export const TECHS = Object.freeze({
     },
     bloom: {
         strength: '최대 3발이 겹치는 일직선 광선·강화 집중 사격·접촉 소모형 가시·재생', weakness: '자동 광선은 한 방향 일직선만 공격·보스에게는 광선 중복 없이 1발, 소모된 가시는 다시 자랄 때까지 빈틈이 생김',
+        base: { maxHp: 10, regen: 0.2 },
         name: '연꽃 정원', icon: '🌸', color: '#ffb3d6', power: 2.3,
         summary: '회전 꽃잎과 광선으로 버티며 성장하는 생존 테크',
         start: { weapon: 'thorns', weapons: ['thorns', 'cannon'], passive: 'regen' },
@@ -72,6 +75,7 @@ export const TECHS = Object.freeze({
     },
     plague: {
         strength: '빠른 투척·지속 장판·둔화로 통로 장악', weakness: '진화 전 근접·원거리 압박에 약하고 장판 이탈 시 지속 피해가 끊김',
+        base: { armor: 0.5, speed: 0.05 },
         name: '역병 화염', icon: '🔥', color: '#ffb36b', power: 0.85,
         summary: '빠른 투척과 지속 장판·둔화로 통로를 장악하는 테크',
         start: { weapon: 'molotov', weapons: ['molotov', 'gas'], passive: 'spread' },
@@ -91,6 +95,7 @@ export const TECHS = Object.freeze({
     },
     executioner: {
         strength: '쌍권총 치명타 Lv1 3.25배→4배(배율 +0.75) · 집중 조준 치명타 +12%p · 일반 적 3~8% 확률 즉사', weakness: '처형은 보스·정예에게 적용되지 않고 방어 보너스가 없음',
+        base: { maxHp: -15, speed: 0.08, crit: 0.05 },
         name: '처형자', icon: '☠️', color: '#e6c6ff', power: 0.82,
         summary: '쌍권총 치명타·집중 조준과 체력 무관 확률 처형의 정밀 테크',
         start: { weapon: 'pistols', weapons: ['pistols', 'rifle'], passive: 'focus' },
@@ -110,6 +115,7 @@ export const TECHS = Object.freeze({
     },
     butcher: {
         strength: '검의 넓은 근접 베기·예측 조준 톱날·출혈과 방어', weakness: '후속 반사는 지형·거리 영향을 받고 먼 단일 적 추적은 약함',
+        base: { maxHp: 30, armor: 2 },
         name: '도살자', icon: '🪚', color: '#ff8f8f', power: 2.2,
         summary: '검과 예측 조준 톱날을 각각 성장시키고 조합하는 근접 전사 테크',
         start: { weapon: 'sword', weapons: ['sword', 'saw'], passive: 'whet' },
@@ -128,6 +134,17 @@ export const TECHS = Object.freeze({
         ],
     },
 });
+
+// 테크별 초기 능력치 (공명 단계와 무관하게 출격 즉시 적용).
+// 원거리 테크(탄막·처형)는 체력이 낮고, 근접 도살자는 체력·방어가 높다. speed 는 배율 가산, crit 는 확률 가산.
+export function techBaseLabel(tech) {
+    const b = tech?.base || {}, parts = [`최대 HP ${100 + (b.maxHp || 0)}`];
+    if (b.armor) parts.push(`방어 +${b.armor}`);
+    if (b.speed) parts.push(`이동 속도 ${b.speed > 0 ? '+' : ''}${Math.round(b.speed * 100)}%`);
+    if (b.regen) parts.push(`재생 +${b.regen}/s`);
+    if (b.crit) parts.push(`치명타 +${Math.round(b.crit * 100)}%`);
+    return parts.join(' · ');
+}
 
 export const DEFAULT_TECH = 'gunline';
 

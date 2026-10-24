@@ -20,8 +20,10 @@ export const FUSION_RECIPES = Object.freeze([
 export const FUSED_WEAPONS = {
     sword_wheel: {
         name: '학살자의 검륜', icon: '⚔️', color: '#ff91aa', fusionOnly: true, amountCap: 4,
-        desc: '핏빛 연꽃검과 척추 분쇄기를 계승한다. 넓은 검격으로 가까운 적을 베고 진화 톱날이 바깥의 적을 추격한다.',
-        base: { dmg: 70, cd: 1.15, amount: 1, speed: 1, duration: 0.22, area: 1, radius: 125, bleed: 5 },
+        // 검륜 자체 베기도 검 계열 치명타를 유지하고, 피해 상한(일반 최종 220)을 높여 레벨 성장이 잘리지 않게 한다.
+        dmgCap: 360,
+        desc: '핏빛 연꽃검과 척추 분쇄기를 계승한다. 넓은 검격(치명타 25%, 피해 4배)으로 가까운 적을 베고 진화 톱날이 바깥의 적을 추격한다. 계승한 검은 진화 때보다 약해지지 않는다.',
+        base: { dmg: 70, cd: 1.15, amount: 1, speed: 1, duration: 0.22, area: 1, radius: 125, bleed: 5, crit: 0.25, critBonus: 1.0 },
         levels: [
             { dmg: 10, t: '검격 피해 +10 · 계승 공격 강화' }, { area: 0.12, t: '검격 범위 +12%' },
             { cd: -0.08, t: '공격 간격 -8%' }, { dmg: 12, t: '검격 피해 +12 · 계승 공격 강화' },
@@ -44,13 +46,13 @@ export const FUSED_WEAPONS = {
     scatter_rail: {
         name: '관통 산탄포', icon: '💥', color: '#a6deff', fusionOnly: true,
         desc: '산탄총의 부채꼴 8발에 소총의 5회 관통과 긴 사거리를 결합한다.',
-        base: { dmg: 28, cd: 1.25, amount: 8, speed: 820, duration: 0.85, pierce: 4, area: 1.2, spread: 0.55 },
+        base: { dmg: 33, cd: 1.25, amount: 8, speed: 820, duration: 0.75, pierce: 4, area: 1.2, spread: 0.55 },
         levels: [{dmg:3,t:'탄당 피해 +3'},{pierce:1,t:'관통 +1'},{cd:-0.1,t:'재사용 -10%'},{amount:1,t:'산탄 +1'},{dmg:4,t:'탄당 피해 +4'},{pierce:1,t:'관통 +1'},{amount:1,t:'산탄 +1'}],
     },
     doom_barrage: {
         name: '종말의 탄막', icon: '🎆', color: '#9fd3ff', fusionOnly: true, tier: 'absolute', amountCap: 10,
-        desc: '세 총기의 공격을 계승하고, 360도 전방위로 관통 탄환 10발을 흩뿌린 뒤 조준 레일탄 3발을 꽂는다.',
-        base: { dmg: 34, cd: 1.8, amount: 10, speed: 760, duration: 0.85, pierce: 4, area: 1 },
+        desc: '세 총기의 공격을 계승하고, 360도 전방위로 관통 탄환 10발(사거리 짧음)을 흩뿌린 뒤 조준 레일탄 3발을 꽂는다.',
+        base: { dmg: 34, cd: 1.8, amount: 10, speed: 760, duration: 0.7, pierce: 3, area: 1 },
         levels: [{dmg:4,t:'탄당 피해 +4 · 계승 공격 강화'},{pierce:2,t:'관통 +2'},{cd:-0.08,t:'재사용 -8%'},{speed:0.15,t:'탄속 +15%'},{dmg:5,t:'탄당 피해 +5 · 계승 공격 강화'},{area:0.1,t:'탄 크기 +10%'},{dmg:6,cd:-0.08,t:'피해 +6, 재사용 -8% · 세 총기 최종 강화'}],
     },
     plague_end: {

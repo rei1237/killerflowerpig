@@ -19,7 +19,10 @@ function paired(id, phase, scene, { route = false, oneCast = false } = {}) {
 
 test('gun evolutions keep their mods (shotgun reach +30%); non-sword crit modifiers are unchanged; sword gains melee crit', () => {
     // 무기 밸런스 재조정으로 총기 기본·레벨 수치는 바뀌었다(tools/weapon-balance-bench.mjs). 진화 모드와 치명타 성질은 그대로.
-    for (const id of ['pistols', 'rifle', 'shotgun']) assert.deepEqual(WEAPONS[id].evolve, { ...baseline.weapons[id].evolve, mods: id === 'shotgun' ? { ...baseline.weapons[id].evolve.mods, duration: 1.3 } : baseline.weapons[id].evolve.mods });
+    // 산탄총 계열 강화(도살자의 산탄 피해 1.6배·출혈 5·재장전 -15%)와 탄막 사수 원거리 하향(레일 소총 관통 +10 → +6)만 의도적으로 바꿨다.
+    assert.deepEqual(WEAPONS.pistols.evolve, baseline.weapons.pistols.evolve);
+    assert.deepEqual(WEAPONS.rifle.evolve.mods, { ...baseline.weapons.rifle.evolve.mods, pierce: 6 });
+    assert.deepEqual(WEAPONS.shotgun.evolve.mods, { ...baseline.weapons.shotgun.evolve.mods, dmg: 1.6, bleed: 5, duration: 1.3, cd: 0.85 });
     assert.equal(WEAPONS.shotgun.evolve.mods.duration, 1.3);
     // 도살검은 근접 보상으로 고유 치명타를 받았다 (기본 20%, 피해 +50%, 진화 +10%/+50%).
     assert.equal(WEAPONS.sword.base.crit, 0.2); assert.equal(WEAPONS.sword.base.critBonus, 0.5);

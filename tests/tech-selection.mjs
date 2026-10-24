@@ -79,13 +79,13 @@ test('tech weapon bonus applies only to matching tags and grows with tiers', () 
 
 test('player-wide tier bonuses (HP, regen, armor, crit multiplier) follow resonance', () => {
     startTech('bloom');
-    assert.equal(G.player.maxHp, 100 + 20);
+    assert.equal(G.player.maxHp, 100 + 20 + 10, 'tier I +20 and the Bloom starting base +10');
     assert.equal(resonanceCount(), 3);
     assert.equal(resonanceTier(), 1, 'two starter weapons and one passive do not skip tier II');
     applyChoice({ kind: 'passive', id: 'pollen', level: 1 });
     recomputeStats();
     assert.equal(resonanceTier(), 2);
-    assert.ok(Math.abs(G.player.stats.regen - (0.3 + 0.5)) < 1e-9);
+    assert.ok(Math.abs(G.player.stats.regen - (0.3 + 0.5 + 0.2)) < 1e-9);
 
     startTech('executioner');
     assert.equal(G.player.stats.critMul, 3);
@@ -97,8 +97,9 @@ test('player-wide tier bonuses (HP, regen, armor, crit multiplier) follow resona
     startTech('butcher');
     for (const [kind, id] of [['weapon', 'shotgun'], ['passive', 'hide']]) applyChoice({ kind, id, level: 1 });
     recomputeStats();
-    assert.ok(Math.abs(G.player.stats.armor - (0.6 + 1)) < 1e-9, 'hide Lv1 (0.6) + tier II armor');
-    assert.equal(G.player.maxHp, 130);
+    assert.ok(Math.abs(G.player.stats.armor - (1.2 + 1 + 2)) < 1e-9, 'hide Lv1 (1.2) + tier II armor + Butcher starting armor 2');
+    assert.ok(Math.abs(G.player.stats.damageReduction - .04) < 1e-9, 'hide Lv1 also reduces damage by 4%');
+    assert.equal(G.player.maxHp, 160, 'base 100 + Butcher starting +30 + tier II +30');
 });
 
 test('bloom starter cannon still needs ordinary upgrades, pollen, chest evolution and evolved fusion partners', () => {
@@ -173,7 +174,7 @@ test('imprints make the same weapon grow in a tech-specific direction at Lv3/5/7
     // 산탄총 Lv8: 탄막 사수는 투사체·관통, 도살자는 출혈·피해, 처형자(투사체 태그)는 치명·처형으로 성장
     const gun = at('gunline', 'shotgun', 8), butcher = at('butcher', 'shotgun', 8), exe = at('executioner', 'shotgun', 8);
     G.tech = null; recomputeStats(); const plain = weaponStats(Object.assign(createWeapon('shotgun', 0), { level: 8 }));
-    assert.equal(gun.amount, plain.amount + 2); assert.equal(gun.pierce, plain.pierce + 2);
+    assert.equal(gun.amount, plain.amount + 2); assert.equal(gun.pierce, plain.pierce + 1, 'imprint II pierce +1 (ranged reach toned down)');
     assert.ok(Math.abs(butcher.dmg - plain.dmg * MISMATCH_DAMAGE) < 1e-9, 'shotgun is off-tag for the butcher (blade/orbit)');
     assert.ok(exe.crit >= 0.16); assert.equal(exe.executeChance, 0, 'shotgun does not inherit the pistol-only execution identity');
     const below = at('gunline', 'shotgun', 2), lv3 = at('gunline', 'shotgun', 3);

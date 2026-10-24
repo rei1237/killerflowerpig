@@ -25,14 +25,14 @@ export const WEAPONS = {
     shotgun: {
         name: '12게이지 산탄총', icon: '💥', color: '#ffb36b',
         desc: '가장 가까운 적에게 부채꼴 산탄을 퍼붓는다.',
-        base: { dmg: 10, cd: 1.0, amount: 5, speed: 540, duration: 0.55, pierce: 2, area: 1, spread: 0.6 },
+        base: { dmg: 11, cd: 1.0, amount: 5, speed: 560, duration: 0.55, pierce: 2, area: 1, spread: 0.6 },
         levels: [
             { amount: 1, t: '산탄 +1' }, { dmg: 10, t: '피해 +10' }, { cd: -0.1, duration: 0.15, area: 0.1, t: '재장전 -10%, 사거리 +15%, 탄 크기 +10%' },
-            { amount: 2, t: '산탄 +2' }, { pierce: 2, t: '관통 +2' }, { dmg: 14, t: '피해 +14' },
+            { amount: 2, t: '산탄 +2' }, { pierce: 2, dmg: 4, t: '관통 +2, 피해 +4' }, { dmg: 14, t: '피해 +14' },
             { amount: 3, cd: -0.15, area: 0.15, t: '산탄 +3, 재장전 -15%, 탄 크기 +15%' },
         ],
-        evolve: { with: 'magazine', name: '도살자의 산탄', icon: '🩸', desc: '관통 산탄 + 출혈. 살점이 갈려 나간다.',
-            mods: { dmg: 1.35, amount: 1.5, pierce: 3, bleed: 4, duration: 1.3 } },
+        evolve: { with: 'magazine', name: '도살자의 산탄', icon: '🩸', desc: '관통 산탄 + 강한 출혈. 피해 +60%, 산탄 1.5배, 재장전 -15%. 살점이 갈려 나간다.',
+            mods: { dmg: 1.6, amount: 1.5, pierce: 3, bleed: 5, duration: 1.3, cd: 0.85 } },
     },
     pistols: {
         name: '쌍권총', icon: '🔫', color: '#ffd27a',
@@ -61,14 +61,14 @@ export const WEAPONS = {
     rifle: {
         name: '노획 소총', icon: '🎯', color: '#e8f0ff',
         desc: '적 무리를 꿰뚫는 고위력 관통탄.',
-        base: { dmg: 26, cd: 1.3, amount: 1, speed: 950, duration: 0.8, pierce: 7, area: 1 },
+        base: { dmg: 26, cd: 1.3, amount: 1, speed: 950, duration: 0.62, pierce: 5, area: 1 },
         levels: [
-            { dmg: 16, t: '피해 +16' }, { pierce: 3, t: '관통 +3' }, { cd: -0.18, t: '재장전 -18%' },
-            { amount: 1, t: '탄 +1' }, { dmg: 18, t: '피해 +18' }, { pierce: 4, t: '관통 +4' },
+            { dmg: 16, t: '피해 +16' }, { pierce: 2, t: '관통 +2' }, { cd: -0.18, t: '재장전 -18%' },
+            { amount: 1, t: '탄 +1' }, { dmg: 18, t: '피해 +18' }, { pierce: 3, t: '관통 +3' },
             { cd: -0.15, amount: 1, t: '탄 +1, 재장전 -15%' },
         ],
-        evolve: { with: 'scope', name: '레일 소총', icon: '⚡', desc: '관통 +10 전자기탄. 일직선상의 적을 꿰뚫는다.',
-            mods: { dmg: 1.35, pierce: 10, area: 1.3 } },
+        evolve: { with: 'scope', name: '레일 소총', icon: '⚡', desc: '관통 +6 전자기탄. 일직선상의 적을 꿰뚫는다.',
+            mods: { dmg: 1.35, pierce: 6, area: 1.3 } },
     },
     molotov: {
         name: '화염병', icon: '🔥', color: '#ff7a1a',
@@ -151,13 +151,13 @@ export const PASSIVES = {
     // 저장 호환을 위해 id는 nose 그대로. 쓸모가 적던 '자석 코'(획득 범위만 +30%)를 재사용 대기 감소 아이템으로 바꿨다.
     nose: { name: '자력 가속 코일', icon: '🧲', desc: '자력으로 무기를 빠르게 재충전한다. 모든 무기 재사용 대기 -6% · 경험치 획득 범위 +15%', per: '재사용 -6% · 범위 +15%' },
     madness: { name: '광기', icon: '🌀', desc: '이동 속도 +7%', per: '이속 +7%' },
-    hide: { name: '철갑 피부', icon: '🛡️', desc: '받는 피해 -0.6 (방어)', per: '방어 +0.6' },
+    hide: { name: '철갑 피부', icon: '🛡️', desc: '받는 피해 -1.2 (방어) · 추가로 받는 피해 -4%', per: '방어 +1.2 · 피해 -4%' },
 };
 
 // 보조 아이템 레벨당 수치. 피해형(날 연마 +10%·집중 치명타 +4.5%≈+9%·탄창)은 서로 비슷하게,
-// 철갑 피부는 적 1회 피해가 작은 초반에 과하게 세지 않도록 0.6씩.
+// 철갑 피부: 0.6씩은 체감이 거의 없어 레벨당 방어 +1.2 · 받는 피해 -4% (Lv5 방어 6 · -20%)로 상향.
 // 자력 가속 코일(nose): 레벨당 모든 무기 재사용 대기 -6% (Lv5 -30%, 화력 약 +43%로 날 연마 +50%와 비슷) · 획득 범위 +15%.
-export const PASSIVE_TUNING = Object.freeze({ focus: .045, spread: .13, hide: .6, coilCooldown: .06, coilMagnet: .15 });
+export const PASSIVE_TUNING = Object.freeze({ focus: .045, spread: .13, hide: 1.2, hideReduction: .04, coilCooldown: .06, coilMagnet: .15 });
 // 탄창 확장: 무기 투사체 수에 비례해 증가 (Lv당 +10%). 정수로 못 늘린 나머지 비율은 피해로 환산한다.
 export const MAGAZINE_BONUS = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
 
@@ -176,8 +176,8 @@ export const TIER_POWER = Object.freeze({
         // 2차 대폭 하향: 절대 무기는 이전 '최종' 화력대로, 최종 무기는 그보다 아래로 한 등급씩 내렸다.
         // (1차: 학살자의 검륜·맹독 회전톱·심판의 단두대·역병 종언 개별 하향 후, 최종 ×0.55 · 절대 ×0.7)
         lotus_bloom: 1.25, venom_saw: 7.5, orbit_saw: 1.8, sword_wheel: 1.21, toxic_scatter: 3.0, plague_fire: 0.75,
-        scatter_rail: 1.05, burst_rail: 1.173, ember_lance: 0.36,
-        absolute_bloom: 0.9, doom_barrage: 1.6, plague_end: 0.85, guillotine: 1.25, carnage_saw: 1.35 }),
+        scatter_rail: 0.72, burst_rail: 1.173, ember_lance: 0.36,
+        absolute_bloom: 0.9, doom_barrage: 1.1, plague_end: 0.85, guillotine: 1.25, carnage_saw: 1.35 }),
     // 조합 무기 안에 계승된 꽃잎포 코어 배율(진화 꽃잎포 보정에 곱한다). 절대 > 최종 순서는 유지.
     retainedCannon: Object.freeze({ final: 1.3, absolute: 1.5 }),
 });

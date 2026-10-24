@@ -96,6 +96,12 @@ export function applyTechWeaponBonus(weapon, result) {
 export function applyTechPlayerBonus(stats) {
     const tech = activeTech();
     if (!tech) return stats;
+    const base = tech.base || {};
+    if (base.maxHp) stats.maxHp += base.maxHp;
+    if (base.armor) stats.armor += base.armor;
+    if (base.regen) stats.regen += base.regen;
+    if (base.speed) stats.speed *= 1 + base.speed;
+    if (base.crit) stats.crit += base.crit;
     const b = sumTiers(tech, resonanceTier(tech), 'player');
     if (b.maxHp) stats.maxHp += b.maxHp;
     if (b.regen) stats.regen += b.regen;

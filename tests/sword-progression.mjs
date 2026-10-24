@@ -169,3 +169,17 @@ test('new sword affinity preserves all old Butcher weapons and all five absolute
         plague_end: ['molotov', 'gas', 'cannon'], guillotine: ['pistols', 'rifle', 'saw'], carnage_saw: ['saw', 'shotgun', 'thorns'],
     });
 });
+
+test('fusing into the sword wheel never weakens the inherited Butcher sword, and the wheel swing keeps crit and level growth', () => {
+    G.tech = 'butcher'; G.passives = { whet: 5, hide: 5, heart: 5 };
+    G.weapons = [Object.assign(createWeapon('sword', 0), { level: 8, evolved: true })]; recomputeStats();
+    const evolved = weaponStats(G.weapons[0]).dmg;
+    for (const level of [1, 8]) {
+        G.weapons = [Object.assign(createWeapon('sword_wheel', 0), { level })]; recomputeStats();
+        const core = activeWeaponCores().find(core => core.id === 'sword');
+        assert.ok(weaponStats(core).dmg > evolved, `Lv${level} inherited sword ${weaponStats(core).dmg} <= evolved ${evolved}`);
+    }
+    const wheel = lv => weaponStats(Object.assign(createWeapon('sword_wheel', 0), { level: lv }));
+    assert.ok(wheel(1).crit >= 0.25 && wheel(1).critBonus >= 1);
+    assert.ok(wheel(8).dmg > wheel(1).dmg, 'wheel damage still grows with fusion level under the Butcher tech');
+});

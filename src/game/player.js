@@ -72,6 +72,7 @@ export function recomputeStats(fullHeal = false) {
         magnet: BASE.magnet * (1 + lv('nose') * PASSIVE_TUNING.coilMagnet + upgradeLevel('magnet') * 0.1),
         speed: BASE.speed * (1 + lv('madness') * 0.07 + upgradeLevel('speed') * 0.04),
         armor: lv('hide') * PASSIVE_TUNING.hide,
+        damageReduction: lv('hide') * PASSIVE_TUNING.hideReduction,
         maxHp: BASE.hp + lv('heart') * 20 + upgradeLevel('maxHp') * 10,
         greed: 1 + upgradeLevel('greed') * 0.1,
         critMul: BASE_CRIT_MUL,
@@ -127,7 +128,7 @@ export function damagePlayer(amount, srcX, srcY) {
         return true;
     }
     // 연꽃 가시 '만개 수호': 준비된 꽃잎 수만큼 받는 피해 감소
-    const dmg = incomingOutfitDamage(amount, p.stats.armor, p.stats.outfitDamageMultiplier) * (1 - thornGuardReduction());
+    const dmg = incomingOutfitDamage(amount, p.stats.armor, p.stats.outfitDamageMultiplier) * (1 - thornGuardReduction()) * (1 - Math.min(.5, p.stats.damageReduction || 0));
     p.iframes = 0.5;
     p.hurtT = 0.25;
     if (G.godMode) return true;
