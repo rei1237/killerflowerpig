@@ -91,6 +91,9 @@ button:focus-visible, summary:focus-visible, select:focus-visible, input:focus-v
     animation: none !important; transition: none !important; scroll-behavior: auto !important;
   }
 }
+/* Movement hint fades after the opening seconds; it must not block the thumb area. */
+.movement-hint { transition: opacity .6s ease, visibility .6s; pointer-events: none; }
+.movement-hint.is-faded { opacity: 0; visibility: hidden; }
 /* Make the entire labeled settings row tappable without enlarging its checkbox art. */
 .setting-row { min-height: 44px; flex-wrap: wrap; }
 .setting-row .seg { max-width: 100%; flex-wrap: wrap; }

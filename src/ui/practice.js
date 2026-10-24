@@ -12,7 +12,7 @@ const STAGES = [
 ];
 let root, canvas, ctx, hooks = {}, opened = false, acknowledged = false, state, callback, restoreFocus;
 let isolated = [], frameId, lastTime = 0, previousStep = -1, keys = new Set(), pointer = null, joystick = {x:0,y:0};
-let hero, rabbit, suspended = false;
+let hero, rabbit, suspended = false, rasterScale = 1;
 const MAP = { KeyW:[0,-1], ArrowUp:[0,-1], KeyS:[0,1], ArrowDown:[0,1], KeyA:[-1,0], ArrowLeft:[-1,0], KeyD:[1,0], ArrowRight:[1,0] };
 function el(tag, cls, text) { const n=document.createElement(tag); if(cls)n.className=cls;if(text)n.textContent=text;return n; }
 function btn(cls,text,fn){const b=el('button',cls,text);b.type='button';b.addEventListener('click',fn);return b;}
@@ -26,7 +26,9 @@ export function initPractice(options={}) {
     const info=el('div','practice-info');info.setAttribute('aria-live','polite');info.setAttribute('aria-atomic','true');
     const count=el('p','practice-count'),heading=el('h2');heading.id='practice-heading';heading.tabIndex=-1;
     info.append(count,heading,el('p','practice-instruction'));
-    canvas=el('canvas','practice-canvas');canvas.width=PRACTICE_WORLD.width;canvas.height=PRACTICE_WORLD.height;canvas.setAttribute('aria-label','꽃돼지 연습장. 이동, 토끼 집중 조준, 경험치 젬 수집을 연습하세요.');canvas.setAttribute('role','img');ctx=canvas.getContext('2d');
+    canvas=el('canvas','practice-canvas');
+    // 고해상도 화면에서도 선명하게: 월드 좌표는 그대로, 래스터만 기기 픽셀 비율(최대 2배)로 그린다.
+    rasterScale=Math.min(2,Math.max(1,(typeof window!=='undefined'&&window.devicePixelRatio)||1));canvas.width=Math.round(PRACTICE_WORLD.width*rasterScale);canvas.height=Math.round(PRACTICE_WORLD.height*rasterScale);canvas.setAttribute('aria-label','꽃돼지 연습장. 이동, 토끼 집중 조준, 경험치 젬 수집을 연습하세요.');canvas.setAttribute('role','img');ctx=canvas.getContext('2d');
     const actions=el('div','practice-actions');
     const focus=btn('practice-focus','표적 집중',()=>{if(state.step===1||state.step===2){focusPracticeAt(state,state.dummy.x,state.dummy.y-state.dummy.radius);sync();}});
     const choices=el('div','practice-choices');
@@ -64,7 +66,7 @@ function pointerup(e){
     const distance=Math.max(p.distance,Math.hypot(e.clientX-p.x,e.clientY-p.y));
     if(isTargetTap({duration:performance.now()-p.time,distance,multitouch:p.multitouch,canceled:false})){
         const rect=canvas.getBoundingClientRect();
-        focusPracticeAt(state,(e.clientX-rect.left)*canvas.width/rect.width,(e.clientY-rect.top)*canvas.height/rect.height);sync();
+        focusPracticeAt(state,(e.clientX-rect.left)*PRACTICE_WORLD.width/rect.width,(e.clientY-rect.top)*PRACTICE_WORLD.height/rect.height);sync();
     }
     e.preventDefault();
 }
@@ -101,8 +103,8 @@ function tick(time){
     advancePractice(state,move,dt);sync();draw();schedulePractice();
 }
 function draw(){
-    if(!ctx)return;const p=state.player,w=canvas.width,h=canvas.height;
-    ctx.clearRect(0,0,w,h);ctx.fillStyle='#101f35';ctx.fillRect(0,0,w,h);
+    if(!ctx)return;const p=state.player,w=PRACTICE_WORLD.width,h=PRACTICE_WORLD.height;
+    ctx.setTransform?.(rasterScale,0,0,rasterScale,0,0);ctx.clearRect(0,0,w,h);ctx.fillStyle='#101f35';ctx.fillRect(0,0,w,h);
     ctx.strokeStyle='#a3c7ee0d';ctx.lineWidth=1;
     for(let x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}for(let y=20;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
     ctx.fillStyle='#9bb5d1';ctx.font='12px sans-serif';ctx.fillText('TRAINING',20,25);

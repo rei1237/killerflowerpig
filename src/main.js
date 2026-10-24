@@ -46,6 +46,7 @@ async function boot() {
 
 let last = performance.now();
 let acc = 0;
+let pendingRenderDt = 0;
 // 성능 계측 (?debug 로 표시)
 const perf = { fps: 0, frames: 0, t: 0, stepMs: 0, renderMs: 0 };
 const debug = new URLSearchParams(location.search).has('debug');
@@ -64,13 +65,19 @@ function frame(now) {
         n++;
     }
     if (n === MAX_STEPS) acc = 0; // 처리 지연 시 따라잡기 포기 (나선형 지연 방지)
+    // 120Hz 화면: 시뮬레이션은 60Hz 고정이라 스텝이 없는 프레임은 같은 그림이다 → 다시 그리지 않아 배터리·발열을 줄인다.
+    pendingRenderDt += dt;
+    const live = !G.paused && (G.mode === 'play' || G.mode === 'boss' || G.mode === 'clearing');
+    if (live && n === 0) return;
     const t1 = performance.now();
-    render(G.paused ? 0 : dt);
+    const renderDt = pendingRenderDt;
+    pendingRenderDt = 0;
+    render(G.paused ? 0 : renderDt);
     const t2 = performance.now();
-    observeRenderCost(t2 - t1, now);
+    observeRenderCost(t2 - t1, now, renderDt * 1000);
 
     perf.frames++;
-    perf.t += dt;
+    perf.t += renderDt;
     perf.stepMs += t1 - t0;
     perf.renderMs += t2 - t1;
     if (perf.t >= 1) {
@@ -100,7 +107,7 @@ window.addEventListener('orientationchange', () => setTimeout(resize, 150));
 // Mobile app switching and Safari BFCache both cancel background frame work.
 const loop = createFrameLoop({
     frame,
-    reset() { last = performance.now(); acc = 0; },
+    reset() { last = performance.now(); acc = 0; pendingRenderDt = 0; },
     onSuspend() {
         resetInput();
         if ((G.mode === 'play' || G.mode === 'boss') && !G.paused) togglePause();

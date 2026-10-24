@@ -26,6 +26,9 @@ export function drawHUD() {
         'hud-level','hud-stage','hud-time','hud-score','hud-build',
         'hud-boss','hud-boss-portrait','hud-boss-name','hud-boss-hp','hud-countdown','hud-stage-progress','hud-tech'
     ].map(id => [id,$(id)]));
+    // 조작 안내는 각 스테이지 첫 8초만 보여 주고 사라진다: 모바일에서 엄지 이동 영역을 계속 가리지 않게.
+    const hint = nodes.hint ??= document.querySelector?.('.movement-hint') || null;
+    hint?.classList?.toggle('is-faded', G.time > 8);
     const hp = Math.max(0, Math.min(1,G.player.hp/G.player.maxHp));
     nodes['hud-hp'].style.width = hp * 100 + '%';
     nodes['hud-hp'].style.background = hp < .25 ? '#e37765' : '#71b9a5';

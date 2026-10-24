@@ -116,9 +116,15 @@ if (process.env.RENDER_BENCHMARK) {
         for (const tier of [0, 1, 2]) { state.setVisualTier(tier); renderer.resize(); renderer.render(.016); assert.deepEqual(G.view, view); assert.equal(G.lowQ, lowQ); assert.equal(gameplaySnapshot(), before); }
     });
     test('mobile DPR is bounded and degraded raster keeps the same visible world', () => {
-        seedScene(); assert.equal(renderer.screen.pr, 1); const view = { ...G.view };
-        state.setVisualTier(2); renderer.resize(); assert.equal(renderer.screen.pr, .75); assert.deepEqual(G.view, view);
-        assert.ok(canvas.width * canvas.height < 390 * 844 * .57);
+        // 3x phone: sharp 2x raster within the 1.5M-pixel mobile budget (was a blurry 1x).
+        seedScene(); assert.equal(renderer.screen.pr, 2); const view = { ...G.view };
+        assert.ok(canvas.width * canvas.height <= 1500000);
+        state.setVisualTier(2); renderer.resize(); assert.equal(renderer.screen.pr, 1.25); assert.deepEqual(G.view, view);
+        assert.ok(canvas.width * canvas.height < 390 * 844 * 2 * 2 * .45);
+        // Large tablets stay inside the pixel budget instead of rasterizing at full DPR.
+        const size = [window.innerWidth, window.innerHeight]; Object.assign(window, { innerWidth: 1024, innerHeight: 1366 });
+        state.setVisualTier(1); renderer.resize(); assert.ok(canvas.width * canvas.height <= 1500000 * 1.01 && renderer.screen.pr >= .75);
+        [window.innerWidth, window.innerHeight] = size; renderer.resize();
     });
     test('paused/static renders are reused; resize and resume force redraw', () => {
         seedScene(); renderer.render(.016); G.paused = true; renderer.render(0); resetCounts();

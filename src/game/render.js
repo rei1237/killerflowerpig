@@ -23,26 +23,29 @@ let backdrop = null;
 let groundPattern = null;
 let groundStage = 0;
 let frameValid = false, framePlayer = null, frameClock = -1, frameMode = '', frameStage = -1, frameJoy = false, frameVisuals;
-let costStart = 0, costSum = 0, costSamples = 0, slowWindows = 0, fastWindows = 0, lastTierChange = -Infinity;
+let costStart = 0, costSum = 0, costSamples = 0, frameSum = 0, frameSamples = 0, slowWindows = 0, fastWindows = 0, lastTierChange = -Infinity;
 export const screen = { w: 0, h: 0, pr: 1, zoom: 1, cssW: 0, cssH: 0, worldTx: 0, worldTy: 0 };
 
-onSettingsChange(() => { frameValid = false; costStart = costSum = costSamples = slowWindows = fastWindows = 0; });
+onSettingsChange(() => { frameValid = false; costStart = costSum = costSamples = frameSum = frameSamples = slowWindows = fastWindows = 0; });
 
 // Caller measures only render CPU time. Conservative auto-mode fallback with
-// separate degradation/recovery windows; no inference about actual display FPS.
-export function observeRenderCost(renderMs, nowMs = performance.now()) {
+// separate degradation/recovery windows. Optional frameMs (rAF interval) also
+// catches GPU raster cost that CPU render time misses: sustained < ~42 FPS
+// degrades, and recovery additionally needs smooth frames.
+export function observeRenderCost(renderMs, nowMs = performance.now(), frameMs = NaN) {
     if (settings.quality !== 'auto' || G.paused || G.mode === 'idle' || document.hidden || !Number.isFinite(renderMs) || renderMs < 0) {
-        costStart = costSum = costSamples = slowWindows = fastWindows = 0;
+        costStart = costSum = costSamples = frameSum = frameSamples = slowWindows = fastWindows = 0;
         return;
     }
     if (!costSamples) costStart = nowMs;
     costSum += Math.min(renderMs, 100);
     costSamples++;
+    if (Number.isFinite(frameMs) && frameMs > 0) { frameSum += Math.min(frameMs, 100); frameSamples++; }
     if (nowMs - costStart < 1000 || costSamples < 30) return;
-    const mean = costSum / costSamples;
-    costStart = costSum = costSamples = 0;
-    slowWindows = mean > 12 ? slowWindows + 1 : 0;
-    fastWindows = mean < 5 ? fastWindows + 1 : 0;
+    const mean = costSum / costSamples, frameMean = frameSamples ? frameSum / frameSamples : 0;
+    costStart = costSum = costSamples = frameSum = frameSamples = 0;
+    slowWindows = mean > 12 || frameMean > 24 ? slowWindows + 1 : 0;
+    fastWindows = mean < 5 && (!frameMean || frameMean < 18) ? fastWindows + 1 : 0;
     if (nowMs - lastTierChange < 8000) return;
     const base = G.lowQ ? 1 : 0;
     const tier = G.visuals.tier;
@@ -56,7 +59,7 @@ export function observeRenderCost(renderMs, nowMs = performance.now()) {
 
 export function initRender(c) {
     canvas = c;
-    ctx = canvas.getContext('2d', { alpha: false });
+    ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
     resize();
     input.onTap = (x, y) => {
         const point = clientToWorld(x, y);
@@ -80,7 +83,9 @@ export function resize() {
     if (!canvas) return;
     const cssW = Math.max(1, window.innerWidth), cssH = Math.max(1, window.innerHeight);
     const dpr = window.devicePixelRatio || 1;
-    const pr = Math.min(dpr, G.visuals.maxDpr);
+    // Pixel budget keeps large tablets affordable; never drop below 0.75 CSS px.
+    const budgetPr = Math.sqrt((G.visuals.pixelBudget || Infinity) / (cssW * cssH));
+    const pr = Math.max(Math.min(dpr, .75), Math.round(Math.min(dpr, G.visuals.maxDpr, budgetPr) * 100) / 100);
     screen.cssW = cssW; screen.cssH = cssH; screen.pr = pr;
     screen.w = canvas.width = Math.round(cssW * pr);
     screen.h = canvas.height = Math.round(cssH * pr);
