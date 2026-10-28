@@ -1,5 +1,5 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v45-coop-boss';
+const VERSION = 'v46-partner-growth';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
@@ -80,6 +80,10 @@ const PRECACHE = [
     './asset/sprites/pet-yeongnyang-attack.webp',
     './asset/sprites/pet-yeongnyang-heal.webp',
     './src/game/coop.js',
+    './src/data/partner-kit.js',
+    './src/ui/partner-panel.js',
+    './src/ui/partner.css',
+    './asset/sprites/coop-yeongnyang-badge.webp',
     './asset/sprites/coop-yeongnyang-walk.webp',
     './asset/sprites/coop-yeongnyang-attack.webp',
     './asset/sprites/player.webp',

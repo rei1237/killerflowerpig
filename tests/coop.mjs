@@ -98,7 +98,7 @@ test('2P stays within one screen of 1P and the camera frames both', () => {
     assert.equal(f.x, (G.player.x + q.x) / 2);
 });
 
-test('영냥이 skills deal real damage, unlock with 1P level, and are buffed over the original hunt kit', () => {
+test('영냥이 skills deal real damage, grow with her own build, and are buffed over the original hunt kit', () => {
     start(true);
     const S = coop.PARTNER_SKILLS;
     // 원작 hunt-kit: 성광 36·0.85초, 궤도 7·2개, 부메랑 22·1.3초, 타로 38·2.1초, 수호부 12%
@@ -107,19 +107,99 @@ test('영냥이 skills deal real damage, unlock with 1P level, and are buffed ov
     assert.ok(S.crescent.dmg / S.crescent.cd > 22 / 1.3 * 1.5);
     assert.ok(S.tarot.dmg / S.tarot.cd > 38 / 2.1 * 1.5);
     assert.ok(S.aura.guard > 0.12);
-    G.level = 1;
-    assert.equal(coop.skillUnlocked('crescent'), false); assert.equal(coop.skillUnlocked('tarot'), false);
-    G.level = 30;
-    for (const id of coop.PARTNER_SKILL_ORDER) assert.ok(coop.skillUnlocked(id), id);
-    assert.ok(coop.partnerPower(30) > coop.partnerPower(1) * 2);
-    const q = G.partner; q.x = 0; q.y = 0; G.player.x = -500;
+    const q = G.partner;
+    assert.equal(coop.skillLevel('bolt'), 1); assert.equal(coop.skillUnlocked('tarot'), false);
+    for (const id of coop.PARTNER_SKILL_ORDER) q.skills[id] = 5;
+    assert.ok(coop.skillPower('bolt') > 1.7);
+    q.x = 0; q.y = 0; G.player.x = -500;
     G.grid.reset();
-    const targets = [foe(60, 0), foe(-200, 40), foe(150, -150)];
+    const targets = [foe(60, 0), foe(-200, 40), foe(150, -150), foe(380, 0)];
     const random = Math.random; Math.random = () => 0.5;
     try { for (let i = 0; i < 60 * 6; i++) { G.clock += 1 / 60; coop.updatePartner(1 / 60); } } finally { Math.random = random; }
     assert.ok(G.damageBy[coop.PARTNER_ID] > 0);
-    assert.ok(targets.every(e => e.hp < e.maxHp), 'bolt/boomerang/tarot reach near and far foes');
-    assert.ok(coop.partnerGuard(30) > S.aura.guard);
+    assert.ok(targets.every(e => e.hp < e.maxHp), 'melee, ranged star bolts, boomerang and tarot reach near and far foes');
+    assert.ok(coop.partnerGuard() > S.aura.guard);
+});
+
+test('영냥이 eats XP gems herself, shares with 연이, and levels up into her own choice window', async () => {
+    const { updatePickups } = await import('../src/game/pickups.js');
+    start(true);
+    const q = G.partner, p = G.player;
+    p.x = -600; p.y = 0; q.x = 0; q.y = 0;
+    const g = G.gems.spawn(); Object.assign(g, { x: 20, y: -14, value: 10, tier: 0, pull: false, speed: 0, toPartner: false, phase: 0 });
+    const p1Before = G.xp;
+    for (let i = 0; i < 30; i++) updatePickups(1 / 60);
+    assert.equal(G.gems.count, 0);
+    assert.ok(q.level > 1 || q.xp === 10, 'the full gem value goes to 영냥이');
+    assert.ok(G.xp > p1Before, '연이 receives a share');
+    // 레벨업 → 성장 선택 창 이벤트
+    let opened = 0; G.events.partnerLevelUp = () => opened++;
+    coop.addPartnerXP(q.xpNext * 3);
+    assert.ok(q.level >= 2 && q.pendingLevelUps >= 1);
+    G.pendingLevelUps = 0;
+    step(1 / 60);
+    assert.equal(opened, 1);
+});
+
+test('level-up choices upgrade skills and charms; a Lv5 skill plus its paired charm combines into an evolution', () => {
+    start(true);
+    const q = G.partner;
+    const picks = coop.rollPartnerChoices(3, () => 0.3);
+    assert.equal(picks.length, 3);
+    assert.ok(picks.every(c => ['skill', 'charm'].includes(c.kind)));
+    q.skills.bolt = 4;
+    const up = { kind: 'skill', id: 'bolt' };
+    assert.ok(coop.applyPartnerChoice(up)); assert.equal(q.skills.bolt, 5);
+    assert.equal(coop.applyPartnerChoice(up), false, 'max level');
+    assert.deepEqual(coop.readyCombos(), [], 'needs the paired charm');
+    assert.ok(coop.applyPartnerChoice({ kind: 'charm', id: 'bell' }));
+    assert.deepEqual(coop.readyCombos(), ['bolt']);
+    const roll = coop.rollPartnerChoices(3);
+    assert.equal(roll[0].kind, 'combo', 'a ready combination is always offered first');
+    assert.match(roll[0].recipe, /사주 성광 Lv5 \+ 🔔 별 방울 → 🌙 사주 월광참/);
+    const before = coop.skillPower('bolt');
+    assert.ok(coop.applyPartnerChoice(roll[0]));
+    assert.equal(q.evolved.bolt, true);
+    assert.ok(coop.skillPower('bolt') > before * 1.4);
+    assert.deepEqual(coop.readyCombos(), []);
+    // 부적 효과: 생선 비축 → 최대 HP
+    const hp = q.maxHp; coop.applyPartnerChoice({ kind: 'charm', id: 'fish_stock' }); assert.equal(q.maxHp, hp + 20);
+});
+
+test('영냥이 complements 연이: tech-specific starting skill, complement weight and damage bonus', async () => {
+    const kit = await import('../src/data/partner-kit.js');
+    // 근접 도살자 → 원거리 별빛 탄환으로 시작, 원거리 탄막 사수 → 근접 궤도
+    G.tech = 'butcher'; assert.ok(coop.startingSkills().starshot);
+    G.tech = 'gunline'; assert.ok(coop.startingSkills().orbit);
+    for (const [tech, c] of Object.entries(kit.PARTNER_COMPLEMENT)) {
+        assert.ok(c.skills.length >= 2 && c.why.length > 8, tech);
+        assert.ok(c.skills.every(id => kit.PARTNER_SKILL_KIT[id]), tech);
+    }
+    assert.ok(kit.PARTNER_COMPLEMENT.butcher.skills.some(id => kit.PARTNER_RANGED.includes(id)), 'melee 연이 gets ranged help');
+    assert.ok(!kit.PARTNER_COMPLEMENT.gunline.skills.some(id => kit.PARTNER_RANGED.includes(id)), 'ranged 연이 gets close guard');
+    start(true); G.tech = 'butcher';
+    const q = G.partner; q.skills = { bolt: 1, starshot: 1 };
+    assert.ok(coop.isComplement('starshot'));
+    assert.ok(Math.abs(coop.skillPower('starshot') - (1 + kit.PARTNER_COMPLEMENT_BONUS)) < 1e-9);
+    assert.equal(coop.skillPower('orbit', { skills: { orbit: 1 }, evolved: {} }), 1);
+    // 보완 기술이 선택지에 더 자주 나온다
+    let comp = 0, other = 0;
+    for (let i = 0; i < 400; i++) for (const c of coop.rollPartnerChoices(3)) if (c.kind === 'skill') (coop.isComplement(c.id) ? comp++ : other++);
+    assert.ok(comp > other * 0.8, `${comp} vs ${other}`);
+    const card = coop.rollPartnerChoices(3, () => 0).find(c => c.kind === 'skill' && coop.isComplement(c.id));
+    if (card) assert.match(card.complement, /연이 보완/);
+});
+
+test('영냥이 build survives stage checkpoints and retries; bad saved builds are rejected', () => {
+    start(true);
+    const q = G.partner;
+    q.level = 7; q.skills.crescent = 3; q.charms.paw = 2;
+    const snap = coop.partnerSnapshot();
+    assert.deepEqual(coop.sanitizePartnerBuild(snap).skills, q.skills);
+    assert.equal(coop.sanitizePartnerBuild({ skills: { bolt: 9 } }), null);
+    assert.equal(coop.sanitizePartnerBuild({ skills: { bolt: 5 }, evolved: { bolt: true } }).evolved.bolt, undefined, 'evolution needs its charm');
+    const p2 = coop.createPartner(snap);
+    assert.equal(p2.level, 7); assert.equal(p2.skills.crescent, 3); assert.equal(p2.charms.paw, 2);
 });
 
 test('2P choice is saved in the stage checkpoint and restored on retry', () => {

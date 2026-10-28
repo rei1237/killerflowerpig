@@ -1,0 +1,101 @@
+/* 2P 영냥이: 전투 HUD 카드 + 성장·조합 창. 보라·금빛으로 1P(민트) UI와 한눈에 구별된다. */
+:root { --p2: #b98bea; --p2-soft: #2a2140; --p2-gold: #f6ce73; --p2-line: #c9a7ff55; }
+
+/* ── HUD 카드 (왼쪽 아래, 이동 영역을 막지 않도록 버튼만 터치 가능) ── */
+.partner-card{position:absolute;left:var(--ui-left,16px);bottom:var(--ui-bottom,16px);display:flex;align-items:flex-start;gap:8px;
+  width:min(250px,calc(100% - 140px));padding:8px 10px;background:#140f20e8;border:1px solid var(--p2-line);border-radius:10px;
+  box-shadow:0 8px 22px #0005;pointer-events:none}
+.partner-face{pointer-events:auto;position:relative;flex:none;width:46px;height:46px;min-height:0!important;padding:0;border:1px solid var(--p2-line);
+  border-radius:10px;background:var(--p2-soft);cursor:pointer}
+.partner-face img{width:100%;height:100%;object-fit:contain;border-radius:9px}
+.partner-face b{position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);padding:1px 5px;border-radius:6px;background:var(--p2);
+  color:#160f22;font:700 9px/1.3 var(--font-kr,sans-serif);white-space:nowrap}
+.partner-card.is-down .partner-face img{filter:grayscale(1) brightness(.6)}
+.partner-vitals{flex:1;min-width:0}
+.partner-label{display:flex;justify-content:space-between;gap:6px;font-size:10px;color:#cdbfe6;margin-bottom:4px}
+.partner-label strong{color:#efe4ff;font-size:11px}
+.partner-track{height:6px;border-radius:3px;background:#2d2540;overflow:hidden}
+.partner-track i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#9a72d6,#d6b8ff);border-radius:3px}
+.partner-xp{height:3px;margin-top:3px;border-radius:2px;background:#2d2540;overflow:hidden}
+.partner-xp i{display:block;height:100%;width:0;background:var(--p2-gold)}
+.partner-kit{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.pk-chip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;
+  background:#211a33;border:1px solid #4a3d66;font-size:13px;line-height:1}
+.pk-chip small{position:absolute;right:-3px;bottom:-4px;padding:0 3px;border-radius:4px;background:#0c0814;color:#e8dcff;font:700 8px/1.4 ui-monospace,monospace}
+.pk-chip.is-evolved{border-color:var(--p2-gold);background:#3a2c18;box-shadow:0 0 8px #f6ce7366}
+.pk-chip.is-complement::after{content:'🤝';position:absolute;left:-4px;top:-6px;font-size:8px}
+.pk-chip.is-charm{width:20px;height:20px;font-size:11px;border-radius:50%;opacity:.85}
+.partner-combo{pointer-events:auto;position:absolute;right:-6px;top:-14px;min-height:0!important;padding:4px 9px;border-radius:999px;border:1px solid var(--p2-gold);
+  background:#3a2c18;color:var(--p2-gold);font:700 11px/1.2 var(--font-kr,sans-serif);cursor:pointer;animation:partner-pulse 1.2s ease-in-out infinite}
+@keyframes partner-pulse{50%{box-shadow:0 0 0 5px #f6ce7333}}
+
+/* ── 성장·조합 창 ── */
+.partner-box{width:min(760px,100%);border-color:var(--p2-line)!important;background:linear-gradient(180deg,#1a1329,#100c18)!important}
+.partner-head{display:flex;align-items:center;gap:12px}
+.partner-head img{width:56px;height:56px;border-radius:12px;background:var(--p2-soft);border:1px solid var(--p2-line);object-fit:contain}
+.partner-head .eyebrow{margin:0;color:var(--p2)}
+.partner-head .modal-title{margin:2px 0 0;font-size:24px}
+.partner-head .modal-title small{color:var(--p2-gold);border-color:var(--p2-line)}
+.partner-complement{margin:10px 0 0;padding:8px 10px;border-radius:8px;background:#1f2a24;border:1px solid #71b9a555;color:#cfe9dc;font-size:12px;line-height:1.5}
+.partner-complement:empty{display:none}
+/* 조합표: 기술 → 짝 부적 → 진화. 한 줄에 하나, 모은 것은 밝게 */
+.partner-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px;margin-top:10px}
+.pb-row{display:grid;grid-template-columns:auto auto auto 1fr;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;background:#1d1630;border:1px solid #3a2f52;font-size:12px;color:#bfb2d6}
+.pb-row .pb-ico{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:#120d1d;border:1px solid #3a2f52;font-size:15px;opacity:.45}
+.pb-row .pb-ico.on{opacity:1;border-color:var(--p2)}
+.pb-row .pb-plus{color:#7d6e99;font-weight:700}
+.pb-row .pb-out{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pb-row .pb-out b{color:#e8dcff}
+.pb-row .pips{display:block;color:var(--p2-gold);font-size:9px;letter-spacing:1px}
+.pb-row.is-ready{border-color:var(--p2-gold);background:#2e2416}
+.pb-row.is-ready .pb-out b{color:var(--p2-gold)}
+.pb-row.is-evolved{border-color:#f6ce7388;background:#241c12}
+.pb-row.is-complement{box-shadow:inset 3px 0 0 #71b9a5}
+.partner-caption{margin:10px 0 6px}
+.partner-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pc-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;min-height:150px!important;padding:12px;border-radius:12px;
+  border:1px solid #4a3d66;background:#1e1730;color:#e8dcff;font:inherit;cursor:pointer;transition:transform .12s,border-color .12s}
+.pc-card:hover,.pc-card:focus-visible{border-color:var(--p2);transform:translateY(-2px)}
+.pc-card .pc-top{display:flex;align-items:center;gap:8px;width:100%}
+.pc-card .pc-icon{display:inline-flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;border-radius:10px;background:#120d1d;font-size:22px}
+.pc-card .pc-name{font-weight:800;font-size:15px;line-height:1.25}
+.pc-card .pc-lv{font-size:11px;color:var(--p2-gold)}
+.pc-card .pc-desc{font-size:12px;line-height:1.5;color:#cdbfe6}
+.pc-card .pc-hint{font-size:11px;line-height:1.45;color:#d9c08a}
+.pc-card .pc-comp{font-size:11px;line-height:1.45;color:#9fe0c4}
+.pc-card .pc-key{margin-left:auto;align-self:flex-start;font:700 10px ui-monospace,monospace;color:#8f80ad;border:1px solid #4a3d66;border-radius:4px;padding:1px 5px}
+.pc-card .pc-new{position:absolute;right:10px;bottom:8px;font:800 10px var(--font-kr,sans-serif);color:#ff9fd0}
+.pc-card.is-combo{border-color:var(--p2-gold);background:linear-gradient(160deg,#3a2c18,#1e1730 70%)}
+.pc-card.is-combo .pc-name{color:var(--p2-gold)}
+.pc-card.is-complement{box-shadow:inset 0 3px 0 #71b9a5}
+.partner-keys{margin:10px 0 0;font-size:11px;color:#8f80ad;text-align:center}
+
+/* 휴대폰 세로: 카드는 한 줄 하나(가로형), 조합표는 2열 압축 */
+@media (max-width:640px){
+  .partner-card{width:calc(100% - var(--ui-left,12px) - var(--ui-right,12px) - 150px);min-width:180px;padding:6px 8px;gap:6px}
+  .partner-face{width:38px;height:38px}
+  .pk-chip{width:21px;height:21px;font-size:11px}.pk-chip.is-charm{width:17px;height:17px;font-size:9px}
+  .partner-head img{width:44px;height:44px}.partner-head .modal-title{font-size:20px}
+  .partner-board{grid-template-columns:1fr 1fr;gap:4px}
+  .pb-row{grid-template-columns:auto auto auto;gap:3px;padding:5px;font-size:10px}
+  .pb-row .pb-out{grid-column:1/-1}
+  .pb-row .pb-ico{width:24px;height:24px;font-size:13px}
+  .partner-cards{grid-template-columns:1fr;gap:8px}
+  .pc-card{min-height:0!important;padding:10px}
+  .pc-card .pc-icon{width:34px;height:34px;font-size:19px}
+  .partner-keys{display:none}
+}
+/* 가로 휴대폰: 높이가 낮으므로 조합표를 접고 카드를 3열로 */
+@media (max-height:520px) and (orientation:landscape){
+  .partner-card{bottom:8px;width:230px}
+  .partner-board{display:none}
+  .partner-cards{grid-template-columns:repeat(3,1fr)}
+  .pc-card{min-height:0!important}
+  .pc-card .pc-hint,.pc-card .pc-comp{display:none}
+  .partner-keys{display:none}
+}
+/* 2P: 이동 안내를 영냥이 카드 위로 올리고 두 사람 조작을 함께 보여 준다 */
+.battle-hud.is-coop .movement-hint{bottom:calc(var(--ui-bottom,16px) + 104px)}
+.movement-hint .coop-keys{display:none}
+.battle-hud.is-coop .movement-hint .coop-keys{display:block;color:#d9c3ff}
+@media (max-width:640px){.battle-hud.is-coop .movement-hint{bottom:calc(var(--ui-bottom,12px) + 92px)}}

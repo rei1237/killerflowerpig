@@ -7,6 +7,7 @@ import { WEAPONS, PASSIVES } from '../data/weapons.js';
 import { techSummary } from '../game/tech.js';
 import { difficultyOf } from '../data/difficulty.js';
 import { syncFusionButtons } from './fusion-button.js';
+import { drawPartnerHUD } from './partner-panel.js';
 
 let lastUpdate = -Infinity;
 let buildKey = '';
@@ -21,6 +22,7 @@ export function drawHUD() {
     const now = performance.now();
     if (now - lastUpdate < 100) return;
     lastUpdate = now;
+    drawPartnerHUD();
     if (!nodes) nodes = Object.fromEntries([
         'hud-hp','hud-hp-text','hud-hp-track','hud-xp','hud-xp-track',
         'hud-level','hud-stage','hud-time','hud-score','hud-build',
