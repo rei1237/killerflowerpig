@@ -1,4 +1,5 @@
 import { BOSS_XP_GEMS, bossGemValue } from '../src/data/boss-rewards.js';
+import { FIELD_ITEM } from '../src/game/field-items.js';
 // 재현 가능한 벤치마크: 변이·보물 상자 난수 스트림을 고정한다 (Math.random 과 분리된 스트림이라 시드로는 재현되지 않는다).
 import { affixRandom } from '../src/game/affixes.js';
 import { treasureRandom } from '../src/game/coin-drops.js';
@@ -113,7 +114,9 @@ function scoreCard(c, mode) {
     return -1;
 }
 
-export function simulatePlan({ rows, collection = .85, mode = 'planned', seed = 1, chestFirst = true } = {}) {
+// 필드 보급품: 1P 구역 지도마다 하나, 주우면 장비 선택 1회.
+export const fieldCachesPerStage = () => FIELD_ITEM.perStage;
+export function simulatePlan({ rows, collection = .85, mode = 'planned', seed = 1, chestFirst = true, fieldCaches = true } = {}) {
     if (!Array.isArray(rows) || rows.length !== 10) throw Error('Exactly ten XP rows required');
     const original = Math.random; Math.random = seeded(seed);
     try {
@@ -147,6 +150,7 @@ export function simulatePlan({ rows, collection = .85, mode = 'planned', seed = 
         }
         for (const row of rows) {
             G.stage = row.stage;
+            if (fieldCaches) G.pendingLevelUps += fieldCachesPerStage(row.stage);
             processXP(row.waveXP * collection);
             fuseReady(mode, log.fusions);
             const beforeBoss = build();
@@ -196,7 +200,7 @@ export function makeBossBuildFixtures() {
     const rows = estimateWaveXP({ residency: 16, seed: 7 });
     const specs = [['mid invested/evolved build', 'planned', 1, 5], ['late two-final build', 'twoFinal', 101, 10],
         ['late three-final build', 'planned', 101, 10], ['late absolute plus one final', 'absolute', 101, 10], ['late Butcher sword-wheel route', 'butcher', 101, 10]];
-    return { method: 'Actual rollChoices/rollBossChest; 16s ordinary/48s elite synthetic residency, 85% collected XP, spawn seed7, chest before boss XP, no permanent purchases. Pre-boss snapshots.',
+    return { method: 'Actual rollChoices/rollBossChest; 16s ordinary/48s elite synthetic residency, 85% collected XP, spawn seed7, chest before boss XP, one field supply cache per stage, no permanent purchases. Pre-boss snapshots.',
         builds: specs.map(([name, mode, seed, stage]) => ({ name, mode, seed, stage, distance: 130,
             ...simulatePlan({ rows, collection: .85, mode, seed }).stages[stage - 1].beforeBoss })) };
 }

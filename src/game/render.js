@@ -1,4 +1,5 @@
 import { drawEncirclement, updateEncirclementCamera } from './encirclement.js';
+import { drawFieldItemPointer } from './field-items.js';
 import { drawPartner, drawPartnerShadow, drawPartnerEffects } from './coop.js';
 import { drawPets } from './pets.js';
 // 월드 렌더링. 캔버스 1장, 레이어 순서로 그리며 화면 밖 객체는 컬링.
@@ -235,6 +236,7 @@ export function render(dt) {
     // 8~9. 파티클, 숫자
     drawParticles(ctx, vx0, vy0, vx1, vy1);
     drawTexts(ctx, vx0, vy0, vx1, vy1);
+    drawFieldItemPointer(ctx, cam, G.view);
     drawFocusMarker(vx0, vy0, vx1, vy1);
 
     // 플레이어 주변 약한 빛 (가산)

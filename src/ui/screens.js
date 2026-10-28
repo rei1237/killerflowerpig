@@ -1,4 +1,5 @@
 import { bossCoinValue, treasureCoinValue, TREASURE_DROPS } from '../game/coin-drops.js';
+import { initMinimap } from './minimap.js';
 import { initPartnerUI, presentPartnerLevelUp } from './partner-panel.js';
 import { renderPetUpgradeShop } from './pet-upgrade-shop.js';
 import { initBestiary, openBestiary, closeBestiary } from './bestiary.js';
@@ -913,6 +914,7 @@ export function initUI() {
     initFusionReveal({ onOpen: () => { resetInput(); openModal('fusion-reveal'); }, onClose: () => { closeModal('fusion-reveal'); resetInput(); } });
     initTechSelect({ open: () => openModal('tech-select'), close: () => closeModal('tech-select') });
     initPartnerUI({ open: id => openModal(id), close: id => closeModal(id) });
+    initMinimap();
     G.events.partnerLevelUp = () => { pendingRewardScreens.push({ type: 'partner' }); drainRewardScreens(); };
     initPractice({ onOpen: () => { resetInput(); openModal('practice'); }, onClose: () => { closeModal('practice'); resetInput(); } });
     click('btn-practice', () => openPractice());

@@ -1,0 +1,31 @@
+/* 전투 지도: 버튼 하나가 지도 자체. 탭 한 번으로 켜고(지도 펼침) 끈다(작은 알약 버튼). */
+.hud-map{pointer-events:auto;position:absolute;top:108px;right:var(--ui-right,16px);display:flex;flex-direction:column;align-items:center;gap:4px;
+  min-height:0!important;padding:6px;border-radius:14px;border:1px solid #53626a99;background:#0d161dd9;color:#c9d6dd;font:600 10px var(--font-kr,sans-serif);cursor:pointer;
+  box-shadow:0 8px 22px #0004}
+.hud-map canvas{display:block;width:168px;height:168px;border-radius:50%}
+.hud-map .map-label{display:flex;align-items:center;gap:5px}
+.hud-map .map-ico{font-size:13px}
+.hud-map kbd{font:700 9px ui-monospace,monospace;color:#93a3ae;border:1px solid #53626a;border-radius:3px;padding:0 4px}
+.hud-map .map-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 6px;max-width:170px;font-size:9px;color:#93a3ae}
+.hud-map .map-legend i{display:inline-block;width:7px;height:7px;margin-right:2px;border-radius:50%;vertical-align:-1px}
+.lg-p1{background:#ff8fb0}.lg-p2{background:#c9a7ff}.lg-item{background:#ffe28a;border-radius:1px!important;transform:rotate(45deg)}
+.lg-chest{background:#ffd76a;border-radius:1px!important}.lg-boss{background:#ff2244}
+.hud-map:hover,.hud-map:focus-visible{border-color:#9fc3b3}
+.hud-map.is-off{padding:8px 12px;border-radius:999px}
+.hud-map.is-off canvas,.hud-map.is-off .map-legend{display:none}
+.battle-hud:not(.is-coop) .hud-map .lg-p2-item{display:none}
+/* 휴대폰 세로: 오른쪽 아래(아이템 조합 버튼 위), 작은 지도 */
+@media (max-width:700px) and (orientation:portrait){
+  /* 보스 체력 바(아래 70px)를 피해 그 위에 둔다 */
+  .hud-map{top:auto;bottom:calc(var(--ui-bottom,12px) + 112px);right:var(--ui-right,12px);padding:4px;border-radius:12px}
+  .hud-map canvas{width:112px;height:112px}
+  .hud-map .map-legend,.hud-map kbd{display:none}
+  .hud-map .map-label{font-size:9px}
+}
+/* 가로 휴대폰: 높이가 낮아 지도를 더 작게 */
+@media (max-height:520px) and (orientation:landscape){
+  .hud-map{top:auto;bottom:calc(var(--ui-bottom,8px) + 64px);padding:4px}
+  .hud-map canvas{width:96px;height:96px}
+  .hud-map .map-legend,.hud-map kbd{display:none}
+}
+.hud-map .map-supply{padding:1px 6px;border-radius:999px;background:#3a2c18;border:1px solid #ffe28a88;color:#ffe28a;font:700 9px var(--font-kr,sans-serif)}

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { SHOP } from '../src/data/shop.js';
 import { RELICS, RELIC_CHEST } from '../src/data/relics.js';
 import { PICKUP_ASSIST } from '../src/game/pickups.js';
-import { xpForLevel } from '../src/game/progression.js';
+import { xpForLevel, LEVEL_COST_MULTIPLIER as M } from '../src/game/progression.js';
 const price = id => SHOP.find(i=>i.id===id).cost[0];
 test('strong enemy rewards stay unchanged while permanent purchases require saving',async()=>{
  const {coinTier,bossCoinValue}=await import('../src/game/coin-drops.js');
@@ -18,9 +18,11 @@ test('coin and XP collection are friendlier without expanding chest/bomb activat
 });
 test('tech progression requires more XP with steeper late growth',()=>{
  // 5·10·13·18·27레벨부터 단계적으로 가팔라지는 '쉬움' 기준 곡선 (보통 ×2.0 등 난이도 배율은 별도)
- const ref=lv=>12+(lv-1)*12+Math.max(0,lv-4)*10+Math.max(0,lv-9)*18+Math.max(0,lv-12)*40+Math.max(0,lv-17)*90+Math.max(0,lv-26)*140;
- assert.equal(xpForLevel(1),12);assert.equal(xpForLevel(4),48);assert.equal(xpForLevel(10),ref(10));
- const firstThree=[1,2,3].reduce((sum,level)=>sum+xpForLevel(level),0);assert.equal(firstThree,12+24+36);
+ // 레벨업 추가 난이도(LEVEL_COST_MULTIPLIER)가 곡선 전체에 곱해진다
+ assert.ok(M>1);
+ const ref=lv=>Math.round((12+(lv-1)*12+Math.max(0,lv-4)*10+Math.max(0,lv-9)*18+Math.max(0,lv-12)*40+Math.max(0,lv-17)*90+Math.max(0,lv-26)*140)*M);
+ assert.equal(xpForLevel(1),ref(1));assert.equal(xpForLevel(4),ref(4));assert.equal(xpForLevel(10),ref(10));
+ const firstThree=[1,2,3].reduce((sum,level)=>sum+xpForLevel(level),0);assert.equal(firstThree,ref(1)+ref(2)+ref(3));
  for(let lv=3;lv<=40;lv++)assert.ok(xpForLevel(lv)-xpForLevel(lv-1)>=xpForLevel(lv-1)-xpForLevel(lv-2),`convex at ${lv}`);
  // 기울기는 5·10·13·18·27레벨에서 정확히 한 단계씩 가팔라진다
  const slope=lv=>xpForLevel(lv)-xpForLevel(lv-1);

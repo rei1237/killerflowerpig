@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="src/ui/tech-select.css">
     <link rel="stylesheet" href="src/ui/cosmetic-shop.css">
     <link rel="stylesheet" href="src/ui/partner.css">
+    <link rel="stylesheet" href="src/ui/minimap.css">
     <link rel="stylesheet" href="src/ui/mobile.css">
 </head>
 <body>
@@ -148,6 +149,11 @@
             <div class="operation-progress"><span id="hud-countdown"></span><div><i id="hud-stage-progress"></i></div></div>
             <div id="hud-build" class="hud-build" aria-label="현재 장비"></div>
             <div id="hud-boss" class="hud-boss" hidden><img id="hud-boss-portrait" alt=""><span id="hud-boss-name"></span><div class="boss-track"><div id="hud-boss-hp"></div></div></div>
+            <button id="btn-map" class="hud-map" type="button" aria-pressed="true" aria-keyshortcuts="M" title="지도 켜기/끄기 (M)">
+                <canvas id="minimap" width="168" height="168" aria-hidden="true"></canvas>
+                <span class="map-label"><span class="map-ico" aria-hidden="true">🗺</span><span id="map-state">지도 끄기</span><b id="map-supply" class="map-supply" hidden></b><kbd>M</kbd></span>
+                <span class="map-legend" aria-hidden="true"><span><i class="lg-p1"></i>연이</span><span class="lg-p2-item"><i class="lg-p2"></i>영냥이</span><span><i class="lg-item"></i>보급</span><span><i class="lg-chest"></i>상자</span><span><i class="lg-boss"></i>보스</span></span>
+            </button>
             <button id="btn-fusion" class="fusion-hud btn" type="button">아이템 조합 <span>레시피 확인</span></button>
             <div id="hud-partner" class="partner-card" hidden>
                 <button id="btn-partner" class="partner-face" type="button" aria-label="영냥이 성장·조합표 열기"><img src="asset/sprites/coop-yeongnyang-badge.webp" alt="" width="192" height="192"><b id="hud-partner-level">Lv.1</b></button>

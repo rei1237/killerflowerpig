@@ -74,7 +74,8 @@ test('the final boss reward cannot retroactively become the build used against t
     assert.notEqual(run.stages[9].beforeBoss, run.stages[9].afterReward);
     assert.ok(run.stages[9].afterReward.level >= run.stages[9].beforeBoss.level);
     const none = rows.map(r => ({ ...r, waveXP: 0, bossXP: 0 }));
-    const noChoices = simulatePlan({ rows: none, seed: 1 });
+    // 경험치도 필드 보급품도 없으면 선택은 0회
+    const noChoices = simulatePlan({ rows: none, seed: 1, fieldCaches: false });
     assert.equal(noChoices.choices, 0);
     assert.equal(noChoices.fusions.length, 0, 'chests alone cannot discover missing weapons or passives');
     assert.equal(noChoices.stages[9].beforeBoss.weapons.length, 1);
@@ -82,6 +83,6 @@ test('the final boss reward cannot retroactively become the build used against t
 });
 
 test('Butcher receives the actual two weapons and passive once without invented choice investment',()=>{
- const none=rows.map(r=>({...r,waveXP:0,bossXP:0}));const run=simulatePlan({rows:none,mode:'butcher'});
+ const none=rows.map(r=>({...r,waveXP:0,bossXP:0}));const run=simulatePlan({rows:none,mode:'butcher',fieldCaches:false});
  assert.equal(run.initialInvestment,3);assert.equal(run.choices,0);assert.deepEqual(run.stages[0].beforeBoss.weapons.map(w=>[w.id,w.level]),[['sword',1],['saw',1]]);assert.deepEqual(run.stages[0].beforeBoss.passives,{whet:1});
 });

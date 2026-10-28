@@ -80,12 +80,14 @@ function restoreChoiceState(value) {
     G.rerolls = G.choiceSession?.remaining ?? 0;
 }
 
+// 레벨업 추가 난이도: 구역마다 놓인 필드 보급품(src/game/field-items.js)이 장비 선택을 따로 주는 대신 경험치 레벨업은 3배 비싸다.
+export const LEVEL_COST_MULTIPLIER = 3;
 export function xpForLevel(lv) {
     // 레벨업 비용: 구간(20, 35)마다 가팔라지는 '쉬움' 기준 곡선 × 난이도 배율.
     // 레벨업은 매우 힘들어야 한다: 5·10·13·18·27레벨부터 단계적으로 가팔라진다.
     const base = 12 + (lv - 1) * 12 + Math.max(0, lv - 4) * 10 + Math.max(0, lv - 9) * 18
         + Math.max(0, lv - 12) * 40 + Math.max(0, lv - 17) * 90 + Math.max(0, lv - 26) * 140;
-    return Math.round(base * difficultyOf(G.difficulty).xpMul);
+    return Math.round(base * LEVEL_COST_MULTIPLIER * difficultyOf(G.difficulty).xpMul);
 }
 
 export function addXP(v) {

@@ -1,4 +1,5 @@
 import { hasRunReward } from '../core/run-rewards.js';
+import { FIELD_ITEM, claimFieldItem, drawFieldItem } from './field-items.js';
 import { addPartnerXP, partnerMagnet } from './coop.js';
 import { PARTNER_XP } from '../data/partner-kit.js';
 // 경험치 젬 + 필드 아이템(고기/자석/다이너마이트/관 상자)
@@ -164,6 +165,12 @@ export function updatePickups(dt) {
         it.t += dt;
         const dx = p.x - it.x, dy = py - it.y;
         const d = Math.hypot(dx, dy) || 1;
+        // 필드 보급품: 끌려오지 않는다. 1P나 2P가 직접 밟아야 한다.
+        if (it.kind === FIELD_ITEM.kind) {
+            const byPartner = !!q && Math.hypot(q.x - it.x, qy - it.y) < FIELD_ITEM.reach;
+            if ((!p.dead && d < FIELD_ITEM.reach) || byPartner) { claimFieldItem(it, byPartner && d >= FIELD_ITEM.reach); pk.release(i); }
+            continue;
+        }
         if (it.kind === 'meat' && (p.dead || p.hp >= p.maxHp)) { it.pull = false; it.speed = 0; continue; }
         if (!it.pull && d < (it.kind === 'coin' ? mr * PICKUP_ASSIST.coinMultiplier * collection : Math.max(40, mr * 0.6))) it.pull = true;
         // 보스 관은 잠시 후 플레이어에게 끌려옴 (놓치지 않게)
@@ -203,6 +210,7 @@ export function drawPickups(ctx, vx0, vy0, vx1, vy1) {
             ctx.fillStyle = '#fff2b3'; ctx.fillRect(-1, -5, 2, 8);
             ctx.restore(); continue;
         }
+        if (it.kind === FIELD_ITEM.kind) { drawFieldItem(ctx, it, t, glow); continue; }
         const bob = Math.sin(t * 3 + i) * 2;
         if (it.kind === 'bomb') { drawDynamite(ctx, it.x, it.y, t, bob); continue; }
         const img = it.kind === 'meat' ? fx.meat : it.kind === 'magnet' ? fx.magnet : fx.chest;

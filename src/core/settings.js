@@ -11,6 +11,7 @@ const DEFAULTS = {
     bgm: 0.5,
     sfx: 0.6,
     quality: 'auto',      // auto | high | low
+    minimap: true,        // 전투 지도 (탭 한 번 / M 키로 켜고 끔)
 };
 
 function load() {
