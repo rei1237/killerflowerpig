@@ -1,17 +1,20 @@
-// 필드 보급품: 레벨업이 비싸진 대신(경험치 ×3), 구역 지도마다 장비 보급품이 하나씩 놓인다(2P는 두 사람 몫으로 2개, 한 번에 하나씩).
-// 직접 걸어가 주우면 장비 선택 1회(2P 영냥이가 주우면 영냥이 성장 선택 1회).
-// 런 전체 선택 횟수는 이전(경험치만)과 비슷하게 맞췄다: tools/run-progression-audit.mjs 기준 33.6 → 34.7회.
+// 필드 보급품: 레벨업이 매우 비싸진 대신(경험치 ×60), 구역 지도마다 장비 보급품이 3개 놓인다(1·2구역 2개, 2P는 +2). 한 번에 하나씩 나타난다.
+// 직접 걸어가 주우면 장비 선택 1회(2P 영냥이가 주우면 영냥이 성장 선택 1회). 성장하려면 지도를 보고 찾아가야 한다.
+// tools/run-progression-audit.mjs 기준 런당 선택 약 37회 중 보급품 28회 · 경험치 약 9회.
 // 지도(미니맵)와 화면 가장자리 화살표가 위치를 알려 준다.
 import { G } from './state.js';
 import { dropPickup } from './pickups.js';
 import { floatText, sparks } from './effects.js';
 import { audio } from '../core/audio.js';
 
-export const FIELD_ITEM = Object.freeze({ kind: 'cache', firstDelay: 12, respawn: 25, perStage: 1, coopPerStage: 2, minDistance: 520, maxDistance: 1050, reach: 26 });
+export const FIELD_ITEM = Object.freeze({ kind: 'cache', firstDelay: 10, respawn: 18, perStage: 3, coopBonus: 2, minDistance: 520, maxDistance: 1050, reach: 26 });
+// 구역별 보급품 수: 짧은 1·2구역은 2개(초반 2구역 보스 상자 진화 폭주 방지), 3구역부터 3개. 2P는 +2.
+export const FIELD_ITEMS_BY_STAGE = Object.freeze([0, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3]);
+export const fieldItemsForStage = (stage, coop = false) => (FIELD_ITEMS_BY_STAGE[stage] ?? FIELD_ITEM.perStage) + (coop ? FIELD_ITEM.coopBonus : 0);
 let timer = FIELD_ITEM.firstDelay, spawned = 0;
 
 export function resetFieldItems() { timer = FIELD_ITEM.firstDelay; spawned = 0; }
-export const fieldItemsPerStage = () => G.coop ? FIELD_ITEM.coopPerStage : FIELD_ITEM.perStage;
+export const fieldItemsPerStage = () => fieldItemsForStage(G.stage, !!G.coop);
 export const fieldItemsLeft = () => Math.max(0, fieldItemsPerStage() - spawned) + (fieldItem() ? 1 : 0);
 export function fieldItem() {
     for (let i = 0; i < G.pickups.count; i++) if (G.pickups.items[i].kind === FIELD_ITEM.kind) return G.pickups.items[i];

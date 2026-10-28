@@ -11,10 +11,10 @@ import './helpers/fixed-variants.mjs'; // 변이·보물 난수 스트림 고정
 test('restored King preserves legal two-final growth and full frenzy challenge with current legendary/focus',t=>{
  const rows=estimateWaveXP({residency:16,seed:7});
  const snapshot=simulatePlan({rows,mode:'twoFinal',seed:101,collection:.85}).stages[8].beforeBoss;
- // 레벨업 경험치 ×3 + 구역마다 보급품 1개 이후 9스테이지 직전: 레벨 23, 최종 무기 1개 (이전 레벨 31)
- assert.ok(snapshot.level>=20&&snapshot.level<=45);assert.equal(snapshot.finals,1);assert.equal(snapshot.absolutes,0);
+ // 레벨업 경험치 ×60 + 구역마다 보급품(1·2구역 2개, 이후 3개) 이후 9스테이지 직전: 레벨 8, 최종 무기 1개 (성장은 대부분 보급품에서)
+ assert.ok(snapshot.level>=5&&snapshot.level<=45);assert.equal(snapshot.finals,1);assert.equal(snapshot.absolutes,0);
  assert.ok(snapshot.weapons.length<=6&&Object.keys(snapshot.passives).length<=6);
- assert.equal(bossMaxHp(9),24000*7*2.0); // 336000: 보스 HP 진화 배율 BOSS_EVOLUTION_HP[9]=2.0 (총기 강화 후 광폭 단계 보장)
+ assert.ok(Math.abs(bossMaxHp(9)-24000*7*2.8)<1e-6); // 470400: 보스 HP 진화 배율 BOSS_EVOLUTION_HP[9]=2.8 (보급품 3개로 장비가 일찍 모여 2.0→2.8, 광폭 단계 보장)
  const scenario={...snapshot,stage:9,name:'pre-stage-9 late build',weapons:snapshot.weapons.map(w=>[w.id,w.level,w.evolved])};
  const previous=save.upgrades.lotus_gun;
  const all=[];
