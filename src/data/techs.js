@@ -74,9 +74,10 @@ export const TECHS = Object.freeze({
         ],
     },
     plague: {
-        strength: '빠른 투척·지속 장판·둔화로 통로 장악', weakness: '진화 전 근접·원거리 압박에 약하고 장판 이탈 시 지속 피해가 끊김',
+        strength: '빠른 투척·지속 장판·둔화로 통로 장악, 절대 무기는 몸을 감싸는 역병 소용돌이', weakness: '진화 전 장판 피해가 약해(-20%) 초반 근접·원거리 압박에 취약하고 장판 이탈 시 지속 피해가 끊김',
         base: { armor: 0.5, speed: 0.05 },
-        name: '역병 화염', icon: '🔥', color: '#ffb36b', power: 0.85,
+        // 초반 과잉 화력 하향: 진화 전 계열 무기 피해 ×0.8 (진화·조합·절대 무기는 그대로)
+        name: '역병 화염', icon: '🔥', color: '#ffb36b', power: 0.85, unevolvedPower: 0.8,
         summary: '빠른 투척과 지속 장판·둔화로 통로를 장악하는 테크',
         start: { weapon: 'molotov', weapons: ['molotov', 'gas'], passive: 'spread' },
         family: { weapons: ['molotov', 'gas', 'cannon'], passives: ['spread', 'sap', 'hide'] },
@@ -88,8 +89,9 @@ export const TECHS = Object.freeze({
             7: { label: '역병 각인 III · 장판 피해 +30%', mod: { dmg: 0.3 } },
         },
         tiers: [
-            { label: '투척 +1 · 장판 지속 +20% · 재사용 -15% · 둔화 +20%', weapon: { amount: 1, duration: 0.2, cd: -0.15, slow: 0.2 } },
-            { label: '장판 범위 +15% · 둔화 +10%', weapon: { area: 0.15, slow: 0.1 } },
+            // 출격 즉시 열리는 1단계가 너무 강했다: 투척 +1 은 2단계로 미루고 재사용·지속·둔화 폭을 줄였다.
+            { label: '장판 지속 +15% · 재사용 -8% · 둔화 +15%', weapon: { duration: 0.15, cd: -0.08, slow: 0.15 } },
+            { label: '투척 +1 · 장판 범위 +15% · 둔화 +10%', weapon: { amount: 1, area: 0.15, slow: 0.1 } },
             { label: '장판 피해 +35%', weapon: { dmg: 0.35 } },
         ],
     },

@@ -1,5 +1,6 @@
 // Timed, non-damaging poison-fog enclosure. All clocks advance with gameplay only.
 import { G, emit } from './state.js';
+import { cameraFocus } from './coop.js';
 
 export const ENCIRCLEMENT = Object.freeze({ minStage: 5, warning: 2, active: 7, cooldown: 90, radius: 230 });
 export function clearEncirclement() { G.encirclement = null; }
@@ -17,6 +18,11 @@ export function startEncirclement() {
 export function constrainEncirclementPlayer() {
     const ring = G.encirclement, p = G.player;
     if (!ring || ring.phase !== 'active' || !valid()) return false;
+    // 2P 영냥이도 같은 안개 벽 안에 갇힌다.
+    if (G.coop && G.partner && !G.partner.dead) constrainInside(ring, G.partner);
+    return constrainInside(ring, p);
+}
+function constrainInside(ring, p) {
     const dx = p.x - ring.x, dy = p.y - ring.y, distance = Math.hypot(dx, dy);
     const limit = Math.max(0, ring.radius - (p.radius || 10));
     if (distance <= limit) return false;
@@ -54,9 +60,9 @@ export function updateEncirclementCamera(dt) {
         return ring.phase === 'active';
     }
     if (p) {
-        const k = Math.min(1, Math.max(0, dt) * 10);
-        cam.x += (p.x - cam.x) * k;
-        cam.y += (p.y - 20 - cam.y) * k;
+        const k = Math.min(1, Math.max(0, dt) * 10), focus = cameraFocus(p);
+        cam.x += (focus.x - cam.x) * k;
+        cam.y += (focus.y - 20 - cam.y) * k;
     }
     return false;
 }

@@ -267,7 +267,7 @@ test('plague ordinary fire and evolved trail actually carry their disclosed slow
         const w = Object.assign(createWeapon('molotov', 0), { cd: 0, evolved, level: evolved ? 8 : 1 });
         G.weapons = [w]; G.passives = { spread: 1 }; recomputeStats();
         const stats = weaponStats(w);
-        close(stats.slow, evolved ? .3 : .2);
+        close(stats.slow, evolved ? .25 : .15); // 역병 1단계 둔화 +15% (초반 하향)
         G.player.vx = evolved ? 1 : 0;
         fixedRandom(.99, () => {
             updateWeapons(.01);

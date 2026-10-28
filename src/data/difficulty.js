@@ -19,6 +19,14 @@ export const DIFFICULTIES = Object.freeze({
         enemy: { hp: 2.3, dmg: 1.5, speed: 1.12, champion: 2.4 }, elite: { hp: 2, dmg: 1.4, affixes: 2, count: 1 }, boss: { hp: 1.5, dmg: 1.35 },
         desc: '레벨업 경험치 ×5.5 · 보스 상자 강화 최소화 · 청토끼 체력 ×2.3, 엘리트 능력 +2·출현 +1. 모든 선택이 생사를 가릅니다.' },
 });
+// 2P 협동 압박: 두 사람이 싸우는 만큼 적이 2배 넘게 몰려오고 더 단단하고 아프다 (모든 난이도 위에 곱한다).
+// - count: 목표 밀도·대군/포위/러시 규모·구역 동시 상한 배율. caps: 기기 성능 상한(G.caps.enemies) 배율.
+// - hp/dmg/speed: 모든 필드 적(엘리트 포함). eliteCount: 엘리트 이벤트 동시 출현 추가. boss: 보스 체력/피해.
+// - xp: 적이 2배 이상이라 한 마리당 경험치를 줄여 레벨업 속도가 1.3배 정도로만 빨라지게 한다.
+export const COOP_PRESSURE = Object.freeze({ count: 2.2, caps: 1.6, hp: 1.5, dmg: 1.25, speed: 1.05, eliteCount: 1, boss: Object.freeze({ hp: 1.4, dmg: 1.15 }), xp: 0.6 });
+export const coopPressure = () => G_COOP.on ? COOP_PRESSURE : null;
+// state.js 를 직접 가져오면 순환 참조가 생기므로 G.coop 값을 여기로 동기화한다 (game.js setCoop).
+export const G_COOP = { on: false };
 export const DIFFICULTY_ORDER = Object.freeze(['easy', 'normal', 'hard', 'hell']);
 export const DEFAULT_DIFFICULTY = 'easy';
 export const difficultyOf = id => DIFFICULTIES[id] || DIFFICULTIES[DEFAULT_DIFFICULTY];

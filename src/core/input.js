@@ -1,4 +1,5 @@
-// 입력: 키보드(WASD/방향키) + 플로팅 가상 조이스틱(터치/마우스 드래그, 화면 어디서나)
+// 입력: 키보드(WASD/방향키) + 플로팅 가상 조이스틱(터치/마우스 드래그, 화면 어디서나) + 게임패드
+// 2P 협동(split)일 때: WASD = 1P, 방향키 = 2P. 게임패드는 1개면 2P(추가 컨트롤러), 2개 이상이면 첫째 1P · 둘째 2P.
 const keys = new Set();
 let gesture = null;
 const initialized = new WeakSet();
@@ -12,6 +13,7 @@ export function joystickVector(dx, dy, radius = 56, dead = 6) {
     const magnitude = Math.min(1, length / radius);
     return { x: dx / length * magnitude, y: dy / length * magnitude };
 }
+const P1_KEYS = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD']);
 const MOVE_KEYS = {
     KeyW: [0, -1], ArrowUp: [0, -1],
     KeyS: [0, 1], ArrowDown: [0, 1],
@@ -21,6 +23,10 @@ const MOVE_KEYS = {
 
 export const input = {
     move: { x: 0, y: 0 },
+    move2: { x: 0, y: 0 },
+    split: false,
+    // 게임패드 이동 (polled). 0이 아니면 키보드보다 우선한다.
+    pad: [{ x: 0, y: 0 }, { x: 0, y: 0 }],
     joy: { active: false, id: -1, ox: 0, oy: 0, x: 0, y: 0, radius: 56 },
     onPause: null,
     onConfirm: null,
@@ -28,16 +34,60 @@ export const input = {
     enabled: false,
 };
 
+function normalize(out, x, y) {
+    const len = Math.hypot(x, y);
+    out.x = len ? x / len : 0;
+    out.y = len ? y / len : 0;
+}
 function updateKeyboardMove() {
-    if (input.joy.active) return;
-    let x = 0, y = 0;
+    let x = 0, y = 0, x2 = 0, y2 = 0;
     for (const k of keys) {
         const v = MOVE_KEYS[k];
-        if (v) { x += v[0]; y += v[1]; }
+        if (!v) continue;
+        if (input.split && !P1_KEYS.has(k)) { x2 += v[0]; y2 += v[1]; }
+        else { x += v[0]; y += v[1]; }
     }
+    normalize(input.move2, x2, y2);
+    if (!input.joy.active) normalize(input.move, x, y);
+}
+export function setSplitInput(split) {
+    input.split = !!split;
+    updateKeyboardMove();
+}
+
+// 게임패드: 왼쪽 스틱 또는 방향 패드. 시작(9)·선택(8) 버튼은 일시정지.
+export const PAD_DEAD_ZONE = 0.22;
+export function padVector(pad) {
+    if (!pad) return { x: 0, y: 0 };
+    let x = pad.axes?.[0] || 0, y = pad.axes?.[1] || 0;
+    const b = i => !!pad.buttons?.[i]?.pressed;
+    if (b(12)) y -= 1; if (b(13)) y += 1; if (b(14)) x -= 1; if (b(15)) x += 1;
     const len = Math.hypot(x, y);
-    input.move.x = len ? x / len : 0;
-    input.move.y = len ? y / len : 0;
+    if (len < PAD_DEAD_ZONE) return { x: 0, y: 0 };
+    const mag = Math.min(1, (len - PAD_DEAD_ZONE) / (1 - PAD_DEAD_ZONE));
+    return { x: x / len * mag, y: y / len * mag };
+}
+// 연결 순서대로 [1P 패드, 2P 패드]. split(2P)일 때 패드 1개는 2P 전용 추가 컨트롤러.
+export function assignPads(pads, split) {
+    const list = (pads || []).filter(p => p && p.connected !== false);
+    if (!split) return [list[0] || null, null];
+    return list.length >= 2 ? [list[0], list[1]] : [null, list[0] || null];
+}
+const pausePressed = [false, false];
+export function pollGamepads() {
+    const pads = typeof navigator !== 'undefined' && navigator.getGamepads ? Array.from(navigator.getGamepads()) : [];
+    const [a, b] = assignPads(pads, input.split);
+    [a, b].forEach((pad, i) => {
+        Object.assign(input.pad[i], input.enabled ? padVector(pad) : { x: 0, y: 0 });
+        const pause = !!(pad?.buttons?.[9]?.pressed || pad?.buttons?.[8]?.pressed);
+        if (pause && !pausePressed[i]) input.onPause?.();
+        pausePressed[i] = pause;
+    });
+}
+const padActive = v => v.x !== 0 || v.y !== 0;
+export function playerMove(index) {
+    if (padActive(input.pad[index])) return input.pad[index];
+    return index === 0 ? input.move : input.move2;
 }
 
 export function initInput(canvas) {
@@ -115,6 +165,8 @@ export function resetJoy() {
     input.joy.id = -1;
     input.move.x = 0;
     input.move.y = 0;
+    input.move2.x = 0;
+    input.move2.y = 0;
 }
 
 // Modal/practice boundaries must also release held keyboard state.

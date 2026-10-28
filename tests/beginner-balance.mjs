@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { STAGES, EVENTS, POPULATION_BOOST, POPULATION_SCALE } from '../src/data/stages.js';
 import { BOSSES, BOSS_HP_MULTIPLIER } from '../src/data/bosses.js';
-import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, ENEMY_DAMAGE_MULTIPLIER, SPARSE_ENEMY_HP, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, MOB_STRENGTH, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, ENEMY_TOUGHNESS_MULTIPLIER, ENEMY_DAMAGE_MULTIPLIER, SPARSE_ENEMY_HP, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, MOB_STRENGTH, stageScaling, earlyPressure } from '../src/data/enemies.js';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases } from '../src/core/assets.js';
 import { spawnEnemy } from '../src/game/enemies.js';
@@ -77,9 +77,12 @@ test('opening stages keep movement grace while sparse enemies grant compensated 
         reset(stage, STAGES[stage].duration / 2);
         const enemy = spawnEnemy('shambler', 400, 0, { noAffix: true });
         const oldHp = (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + 0.5 * IN_STAGE_HP_RAMP);
-        close(enemy.hp, ENEMIES.shambler.hp * oldHp * multipliers[0] * ENEMY_TOUGHNESS_MULTIPLIER * SPARSE_ENEMY_HP[stage] * MOB_STRENGTH.hp);
-        close(enemy.speed, ENEMIES.shambler.speed * (1 + (stage - 1) * 0.035) * multipliers[1]);
-        close(enemy.dmg, ENEMIES.shambler.dmg * (1 + (stage - 1) * 0.24) * multipliers[2] * ENEMY_DAMAGE_MULTIPLIER * MOB_STRENGTH.dmg);
+        // 초반 압박 강화(EARLY_STAGE_PRESSURE)가 기존 완화 곡선 위에 곱해진다
+        const early = earlyPressure(stage);
+        assert.ok(early.hp > 1 && early.dmg > 1);
+        close(enemy.hp, ENEMIES.shambler.hp * oldHp * multipliers[0] * ENEMY_TOUGHNESS_MULTIPLIER * SPARSE_ENEMY_HP[stage] * MOB_STRENGTH.hp * early.hp);
+        close(enemy.speed, ENEMIES.shambler.speed * (1 + (stage - 1) * 0.035) * multipliers[1] * early.speed);
+        close(enemy.dmg, ENEMIES.shambler.dmg * (1 + (stage - 1) * 0.24) * multipliers[2] * ENEMY_DAMAGE_MULTIPLIER * MOB_STRENGTH.dmg * early.dmg);
         // 적 수를 줄인 만큼(MOB_STRENGTH.xp) 1마리당 XP를 다시 올렸다
         close(enemy.xp, ENEMIES.shambler.xp * (1 + (stage - 1) * 0.15) * STAGE_XP_YIELD * MOB_STRENGTH.xp);
         assert.equal(enemy.tint, ENEMIES.shambler.tint);
@@ -177,11 +180,12 @@ test('later-stage damage, speed, event timing and legacy charges remain while po
         assert.equal(STAGES[stage].events, undefined);
         for (const t of [0, duration / 2, duration, duration + 10]) {
             const prog = Math.min(1, t / duration);
+            const early = earlyPressure(stage);
             assert.deepEqual(stageScaling(stage, t, duration), {
-                // 4스테이지부터 LATE_STAGE_SCALING만큼 추가 강화 (3스테이지는 late=0으로 기존 곡선)
-                hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * ENEMY_TOUGHNESS_MULTIPLIER * SPARSE_ENEMY_HP[stage] * (1 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.hp),
-                speed: 1 + (stage - 1) * 0.035 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.speed,
-                dmg: (1 + (stage - 1) * 0.24 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.dmg) * ENEMY_DAMAGE_MULTIPLIER,
+                // 4스테이지부터 LATE_STAGE_SCALING만큼 추가 강화 (3스테이지는 late=0으로 기존 곡선), 1~4구역은 초반 압박 배율
+                hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * ENEMY_TOUGHNESS_MULTIPLIER * SPARSE_ENEMY_HP[stage] * (1 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.hp) * early.hp,
+                speed: (1 + (stage - 1) * 0.035 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.speed) * early.speed,
+                dmg: (1 + (stage - 1) * 0.24 + Math.max(0, stage - 3) * LATE_STAGE_SCALING.dmg) * ENEMY_DAMAGE_MULTIPLIER * early.dmg,
                 xp: (1 + (stage - 1) * 0.15) * STAGE_XP_YIELD,
             });
         }

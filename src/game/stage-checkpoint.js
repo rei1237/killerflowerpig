@@ -16,6 +16,7 @@ export function validateStageCheckpoint(raw){
  s.banished=(Array.isArray(s.banished)?s.banished:[]).filter(id=>Object.hasOwn(WEAPONS,id)||Object.hasOwn(PASSIVES,id));
  s.difficulty=Object.hasOwn(DIFFICULTIES,s.difficulty)?s.difficulty:'easy';
  s.consumedItems=(Array.isArray(s.consumedItems)?s.consumedItems:[]).filter(id=>Object.hasOwn(WEAPONS,id)&&!WEAPONS[id].fusionOnly);
+ s.coop=raw.coop===true;
  s.checkpointVersion=2;s.retry=raw.retry===true;
  return s;
 }

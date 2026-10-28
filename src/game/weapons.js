@@ -14,7 +14,7 @@ import { WEAPONS, tierPower, CANNON_IMPACT_MULTIPLIER, CANNON_MISMATCH_DAMAGE, C
 import { fx, glow, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { hitEnemy } from './enemies.js';
-import { spawnHazard, limitFriendlyFields } from './hazards.js';
+import { spawnHazard, limitFriendlyFields, findVortex, VORTEX } from './hazards.js';
 import { sparks, petals, embers, shake, floatText } from './effects.js';
 import { healPlayer } from './player.js';
 import { preferredTarget, focusedTarget } from './targeting.js';
@@ -307,6 +307,34 @@ export function orbitStats(w, s) {
 const fieldCap = (s, id) => WEAPONS[id]?.fusionOnly ? Infinity : Math.max(3, Math.round(s.amount) + 2);
 export function hellfireTrailStats(s) { return { radius: 64 * s.area, duration: Math.min(10, 6 * (s.durationScale || 1)), dmg: s.dmg * 0.6, tick: 0.3, slow: s.slow || 0 }; }
 export function emberFieldStats(s) { return { ...s, dmg: s.dmg * 0.16, amount: Math.min(2, s.amount), duration: Math.min(6, 3 * (s.durationScale || 1)), radius: 54, tick: 0.3 }; }
+// 역병 종언 소용돌이: 플레이어를 따라다니는 1개만 유지. 무기가 사라지면 몇 초 뒤 스스로 꺼진다.
+export const PLAGUE_VORTEX_RADIUS = 1.6, PLAGUE_PLUME_RADIUS = 0.8, PLAGUE_PLUME_PULL = 90, PLAGUE_VORTEX_MAX = 260, PLAGUE_PLUME_MAX = 110;
+function ensurePlagueVortex(w, s) {
+    const owner = ownerId(w), p = G.player;
+    let v = findVortex(owner);
+    if (!v) v = spawnHazard('vortex', p.x, p.y, { radius: 1, duration: 1, tick: s.tick, weapon: owner, follow: true });
+    v.radius = Math.min(PLAGUE_VORTEX_MAX, s.radius * s.area * PLAGUE_VORTEX_RADIUS); v.dmg = s.dmg; v.slow = s.slow; v.tick = s.tick;
+    v.duration = v.t + s.cd + 1.5;
+    return v;
+}
+function spawnPlume(w, s, x, y, element) {
+    const p = G.player, owner = ownerId(w);
+    animateAttack(w, x - p.x, { family: 'throw' });
+    limitFriendlyFields('plume', owner, VORTEX.plumeCap);
+    spawnHazard('plume', x, y, { radius: Math.min(PLAGUE_PLUME_MAX, s.radius * s.area * PLAGUE_PLUME_RADIUS), duration: 6, dmg: s.dmg, tick: s.tick, slow: s.slow, weapon: owner,
+        element, pull: PLAGUE_PLUME_PULL, spin: element === 'gas' ? -1 : 1 });
+}
+// 역병 종언이 계승한 지옥 불꽃길·역병 안개 코어는 장판을 깔지 않고 소용돌이로 모여드는 덩어리를 만든다.
+function plagueCore(w, s) {
+    const p = G.player, element = w.id === 'gas' ? 'gas' : 'fire', n = Math.min(3, s.amount);
+    // 계승한 불꽃길·독구름의 상시 피해는 화면에 장판을 깔지 않고 소용돌이 자체에 실린다.
+    const v = findVortex(ownerId(w));
+    if (v) { if (element === 'gas') v.coreGas = s.dmg; else v.coreFire = s.dmg; }
+    for (let i = 0; i < n; i++) {
+        const e = randomEnemyNear(380, i === 0);
+        spawnPlume(w, { ...s, radius: (s.radius || 60) * .8, slow: s.slow }, e ? e.x : p.x + rand(-240, 240), e ? e.y : p.y + rand(-170, 170), element);
+    }
+}
 const FIRE = {
     sword(w, s) { fireSword(w, s); },
     sword_wheel(w, s) { fireSword(w, s); },
@@ -325,12 +353,15 @@ const FIRE = {
         for (const off of [-0.08, 0, 0.08]) shoot(w, { ...s, dmg: s.dmg * 2 }, Math.cos(base + off), Math.sin(base + off), { img: fx.rail, radius: 7, knock: 120, origin });
         shake(2); audio.sfx('zap');
     },
-    // 절대 무기: 역병 화염 — 거대한 역병 화염 장판 다발
+    // 절대 무기: 역병 종언 — 적 무리 위에서 피어오른 화염·독가스가 나선을 그리며 연이에게 모여
+    // 몸을 감싸는 하나의 역병 소용돌이로 흡수된다 (흡수할수록 소용돌이 피해 증가).
     plague_end(w, s) {
+        const p = G.player;
+        ensurePlagueVortex(w, s);
         for (let i = 0; i < s.amount; i++) {
-            const p = G.player, landing = G.tech === 'plague' ? choosePlagueLanding(p, 420, .35, i, { radius: s.radius * s.area, kind: 'fire', weapon: ownerId(w) }) : null;
+            const landing = G.tech === 'plague' ? choosePlagueLanding(p, 420, .35, i, { radius: s.radius * s.area, kind: 'fire', weapon: ownerId(w) }) : null;
             const e = landing || randomEnemyNear(420, i === 0);
-            lob(w, s, e ? e.x : p.x + rand(-220, 220), e ? e.y : p.y + rand(-170, 170), 'firegas');
+            spawnPlume(w, s, e ? e.x : p.x + rand(-260, 260), e ? e.y : p.y + rand(-190, 190), i % 2 ? 'gas' : 'fire');
         }
     },
     // 절대 무기: 처형자 — 치명타·처형 특화 관통 연사
@@ -634,8 +665,8 @@ export function updateWeapons(dt) {
             w.angle += WEAPONS.thorns.base.speed * dt;
             updateOrbit(w, orbitStats(w, s));
         }
-        // 지옥 불꽃길
-        if (s.trail) {
+        // 지옥 불꽃길 (역병 종언에 계승된 코어는 소용돌이로 대체)
+        if (s.trail && w.sourceId !== 'plague_end') {
             w.trailT -= dt;
             if (w.trailT <= 0 && (p.vx || p.vy)) {
                 w.trailT = 0.3;
@@ -646,7 +677,8 @@ export function updateWeapons(dt) {
         if (w.cd <= 0) {
             if (w.burst > 0) { w.cd = 0.07; continue; }
             w.cd = s.cd;
-            FIRE[w.id](w, s);
+            if (w.sourceId === 'plague_end' && (w.id === 'molotov' || w.id === 'gas')) plagueCore(w, s);
+            else FIRE[w.id](w, s);
         }
     }
     flushCannonVolleys();

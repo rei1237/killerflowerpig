@@ -1,5 +1,6 @@
 // 전역 게임 상태 컨테이너. 각 시스템은 G 를 통해 데이터를 공유한다.
 import { Pool } from '../core/pool.js';
+import { COOP_PRESSURE } from '../data/difficulty.js';
 import { SpatialGrid } from '../core/grid.js';
 import { isLowQuality } from '../core/settings.js';
 
@@ -38,6 +39,9 @@ export const G = {
     view: { w: 1000, h: VIEW_H },
 
     player: null,
+    // 2P 협동: coop 이면 partner(영냥이)가 함께 싸운다 (src/game/coop.js)
+    coop: false,
+    partner: null,
     boss: null,
     encirclement: null,
     encirclementNextAt: 0,
@@ -80,6 +84,8 @@ export function configureCaps() {
     G.caps = G.lowQ
         ? { enemies: 156, particles: 260, texts: 36, gems: 300, decalScale: 0.6 }
         : { enemies: 252, particles: 650, texts: 64, gems: 500, decalScale: 1 };
+    // 2P 협동: 적 수가 2배 이상이므로 동시 상한도 늘린다
+    if (G.coop) G.caps.enemies = Math.round(G.caps.enemies * COOP_PRESSURE.caps);
     setVisualTier(G.lowQ ? 1 : 0);
 }
 

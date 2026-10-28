@@ -4,12 +4,14 @@ import { clearFocus } from './targeting.js';
 import { resetInput } from '../core/input.js';
 import { updateEncirclement, clearEncirclement, constrainEncirclementPlayer } from './encirclement.js';
 import { resetPets, updatePets } from './pets.js';
+import { createPartner, resetPartner, updatePartner } from './coop.js';
+import { setSplitInput } from '../core/input.js';
 // 게임 흐름 제어: 런 시작/스테이지 시작/스텝 업데이트/보스·클리어·사망 전환
 import { G, clearWorld, configureCaps, emit } from './state.js';
 import { STAGES } from '../data/stages.js';
 import { STARTING_WEAPON, PASSIVES } from '../data/weapons.js';
 import { TECHS, techStartingWeapons } from '../data/techs.js';
-import { DIFFICULTIES } from '../data/difficulty.js';
+import { DIFFICULTIES, G_COOP } from '../data/difficulty.js';
 import { createPlayer, updatePlayer, recomputeStats } from './player.js';
 import { updateEnemies, updateEnemyShots, flushExplosions, clearPendingExplosions } from './enemies.js';
 import { updateWeapons, updateShots, createWeapon, resetWeaponRuntime } from './weapons.js';
@@ -48,7 +50,7 @@ export function markLoadoutExchangeSpent() {
 }
 export function clearRun() { stageSnapshot = null; checkpointUnsaved = false; try { localStorage.removeItem(RUN_KEY); } catch { /* A new run overwrites this checkpoint. */ } }
 function captureCheckpoint(stage = G.stage) {
-    return { ...snapshotBuild(), stage, runId: G.runId, checkpointVersion: 2,
+    return { ...snapshotBuild(), stage, runId: G.runId, checkpointVersion: 2, coop: !!G.coop,
         pendingLevelUps: G.pendingLevelUps, banished: [...G.banished], retry: false };
 }
 export function finalizeEntryCheckpoint() {
@@ -62,8 +64,10 @@ export function checkpointStageClear() {
     stageSnapshot = captureCheckpoint(G.stage + 1); return saveRun(stageSnapshot);
 }
 // techId 를 생략하면 기존과 동일하게 산탄총 단독으로 시작 (호환용). difficulty 생략 시 쉬움.
-export function newRun(stage = 1, techId = null, difficulty = 'easy') {
+// coop = true 면 2P 협동(영냥이 합류, 동행 펫 비활성, WASD 1P · 방향키 2P).
+export function newRun(stage = 1, techId = null, difficulty = 'easy', coop = false) {
     G.difficulty = DIFFICULTIES[difficulty] ? difficulty : 'easy';
+    setCoop(coop);
     configureCaps();
     refreshGore();
     resetBuild();
@@ -96,6 +100,7 @@ export function continueRun(raw) {
     if (!snap || isDeadRun(raw)) return false;
     G.runId = snap.runId || createRunId();
     G.godMode = false;
+    setCoop(snap.coop === true);
     configureCaps(); refreshGore(); resetBuild(); G.damageBy = {};
     createPlayer(); restoreBuild(snap);
     G.pendingLevelUps = snap.pendingLevelUps;
@@ -119,6 +124,13 @@ export function retryStage() {
     return continueRun({ ...snap, retry: true });
 }
 
+function setCoop(coop) {
+    G.coop = !!coop;
+    G_COOP.on = G.coop;
+    G.partner = null;
+    setSplitInput(G.coop);
+}
+
 export function startStage(stage, restored = false) {
     if (G.player?.dead || deadRuns.has(G.runId)) return false;
     pinRewardRun(G.runId);
@@ -133,6 +145,9 @@ export function startStage(stage, restored = false) {
     p.x = 0; p.y = 0; p.dead = false; p.iframes = 1.5;
     recomputeStats(true);
     resetPets();
+    if (G.coop && !G.partner) createPartner();
+    resetPartner();
+    setSplitInput(G.coop);
     G.camera.x = 0; G.camera.y = -20;
     G.time = 0;
     G.deadT = 0; G.deathShown = false; heartbeatT = 0;
@@ -169,6 +184,7 @@ export function step(dt) {
     updateEncirclement(dt);
     updatePlayer(dt);
     if (G.mode !== 'dead') updatePets(dt);
+    if (G.mode !== 'dead') updatePartner(dt);
     if (G.mode === 'play' || G.mode === 'boss') updateSpawner(dt);
     updateEnemies(dt);
     flushExplosions();

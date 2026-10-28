@@ -160,8 +160,9 @@ test('coverage inspection stays bounded even when dynamic shot and hazard pools 
     }
 });
 
-test('real tier-I two-bottle volley reserves airborne coverage before selecting its second patch', () => {
-    setup(); G.passives = { spread: 1 }; recomputeStats();
+test('real tier-II two-bottle volley reserves airborne coverage before selecting its second patch', () => {
+    // 투척 +1 은 공명 2단계(계열 4개)부터 열린다
+    setup(); G.passives = { spread: 1, sap: 1, hide: 1 }; recomputeStats();
     const left = enemy(-130), right = enemy(130);
     fire();
     const lobs = G.shots.items.slice(0, G.shots.count).filter(shot => shot.kind === 'lob');
@@ -226,7 +227,7 @@ test('real Plague bottle snapshots predicted landing, while another tech keeps e
 });
 
 test('gas, fused firegas and absolute inherited throws all use the same predicted landing contract', () => {
-    for (const id of ['gas', 'plague_fire', 'plague_end', 'ember_lance']) {
+    for (const id of ['gas', 'plague_fire', 'ember_lance']) {
         setup(); enemy(180, 0, 0, 200); fire(id);
         const lobs = G.shots.items.slice(0, G.shots.count).filter(shot => shot.kind === 'lob');
         assert.ok(lobs.length > 0, id);
@@ -240,8 +241,9 @@ test('Plague Lv5 damage imprint is earned at Lv5 and combines additively with Lv
         const w = Object.assign(createWeapon('molotov', 0), { level }); G.weapons = [w];
         G.tech = null; const ordinary = weaponStats(w);
         G.tech = 'plague'; const empowered = weaponStats(w);
-        near(empowered.dmg / ordinary.dmg, .85 * (1 + bonus));
-        assert.equal(empowered.amount, ordinary.amount + 1, 'tier-I extra throw applies once');
+        // 진화 전 역병 무기는 초반 하향 배율(unevolvedPower 0.8)을 받는다
+        near(empowered.dmg / ordinary.dmg, .85 * .8 * (1 + bonus));
+        assert.equal(empowered.amount, ordinary.amount, 'tier-I no longer grants a free extra throw');
         assert.deepEqual(weaponStats(w), empowered, 'recomputing stats never accumulates the imprint again');
     }
 });

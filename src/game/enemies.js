@@ -7,12 +7,13 @@ import { G, rand, emit } from './state.js';
 import { BOSSES, bossMaxHp } from '../data/bosses.js';
 import { ENEMIES, ELITE, ELITE_BOSS_CAP, eliteSheet, DEATH_CLOUD_UNLOCK_STAGE, RANGED_UNLOCK_STAGE, MAX_RANGED_ALIVE, MOB_STRENGTH, stageScaling, BOSS_FIGHT_XP_MULTIPLIER } from '../data/enemies.js';
 import { STAGES } from '../data/stages.js';
-import { difficultyOf } from '../data/difficulty.js';
+import { difficultyOf, coopPressure } from '../data/difficulty.js';
 import { atlases, textSprite } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { goreProfile } from '../core/settings.js';
 import { blood, gibs, decal, damageText, sparks, smoke, shake, hitstop, floatText } from './effects.js';
 import { damagePlayer } from './player.js';
+import { chaseTarget, hurtTarget, partnerBody } from './coop.js';
 import { dropGem, dropPickup, dropCoin, pruneFieldSupplies } from './pickups.js';
 import { spawnHazard } from './hazards.js';
 import { recordFusionHit } from './weapon-vfx.js';
@@ -35,7 +36,8 @@ function rangedAlive() {
 export function spawnEnemy(typeId, x, y, opts = {}) {
     const st = STAGES[G.stage];
     // Every route shares the population budget, including force/elite/summon/split.
-    const cap = Math.min(st.enemyCap ?? Infinity, G.caps.enemies ?? Infinity);
+    const co = coopPressure();
+    const cap = Math.min((st.enemyCap ?? Infinity) * (co?.count || 1), G.caps.enemies ?? Infinity);
     if (G.enemies.count >= cap) return null;
     let def = ENEMIES[typeId];
     if (!def || G.stage < (def.unlockStage || 1) || (def.ranged && G.stage < RANGED_UNLOCK_STAGE)) return null;
@@ -52,12 +54,12 @@ export function spawnEnemy(typeId, x, y, opts = {}) {
     e.x = x; e.y = y;
     e.kx = 0; e.ky = 0;
     const mob = elite ? null : MOB_STRENGTH;
-    e.maxHp = e.hp = def.hp * sc.hp * (elite ? ELITE.hp : mob.hp) * (opts.hpMul || 1) * (de.hp || 1) * (dl.hp || 1);
-    e.speed = def.speed * sc.speed * (elite ? ELITE.speed : 1) * rand(0.92, 1.08) * (opts.speedMul || 1) * (de.speed || 1);
+    e.maxHp = e.hp = def.hp * sc.hp * (elite ? ELITE.hp : mob.hp) * (opts.hpMul || 1) * (de.hp || 1) * (dl.hp || 1) * (co?.hp || 1);
+    e.speed = def.speed * sc.speed * (elite ? ELITE.speed : 1) * rand(0.92, 1.08) * (opts.speedMul || 1) * (de.speed || 1) * (co?.speed || 1);
     if (opts.maxSpeed > 0) e.speed = Math.min(e.speed, opts.maxSpeed); // 추격형 러시: 꽃돼지보다 빠르지 않게
     e.swarm = !!opts.swarm;
-    e.dmg = def.dmg * sc.dmg * (elite ? ELITE.dmg : mob.dmg) * (de.dmg || 1) * (dl.dmg || 1);
-    e.xp = def.xp * sc.xp * (elite ? ELITE.xp : mob.xp);
+    e.dmg = def.dmg * sc.dmg * (elite ? ELITE.dmg : mob.dmg) * (de.dmg || 1) * (dl.dmg || 1) * (co?.dmg || 1);
+    e.xp = def.xp * sc.xp * (elite ? ELITE.xp : mob.xp) * (co?.xp || 1);
     e.scale = def.scale * (elite ? ELITE.scale : 1);
     e.radius = def.radius * (elite ? ELITE.scale : 1);
     e.mass = def.mass * (elite ? 4 : 1);
@@ -243,6 +245,8 @@ export function flushExplosions() {
         const p = G.player;
         const dx = p.x - ex.x, dy = p.y - ex.y;
         if (dx * dx + dy * dy < (ex.r + p.radius) ** 2) damagePlayer(ex.dmg, ex.x, ex.y);
+        const q = G.partner;
+        if (q && !q.dead && (q.x - ex.x) ** 2 + (q.y - ex.y) ** 2 < (ex.r + q.radius) ** 2) hurtTarget(q, ex.dmg, ex.x, ex.y, damagePlayer);
         const list = ex.suicide ? [] : G.grid.query(ex.x, ex.y, ex.r, tmp);
         for (const o of list) {
             if (!o.alive) continue;
@@ -260,7 +264,7 @@ export function flushExplosions() {
 }
 
 export function updateEnemies(dt) {
-    const p = G.player;
+    const p1 = G.player;
     const pool = G.enemies;
     const grid = G.grid;
     grid.clear();
@@ -306,7 +310,8 @@ export function updateEnemies(dt) {
             continue;
         }
 
-        // 이동
+        // 이동 (2P 협동: 더 가까운 플레이어를 쫓는다)
+        const p = chaseTarget(e, p1);
         const dx = p.x - e.x, dy = p.y - e.y;
         const dist = Math.hypot(dx, dy) || 1;
         if (e.affixes) updateAffixes(e, dt, p, dist, spawnMinion);
@@ -389,7 +394,7 @@ export function updateEnemies(dt) {
                     if (e.shootT <= 0 && dist < rg.range * 1.15) {
                         e.shootT = rg.cooldown * rand(0.85, 1.2);
                         if (rg.warning) {
-                            const body = playerBody(p), aimDist = Math.hypot(body.x - e.x, body.y - (e.y - e.radius)) || 1;
+                            const body = p === G.partner ? partnerBody(p) : playerBody(p), aimDist = Math.hypot(body.x - e.x, body.y - (e.y - e.radius)) || 1;
                             e.aimX = (body.x - e.x) / aimDist; e.aimY = (body.y - (e.y - e.radius)) / aimDist;
                             e.shotWarning = rg.warning;
                         } else fireEnemyShot(e.x, e.y - e.radius, dx / dist, dy / dist, rg.speed, rg.dmg * (1 + (G.stage - 1) * 0.16), 'acid');
@@ -417,7 +422,7 @@ export function updateEnemies(dt) {
 
         // 접촉 피해
         if (!charge && dist < e.radius + p.radius) {
-            if (damagePlayer(e.dmg, e.x, e.y)) { e.state = 'attack'; e.attackT = 0.4; e.anim = 0; }
+            if (hurtTarget(p, e.dmg, e.x, e.y, damagePlayer)) { e.state = 'attack'; e.attackT = 0.4; e.anim = 0; }
         }
 
         // 밀어내기 (군집이 겹치지 않고 '밀려오는' 느낌). 비용 절감: 스텝마다 절반씩 번갈아 처리
@@ -473,8 +478,10 @@ export function updateEnemyShots(dt) {
         const body = playerBody(p);
         const dx = body.x - s.x, dy = body.y - s.y;
         const r = s.radius + p.radius;
-        if (dx * dx + dy * dy < r * r) {
-            damagePlayer(s.dmg, s.x, s.y);
+        const q = G.partner, qb = q && !q.dead ? partnerBody(q) : null;
+        const hitP1 = dx * dx + dy * dy < r * r;
+        if (hitP1 || (qb && (qb.x - s.x) ** 2 + (qb.y - s.y) ** 2 < (s.radius + q.radius) ** 2)) {
+            if (hitP1) damagePlayer(s.dmg, s.x, s.y); else hurtTarget(q, s.dmg, s.x, s.y, damagePlayer);
             if (s.kind === 'acid') blood(s.x, s.y, 4, 0, 0, '#3f8a1a');
             pool.release(i);
         }

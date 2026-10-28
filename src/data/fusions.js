@@ -57,7 +57,7 @@ export const FUSED_WEAPONS = {
     },
     plague_end: {
         name: '역병 종언', icon: '☣️', color: '#b8f05b', fusionOnly: true, tier: 'absolute', amountCap: 8,
-        desc: '세 진화 무기를 계승하고, 화면 곳곳에 큰 역병 화염 장판을 터뜨려 40% 둔화시킨다.',
+        desc: '세 진화 무기를 계승한다. 적 무리 위에서 화염과 독가스가 피어올라 나선을 그리며 서서히 연이에게 모여들고, 몸을 감싸는 역병 소용돌이(40% 둔화)로 흡수된다. 흡수할수록 소용돌이가 뜨거워지며 피해가 오르고, 계승한 불꽃길·독구름도 장판 대신 소용돌이에 실린다.',
         base: { dmg: 22, cd: 3.0, amount: 4, speed: 1, duration: 3.4, area: 1, radius: 105, tick: 0.3, slow: 0.4 },
         levels: [{dmg:3,t:'틱 피해 +3 · 계승 공격 강화'},{area:0.08,t:'범위 +8%'},{slow:0.05,t:'둔화 +5%'},{duration:0.1,t:'지속 +10%'},{dmg:3,t:'틱 피해 +3 · 계승 공격 강화'},{cd:-0.06,t:'재사용 -6%'},{dmg:4,t:'피해 +4 · 최종 강화'}],
     },
