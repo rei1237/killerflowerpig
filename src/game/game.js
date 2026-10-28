@@ -1,4 +1,5 @@
 import { pinRewardRun } from '../core/save.js';
+import { resetFieldItems, updateFieldItems } from './field-items.js';
 import { validateStageCheckpoint } from './stage-checkpoint.js';
 import { clearFocus } from './targeting.js';
 import { resetInput } from '../core/input.js';
@@ -141,6 +142,7 @@ export function startStage(stage, restored = false) {
     clearWorld();
     clearPendingExplosions(); clearFocus(); resetInput(); resetWeaponRuntime();
     resetSpawner();
+    resetFieldItems();
     invalidateStageVisuals();
     for (const w of G.weapons) { w.fusionCores = null; w.follow = null; w.cd = 0.5; w.activeT = 0; w.burst = 0; }
     const p = G.player;
@@ -187,7 +189,7 @@ export function step(dt) {
     updatePlayer(dt);
     if (G.mode !== 'dead') updatePets(dt);
     if (G.mode !== 'dead') updatePartner(dt);
-    if (G.mode === 'play' || G.mode === 'boss') updateSpawner(dt);
+    if (G.mode === 'play' || G.mode === 'boss') { updateSpawner(dt); updateFieldItems(dt); }
     updateEnemies(dt);
     flushExplosions();
     if (G.mode !== 'dead') updateWeapons(dt);

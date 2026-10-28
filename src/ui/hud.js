@@ -1,4 +1,5 @@
 import { mountItemArt } from './item-art.js';
+import { drawMinimap } from './minimap.js';
 // Read-only DOM projection of the survivor state, capped at 10 Hz.
 // UI portraits are static illustrations; combat continues using animated atlases.
 import { G } from '../game/state.js';
@@ -23,6 +24,7 @@ export function drawHUD() {
     if (now - lastUpdate < 100) return;
     lastUpdate = now;
     drawPartnerHUD();
+    drawMinimap();
     if (!nodes) nodes = Object.fromEntries([
         'hud-hp','hud-hp-text','hud-hp-track','hud-xp','hud-xp-track',
         'hud-level','hud-stage','hud-time','hud-score','hud-build',
