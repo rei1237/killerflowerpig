@@ -33,7 +33,9 @@ test('levelling is harder: XP costs carry the extra level-cost multiplier', () =
     assert.equal(xpForLevel(1), Math.round(12 * LEVEL_COST_MULTIPLIER));
 });
 
-test('each stage map holds one supply cache (two in 2P, one at a time); walking onto it grants a choice', () => {
+test('each stage map holds supply caches (2 in stages 1-2, then 3; 2P +2), one at a time; walking onto one grants a choice', () => {
+    assert.deepEqual([1, 2, 3, 10].map(s => field.fieldItemsForStage(s)), [2, 2, 3, 3]);
+    assert.equal(field.fieldItemsForStage(5, true), 5);
     start();
     assert.equal(field.fieldItem(), null);
     for (let i = 0; i < 60 * (field.FIELD_ITEM.firstDelay + 0.1); i++) field.updateFieldItems(1 / 60, () => 0.5);
@@ -50,9 +52,14 @@ test('each stage map holds one supply cache (two in 2P, one at a time); walking 
     updatePickups(1 / 60);
     assert.equal(field.fieldItem(), null);
     assert.equal(G.pendingLevelUps, before + 1);
-    // 1P 구역은 하나뿐
-    for (let i = 0; i < 60 * 120; i++) field.updateFieldItems(1 / 60);
-    assert.equal(field.fieldItem(), null, 'one cache per stage map');
+    // 1구역은 2개: 남은 1개가 나타나고, 그 뒤에는 없다
+    assert.equal(field.fieldItemsLeft(), 1);
+    let more = 0;
+    for (let i = 0; i < 60 * 200; i++) {
+        if (field.updateFieldItems(1 / 60)) { more++; const c = field.fieldItem(); G.player.x = c.x; G.player.y = c.y + 14; updatePickups(1 / 60); }
+    }
+    assert.equal(more, 1);
+    assert.equal(field.fieldItem(), null, 'two caches on the first stage map');
     assert.equal(field.fieldItemsLeft(), 0);
     // 다음 구역에서 다시 하나
     field.resetFieldItems();
@@ -68,7 +75,7 @@ test('each stage map holds one supply cache (two in 2P, one at a time); walking 
             const c = field.fieldItem(); G.player.x = c.x; G.player.y = c.y + 14; updatePickups(1 / 60);
         }
     }
-    assert.equal(seen, field.FIELD_ITEM.coopPerStage);
+    assert.equal(seen, field.fieldItemsForStage(1, true));
 });
 
 test('영냥이 can claim the cache for her own growth choice', () => {
