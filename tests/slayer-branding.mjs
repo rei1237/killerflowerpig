@@ -19,6 +19,6 @@ test('real PNG icon dimensions match manifest and include separate maskable, App
 test('responsive launch art stays small and all newly used local assets are cached',()=>{
  assert.match(html,/srcset="asset\/branding\/slayer-launch-480.webp 480w, asset\/branding\/slayer-launch-900.webp 900w"/);
  for(const size of [480,900]){const p=`asset/branding/slayer-launch-${size}.webp`;assert.ok(sw.includes(p));assert.ok(fs.statSync(new URL('../'+p,import.meta.url)).size<(size===480?65000:150000));}
- assert.ok(sw.includes('v45-coop-boss'));assert.ok(sw.includes('./src/ui/mobile.css'));
+ assert.ok(sw.includes('v46-redeploy'));assert.ok(sw.includes('./src/ui/mobile.css'));
  assert.doesNotMatch(html,/maximum-scale|user-scalable=no/);
 });
