@@ -67,6 +67,15 @@ const BEGINNER_SCALING = {
 // 스테이지 안에서 시간이 지날수록 적이 단단해지는 비율. 집중하지 않은 빌드는 후반 웨이브를 못 따라간다.
 export const IN_STAGE_HP_RAMP = 0.7;
 const STANDARD_SCALING = { hp: 1, speed: 1, dmg: 1 };
+// 초반 압박 강화: 초기 구역 적이 너무 쉽게 녹는다는 피드백. 1~4구역 일반 적·엘리트를 더 단단하고 아프게 만들고,
+// 후반 곡선이 이미 가파른 5구역부터는 영향이 없다 (스테이지 경계에서 강도가 역전되지 않도록 점감).
+export const EARLY_STAGE_PRESSURE = Object.freeze({
+    1: Object.freeze({ hp: 1.45, speed: 1.06, dmg: 1.3 }),
+    2: Object.freeze({ hp: 1.35, speed: 1.05, dmg: 1.22 }),
+    3: Object.freeze({ hp: 1.22, speed: 1.03, dmg: 1.12 }),
+    4: Object.freeze({ hp: 1.1, speed: 1.01, dmg: 1.05 }),
+});
+export const earlyPressure = stage => EARLY_STAGE_PRESSURE[stage] || STANDARD_SCALING;
 
 // 스테이지별 배율
 // 적 한 마리당 경험치 배율. 개체 수를 늘린 만큼 낮춰서 레벨업 속도를 억제한다.
@@ -76,12 +85,12 @@ export const LATE_STAGE_SCALING = Object.freeze({ hp: 0.22, speed: 0.02, dmg: 0.
 export function stageScaling(stage, t, duration) {
     const prog = Math.min(1, t / duration), late = Math.max(0, stage - 3);
     // Opening grace remains gentle; fixed sparse-stage HP and per-kill XP budgets follow below.
-    const beginner = BEGINNER_SCALING[stage] || STANDARD_SCALING;
+    const beginner = BEGINNER_SCALING[stage] || STANDARD_SCALING, early = earlyPressure(stage);
     return {
         // Equipment never changes this curve: permanent upgrades and good builds retain their power.
-        hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp * ENEMY_TOUGHNESS_MULTIPLIER * SPARSE_ENEMY_HP[stage] * (1 + late * LATE_STAGE_SCALING.hp),
-        speed: (1 + (stage - 1) * 0.035 + late * LATE_STAGE_SCALING.speed) * beginner.speed,
-        dmg: (1 + (stage - 1) * 0.24 + late * LATE_STAGE_SCALING.dmg) * beginner.dmg * ENEMY_DAMAGE_MULTIPLIER,
+        hp: (1 + (stage - 1) * 0.6) * (1 + (stage - 1) * 0.14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp * ENEMY_TOUGHNESS_MULTIPLIER * SPARSE_ENEMY_HP[stage] * (1 + late * LATE_STAGE_SCALING.hp) * early.hp,
+        speed: (1 + (stage - 1) * 0.035 + late * LATE_STAGE_SCALING.speed) * beginner.speed * early.speed,
+        dmg: (1 + (stage - 1) * 0.24 + late * LATE_STAGE_SCALING.dmg) * beginner.dmg * ENEMY_DAMAGE_MULTIPLIER * early.dmg,
         xp: (1 + (stage - 1) * 0.15) * SPARSE_ENEMY_XP[stage] * STAGE_XP_YIELD,
     };
 }

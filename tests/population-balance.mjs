@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { G, clearWorld, configureCaps, setVisualTier } from '../src/game/state.js';
 import { settings } from '../src/core/settings.js';
 import { atlases } from '../src/core/assets.js';
-import { ENEMIES, ELITE, eliteSheet, ENEMY_TOUGHNESS_MULTIPLIER, ENEMY_DAMAGE_MULTIPLIER, SPARSE_ENEMY_HP, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, MOB_STRENGTH, stageScaling } from '../src/data/enemies.js';
+import { ENEMIES, ELITE, eliteSheet, ENEMY_TOUGHNESS_MULTIPLIER, ENEMY_DAMAGE_MULTIPLIER, SPARSE_ENEMY_HP, IN_STAGE_HP_RAMP, LATE_STAGE_SCALING, STAGE_XP_YIELD, MOB_STRENGTH, stageScaling, earlyPressure } from '../src/data/enemies.js';
 import { STAGES, EVENTS, POPULATION_BOOST, POPULATION_SCALE } from '../src/data/stages.js';
 import { BOSSES, bossMaxHp } from '../src/data/bosses.js';
 import { ELITE_BOSS_CAP } from '../src/data/enemies.js';
@@ -41,12 +41,12 @@ function withFixedRandom(fn) {
 
 function originalScaling(stage, time) {
     const beginner = stage === 1 ? { hp: .95, speed: .9, dmg: .85 } : stage === 2 ? { hp: 1, speed: .95, dmg: .95 } : { hp: 1, speed: 1, dmg: 1 };
-    const prog = Math.min(1, time / STAGES[stage].duration), late = Math.max(0, stage - 3);
+    const prog = Math.min(1, time / STAGES[stage].duration), late = Math.max(0, stage - 3), early = earlyPressure(stage);
     // 1~3스테이지는 원래 곡선, 4스테이지부터 LATE_STAGE_SCALING 추가 강화 (1.62 배율은 이 위에 곱해진다)
     return {
-        hp: (1 + (stage - 1) * .6) * (1 + (stage - 1) * .14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp * (1 + late * LATE_STAGE_SCALING.hp),
-        speed: (1 + (stage - 1) * .035 + late * LATE_STAGE_SCALING.speed) * beginner.speed,
-        dmg: (1 + (stage - 1) * .24 + late * LATE_STAGE_SCALING.dmg) * beginner.dmg,
+        hp: (1 + (stage - 1) * .6) * (1 + (stage - 1) * .14) * (1 + prog * IN_STAGE_HP_RAMP) * beginner.hp * (1 + late * LATE_STAGE_SCALING.hp) * early.hp,
+        speed: (1 + (stage - 1) * .035 + late * LATE_STAGE_SCALING.speed) * beginner.speed * early.speed,
+        dmg: (1 + (stage - 1) * .24 + late * LATE_STAGE_SCALING.dmg) * beginner.dmg * early.dmg,
         xp: 1 + (stage - 1) * .15,
     };
 }

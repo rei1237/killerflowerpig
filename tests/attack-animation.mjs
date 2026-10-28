@@ -97,6 +97,8 @@ test('real runtime attack emissions select correct body families without delayin
             if (family==='cannon') assert.ok(G.beams.count>0,id);
             else if(family==='channel') assert.ok(w.activeT>0,id);
             else if(family==='sword') assert.ok(G.player.swordSwing,id);
+            // 역병 종언은 병을 던지지 않고 그 자리에서 소용돌이로 모여드는 덩어리를 즉시 피워 올린다.
+            else if(id==='plague_end') assert.ok(G.hazards.items.slice(0,G.hazards.count).some(h=>h.kind==='plume'),id);
             else assert.ok(G.shots.count>0,id);
             assert.equal(G.player.x,0); assert.equal(G.player.y,0); assert.equal(G.player.radius,10);
         }

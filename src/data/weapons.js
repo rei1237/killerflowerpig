@@ -177,7 +177,7 @@ export const TIER_POWER = Object.freeze({
         // (1차: 학살자의 검륜·맹독 회전톱·심판의 단두대·역병 종언 개별 하향 후, 최종 ×0.55 · 절대 ×0.7)
         lotus_bloom: 1.25, venom_saw: 7.5, orbit_saw: 1.8, sword_wheel: 1.21, toxic_scatter: 3.0, plague_fire: 0.75,
         scatter_rail: 0.72, burst_rail: 1.173, ember_lance: 0.36,
-        absolute_bloom: 0.9, doom_barrage: 1.1, plague_end: 0.85, guillotine: 1.25, carnage_saw: 1.35 }),
+        absolute_bloom: 0.9, doom_barrage: 1.1, plague_end: 1.3, guillotine: 1.25, carnage_saw: 1.35 }),
     // 조합 무기 안에 계승된 꽃잎포 코어 배율(진화 꽃잎포 보정에 곱한다). 절대 > 최종 순서는 유지.
     retainedCannon: Object.freeze({ final: 1.3, absolute: 1.5 }),
 });

@@ -28,7 +28,42 @@ export function spawnHazard(kind, x, y, o = {}) {
     h.width = o.width || 0;
     h.color = o.color || '#ff1a3a';
     h.symbol = o.symbol || null; // cosmetic only; reset on pooled reuse
+    // 역병 소용돌이 전용: plume 은 플레이어 쪽으로 나선을 그리며 모이고, vortex 는 흡수한 만큼 강해진다.
+    h.element = o.element || null;
+    h.pull = o.pull || 0;
+    h.charge = 0;
+    h.spin = o.spin || 1;
+    h.flash = 0;
+    h.coreFire = 0; h.coreGas = 0;
     return h;
+}
+
+// 역병 소용돌이: 바깥에서 피어오른 화염·독가스 덩어리(plume)가 서서히 플레이어에게 모여
+// 하나의 소용돌이(vortex)로 흡수된다. 흡수 1회마다 소용돌이 피해가 오르고, 시간이 지나면 천천히 식는다.
+// 장판이 화면 곳곳에 수십 장 깔리던 이전 방식 대신 소용돌이 1개 + 이동하는 덩어리 소수만 유지한다.
+export const VORTEX = Object.freeze({ base: 0.8, perCharge: 0.1, maxCharge: 10, decay: 0.45, absorb: 0.32, plumeCap: 12 });
+export const vortexPower = charge => VORTEX.base + VORTEX.perCharge * Math.min(VORTEX.maxCharge, Math.max(0, charge));
+export function findVortex(weapon) {
+    const pool = G.hazards;
+    for (let i = 0; i < pool.count; i++) {
+        const h = pool.items[i];
+        if (h.alive && h.kind === 'vortex' && h.weapon === weapon) return h;
+    }
+    return null;
+}
+function movePlume(h, dt, p) {
+    const dx = p.x - h.x, dy = p.y - h.y, d = Math.hypot(dx, dy) || 1;
+    const vortex = findVortex(h.weapon);
+    if (d < Math.max(36, vortex ? vortex.radius * VORTEX.absorb : 0)) {
+        if (vortex) { vortex.charge = Math.min(VORTEX.maxCharge, vortex.charge + 1); vortex.flash = 1; }
+        return false;
+    }
+    // 처음엔 느리게 피어오르고 점점 빨라진다. 접선 성분으로 나선을 그리며 모인다.
+    const ramp = Math.min(1, h.t / 2.2), sp = h.pull * (0.25 + 0.75 * ramp * ramp);
+    const swirl = 0.55 * h.spin * Math.min(1, d / 160);
+    h.x += (dx / d * sp - dy / d * sp * swirl) * dt;
+    h.y += (dy / d * sp + dx / d * sp * swirl) * dt;
+    return true;
 }
 
 // 화면 정리: 같은 무기의 장판이 max개 이상이면 가장 오래된 것부터 0.4초 안에 사라지게 한다.
@@ -58,6 +93,8 @@ export function updateHazards(dt) {
         const h = pool.items[i];
         h.t += dt;
         if (h.follow) { h.x = p.x; h.y = p.y; }
+        if (h.kind === 'vortex') { h.charge = Math.max(0, h.charge - VORTEX.decay * dt); h.flash = Math.max(0, (h.flash || 0) - dt * 2.5); }
+        else if (h.kind === 'plume' && !movePlume(h, dt, p)) { h.alive = false; releaseAt(pool, i, h); continue; }
         if (h.kind === 'tcircle' || h.kind === 'tline') {
             if (h.t >= h.delay) {
                 h.onFire?.(h);
@@ -77,17 +114,18 @@ export function updateHazards(dt) {
         }
         // 아군 장판: 범위 내 적에게 틱 피해
         const r = h.radius;
+        const dmg = h.kind === 'vortex' ? (h.dmg + h.coreFire + h.coreGas) * vortexPower(h.charge) : h.dmg;
         const found = G.grid.query(h.x, h.y, r + 20, list);
         for (const e of found) {
             if (!e.alive) continue;
             const dx = e.x - h.x, dy = e.y - h.y;
             if (dx * dx + (dy * dy) / 0.49 > r * r) continue;
-            hitEnemy(e, h.dmg, { weapon: h.weapon, silent: Math.random() < 0.6, slow: h.slow });
+            hitEnemy(e, dmg, { weapon: h.weapon, silent: Math.random() < (h.kind === 'vortex' || h.kind === 'plume' ? 0.85 : 0.6), slow: h.slow });
         }
         const boss = G.boss;
         if (boss && boss.alive) {
             const dx = boss.x - h.x, dy = boss.y - h.y;
-            if (dx * dx + (dy * dy) / 0.49 < (r + boss.radius) ** 2) boss.hurt(h.dmg, { weapon: h.weapon, silent: true });
+            if (dx * dx + (dy * dy) / 0.49 < (r + boss.radius) ** 2) boss.hurt(dmg, { weapon: h.weapon, silent: true });
         }
         if (h.kind === 'fire') embers(h.x, h.y, 2);
         else if (h.kind === 'gas' && Math.random() < 0.5) smoke(h.x + (Math.random() - 0.5) * r, h.y + (Math.random() - 0.5) * r * 0.6, 1, 'rgba(90,200,40,0.35)');
@@ -134,6 +172,57 @@ function dangerMark(ctx, h, alpha) {
     ctx.beginPath();ctx.moveTo(h.x, y - s);ctx.lineTo(h.x + s, y + s * 0.65);ctx.lineTo(h.x - s, y + s * 0.65);ctx.closePath();ctx.fill();
     ctx.strokeStyle = '#e8ed9e';ctx.lineWidth = 1.3;ctx.stroke();
     ctx.fillStyle = '#e8ed9e';ctx.fillRect(h.x - 0.8, y - s * 0.42, 1.6, s * 0.65);ctx.fillRect(h.x - 0.8, y + s * 0.34, 1.6, 1.6);
+}
+
+// 역병 소용돌이: 화염·독가스 나선 팔이 중심으로 감겨 들고, 흡수량(charge)만큼 심장부가 밝아진다.
+// 캐시된 글로우 텍스처 몇 장만 가산 합성으로 겹쳐 그린다 (입자·그라디언트 생성 없음).
+const VORTEX_FIRE = '#ff6a1f', VORTEX_GAS = '#7be04a', VORTEX_CORE = '#ffe9a8';
+const DASH_VORTEX = [14, 10];
+function blot(ctx, tex, x, y, size, alpha) {
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+    ctx.drawImage(tex, x - size, y - size * 0.7, size * 2, size * 1.4);
+}
+function drawVortex(ctx, h, time, life, motion) {
+    const r = h.radius, power = Math.min(1, h.charge / VORTEX.maxCharge), flash = h.flash || 0;
+    ctx.globalAlpha = (0.24 + 0.12 * power) * life;ctx.fillStyle = '#1b0d07';
+    ellipsePath(ctx, h);ctx.fill();
+    ctx.globalCompositeOperation = 'lighter';
+    const arms = G.lowQ ? 2 : 3, beads = G.lowQ ? 4 : 6;
+    const fire = glow(VORTEX_FIRE, 64), gas = glow(VORTEX_GAS, 64);
+    const rot = time * (1.1 + power * 0.9) * h.spin;
+    for (let a = 0; a < arms * 2; a++) {
+        const tex = a % 2 ? gas : fire, base = rot + a * Math.PI / arms;
+        for (let b = 0; b < beads; b++) {
+            const k = (b + 1) / beads, ang = base + k * 2.4 * h.spin, rr = r * (0.16 + 0.78 * k);
+            blot(ctx, tex, h.x + Math.cos(ang) * rr, h.y + Math.sin(ang) * rr * 0.7,
+                r * (0.3 - 0.13 * k) * (1 + power * 0.3), life * (0.32 - 0.18 * k) * (0.8 + power * 0.5));
+        }
+    }
+    const pulse = motion ? 1 + Math.sin(time * 5) * 0.05 : 1;
+    blot(ctx, glow(VORTEX_CORE, 64), h.x, h.y, r * (0.26 + 0.14 * power + 0.12 * flash) * pulse, life * (0.42 + 0.35 * power + 0.3 * flash));
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.lineWidth = 1.6;ctx.setLineDash(DASH_VORTEX);
+    ctx.globalAlpha = 0.55 * life;ctx.strokeStyle = VORTEX_FIRE;ctx.lineDashOffset = -time * 40 * h.spin;
+    ellipsePath(ctx, h);ctx.stroke();
+    ctx.globalAlpha = 0.45 * life;ctx.strokeStyle = VORTEX_GAS;ctx.lineDashOffset = time * 28 * h.spin;
+    ellipsePath(ctx, h, r * 0.93);ctx.stroke();
+    ctx.setLineDash(NO_DASH);ctx.lineDashOffset = 0;
+}
+function drawPlume(ctx, h, time, life, motion) {
+    const fire = h.element === 'fire', tex = glow(fire ? VORTEX_FIRE : VORTEX_GAS, 64), p = G.player;
+    const dx = p.x - h.x, dy = p.y - h.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
+    const grow = Math.min(1, 0.45 + h.t / 0.4), r = h.radius * grow;
+    ctx.globalAlpha = 0.2 * life;ctx.fillStyle = fire ? '#3a0c00' : '#0f3a2c';
+    ellipsePath(ctx, h, r);ctx.fill();
+    ctx.globalCompositeOperation = 'lighter';
+    // 꼬리는 소용돌이 반대쪽으로 흐른다: 모여드는 방향이 한눈에 읽힌다.
+    for (let n = G.lowQ ? 1 : 3; n >= 1; n--) blot(ctx, tex, h.x - ux * r * 0.42 * n, h.y - uy * r * 0.3 * n, r * (0.62 - 0.12 * n), life * (0.36 - 0.08 * n));
+    const wob = motion ? 1 + Math.sin(time * 7 + h.x * 0.05) * 0.06 : 1;
+    blot(ctx, tex, h.x, h.y, r * 0.8 * wob, 0.6 * life);
+    blot(ctx, glow(VORTEX_CORE, 64), h.x, h.y, r * 0.3, 0.5 * life);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 0.35 * life;ctx.strokeStyle = fire ? '#ff9a52' : '#8fe86a';ctx.lineWidth = 1.2;
+    ctx.setLineDash(DASH_FRIENDLY);ellipsePath(ctx, h, r);ctx.stroke();ctx.setLineDash(NO_DASH);
 }
 
 // 바닥 장판 (캐릭터 아래 레이어). State/timing/collision are never modified here.
@@ -187,6 +276,8 @@ export function drawHazards(ctx) {
         const fade = Math.max(0, Math.min(1, (h.duration - h.t) / 0.45));
         const life = Math.max(0, Math.min(fade, h.t / 0.18));
         const footprint = Math.PI * h.radius * h.radius * 0.7;
+        if (h.kind === 'vortex') { drawVortex(ctx, h, time, life, motion); continue; }
+        if (h.kind === 'plume') { drawPlume(ctx, h, time, life, motion); continue; }
         if (h.kind !== 'acid' && fillBudget <= 0) {
             // 예산 초과 아군 장판: 점선 없는 얇은 외곽선 1회만 (경로 래스터 비용 최소화)
             ctx.setLineDash(NO_DASH);ctx.globalAlpha = 0.3 * life;

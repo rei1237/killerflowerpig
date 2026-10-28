@@ -79,6 +79,9 @@ export function applyTechWeaponBonus(weapon, result) {
     for (const k in im) b[k] = (b[k] || 0) + im[k];
     if (b.dmg) result.dmg *= 1 + b.dmg;
     result.dmg *= tech.power || 1;
+    // 초반 전용 배율: 진화 전 일반 무기에만 (진화·조합·계승 코어 제외)
+    const early = typeof weapon !== 'string' && !weapon.evolved && !weapon.sourceId && !FUSION_RECIPES.some(r => r.output === weaponId);
+    if (tech.unevolvedPower && early) result.dmg *= tech.unevolvedPower;
     if (b.cd) result.cd *= Math.max(0.5, 1 + b.cd);
     if (b.amount) result.amount += b.amount;
     if (b.area) result.area *= 1 + b.area;
