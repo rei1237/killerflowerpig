@@ -1,4 +1,6 @@
 import { hasRunReward } from '../core/run-rewards.js';
+import { addPartnerXP, partnerMagnet } from './coop.js';
+import { PARTNER_XP } from '../data/partner-kit.js';
 // 경험치 젬 + 필드 아이템(고기/자석/다이너마이트/관 상자)
 import { G, rand, emit } from './state.js';
 import { fx, glow } from '../core/assets.js';
@@ -26,7 +28,7 @@ export function dropGem(x, y, value) {
     const g = pool.spawn();
     g.x = x + rand(-4, 4); g.y = y + rand(-4, 4);
     g.value = value; g.tier = tierOf(value);
-    g.pull = false; g.speed = 0;
+    g.pull = false; g.speed = 0; g.toPartner = false;
     g.phase = Math.random() * 6.28;
 }
 
@@ -132,11 +134,16 @@ export function updatePickups(dt) {
     const mr2 = (mr * PICKUP_ASSIST.gemMultiplier * collection) ** 2;
     const pool = G.gems;
     const py = p.y - 14;
+    // 2P 협동: 영냥이도 가까운 젬을 끌어와 먹는다. 주운 쪽이 100%, 다른 쪽이 PARTNER_XP.share 만큼 받는다.
+    const q = G.coop && G.partner && !G.partner.dead ? G.partner : null;
+    const qr2 = q ? partnerMagnet(q) ** 2 : 0, qy = q ? q.y - 14 : 0;
     for (let i = pool.count - 1; i >= 0; i--) {
         const g = pool.items[i];
-        const dx = p.x - g.x, dy = py - g.y;
+        if (q && !g.pull && (q.x - g.x) ** 2 + (qy - g.y) ** 2 < qr2) { g.pull = true; g.toPartner = true; }
+        const toQ = q && g.toPartner;
+        const dx = (toQ ? q.x : p.x) - g.x, dy = (toQ ? qy : py) - g.y;
         const d2 = dx * dx + dy * dy;
-        if (!g.pull && d2 < mr2) g.pull = true;
+        if (!g.pull && d2 < mr2) { g.pull = true; g.toPartner = false; }
         if (g.pull) {
             const d = Math.sqrt(d2) || 1;
             g.speed = Math.min(900, g.speed + 1400 * dt);
@@ -144,7 +151,8 @@ export function updatePickups(dt) {
             g.x += (dx / d) * step;
             g.y += (dy / d) * step;
             if (d < 14) {
-                addXP(g.value);
+                if (toQ) { addPartnerXP(g.value); addXP(g.value * PARTNER_XP.share); }
+                else { addXP(g.value); if (q) addPartnerXP(g.value * PARTNER_XP.share); }
                 audio.sfx('gem');
                 pool.release(i);
             }

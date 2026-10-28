@@ -2,6 +2,7 @@ import { DIFFICULTIES } from '../data/difficulty.js';
 import { WEAPONS, PASSIVES, MAX_WEAPONS } from '../data/weapons.js';
 import { STAGES } from '../data/stages.js';
 import { TECHS } from '../data/techs.js';
+import { sanitizePartnerBuild } from './coop.js';
 const number=(v,max=1e9)=>Number.isFinite(v)&&v>=0&&v<=max;
 // A checkpoint contains only run build data. Never restore the permanent wallet.
 export function validateStageCheckpoint(raw){
@@ -17,6 +18,7 @@ export function validateStageCheckpoint(raw){
  s.difficulty=Object.hasOwn(DIFFICULTIES,s.difficulty)?s.difficulty:'easy';
  s.consumedItems=(Array.isArray(s.consumedItems)?s.consumedItems:[]).filter(id=>Object.hasOwn(WEAPONS,id)&&!WEAPONS[id].fusionOnly);
  s.coop=raw.coop===true;
+ s.partner=s.coop?sanitizePartnerBuild(raw.partner):null;
  s.checkpointVersion=2;s.retry=raw.retry===true;
  return s;
 }

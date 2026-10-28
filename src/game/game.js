@@ -4,7 +4,7 @@ import { clearFocus } from './targeting.js';
 import { resetInput } from '../core/input.js';
 import { updateEncirclement, clearEncirclement, constrainEncirclementPlayer } from './encirclement.js';
 import { resetPets, updatePets } from './pets.js';
-import { createPartner, resetPartner, updatePartner } from './coop.js';
+import { createPartner, resetPartner, updatePartner, partnerSnapshot } from './coop.js';
 import { setSplitInput } from '../core/input.js';
 // 게임 흐름 제어: 런 시작/스테이지 시작/스텝 업데이트/보스·클리어·사망 전환
 import { G, clearWorld, configureCaps, emit } from './state.js';
@@ -50,7 +50,7 @@ export function markLoadoutExchangeSpent() {
 }
 export function clearRun() { stageSnapshot = null; checkpointUnsaved = false; try { localStorage.removeItem(RUN_KEY); } catch { /* A new run overwrites this checkpoint. */ } }
 function captureCheckpoint(stage = G.stage) {
-    return { ...snapshotBuild(), stage, runId: G.runId, checkpointVersion: 2, coop: !!G.coop,
+    return { ...snapshotBuild(), stage, runId: G.runId, checkpointVersion: 2, coop: !!G.coop, partner: G.coop ? partnerSnapshot() : null,
         pendingLevelUps: G.pendingLevelUps, banished: [...G.banished], retry: false };
 }
 export function finalizeEntryCheckpoint() {
@@ -101,6 +101,7 @@ export function continueRun(raw) {
     G.runId = snap.runId || createRunId();
     G.godMode = false;
     setCoop(snap.coop === true);
+    G.partnerBuild = snap.partner || null;
     configureCaps(); refreshGore(); resetBuild(); G.damageBy = {};
     createPlayer(); restoreBuild(snap);
     G.pendingLevelUps = snap.pendingLevelUps;
@@ -128,6 +129,7 @@ function setCoop(coop) {
     G.coop = !!coop;
     G_COOP.on = G.coop;
     G.partner = null;
+    G.partnerBuild = null;
     setSplitInput(G.coop);
 }
 
@@ -145,7 +147,7 @@ export function startStage(stage, restored = false) {
     p.x = 0; p.y = 0; p.dead = false; p.iframes = 1.5;
     recomputeStats(true);
     resetPets();
-    if (G.coop && !G.partner) createPartner();
+    if (G.coop && !G.partner) { createPartner(G.partnerBuild); G.partnerBuild = null; }
     resetPartner();
     setSplitInput(G.coop);
     G.camera.x = 0; G.camera.y = -20;
@@ -201,6 +203,13 @@ export function step(dt) {
     if (G.pendingLevelUps > 0 && G.mode !== 'dead') {
         G.pendingLevelUps--;
         emit('levelUp', { choiceSessionId: `choice:${++G.choiceEventSerial}` });
+        return;
+    }
+    // 2P 영냥이 레벨업: 1P 선택이 끝난 뒤 영냥이 성장 선택 창을 띄운다
+    const partner = G.coop ? G.partner : null;
+    if (partner?.pendingLevelUps > 0 && G.mode !== 'dead') {
+        partner.pendingLevelUps--;
+        emit('partnerLevelUp');
         return;
     }
 

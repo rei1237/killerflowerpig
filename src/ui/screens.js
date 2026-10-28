@@ -1,4 +1,5 @@
 import { bossCoinValue, treasureCoinValue, TREASURE_DROPS } from '../game/coin-drops.js';
+import { initPartnerUI, presentPartnerLevelUp } from './partner-panel.js';
 import { renderPetUpgradeShop } from './pet-upgrade-shop.js';
 import { initBestiary, openBestiary, closeBestiary } from './bestiary.js';
 import { clearEncirclement } from '../game/encirclement.js';
@@ -126,6 +127,7 @@ function drainRewardScreens() {
     if (modalStack.length || !pendingRewardScreens.length || G.mode === 'idle' || G.mode === 'dead') return;
     const next = pendingRewardScreens.shift();
     if (next.type === 'chest') presentChest(next.kind);
+    else if (next.type === 'partner') { if (!presentPartnerLevelUp()) drainRewardScreens(); }
     else presentLevelUp(next.choiceSessionId);
 }
 
@@ -166,7 +168,7 @@ export function showTitle() {
     G.coop = false; G.partner = null; G_COOP.on = false;
     setSplitInput(false);
     setPlaying(false);
-    for (const id of ['story', 'gameover', 'clear', 'ending', 'levelup', 'chest', 'pause']) hide(id);
+    for (const id of ['story', 'gameover', 'clear', 'ending', 'levelup', 'chest', 'pause', 'partner-levelup']) hide(id);
     clearTimeout(chestTimer);
     activeChest = null;
     pendingRewardScreens.length = 0;
@@ -910,6 +912,8 @@ export function initUI() {
     initLoadoutExchange({ onOpen: () => { resetInput(); openModal('loadout-exchange'); }, onClose: () => { closeModal('loadout-exchange'); resetInput(); } });
     initFusionReveal({ onOpen: () => { resetInput(); openModal('fusion-reveal'); }, onClose: () => { closeModal('fusion-reveal'); resetInput(); } });
     initTechSelect({ open: () => openModal('tech-select'), close: () => closeModal('tech-select') });
+    initPartnerUI({ open: id => openModal(id), close: id => closeModal(id) });
+    G.events.partnerLevelUp = () => { pendingRewardScreens.push({ type: 'partner' }); drainRewardScreens(); };
     initPractice({ onOpen: () => { resetInput(); openModal('practice'); }, onClose: () => { closeModal('practice'); resetInput(); } });
     click('btn-practice', () => openPractice());
     click('btn-pause-practice', () => openPractice());
