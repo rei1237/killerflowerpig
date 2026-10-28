@@ -4,6 +4,7 @@ import { glow } from '../core/assets.js';
 import { settings } from '../core/settings.js';
 import { hitEnemy } from './enemies.js';
 import { damagePlayer } from './player.js';
+import { damagePartner } from './coop.js';
 import { embers, smoke } from './effects.js';
 
 export function spawnHazard(kind, x, y, o = {}) {
@@ -110,6 +111,8 @@ export function updateHazards(dt) {
         if (h.kind === 'acid') {
             const dx = p.x - h.x, dy = p.y - h.y;
             if (dx * dx + (dy * dy) / 0.49 < h.radius * h.radius) damagePlayer(h.dmg, h.x, h.y);
+            const q = G.partner;
+            if (q && !q.dead && (q.x - h.x) ** 2 + (q.y - h.y) ** 2 / 0.49 < h.radius * h.radius) damagePartner(h.dmg, h.x, h.y);
             continue;
         }
         // 아군 장판: 범위 내 적에게 틱 피해

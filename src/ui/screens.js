@@ -22,7 +22,7 @@ import { resize } from '../game/render.js';
 import { settings, setSetting } from '../core/settings.js';
 import { save, persist, settleRunStage, SHOP, upgradeLevel, buyUpgrade, equipPet, recordTitleProgress, equipTitle, lastSaveError, queueCoins, retryPendingCoins, pendingCoinTotal, openChest, buyRelic, buyAccessory, setAccessory } from '../core/save.js';
 import { audio } from '../core/audio.js';
-import { input, resetInput } from '../core/input.js';
+import { input, resetInput, setSplitInput } from '../core/input.js';
 
 import { shopAccess, highestClearedStage } from '../core/shop-access.js';
 import { PET_REDEMPTION } from '../core/pet-redemption.js';
@@ -36,7 +36,7 @@ import { syncFusionButtons } from './fusion-button.js';
 import { initPractice, openPractice, closePractice, cancelPractice, shouldOfferPractice } from './practice.js';
 import { initTechSelect, openTechSelect } from './tech-select.js';
 import { techSummary } from '../game/tech.js';
-import { difficultyOf } from '../data/difficulty.js';
+import { difficultyOf, G_COOP } from '../data/difficulty.js';
 import { RESONANCE_STEPS } from '../data/techs.js';
 import { initTutorial, openTutorial, closeTutorial, shouldOfferTutorial } from './tutorial.js';
 import { renderCosmeticShop, startCosmeticPreview, stopCosmeticPreview } from './cosmetic-shop.js';
@@ -162,6 +162,9 @@ export function showTitle() {
     if (!retryPendingCoins()) notifyPending();
     G.mode = 'idle';
     G.paused = false;
+    // 타이틀/연습은 항상 1P. 이어하기·재도전은 체크포인트의 2P 여부를 다시 적용한다.
+    G.coop = false; G.partner = null; G_COOP.on = false;
+    setSplitInput(false);
     setPlaying(false);
     for (const id of ['story', 'gameover', 'clear', 'ending', 'levelup', 'chest', 'pause']) hide(id);
     clearTimeout(chestTimer);
@@ -917,9 +920,9 @@ export function initUI() {
 
     click('btn-new', () => {
         // 튜토리얼/연습 → 시작 테크 선택 → 스토리 → 출격
-        const begin = () => openTechSelect((techId, difficulty) => {
+        const begin = () => openTechSelect((techId, difficulty, coop) => {
             clearRun();
-            beginStageFlow(1, () => { G.godMode = false; newRun(1, techId, difficulty); startPlaying(); });
+            beginStageFlow(1, () => { G.godMode = false; newRun(1, techId, difficulty, coop); startPlaying(); });
         });
         const practiceThenBegin = () => shouldOfferPractice() ? openPractice({ onDone: begin }) : begin();
         if (shouldOfferTutorial()) openTutorial({ onDone: practiceThenBegin });
@@ -992,9 +995,9 @@ export function initUI() {
         b.onclick = () => {
             if (!devUnlocked) return;
             audio.unlock();
-            openTechSelect((techId, difficulty) => {
+            openTechSelect((techId, difficulty, coop) => {
                 clearRun();
-                beginStageFlow(s, () => { newRun(s, techId, difficulty); G.godMode = $('dev-god').checked; startPlaying(); });
+                beginStageFlow(s, () => { newRun(s, techId, difficulty, coop); G.godMode = $('dev-god').checked; startPlaying(); });
             });
         };
         grid.appendChild(b);

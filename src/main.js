@@ -5,7 +5,7 @@ import { G, configureCaps } from './game/state.js';
 import { initRender, render, resize, observeRenderCost } from './game/render.js';
 import { step, onPlayerDeath } from './game/game.js';
 import { loadAssets } from './core/assets.js';
-import { initInput, input, resetInput } from './core/input.js';
+import { initInput, input, resetInput, pollGamepads } from './core/input.js';
 import { audio } from './core/audio.js';
 import { createLoadingScreen } from './ui/loading.js';
 import {
@@ -58,6 +58,7 @@ function frame(now) {
     if (dt > 0.25) dt = 0.25; // 탭 복귀 시 순간이동 방지
     acc += dt;
     const t0 = performance.now();
+    pollGamepads();
     let n = 0;
     while (acc >= STEP && n < MAX_STEPS) {
         step(STEP);

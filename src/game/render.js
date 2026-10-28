@@ -1,4 +1,5 @@
 import { drawEncirclement, updateEncirclementCamera } from './encirclement.js';
+import { drawPartner, drawPartnerShadow, drawPartnerEffects } from './coop.js';
 import { drawPets } from './pets.js';
 // 월드 렌더링. 캔버스 1장, 레이어 순서로 그리며 화면 밖 객체는 컬링.
 import { G, VIEW_H, setVisualTier } from './state.js';
@@ -194,6 +195,7 @@ export function render(dt) {
     }
     ctx.moveTo(p.x + 14, p.y);
     ctx.ellipse(p.x, p.y, 14, 5, 0, 0, Math.PI * 2);
+    drawPartnerShadow(ctx);
     const boss = G.boss;
     if (boss) {
         ctx.moveTo(boss.x + boss.radius * 1.3, boss.y);
@@ -205,18 +207,22 @@ export function render(dt) {
 
     // 6. Y 정렬 캐릭터
     drawList.push(p);
+    const partner = G.coop ? G.partner : null;
+    if (partner) drawList.push(partner);
     if (boss) drawList.push(boss);
     collectTallProps(drawList, vx0, vy0, vx1, vy1);
     drawList.sort(byY);
     for (let i = 0; i < drawList.length; i++) {
         const o = drawList[i];
         if (o === p) drawPlayer(ctx);
+        else if (o === partner) drawPartner(ctx);
         else if (o === boss) boss.draw(ctx);
         else if (o.isProp) drawProp(ctx, o);
         else drawEnemy(ctx, o);
     }
 
     drawPets(ctx, images.petYeongnyang);
+    drawPartnerEffects(ctx);
 
     // 소품 빛 번짐 (가로등·네온·독 드럼통)
     drawPropLights(ctx);

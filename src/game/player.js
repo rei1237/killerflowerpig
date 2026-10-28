@@ -3,7 +3,7 @@ import { constrainEncirclementPlayer } from './encirclement.js';
 import { accessoryStats, activeAccessory, accessoryEquipHP } from '../core/accessories.js';
 // 플레이어(연이): 8방향 이동, 피격/무적, 재생, 패시브·영구강화 반영 스탯
 import { G, emit } from './state.js';
-import { input } from '../core/input.js';
+import { playerMove } from '../core/input.js';
 import { atlases, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { relicStats } from '../data/relics.js';
@@ -104,7 +104,7 @@ export function updatePlayer(dt) {
     // 테크 공명 단계가 바뀌면(무기 획득·융합 포함) 캐릭터 보너스를 다시 계산
     if (G.tech && resonanceTier() !== p.techTier) recomputeStats();
     const s = p.stats;
-    advancePlayerMovement(p, input.move, dt);
+    advancePlayerMovement(p, playerMove(0), dt);
     constrainEncirclementPlayer();
 
     if (p.iframes > 0) p.iframes -= dt;

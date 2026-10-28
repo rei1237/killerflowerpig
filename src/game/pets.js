@@ -13,7 +13,8 @@ let portrait = null;
 export function setPetImage(image) { portrait = image; }
 export function resetPets() { pet = null; }
 export function updatePets(dt) {
-    if (!G.player || G.player.dead || save.equippedPet !== 'pet_yeongnyang' || !save.inventory.includes('pet_yeongnyang')) { pet = null; return; }
+    // 2P 협동에서는 영냥이가 직접 싸우므로 동행 펫 영냥이를 쓸 수 없다.
+    if (G.coop || !G.player || G.player.dead || save.equippedPet !== 'pet_yeongnyang' || !save.inventory.includes('pet_yeongnyang')) { pet = null; return; }
     const p = G.player;
     const training = petTrainingStats(save);
     if (!pet) pet = { x: p.x - 32, y: p.y + 10, cd: 0.6, healCd: PET_POWER.healInterval, swipe: 0, animClock: 0, attackElapsed: 99, healElapsed: 99, moving: false, flip: p.flip };

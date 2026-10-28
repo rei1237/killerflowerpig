@@ -7,7 +7,31 @@ import { audio } from '../core/audio.js';
 
 const LAST_KEY = 'kfp.tech.v1';
 const DIFF_KEY = 'kfp.difficulty.v1';
+const COOP_KEY = 'kfp.coop.v1';
 let difficulty = 'normal';
+let coop = false;
+function readCoop() { try { return localStorage.getItem(COOP_KEY) === '2'; } catch { return false; } }
+function writeCoop(v) { try { localStorage.setItem(COOP_KEY, v ? '2' : '1'); } catch { /* 편의 기능 */ } }
+export const COOP_DESC = Object.freeze({
+    solo: '연이 혼자 출격합니다. 키보드는 WASD·방향키 모두 연이를 움직이고, 게임패드도 쓸 수 있어요.',
+    coop: '영냥이(2P)가 함께 싸웁니다 · 키보드: WASD = 1P 연이, 방향키 = 2P 영냥이 · 게임패드 1개는 2P, 2개면 첫째 1P·둘째 2P. 영냥이는 연이의 레벨에 맞춰 사주 성광·별자리 궤도·초승달 부메랑·타로 낙하·달빛 수호부를 익히고, 쓰러지면 10초 뒤 부활해요. 2P 중에는 동행 펫 영냥이를 쓸 수 없어요. ⚠ 2P 압박: 적 2.2배 출현 · 체력 ×1.5 · 피해 ×1.25 · 엘리트 +1 · 보스 체력 ×1.4 (적 1마리당 경험치는 줄어요).',
+});
+function renderCoop() {
+    const list = $('coop-list');
+    if (!list) return;
+    list.replaceChildren(...[[false, '🐷 1P 혼자'], [true, '🐷🐈 2P 협동 · 영냥이']].map(([value, label]) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'diff-option coop-option';
+        b.dataset.coop = value ? '2' : '1';
+        b.setAttribute('role', 'radio');
+        b.setAttribute('aria-checked', String(value === coop));
+        b.textContent = label;
+        b.onclick = () => { if (value !== coop) audio.sfx('click'); coop = value; renderCoop(); };
+        return b;
+    }));
+    $('coop-desc').textContent = coop ? COOP_DESC.coop : COOP_DESC.solo;
+}
 function readDiff() { try { const d = localStorage.getItem(DIFF_KEY); return DIFFICULTIES[d] ? d : 'normal'; } catch { return 'normal'; } }
 function writeDiff(d) { try { localStorage.setItem(DIFF_KEY, d); } catch { /* 편의 기능 */ } }
 
@@ -173,8 +197,9 @@ function confirm() {
     onPick = null;
     writeLast(selected);
     writeDiff(difficulty);
+    writeCoop(coop);
     modal.close();
-    pick(selected, difficulty);
+    pick(selected, difficulty, coop);
 }
 
 export function initTechSelect(api) {
@@ -196,7 +221,9 @@ export function openTechSelect(pick) {
     onPick = pick;
     selected = readLast();
     difficulty = readDiff();
+    coop = readCoop();
     renderDifficulty();
+    renderCoop();
     renderList();
     renderDetail();
     modal.open();
