@@ -157,3 +157,38 @@ test('2P raises the population over 2x and makes every enemy and boss stronger',
     const random = Math.random; let seed = 7; Math.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
     try { const a = alive(false), b = alive(true); assert.ok(b >= a * 1.9, `${a} -> ${b}`); } finally { Math.random = random; }
 });
+
+test('boss telegraphs alternate between 연이 and 영냥이, and boss hits damage whoever stands inside', async () => {
+    const { Boss } = await import('../src/game/boss.js');
+    start(true); G.boss = null; G.hazards.clear();
+    const p = G.player, q = G.partner, b = new Boss(1);
+    p.x = 0; p.y = 0; q.x = 300; q.y = 0; b.x = 150; b.y = -100;
+    const picks = [b.pickTarget(), b.pickTarget(), b.pickTarget(), b.pickTarget()];
+    assert.ok(picks.includes(q) && picks.includes(p), 'both players are targeted over consecutive patterns');
+    // 표적이 영냥이일 때 예고 원은 영냥이 발밑에 깔린다
+    b.target = q; G.hazards.clear();
+    b.task_pools();
+    const first = G.hazards.items[0];
+    assert.equal(first.kind, 'tcircle'); assert.equal(first.x, q.x); assert.equal(first.y, q.y);
+    // 판정은 범위 안 모든 플레이어: 영냥이만 맞고 멀리 있는 연이는 무사
+    q.iframes = 0; p.iframes = 0;
+    const qBefore = q.hp, pBefore = p.hp;
+    b.circleHit({ x: q.x, y: q.y, radius: 60, color: '#fff' });
+    assert.ok(q.hp < qBefore); assert.equal(p.hp, pBefore);
+    // 둘이 함께 서 있으면 둘 다 맞는다
+    q.x = 10; q.iframes = 0; p.iframes = 0;
+    const both = [p.hp, q.hp];
+    b.lineHit({ x: -50, y: 0, angle: 0, len: 200, width: 40, color: '#fff' });
+    assert.ok(p.hp < both[0] && q.hp < both[1]);
+    // 쓰러진 영냥이는 표적이 되지 않는다
+    q.dead = true;
+    for (let i = 0; i < 4; i++) assert.equal(b.pickTarget(), p);
+    assert.equal(b.prey, p);
+});
+
+test('solo boss always targets 연이', async () => {
+    const { Boss } = await import('../src/game/boss.js');
+    start(false); G.boss = null;
+    const b = new Boss(1);
+    for (let i = 0; i < 4; i++) assert.equal(b.pickTarget(), G.player);
+});

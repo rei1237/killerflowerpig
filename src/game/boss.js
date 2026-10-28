@@ -13,6 +13,7 @@ import { audio } from '../core/audio.js';
 import { fireEnemyShot, spawnEnemy, edgePosition } from './enemies.js';
 import { spawnHazard } from './hazards.js';
 import { damagePlayer } from './player.js';
+import { hurtTarget } from './coop.js';
 import { dropGem, dropPickup, dropCoin } from './pickups.js';
 import { BOSS_XP_GEMS, bossGemValue } from '../data/boss-rewards.js';
 import { blood, gibs, decal, damageText, shake, flash, hitstop, sparks, floatText, smoke } from './effects.js';
@@ -142,7 +143,7 @@ export class Boss {
         this.motionVX = 0; this.motionVY = 0;
         // A discarded Hunter must not release its second lock into a new stage
         // or a replacement player. Other boss lifecycles are unchanged.
-        if (['hunt', 'trainingCharge', 'faultline'].includes(this.def.signature) && (G.stage !== this.stage || this.task?.target && this.task.target !== G.player)) {
+        if (['hunt', 'trainingCharge', 'faultline'].includes(this.def.signature) && (G.stage !== this.stage || this.task?.target && this.task.target !== this.prey)) {
             this.cancelPatternWarnings(); this.task = null; return;
         }
         updateBossMotion(this, dt);
@@ -158,7 +159,7 @@ export class Boss {
         if (this.stunImmuneT > 0) this.stunImmuneT = Math.max(0, this.stunImmuneT - dt);
         if (this.stunT > 0) this.stunT = this.task ? 0 : Math.max(0, this.stunT - dt);
         const stunned = this.stunT > 0;
-        const p = G.player;
+        const p = this.prey;
         const dx = p.x - this.x, dy = p.y - this.y;
         const dist = Math.hypot(dx, dy) || 1;
 
@@ -199,8 +200,8 @@ export class Boss {
         if (['hunt', 'trainingCharge'].includes(this.def.signature)) {
             // Active dashes use their swept collision below. Windups and the
             // guaranteed stationary recovery are safe to punish at close range.
-            if (!this.task && !stunned && Math.hypot(p.x - this.x, p.y - this.y) < this.radius + p.radius + 6) damagePlayer(this.dmg, this.x, this.y);
-        } else if (!stunned && dist < this.radius + p.radius + 6) damagePlayer(this.dmg, this.x, this.y);
+            if (!this.task && !stunned) this.hurtPlayers(pl => Math.hypot(pl.x - this.x, pl.y - this.y) < this.radius + pl.radius + 6, this.dmg);
+        } else if (!stunned) this.hurtPlayers(pl => Math.hypot(pl.x - this.x, pl.y - this.y) < this.radius + pl.radius + 6, this.dmg);
 
         const fd = this.state === 'attack' ? 0.09 : 0.13;
         if (this.animT > fd) {
@@ -214,8 +215,38 @@ export class Boss {
         }
     }
 
+    // 2P 협동: 패턴마다 표적을 번갈아 고른다. 쓰러진 2P·화면 밖으로 너무 먼 쪽은 건너뛴다.
+    // 패턴 하나가 끝날 때까지 표적은 고정이라 예고는 항상 그 사람 기준으로 읽힌다.
+    get prey() {
+        const t = this.target, q = G.partner;
+        return t && t === q && G.coop && !q.dead ? q : G.player;
+    }
+    pickTarget() {
+        const p = G.player, q = G.partner;
+        this.target = p;
+        if (!G.coop || !q || q.dead) return p;
+        this.targetTurn = (this.targetTurn || 0) + 1;
+        let pick = this.targetTurn % 2 ? q : p;
+        if (p.dead) pick = q;
+        else {
+            const far = Math.max(G.view.w, G.view.h) * 0.9, other = pick === q ? p : q;
+            if (Math.hypot(pick.x - this.x, pick.y - this.y) > far && Math.hypot(other.x - this.x, other.y - this.y) <= far) pick = other;
+        }
+        this.target = pick;
+        if (pick === q) floatText(q.x, q.y - 76, '⚠ 영냥이를 노린다!', '#ff7ab6', 1.1);
+        return pick;
+    }
+    // 보스 피해 판정은 표적과 무관하게 범위 안의 모든 플레이어에게 들어간다.
+    hurtPlayers(inside, amount, x = this.x, y = this.y) {
+        const p = G.player;
+        if (inside(p)) damagePlayer(amount, x, y);
+        const q = G.partner;
+        if (G.coop && q && !q.dead && inside(q)) hurtTarget(q, amount, x, y, damagePlayer);
+    }
+
     startPattern() {
         this.cancelPatternWarnings();
+        this.pickTarget();
         const list = this.def.phases[this.phase];
         const weights = {};
         for (const k of list) weights[k] = k === this.lastPattern ? 0.3 : 1;
@@ -257,10 +288,10 @@ export class Boss {
     }
 
     warn(kind, x, y, options, release) {
-        const epoch = this.patternEpoch, target = G.player;
+        const epoch = this.patternEpoch, target = this.prey;
         const onFire = h => {
             if (!this.alive || this.patternEpoch !== epoch) return;
-            if (this.def.signature === 'faultline' && (G.stage !== this.stage || G.player !== target)) return;
+            if (this.def.signature === 'faultline' && (G.stage !== this.stage || this.prey !== target)) return;
             setBossMotion(this, 'attack', .2);
             release?.(h);
         };
@@ -287,18 +318,19 @@ export class Boss {
     }
 
     circleHit(h, multiplier = .85) {
-        const dx = G.player.x - h.x, dy = G.player.y - h.y;
-        if (dx * dx + dy * dy / .49 < h.radius * h.radius) damagePlayer(this.dmg * multiplier, h.x, h.y);
+        this.hurtPlayers(pl => (pl.x - h.x) ** 2 + (pl.y - h.y) ** 2 / .49 < h.radius * h.radius, this.dmg * multiplier, h.x, h.y);
         sparks(h.x, h.y, 12, h.color, 160);
     }
 
     lineHit(h, multiplier = .85) {
-        const dx = G.player.x - h.x, dy = G.player.y - h.y;
-        const along = dx * Math.cos(h.angle) + dy * Math.sin(h.angle);
-        const across = -dx * Math.sin(h.angle) + dy * Math.cos(h.angle);
         // Footpoint checks match the drawn rectangle exactly; no invisible
         // expansion outside the telegraph, and no new collision body radius.
-        if (along >= 0 && along <= h.len && Math.abs(across) <= h.width / 2) damagePlayer(this.dmg * multiplier, h.x, h.y);
+        this.hurtPlayers(pl => {
+            const dx = pl.x - h.x, dy = pl.y - h.y;
+            const along = dx * Math.cos(h.angle) + dy * Math.sin(h.angle);
+            const across = -dx * Math.sin(h.angle) + dy * Math.cos(h.angle);
+            return along >= 0 && along <= h.len && Math.abs(across) <= h.width / 2;
+        }, this.dmg * multiplier, h.x, h.y);
         for (let i = 0; i < 5; i++) sparks(h.x + Math.cos(h.angle) * h.len * i / 4, h.y + Math.sin(h.angle) * h.len * i / 4, 3, h.color, 110);
     }
 
@@ -307,7 +339,7 @@ export class Boss {
     task_barrage() {
         setBossMotion(this, 'windup');
         const x = this.x, y = this.bodyY();
-        const a = Math.atan2(G.player.y - 18 - y, G.player.x - x);
+        const a = Math.atan2(this.prey.y - 18 - y, this.prey.x - x);
         // 변이: 각 사격이 3갈래 부채꼴. 광폭화: 양옆 측면 사격선이 반 박자 늦게 교차한다.
         const shots = 3 + this.phase, fanCount = this.phase ? 3 : 1, fanSpread = .28;
         let last = 1.15 + (shots - 1) * .24;
@@ -333,7 +365,7 @@ export class Boss {
     hunterRecoveryTask() {
         setBossMotion(this, 'recover');
         this.alpha = 1;
-        return { t: 0, phase: 'recover', target: G.player, step: (dt, s) => {
+        return { t: 0, phase: 'recover', target: this.prey, step: (dt, s) => {
             if (s.t < HUNTER_TUNING.recovery) return;
             this.endTask(1.8); this.attackT = Math.max(1.35, this.attackT);
             setBossMotion(this, 'walk');
@@ -345,10 +377,10 @@ export class Boss {
     // Each tell gets a rendered state of its own, even after a long frame.
     task_hunt() {
         const task = { t: 0, elapsed: 0, phase: 'warning', strike: 0, dash: 0,
-            target: G.player, speed: HUNTER_TUNING.dashSpeed * (1 + this.phase * HUNTER_TUNING.phaseSpeedStep), lane: null,
+            target: this.prey, speed: HUNTER_TUNING.dashSpeed * (1 + this.phase * HUNTER_TUNING.phaseSpeedStep), lane: null,
             warnings: HUNTER_TUNING.phaseWarnings[Math.min(this.phase, HUNTER_TUNING.phaseWarnings.length - 1)] };
         const lock = s => {
-            const p = G.player, a = Math.atan2(p.y - this.y, p.x - this.x);
+            const p = this.prey, a = Math.atan2(p.y - this.y, p.x - this.x);
             const length = Math.min(HUNTER_TUNING.dashRange, Math.max(160, Math.hypot(p.x - this.x, p.y - this.y)));
             const radius = this.radius + p.radius + 6, warning = s.warnings[s.strike];
             // The rectangle conservatively encloses the entire swept capsule,
@@ -363,7 +395,7 @@ export class Boss {
         };
         const recover = () => { this.cancelPatternWarnings(); this.task = this.hunterRecoveryTask(); };
         task.step = (dt, s) => {
-            if (G.stage !== this.stage || G.player !== s.target || !this.alive) { this.cancelPatternWarnings(); this.task = null; return; }
+            if (G.stage !== this.stage || this.prey !== s.target || !this.alive) { this.cancelPatternWarnings(); this.task = null; return; }
             if (s.phase === 'warning') {
                 s.elapsed += dt;
                 if (s.elapsed + 1e-9 >= s.lane.warning) {
@@ -373,7 +405,7 @@ export class Boss {
             }
             const { angle, length, radius } = s.lane;
             const d = Math.min(s.speed * dt, length - s.dash), ux = Math.cos(angle), uy = Math.sin(angle);
-            const ox = this.x - G.player.x, oy = this.y - G.player.y;
+            const ox = this.x - s.target.x, oy = this.y - s.target.y;
             const projection = ox * ux + oy * uy, c = ox * ox + oy * oy - radius * radius;
             const discriminant = projection * projection - c;
             const contact = c <= 0 ? 0 : discriminant >= 0 ? -projection - Math.sqrt(discriminant) : Infinity;
@@ -381,7 +413,7 @@ export class Boss {
             const move = hit ? contact : d;
             this.x += ux * move; this.y += uy * move; s.dash += move;
             this.flip = ux < 0;
-            if (hit) { damagePlayer(this.dmg, this.x, this.y); recover(); return; }
+            if (hit) { hurtTarget(s.target, this.dmg, this.x, this.y, damagePlayer); recover(); return; }
             if (s.dash + 1e-9 < length) return;
             if (s.strike + 1 < s.warnings.length) { s.strike++; lock(s); }
             else recover();
@@ -407,7 +439,7 @@ export class Boss {
                 audio.sfx('warn');
             }
             for (const lock of s.locks) {
-                if (s.t - lock.start <= .6) lock.h.angle = Math.atan2(G.player.y - 18 - lock.h.y, G.player.x - lock.h.x);
+                if (s.t - lock.start <= .6) lock.h.angle = Math.atan2(this.prey.y - 18 - lock.h.y, this.prey.x - lock.h.x);
             }
             if (s.t > end) { this.endTask(2.1); this.attackT = Math.max(1.35, this.attackT); }
         } };
@@ -420,7 +452,7 @@ export class Boss {
     task_artillery() {
         setBossMotion(this, 'windup');
         // 강화: 전진 포격 4발 + 기본부터 측면 귀환 포격 (변이: 양 측면, 광폭화: 양 측면 2열)
-        const a = Math.atan2(G.player.y - this.y, G.player.x - this.x);
+        const a = Math.atan2(this.prey.y - this.y, this.prey.x - this.x);
         const shots = [[110, 0], [215, 0], [320, 0], [425, 0], [270, 105]];
         if (this.phase >= 1) shots.push([270, -105]);
         if (this.phase === 2) shots.push([370, 150], [370, -150]);
@@ -441,7 +473,7 @@ export class Boss {
     // a wide permanent exit; phase changes rotate that opening, not its size.
     task_toxicTide() {
         setBossMotion(this, 'windup');
-        const x = G.player.x, y = G.player.y, gap = Math.atan2(y - this.y, x - this.x) + this.phase * .35;
+        const x = this.prey.x, y = this.prey.y, gap = Math.atan2(y - this.y, x - this.x) + this.phase * .35;
         // 강화: 기본부터 출구가 반대쪽인 두 번째 파도, 광폭화는 출구가 120도씩 도는 세 번째 파도. 웅덩이가 더 오래 남는다.
         const waves = this.phase === 2 ? 3 : 2, acid = [3.4, 4.0, 4.6][this.phase] || 3.4, turn = waves === 3 ? Math.PI * 2 / 3 : Math.PI;
         for (let w = 0; w < waves; w++) for (let i = 2; i <= 6; i++) {
@@ -460,7 +492,7 @@ export class Boss {
     // the queen's landing point, so standing still in a safe quadrant fails.
     task_crosscut() {
         setBossMotion(this, 'windup');
-        const x = G.player.x, y = G.player.y, angle = this.signatureCount % 2 ? Math.PI / 4 : -Math.PI / 4;
+        const x = this.prey.x, y = this.prey.y, angle = this.signatureCount % 2 ? Math.PI / 4 : -Math.PI / 4;
         // 기본: 교차 2줄 + 추격 1회 / 변이: 3줄 + 추격 1회 / 광폭화: 4줄(간격 단축) + 추격 2회
         const cuts = [2, 3, 4][this.phase] || 2, gapT = this.phase === 2 ? .55 : .8;
         const pursuits = this.phase === 2 ? 2 : 1, daggers = [3, 3, 5][this.phase] || 3;
@@ -469,7 +501,7 @@ export class Boss {
             this.x = h.x; this.y = h.y; this.alpha = 1; this.flip = Math.cos(h.angle) < 0;
             this.lineHit(h); audio.sfx('zap');
             // 그림자 단검: 착지 지점에서 연이를 향한 부채꼴
-            const tx = G.player.x - h.x, ty = G.player.y - 18 - h.y, aim = Math.atan2(ty, tx);
+            const tx = this.prey.x - h.x, ty = this.prey.y - 18 - h.y, aim = Math.atan2(ty, tx);
             for (let k = 0; k < daggers; k++) {
                 const a = aim + (daggers > 1 ? (k / (daggers - 1) - .5) * .5 : 0);
                 fireEnemyShot(h.x, h.y, Math.cos(a), Math.sin(a), 230, this.dmg * .45, 'boss', 6);
@@ -478,7 +510,7 @@ export class Boss {
         const pursue = left => {
             // 추격 베기: 현재 연이 위치를 지나가는 새 칼날 (예고 0.6초)
             const a = (this.signatureCount + left) % 2 ? Math.PI / 4 : -Math.PI / 4;
-            const px = G.player.x, py = G.player.y;
+            const px = this.prey.x, py = this.prey.y;
             this.warn('tline', px - Math.cos(a) * len / 2, py - Math.sin(a) * len / 2, { angle: a, len, width, delay: pursuitWarn, color: '#ff6fd0' }, h => {
                 strike(h);
                 if (left > 1) pursue(left - 1);
@@ -500,7 +532,7 @@ export class Boss {
     // The second is delayed and has a different escape bearing.
     task_echo() {
         setBossMotion(this, 'windup');
-        const targetX = G.player.x, targetY = G.player.y;
+        const targetX = this.prey.x, targetY = this.prey.y;
         // 강화: 기본 메아리 3개 / 변이 4개 / 광폭화 4개·더 빠른 탄, 간격 단축·탄 수 증가
         const echoes = this.phase ? 4 : 3, gapT = this.phase === 2 ? .6 : .8, speed = this.phase === 2 ? 195 : 170;
         const spots = [[-115, -45, -.4], [115, 45, 1.2], [0, -120, 2.6], [0, 120, 4.0]];
@@ -525,7 +557,7 @@ export class Boss {
     // hammer splits that center. The warning footprints are the damage test.
     task_faultline() {
         setBossMotion(this, 'windup');
-        const x = G.player.x, y = G.player.y, a = Math.atan2(y - this.y, x - this.x);
+        const x = this.prey.x, y = this.prey.y, a = Math.atan2(y - this.y, x - this.x);
         for (const offset of [-86, 86, 0]) {
             const sx = x - Math.cos(a) * 240 - Math.sin(a) * offset;
             const sy = y - Math.sin(a) * 240 + Math.cos(a) * offset;
@@ -553,7 +585,7 @@ export class Boss {
         // Mutation reacquires the player's NEW position after the fixed grid;
         // frenzy repeats with an off-beat second verdict. Each circle gets its
         // full warning after acquisition, never an invisible tracking hit.
-        const target = G.player, verdicts = this.phase, warning = 1.05;
+        const target = this.prey, verdicts = this.phase, warning = 1.05;
         let queued = 0, next = last + .15;
         audio.sfx('warn');
         return { t: 0, target, step: (dt, task) => {
@@ -577,7 +609,7 @@ export class Boss {
     // the hourglass settles only after a full 2-second, nontracking countdown.
     task_contract() {
         setBossMotion(this, 'windup');
-        const x = G.player.x, y = G.player.y;
+        const x = this.prey.x, y = this.prey.y;
         const angle = Math.atan2(y - 18 - this.bodyY(), x - this.x);
         // 강화: 금화 사격선 7/9/11줄·탄속 증가, 계약 원 2/2/3개, 결산 금화 확산
         const lines = 7 + this.phase * 2, spread = .6 + this.phase * .12, coinSpeed = 240 + this.phase * 25;
@@ -609,14 +641,14 @@ export class Boss {
     // Warning/recovery never shrink with HP. A hit ends the dash immediately.
     trainingRecoveryTask() {
         setBossMotion(this, 'recover');
-        return { t: 0, phase: 'recover', target: G.player, step: (dt, s) => {
+        return { t: 0, phase: 'recover', target: this.prey, step: (dt, s) => {
             if (s.t < this.def.pacing.safeRecovery) return;
             this.task = null; this.attackT = 1.5; setBossMotion(this, 'walk');
         } };
     }
 
     task_trainingCharge() {
-        const p = G.player, tuning = this.def.pacing;
+        const p = this.prey, tuning = this.def.pacing;
         const angle = Math.atan2(p.y - this.y, p.x - this.x);
         const ux = Math.cos(angle), uy = Math.sin(angle);
         const length = Math.min(tuning.dashRange, Math.max(80, Math.hypot(p.x - this.x, p.y - this.y)));
@@ -637,7 +669,7 @@ export class Boss {
             const contact = c <= 0 ? 0 : disc >= 0 ? -projection - Math.sqrt(disc) : Infinity;
             const hit = contact >= 0 && contact <= distance, moved = hit ? contact : distance;
             this.x += ux * moved; this.y += uy * moved; s.dash += moved; this.flip = ux < 0;
-            if (hit) damagePlayer(this.dmg, this.x, this.y);
+            if (hit) hurtTarget(p, this.dmg, this.x, this.y, damagePlayer);
             if (hit || s.dash + 1e-9 >= length) {
                 this.cancelPatternWarnings(); this.task = this.trainingRecoveryTask();
             }
@@ -647,7 +679,7 @@ export class Boss {
     // ---- 패턴 ----
     task_charge() {
         setBossMotion(this, 'windup');
-        const p = G.player;
+        const p = this.prey;
         const a = Math.atan2(p.y - this.y, p.x - this.x);
         const len = 420;
         const warning = (this.def.pacing?.chargeWarning ?? 0.75) / Math.sqrt(this.phaseMul);
@@ -677,7 +709,7 @@ export class Boss {
     // never the generic rapid unmarked ring. Fifteen projectiles maximum.
     task_royalVolley() {
         setBossMotion(this, 'windup');
-        const a = Math.atan2(G.player.y - 18 - this.bodyY(), G.player.x - this.x);
+        const a = Math.atan2(this.prey.y - 18 - this.bodyY(), this.prey.x - this.x);
         const waves = this.phase === 2 ? 3 : 2;
         for (let wave = 0; wave < waves; wave++) for (let i = 0; i < 5; i++) {
             const angle = a + (i - 2) * .18 + (wave % 2 ? .09 : 0);
@@ -735,7 +767,7 @@ export class Boss {
             step: (dt, s) => {
                 const b = this.def.barrage || {};
                 if (s.t > 0.28 * (b.interval ?? 1) * s.n + 0.35) {
-                    const p = G.player;
+                    const p = this.prey;
                     const base = Math.atan2(p.y - 18 - this.bodyY(), p.x - this.x);
                     setBossMotion(this, 'attack', .13);
                     this.flip = Math.cos(base) < 0;
@@ -776,7 +808,7 @@ export class Boss {
 
     task_pools() {
         setBossMotion(this, 'windup');
-        const p = G.player;
+        const p = this.prey;
         const n = 4 + this.phase * 2;
         for (let i = 0; i < n; i++) {
             const x = p.x + (i === 0 ? 0 : rand(-170, 170));
@@ -785,9 +817,7 @@ export class Boss {
                 radius: 48, delay: 1.0 + i * 0.08, color: '#7dff4a',
             }, (h) => {
                     setBossMotion(this, 'attack', .16);
-                    const pl = G.player;
-                    const dx = pl.x - h.x, dy = pl.y - h.y;
-                    if (dx * dx + (dy * dy) / 0.49 < h.radius * h.radius) damagePlayer(this.dmg * 0.8, h.x, h.y);
+                    this.hurtPlayers(pl => (pl.x - h.x) ** 2 + (pl.y - h.y) ** 2 / 0.49 < h.radius * h.radius, this.dmg * 0.8, h.x, h.y);
                     spawnHazard('acid', h.x, h.y, { radius: h.radius, duration: 4, dmg: this.dmg * 0.25, tick: 0.4 });
                     blood(h.x, h.y, 8, 0, 0, '#3f8a1a');
             });
@@ -802,9 +832,7 @@ export class Boss {
         this.warn('tcircle', this.x, this.y, {
             radius: R, delay: 1.0, color: '#ff1a3a',
         }, (h) => {
-                const pl = G.player;
-                const dx = pl.x - h.x, dy = pl.y - h.y;
-                if (dx * dx + (dy * dy) / 0.49 < R * R) damagePlayer(this.dmg * 1.3, h.x, h.y);
+                this.hurtPlayers(pl => (pl.x - h.x) ** 2 + (pl.y - h.y) ** 2 / 0.49 < R * R, this.dmg * 1.3, h.x, h.y);
                 shake(12);
                 audio.sfx('explode');
                 sparks(h.x, h.y, 20, '#ff6a3a', 300);
@@ -822,7 +850,7 @@ export class Boss {
         return {
             line: h, fired: false,
             step: (dt, s) => {
-                const p = G.player;
+                const p = this.prey;
                 if (s.t < 0.75) {
                     s.line.x = this.x; s.line.y = this.bodyY();
                     s.line.angle = Math.atan2(p.y - 18 - this.bodyY(), p.x - this.x);
@@ -846,7 +874,7 @@ export class Boss {
 
     task_blink() {
         setBossMotion(this, 'windup');
-        const p = G.player;
+        const p = this.prey;
         const a = Math.random() * Math.PI * 2;
         const tx = p.x + Math.cos(a) * 140, ty = p.y + Math.sin(a) * 100;
         spawnHazard('tcircle', tx, ty, { radius: this.radius * 1.6, delay: 0.7, color: '#c040ff' });
@@ -859,9 +887,9 @@ export class Boss {
                     smoke(this.x, this.y, 10, 'rgba(80,0,90,0.5)');
                     this.x = s.tx; this.y = s.ty;
                     this.alpha = 1;
-                    const pl = G.player;
+                    const pl = this.prey;
                     this.flip = pl.x < this.x;
-                    if (Math.hypot(pl.x - this.x, pl.y - this.y) < this.radius * 1.6) damagePlayer(this.dmg, this.x, this.y);
+                    this.hurtPlayers(o => Math.hypot(o.x - this.x, o.y - this.y) < this.radius * 1.6, this.dmg);
                     this.radial(8 + this.phase * 4, Math.random(), 210);
                     blood(this.x, this.y - this.radius, 14);
                 }
