@@ -66,8 +66,8 @@ test('reachable mid and two/three-final late fixtures begin real attacks and fin
  assert.ok(DAMAGE_SCENARIOS[1].finals<=1);
  // 느려진 레벨업으로 픽스처 이름('2융합'·'3융합'·'절대+최종1')보다 실제 도달 개수가 적다: 10스테이지 직전 2융합=1개, '3융합'=2개, 절대+1=절대 무기 1개(일반 최종 0개).
  // 원거리 적·엘리트 축소로 경험치 곡선이 바뀌어 재생성된 스냅샷: 2융합=1개, '3융합'=1개, 절대+1=절대 1개+최종 1개.
- // 레벨업 경험치 ×60 + 구역마다 보급품(1·2구역 2개, 이후 3개)으로 재생성: 2융합=2개, '3융합'=1개, 절대+1=절대 1개 + 최종 1개.
- assert.equal(DAMAGE_SCENARIOS[2].finals,2);assert.equal(DAMAGE_SCENARIOS[3].finals,1);
+ // 레벨업 경험치 ×20 + 구역마다 보급품(1·2구역 2개, 이후 3개)으로 재생성: 2융합=2개, '3융합'=3개, 절대+1=절대 1개 + 최종 1개.
+ assert.equal(DAMAGE_SCENARIOS[2].finals,2);assert.equal(DAMAGE_SCENARIOS[3].finals,3);
  assert.equal(DAMAGE_SCENARIOS[4].finals,1);assert.equal(DAMAGE_SCENARIOS[4].absolutes,1);
  for(const scenario of DAMAGE_SCENARIOS.slice(1)){
   assert.ok(Object.keys(scenario.passives).length<=6);assert.ok(scenario.weapons.length<=6);

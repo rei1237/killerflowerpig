@@ -645,7 +645,7 @@ export async function loadAssets(onProgress, { signal, timeoutMs = 20000 } = {})
 
     onProgress?.(null, done / total, { done, total, phase: 'prepare' });
     buildFx();
-    for (const [key, target, size] of [['cacheArt','chest',44],['medArt','meat',30],['magnetArt','magnet',30]]) {
+    for (const [key, target, size] of [['cacheArt','chest',44],['cacheArt','supplyCache',72],['medArt','meat',30],['magnetArt','magnet',30]]) {
         const img = images[key];
         if (!img) continue;
         const c = makeCanvas(size,size), g = c.getContext('2d');
