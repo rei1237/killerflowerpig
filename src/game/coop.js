@@ -77,8 +77,8 @@ export const partnerSpeed = (q = G.partner) => PARTNER.speed * (1 + PARTNER_CHAR
 export const partnerMagnet = (q = G.partner) => PARTNER_XP.magnet * (1 + PARTNER_CHARMS.whisker.per * charmLevel('whisker', q));
 
 // ── 성장: 경험치 · 레벨업 선택 · 조합 ─────────────────────────────
-// 2P 곡선: 1P 난이도 배율의 70% × 레벨업 추가 난이도 2 (영냥이도 보급품을 주워 성장한다, 이전 6에서 3배 쉽게)
-export const PARTNER_LEVEL_COST = 2;
+// 2P 곡선: 1P 난이도 배율의 70% × 레벨업 추가 난이도 0.25 (1P 배율 2.5와 같은 비율, 영냥이도 보급품을 주워 성장한다)
+export const PARTNER_LEVEL_COST = 0.25;
 export const partnerXpNext = level => Math.max(4, Math.round(partnerXpBase(level) * difficultyOf(G.difficulty).xpMul * 0.7 * PARTNER_LEVEL_COST));
 export function addPartnerXP(v) {
     const q = G.partner;
