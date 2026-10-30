@@ -80,9 +80,10 @@ function restoreChoiceState(value) {
     G.rerolls = G.choiceSession?.remaining ?? 0;
 }
 
-// 레벨업 추가 난이도: 구역마다 놓인 장비 보급품 3개(src/game/field-items.js)가 성장의 중심이고, 경험치 레벨업은 20배 비싸다.
-// (이전 60배는 레벨업이 너무 드물어 3배 쉽게 낮췄다.)
-export const LEVEL_COST_MULTIPLIER = 20;
+// 레벨업 추가 난이도: 구역마다 놓인 장비 보급품 3개(src/game/field-items.js)와 함께 경험치 레벨업도 성장의 축이다.
+// 곡선이 고레벨에서 가팔라 배율을 1/3로만 낮추면 레벨업 횟수는 1.4배밖에 늘지 않는다.
+// tools/run-progression-audit.mjs 기준 런당 경험치 레벨업 횟수: ×60 약 9회 → ×2.5 약 27회 (3배).
+export const LEVEL_COST_MULTIPLIER = 2.5;
 export function xpForLevel(lv) {
     // 레벨업 비용: 구간(20, 35)마다 가팔라지는 '쉬움' 기준 곡선 × 난이도 배율.
     // 레벨업은 매우 힘들어야 한다: 5·10·13·18·27레벨부터 단계적으로 가팔라진다.

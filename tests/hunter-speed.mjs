@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Boss } from '../src/game/boss.js';
-import { BOSSES, HUNTER_TUNING } from '../src/data/bosses.js';
+import { BOSSES, HUNTER_TUNING, bossMaxHp } from '../src/data/bosses.js';
 import { G, clearWorld } from '../src/game/state.js';
 import { atlases, fx } from '../src/core/assets.js';
 import { SPRITES } from '../src/data/sprites.js';
@@ -141,8 +141,9 @@ test('actual stage3 weak/mid progression builds finish bounded live Hunter encou
         const scenario={name,stage:3,weapons:snapshot.weapons.map(w=>[w.id,w.level,w.evolved]),stats:snapshot.stats};
         const deaths=[];
         for(const distance of [100,300,500])for(let seed=1;seed<=12;seed++){
-            const r=measureBossEncounter(scenario,{distance,seed,maxSeconds:90});
-            assert.ok(r.death!==null&&r.death<90,`${name}/${distance}/${seed}`);assert.ok(r.starts.length>0);
+            // 실제 전투 체력(bossMaxHp): 경험치 레벨업 ×3 이후 중간 빌드는 3구역에서 진화 무기를 갖춰 기본 체력으로는 첫 공격 전에 쓰러진다.
+            const r=measureBossEncounter(scenario,{hp:bossMaxHp(3),distance,seed,maxSeconds:200});
+            assert.ok(r.death!==null&&r.death<200,`${name}/${distance}/${seed}`);assert.ok(r.starts.length>=3,`${name}/${distance}/${seed}: Hunter shows several patterns`);
             deaths.push(r.death);
         }
         deaths.sort((a,b)=>a-b);summaries.push({name,level:snapshot.level,min:deaths[0],median:deaths[18],max:deaths.at(-1)});
