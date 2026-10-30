@@ -59,11 +59,12 @@ test('seeded planned versus scattered runs conserve item investment and respect 
     }
     // 느려진 레벨업(STAGE_XP_YIELD 0.55 + 5·10·13·18·27레벨 가속) + 14개 조합: 모든 장비를 최대로 만드는 것은 불가능하다.
     // 측정(40시드): 집중 빌드 최종 1개 11 / 2개 28 / 3개 1, 도살 빌드 1개 12 / 2개 28, 절대 빌드는 28/40이 절대 무기를 갖춘다.
-    assert.ok((result.planned.beforeBoss10Finals[3] || 0) <= 5, 'three finals before the last boss are rare');
+    // 레벨업 경험치 ×20(이전 ×60) 이후 측정: 집중 빌드 3개 6 / 40, 도살 빌드 3개 6 / 40 — 여전히 드물다.
+    assert.ok((result.planned.beforeBoss10Finals[3] || 0) <= 8, 'three finals before the last boss are rare');
     assert.ok((result.planned.beforeBoss10Finals[2] || 0) + (result.planned.beforeBoss10Finals[3] || 0) >= 20, 'a focused build still reaches two finals in most runs');
     assert.ok((result.absolute.beforeBoss10Absolutes[1] || 0) >= 20 && (result.absolute.beforeBoss10Absolutes[1] || 0) < 40, 'absolute route is usually, not always, complete');
     assert.ok((result.butcher.beforeBoss10Finals[2] || 0) + (result.butcher.beforeBoss10Finals[3] || 0) >= 20, 'butcher route usually reaches two finals');
-    assert.ok((result.butcher.beforeBoss10Finals[3] || 0) <= 5);
+    assert.ok((result.butcher.beforeBoss10Finals[3] || 0) <= 8);
     assert.ok((result.scattered.beforeBoss10Finals[0] || 0) + (result.scattered.beforeBoss10Finals[1] || 0) > 0);
     // 보조 아이템은 슬롯 제한이 없어 진화 짝을 얻으려고 교체할 필요가 없다.
     assert.equal(result.scattered.exchangesUsed, 0);
