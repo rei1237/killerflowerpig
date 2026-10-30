@@ -1,4 +1,6 @@
-import { pinRewardRun } from '../core/save.js';
+import { pinRewardRun, queueCharacterXP, save } from '../core/save.js';
+import { characterProgress, characterStageXP } from '../core/character-progression.js';
+import { floatText } from './effects.js';
 import { resetFieldItems, updateFieldItems } from './field-items.js';
 import { validateStageCheckpoint } from './stage-checkpoint.js';
 import { clearFocus } from './targeting.js';
@@ -244,6 +246,7 @@ export function beginStageClear() {
     clearEncirclement();
     G.mode = 'clearing';
     clearTimer = 0;
+    awardStageCharacterXP();
     magnetAll();
     // 남은 적은 무너져 내림
     const pool = G.enemies;
@@ -251,6 +254,19 @@ export function beginStageClear() {
         const e = pool.items[i];
         if (e.alive) { e.alive = false; e.state = 'dead'; e.anim = 0; e.animT = 0; e.deadT = 0; }
     }
+}
+
+// 구역 클리어 → 영구 캐릭터 경험치 (런·구역별 요청 id로 한 번만). 레벨이 오르면 기본 능력치를 바로 반영한다.
+export function awardStageCharacterXP() {
+    if (!G.runId) return false;
+    const before = characterProgress(save.characterXP).level;
+    const amount = characterStageXP(G.stage);
+    if (!queueCharacterXP(amount, `character:${G.runId}:${G.stage}`)) return false;
+    const after = characterProgress(save.characterXP).level;
+    const p = G.player;
+    if (p) floatText(p.x, p.y - 96, after > before ? `캐릭터 Lv.${after}! 기본 능력치 상승` : `캐릭터 경험치 +${amount}`, after > before ? '#ffd76a' : '#e8dcff', 1.6);
+    if (after > before && p) recomputeStats();
+    return true;
 }
 
 export function onPlayerDeath() {
