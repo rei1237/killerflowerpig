@@ -219,7 +219,14 @@ test('home illustration stays within its frame and narrow layouts put launch bef
             assert.ok(parseFloat(art.width) + parseFloat(edge) <= 100, `${selector} extends horizontally beyond frame at ${size(viewport)}`);
             assert.ok(parseFloat(art.height) + parseFloat(art.bottom) <= 100, `${selector} extends vertically beyond frame at ${size(viewport)}`);
         }
-        if (viewport.width <= 760) {
+        if (viewport.width <= 760 && viewport.width > viewport.height && viewport.height <= 520) {
+            // 낮은 가로 화면: 그림을 숨기고 왼쪽 제목·시작, 오른쪽 메뉴 두 칸으로 한 화면에 담는다.
+            const wrap = style('.title-wrap', viewport);
+            assert.equal(style('.hero-scene', viewport).display, 'none');
+            assert.equal(compact(wrap['grid-template-columns']).split('minmax').length - 1, 2);
+            const areas = wrap['grid-template-areas'];
+            assert.ok(areas.indexOf('launch') < areas.indexOf('footer') && areas.includes('utility'), 'Landscape menu keeps launch visible beside the menu');
+        } else if (viewport.width <= 760) {
             const wrap = style('.title-wrap', viewport);
             assert.equal(compact(wrap['grid-template-columns']), 'minmax(0,1fr)');
             const areas = wrap['grid-template-areas'];
