@@ -323,10 +323,11 @@ test('fusion rejects stale preview and closing locked recipes never consumes ite
  assert.deepEqual(G.weapons.map(w=>w.id),['shotgun','rifle']);assert.match(node('fusion-status').textContent,/바뀌었습니다/);
  const before=JSON.stringify(G.weapons);closeModal('fusion');assert.equal(JSON.stringify(G.weapons),before);assert.equal(G.paused,false);
 });
-test('active gameplay no longer exposes global charge or character XP advancement',()=>{
+test('active gameplay no longer exposes global charge; character level is shown only on the title screen',()=>{
  assert.doesNotMatch(html,/id="btn-petal"|id="hud-character-level"|SPACE · 수동/);
  const screens=fs.readFileSync(new URL('../src/ui/screens.js',import.meta.url),'utf8');
- assert.doesNotMatch(screens,/queueCharacterXP|characterProgress|firePetalCannon/);
+ // 캐릭터 경험치는 구역 클리어 때 game.js가 지급하고, UI는 타이틀 기록 줄에서 레벨·보너스만 읽는다.
+ assert.doesNotMatch(screens,/queueCharacterXP|firePetalCannon/);
 });
 
 test('fused weapon level seven to eight selection renders without a legacy evolution recipe',async()=>{

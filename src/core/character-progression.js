@@ -10,6 +10,14 @@ export function characterProgress(xp = 0) {
     }
     return { level, totalXP: xp, xp: remaining, xpNext: level === CHARACTER_MAX_LEVEL ? 0 : 100 + 20 * (level - 1), maxLevel: CHARACTER_MAX_LEVEL };
 }
+// 캐릭터 레벨 기본 능력치: 레벨이 오를 때마다 조금씩 (Lv.50에서 체력 +49 · 공격력 +24.5% · 이동 속도 +9.8%).
+export const CHARACTER_STAT_PER_LEVEL = Object.freeze({ maxHp: 1, might: 0.005, speed: 0.002 });
+export function characterStatBonus(level = 1) {
+    const n = Number.isFinite(level) ? Math.max(1, Math.min(CHARACTER_MAX_LEVEL, Math.floor(level))) - 1 : 0;
+    return { maxHp: n * CHARACTER_STAT_PER_LEVEL.maxHp, might: n * CHARACTER_STAT_PER_LEVEL.might, speed: n * CHARACTER_STAT_PER_LEVEL.speed };
+}
+// 구역 클리어마다 받는 캐릭터 경험치: 뒤 구역일수록 많다 (10구역 전체 클리어 1400 → 약 Lv.9).
+export const characterStageXP = stage => 30 + 20 * Math.max(1, Math.min(10, Math.floor(stage) || 1));
 export function petalStats(level = 1) {
     const n = Number.isFinite(level) ? Math.max(1, Math.min(CHARACTER_MAX_LEVEL, Math.floor(level))) : 1;
     return { level: n, damage: 80 + 12 * (n - 1), radius: Math.min(340, 170 + 4 * (n - 1)) };

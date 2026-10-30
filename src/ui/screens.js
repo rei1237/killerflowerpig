@@ -23,6 +23,7 @@ import { configureCaps } from '../game/state.js';
 import { resize } from '../game/render.js';
 import { settings, setSetting } from '../core/settings.js';
 import { save, persist, settleRunStage, SHOP, upgradeLevel, buyUpgrade, equipPet, recordTitleProgress, equipTitle, lastSaveError, queueCoins, retryPendingCoins, pendingCoinTotal, openChest, buyRelic, buyAccessory, setAccessory } from '../core/save.js';
+import { characterProgress, characterStatBonus } from '../core/character-progression.js';
 import { audio } from '../core/audio.js';
 import { input, resetInput, setSplitInput } from '../core/input.js';
 
@@ -189,7 +190,9 @@ export function showTitle() {
         cont.hidden = false;
         cont.textContent = `이어하기 — STAGE ${run.stage} (LV ${run.level})`;
     } else cont.hidden = true;
-    $('title-record').textContent = `최고 도달: STAGE ${save.maxStage} · 누적 처치 ${save.kills.toLocaleString()} · 골드 ${save.gold}` + titleRecordLine();
+    const ch = characterProgress(save.characterXP), bonus = characterStatBonus(ch.level);
+    const chLine = `캐릭터 Lv.${ch.level}${ch.xpNext ? ` (${ch.xp}/${ch.xpNext})` : ' MAX'}` + (ch.level > 1 ? ` · 체력 +${bonus.maxHp} 공격 +${(bonus.might * 100).toFixed(1)}% 이동 +${(bonus.speed * 100).toFixed(1)}%` : '');
+    $('title-record').textContent = `${chLine} · 최고 도달: STAGE ${save.maxStage} · 누적 처치 ${save.kills.toLocaleString()} · 골드 ${save.gold}` + titleRecordLine();
     $('btn-install').hidden = isStandalone();
     show('title');
 }

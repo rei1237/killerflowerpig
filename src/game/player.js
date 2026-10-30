@@ -8,6 +8,7 @@ import { atlases, images } from '../core/assets.js';
 import { audio } from '../core/audio.js';
 import { relicStats } from '../data/relics.js';
 import { upgradeLevel, save, onCosmeticsChanged } from '../core/save.js';
+import { characterProgress, characterStatBonus } from '../core/character-progression.js';
 import { MAGAZINE_BONUS, PASSIVE_TUNING } from '../data/weapons.js';
 import { applyTechPlayerBonus, resonanceTier } from './tech.js';
 import { blood, flash, shake, damageText, hitstop, sparks, floatText } from './effects.js';
@@ -55,8 +56,9 @@ export const BASE_CRIT_MUL = 3;
 export function recomputeStats(fullHeal = false) {
     const p = G.player;
     const lv = (id) => G.passives[id] || 0;
+    const ch = characterStatBonus(characterProgress(save.characterXP).level); // 영구 캐릭터 레벨 기본 능력치
     const s = {
-        might: 1 + lv('whet') * 0.1 + upgradeLevel('might') * 0.05,
+        might: 1 + lv('whet') * 0.1 + upgradeLevel('might') * 0.05 + ch.might,
         area: 1 + lv('spread') * PASSIVE_TUNING.spread,
         cooldown: 1 - lv('nose') * PASSIVE_TUNING.coilCooldown,
         // 꽃가루 장막: 피격 1회 차단 보호막 재충전 시간 (0이면 없음)
@@ -70,10 +72,10 @@ export function recomputeStats(fullHeal = false) {
         crit: lv('focus') * PASSIVE_TUNING.focus,
         regen: lv('regen') * 0.3,
         magnet: BASE.magnet * (1 + lv('nose') * PASSIVE_TUNING.coilMagnet + upgradeLevel('magnet') * 0.1),
-        speed: BASE.speed * (1 + lv('madness') * 0.07 + upgradeLevel('speed') * 0.04),
+        speed: BASE.speed * (1 + lv('madness') * 0.07 + upgradeLevel('speed') * 0.04 + ch.speed),
         armor: lv('hide') * PASSIVE_TUNING.hide,
         damageReduction: lv('hide') * PASSIVE_TUNING.hideReduction,
-        maxHp: BASE.hp + lv('heart') * 20 + upgradeLevel('maxHp') * 10,
+        maxHp: BASE.hp + lv('heart') * 20 + upgradeLevel('maxHp') * 10 + ch.maxHp,
         greed: 1 + upgradeLevel('greed') * 0.1,
         critMul: BASE_CRIT_MUL,
     };
