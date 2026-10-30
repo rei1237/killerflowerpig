@@ -1,10 +1,11 @@
 // 서비스 워커: 코드(html/js/css)는 네트워크 우선(항상 최신), 에셋(이미지/오디오/폰트)은 캐시 우선.
-const VERSION = 'v51-character-stats';
+const VERSION = 'v52-mobile-hud';
 const CODE_CACHE = `kfp-code-${VERSION}`;
 const ASSET_CACHE = `kfp-assets-${VERSION}`;
 
 const PRECACHE = [
     './src/ui/mobile.css',
+    './src/ui/hud-compact.css',
     './asset/branding/slayer-icon-180.png',
     './asset/branding/slayer-icon-192.png',
     './asset/branding/slayer-icon-32.png',

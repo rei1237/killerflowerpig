@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="src/ui/partner.css">
     <link rel="stylesheet" href="src/ui/minimap.css">
     <link rel="stylesheet" href="src/ui/mobile.css">
+    <link rel="stylesheet" href="src/ui/hud-compact.css">
 </head>
 <body>
     <div id="app">
@@ -140,14 +141,15 @@
         </section>
 
         <div id="battle-hud" class="battle-hud" hidden>
+            <div id="hud-xp-track" class="xp-track" role="progressbar" aria-label="경험치" aria-valuemin="0" aria-valuemax="100"><div id="hud-xp"></div></div>
             <div class="guardian-card"><img src="asset/ui/menu-yeoni.webp" alt="" width="1254" height="1254"><div class="guardian-vitals">
                 <div class="vitals-label"><strong>꽃돼지 <span id="hud-title-name" class="hud-title-name"></span> <span id="hud-level">Lv.1</span> <span id="hud-tech" class="hud-tech" hidden></span></strong><span id="hud-hp-text"></span></div>
                 <div id="hud-hp-track" class="vital-track" role="progressbar" aria-label="체력" aria-valuemin="0" aria-valuemax="100"><div id="hud-hp"></div></div>
-                <div id="hud-xp-track" class="xp-track" role="progressbar" aria-label="경험치" aria-valuemin="0" aria-valuemax="100"><div id="hud-xp"></div></div>
             </div></div>
             <div class="mission-card"><span id="hud-stage"></span><strong id="hud-time">0:00</strong><small id="hud-score"></small></div>
             <div class="operation-progress"><span id="hud-countdown"></span><div><i id="hud-stage-progress"></i></div></div>
             <div id="hud-build" class="hud-build" aria-label="현재 장비"></div>
+            <button id="hud-build-toggle" class="hud-build-toggle" type="button" aria-controls="hud-build" aria-expanded="false" hidden>보조 0</button>
             <div id="hud-boss" class="hud-boss" hidden><img id="hud-boss-portrait" alt=""><span id="hud-boss-name"></span><div class="boss-track"><div id="hud-boss-hp"></div></div></div>
             <button id="btn-map" class="hud-map" type="button" aria-pressed="true" aria-keyshortcuts="M" title="지도 켜기/끄기 (M)">
                 <canvas id="minimap" width="168" height="168" aria-hidden="true"></canvas>
@@ -228,7 +230,7 @@
         <section id="fusion" class="modal" hidden>
             <div class="modal-box fusion-box">
                 <p class="eyebrow">EQUIPMENT WORKBENCH</p><h2 class="modal-title">아이템 조합</h2>
-                <p class="panel-caption">이번 작전에서 아이템 레벨을 올려 두 장점을 합치세요. 조합하면 재료 2개를 소모하고 새 아이템 Lv.1 하나를 얻습니다. 장비는 다음 구역 시작 때 저장됩니다.</p>
+                <p class="panel-caption fusion-caption">진화 무기 2개 → 최종 무기, 진화 무기 3개 → 절대 무기. 조합할 수 있는 레시피가 맨 위에 보입니다. 재료는 소모되고 새 무기 Lv.1을 얻습니다.</p>
                 <p id="fusion-summary" class="fusion-summary"></p><div id="fusion-recipes" class="fusion-recipes"></div>
                 <p id="fusion-status" class="shop-status" role="status" aria-live="polite"></p>
                 <div class="modal-actions"><button id="btn-fusion-close" class="btn btn-blood" type="button">돌아가기</button></div>

@@ -18,6 +18,22 @@ function fmtTime(t) {
     const m = Math.floor(t / 60), s = Math.floor(t % 60);
     return `${m}:${s < 10 ? '0' : ''}${s}`;
 }
+// 휴대폰에서는 보조 아이템 칸을 접어 두고(무기 한 줄만) 이 버튼으로 펼친다. 넓은 화면은 CSS가 버튼을 숨기고 모두 보여 준다.
+function syncBuildToggle(passiveCount) {
+    const toggle = $('hud-build-toggle'), build = nodes['hud-build'];
+    if (!toggle || !build?.classList) return;
+    if (!toggle.dataset.bound) {
+        toggle.dataset.bound = '1';
+        toggle.addEventListener('click', () => {
+            const open = !build.classList.contains('show-passives');
+            build.classList.toggle('show-passives', open);
+            toggle.setAttribute('aria-expanded', String(open));
+            toggle.classList.toggle('is-open', open);
+        });
+    }
+    toggle.hidden = passiveCount <= 0;
+    toggle.textContent = `보조 ${passiveCount}`;
+}
 export function drawHUD() {
     if (!G.player || G.mode === 'idle') return;
     const now = performance.now();
@@ -67,9 +83,9 @@ export function drawHUD() {
             ...G.weapons.map(w => ({id:w.id,name:w.evolved?WEAPONS[w.id].evolve.name:WEAPONS[w.id].name, icon:w.evolved?WEAPONS[w.id].evolve.icon:WEAPONS[w.id].icon,level:w.level,evolved:w.evolved})),
             ...Object.entries(G.passives).map(([id,level])=>({id,name:PASSIVES[id].name,icon:PASSIVES[id].icon,level}))
         ];
-        nodes['hud-build'].replaceChildren(...slots.map(item=>{
+        nodes['hud-build'].replaceChildren(...slots.map((item,i)=>{
             const slot=document.createElement('span');
-            slot.className='hud-slot'+(item.evolved?' evolved':'');
+            slot.className='hud-slot'+(item.evolved?' evolved':'')+(i>=G.weapons.length?' passive':'');
             slot.title=`${item.name} Lv.${item.level}`;
             slot.setAttribute('aria-label',slot.title);
             mountItemArt(slot,item.id);
@@ -78,6 +94,7 @@ export function drawHUD() {
             slot.appendChild(level);
             return slot;
         }));
+        syncBuildToggle(slots.length - G.weapons.length);
     }
     const b=G.boss;
     nodes['hud-boss'].hidden = !b || (!b.alive && b.deadT >= 1.2);

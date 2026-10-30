@@ -546,23 +546,41 @@ function renderFusion() {
     const ready=recipes.filter(row=>row.preview.ok).length;
     $('fusion-summary').textContent=`전체 ${recipes.length}개 레시피 · 조합 가능 ${ready}개 · 진화 2개 → 최종 · 진화 3개 → 절대 무기`;
     for (const {recipe,preview} of recipes) {
-        const card=document.createElement('article');card.className=preview.ok?'fusion-recipe fusion-ready':'fusion-recipe';card.dataset.recipe=recipe.id;card.dataset.tier=preview.output.tier || (preview.ingredients.length===3?'absolute':'final');
+        const n=preview.ingredients.length,tierName=n===3?'절대':'최종';
+        const done=preview.ingredients.filter(i=>i.level>=i.requiredLevel&&(!i.requiredEvolution||i.evolved)).length;
+        const card=document.createElement('article');card.className=preview.ok?'fusion-recipe fusion-ready':done?'fusion-recipe fusion-partial':'fusion-recipe';card.dataset.recipe=recipe.id;card.dataset.tier=preview.output.tier || (n===3?'absolute':'final');
+        // 화면 순서만 바꾼다(조합 가능 → 재료 일부 준비 → 나머지). DOM 순서는 레시피 순서 그대로.
+        card.style.order=preview.ok?-2:done?-1:0;
+        // 한 줄 흐름: 재료 아이콘 + 재료 아이콘 (+ 재료) → 결과 아이콘
+        const flow=document.createElement('div');flow.className='fusion-flow';
         const ingredients=document.createElement('div');ingredients.className='fusion-ingredients';
         for(const item of preview.ingredients){
-            const cell=document.createElement('div');const art=document.createElement('div');art.className='fusion-art';mountItemArt(art,item.id);
+            const ok=item.level>=item.requiredLevel&&(!item.requiredEvolution||item.evolved);
+            const cell=document.createElement('div');cell.className=ok?'fusion-ing is-ok':'fusion-ing';
+            const art=document.createElement('div');art.className='fusion-art';mountItemArt(art,item.id);
             const name=document.createElement('strong');name.textContent=item.name;
-            const level=document.createElement('small');level.textContent=`현재 Lv.${item.level} / 필요 Lv.${item.requiredLevel}${item.requiredEvolution ? ` · ${item.evolved ? '진화 완료' : '진화 필요'}` : ''}`;
+            const level=document.createElement('small');level.textContent=`Lv.${item.level}/${item.requiredLevel}${item.requiredEvolution ? ` · ${item.evolved ? '✓ 진화' : '진화 필요'}` : ''}`;
             cell.append(art,name,level);ingredients.appendChild(cell);
         }
+        const arrow=document.createElement('span');arrow.className='fusion-arrow';arrow.setAttribute('aria-hidden','true');arrow.textContent='→';
         const output=document.createElement('div');output.className='fusion-output';
         const art=document.createElement('div');art.className='fusion-art';mountItemArt(art,preview.output.id);
-        const copy=document.createElement('div');const name=document.createElement('h3');name.textContent=`${preview.ingredients.length===3?'절대':'최종'} · ${preview.output.name} · Lv.1`;
+        output.append(art);
+        flow.append(ingredients,arrow,output);
+        // 머리줄: 결과 이름 + 준비 상태
+        const head=document.createElement('div');head.className='fusion-head';
+        const name=document.createElement('h3');name.textContent=`${tierName} · ${preview.output.name} · Lv.1`;
+        const progress=document.createElement('small');progress.className='fusion-progress';progress.textContent=preview.ok?'조합 가능':`재료 ${done}/${n} 준비`;
+        head.append(name,progress);
+        // 긴 설명·능력치는 접어 둔다 (휴대폰에서 레시피를 한눈에 비교)
+        const details=document.createElement('details');details.className='fusion-details';
+        const summary=document.createElement('summary');summary.textContent='효과 · 능력치 보기';
         const desc=document.createElement('p');desc.textContent=preview.output.desc;
         const stats=document.createElement('small');stats.textContent=fusionStatText(preview.output.stats);
-        copy.append(name,desc,stats);output.append(art,copy);
+        details.append(summary,desc,stats);
         const button=document.createElement('button');button.type='button';button.className='btn btn-blood';button.disabled=!preview.ok;
-        button.textContent=preview.ok?`진화 무기 ${preview.ingredients.length}개를 소모하고 ${preview.ingredients.length===3?'절대':'최종'} 조합`:`재료 ${preview.ingredients.length}개 모두 진화가 필요합니다`;
-        const cost=document.createElement('p');cost.className='fusion-cost';cost.textContent=`진화 무기 ${preview.ingredients.length}개 소모 → 새 무기 1개 · 슬롯 ${preview.ingredients.length-1}칸 확보. 소모한 재료의 강화·진화는 되돌릴 수 없습니다.`;
+        button.textContent=preview.ok?`${tierName} 무기 조합하기`:`재료 ${n}개 모두 진화가 필요합니다`;
+        const cost=document.createElement('p');cost.className='fusion-cost';cost.textContent=`진화 무기 ${n}개 소모 → 새 무기 1개 · 슬롯 ${n-1}칸 확보. 되돌릴 수 없습니다.`;
         button.addEventListener('click',()=>{
             if(topModalId()!=='fusion'||button.disabled)return;
             button.disabled=true;
@@ -574,7 +592,7 @@ function renderFusion() {
             renderFusion();
             openFusionReveal({ ingredients: preview.ingredients, output: preview.output, statText: fusionStatText(preview.output.stats), onDone: () => closeModal('fusion') });
         });
-        card.append(ingredients,output,cost,button);wrap.appendChild(card);
+        card.append(head,flow,details,cost,button);wrap.appendChild(card);
     }
 }
 
